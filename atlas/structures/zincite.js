@@ -1,0 +1,3 @@
+// Structure cristalline — générée par tools/cif_vers_structure.py, ne pas retoucher à la main.
+// Source : COD 9004178 (Kihara, K., Donnay, G., 1985).
+Structure3D.enregistrer({"id":"zincite","nom":"Zincite","formule":"O Zn","groupe":"P 63 m c","maille":[3.2494,3.2494,5.2038,90.0,90.0,120.0],"source":{"base":"Crystallography Open Database","cod":"9004178","auteurs":["Kihara, K.","Donnay, G."],"annee":"1985","titre":"Anharmonic thermal vibrations in ZnO Model: 2-c, at T = 293 K","revue":"The Canadian Mineralogist","volume":"23","pages":"647–654","doi":""},"atomes":[["O",0.33333,0.66667,0.3821,"O"],["O",0.66667,0.33334,0.8821,"O"],["Zn",0.33333,0.66667,0.0,"Zn"],["Zn",0.66667,0.33334,0.5,"Zn"]]});

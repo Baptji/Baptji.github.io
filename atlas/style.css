@@ -1,0 +1,1335 @@
+/* ============ Atlas géologique de France ============ */
+:root {
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --ink: #0b0b0b;
+  --ink2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --baseline: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.10);
+  --accent: #2a78d6;
+  --cat-sedimentaire: #2a78d6;
+  --cat-magmatique: #1baf7a;
+  --cat-metamorphique: #4a3aa7;
+  --prod-sable: #eda100;
+  --prod-limon: #eb6834;
+  --prod-argile: #e87ba4;
+  --prod-oxydes: #e34948;
+  --prod-dissous: #2a78d6;
+  --prod-autre: #1baf7a;
+  --wash: rgba(42, 120, 214, 0.08);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --ink: #ffffff;
+    --ink2: #c3c2b7;
+    --muted: #898781;
+    --grid: #2c2c2a;
+    --baseline: #383835;
+    --border: rgba(255, 255, 255, 0.10);
+    --accent: #3987e5;
+    --cat-sedimentaire: #3987e5;
+    --cat-magmatique: #199e70;
+    --cat-metamorphique: #9085e9;
+    --prod-sable: #c98500;
+    --prod-limon: #d95926;
+    --prod-argile: #d55181;
+    --prod-oxydes: #e66767;
+    --prod-dissous: #3987e5;
+    --prod-autre: #199e70;
+    --wash: rgba(57, 135, 229, 0.12);
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--page);
+  color: var(--ink);
+  font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+a { color: var(--accent); }
+
+/* ---------- top bar ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 1200;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 10px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.brand { font-weight: 700; font-size: 17px; cursor: pointer; white-space: nowrap; }
+.brand small { color: var(--muted); font-weight: 400; margin-left: 6px; }
+#search {
+  flex: 1; min-width: 160px; max-width: 340px;
+  padding: 7px 12px; border-radius: 8px;
+  border: 1px solid var(--baseline);
+  background: var(--page); color: var(--ink); font: inherit;
+}
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip {
+  padding: 5px 12px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--baseline); background: none;
+  color: var(--ink2); font: inherit; font-size: 13px;
+}
+.chip.on { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.chip .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+
+/* ---------- layout ---------- */
+.layout {
+  display: grid; grid-template-columns: 340px minmax(0, 1fr);
+  gap: 20px; max-width: 1340px; margin: 0 auto; padding: 20px;
+}
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+}
+
+/* ---------- sidebar ---------- */
+#sidebar {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 10px;
+  overflow-y: auto; max-height: calc(100vh - 100px);
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+  position: sticky; top: 76px; align-self: start;
+}
+.side-group { margin: 4px 0 10px; }
+.side-group h3 {
+  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--muted); margin: 10px 8px 4px; font-weight: 600;
+}
+.rock-item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 7px 8px; border: 0; border-radius: 8px;
+  background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer;
+}
+.rock-item:hover { background: var(--wash); }
+.rock-item.on { background: var(--ink); color: var(--surface); }
+.rock-item .sw {
+  width: 16px; height: 16px; border-radius: 5px; flex: none;
+  border: 1px solid var(--border);
+}
+.rock-item .fac { margin-left: auto; font-size: 11px; color: var(--muted); letter-spacing: 1px; }
+.rock-item.on .fac { color: var(--surface); opacity: 0.7; }
+.rock-item.sub-item {
+  padding: 5px 8px 5px 20px; font-size: 13px; color: var(--ink2);
+  border-left: 2px solid var(--border); border-radius: 0 8px 8px 0; margin-left: 10px;
+}
+.rock-item.sub-item.on { color: var(--surface); border-left-color: var(--accent); }
+/* arbre des roches : colonnes emboîtées famille | branche | roches (principe de la charte des temps) */
+.arbre { display: flex; flex-direction: column; gap: 8px; margin: 2px 0 6px; }
+.arbre-fam { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.arbre-branches { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.arbre-br { display: flex; min-width: 0; }
+.arbre-br + .arbre-br { border-top: 1px solid color-mix(in srgb, var(--c) 45%, var(--surface)); }
+.arbre-band {
+  flex: none; width: 32px; padding: 6px 0; border: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-family: inherit; font-size: 13px; font-weight: 600; color: var(--ink);
+  border-right: 1px solid var(--border);
+}
+.arbre-band span { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; letter-spacing: 0.02em; }
+.arbre-band.fam { width: 36px; font-size: 14px; background: color-mix(in srgb, var(--c) 30%, var(--surface)); }
+.arbre-band.br { background: color-mix(in srgb, var(--c) 12%, var(--surface)); }
+.arbre-band.chemin { background: color-mix(in srgb, var(--c) 50%, var(--surface)); }
+.arbre-band.on { background: var(--c); color: var(--surface); }
+.arbre-roches { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.arbre-roche {
+  display: flex; align-items: center; gap: 8px; min-height: 28px; padding: 4px 10px;
+  border: 0; background: none; color: var(--ink); font: inherit; font-size: 13.5px; line-height: 1.25;
+  text-align: left; cursor: pointer;
+}
+.arbre-roche + .arbre-roche { border-top: 1px solid var(--border); }
+.arbre-roche.sep { border-top: 1px solid color-mix(in srgb, var(--c) 35%, var(--surface)); }
+.arbre-roche:not(.on):hover, .arbre-band:not(.on):not(.chemin):hover { background: var(--wash); }
+.arbre-roche.on { background: var(--ink); color: var(--surface); }
+.arbre-roche .sw { width: 12px; height: 12px; border-radius: 4px; border: 1px solid var(--border); flex: none; }
+.strunz-code {
+  font-variant-numeric: tabular-nums; font-weight: 700; font-size: 11px;
+  color: var(--accent); background: var(--wash);
+  padding: 1px 6px; border-radius: 5px; flex: none; min-width: 34px; text-align: center;
+}
+.rock-item.sub-item.on .strunz-code { color: var(--accent); background: var(--surface); }
+
+/* ---------- cards / sections ---------- */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px 22px; margin-bottom: 18px;
+}
+.card h2 { margin: 0 0 4px; font-size: 19px; }
+.card h2 .num { color: var(--muted); font-weight: 400; margin-right: 6px; }
+.card .sub { color: var(--ink2); font-size: 13.5px; margin: 0 0 14px; }
+.note {
+  background: var(--wash); border-radius: 8px; padding: 10px 14px;
+  font-size: 13.5px; color: var(--ink2); margin-top: 12px;
+}
+.warn { border-left: 3px solid var(--prod-oxydes); }
+
+/* ---------- rock header ---------- */
+.rock-head h1 { margin: 0 0 2px; font-size: 28px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.rock-head .sw-big { width: 26px; height: 26px; border-radius: 8px; border: 1px solid var(--border); display: inline-block; }
+.badge {
+  font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px;
+  color: #fff; vertical-align: middle;
+}
+.badge.outline { color: var(--ink2); border: 1px solid var(--baseline); background: none; font-weight: 400; }
+.rock-head .desc { font-size: 15.5px; max-width: 75ch; }
+.meta-row { display: flex; gap: 26px; flex-wrap: wrap; margin-top: 14px; }
+.meta { min-width: 130px; }
+.meta .lab { font-size: 12px; color: var(--muted); }
+.meta .val { font-weight: 600; font-size: 15px; }
+.meter { display: flex; gap: 3px; margin-top: 3px; }
+.meter i {
+  width: 22px; height: 8px; border-radius: 4px;
+  background: var(--grid); display: inline-block;
+}
+.meter i.f { background: var(--prod-oxydes); }
+.wiki-btn {
+  display: inline-block; margin-top: 4px; padding: 7px 14px; border-radius: 8px;
+  background: var(--accent); color: #fff !important; text-decoration: none; font-size: 13.5px;
+}
+
+/* ---------- map ---------- */
+#map { height: 400px; border-radius: 10px; border: 1px solid var(--border); background: var(--page); }
+.map-ctrl { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 10px; font-size: 13.5px; color: var(--ink2); }
+.map-ctrl input[type="range"] { width: 140px; accent-color: var(--accent); }
+.map-fs-btn {
+  margin-left: auto; border: 1px solid var(--border); background: var(--surface); color: var(--ink);
+  border-radius: 8px; padding: 5px 12px; font-size: 13px; cursor: pointer;
+}
+.map-fs-btn:hover { border-color: var(--accent); color: var(--accent); }
+#map.is-tall { height: 75vh; }
+.geol50-status { font-size: 13px; color: var(--accent); font-style: italic; }
+.geol50-legend { background: var(--surface); color: var(--ink); padding: 7px 10px; border-radius: 8px;
+  border: 1px solid var(--border); font-size: 12.5px; line-height: 1.35; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+.geol50-legend .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px;
+  vertical-align: -1px; border: 1px solid rgba(255,255,255,.7); }
+.geol50-legend .sw.acc { opacity: .28; border-style: dashed; border-color: currentColor; }
+.geol50-legend small { color: var(--muted); }
+.map-fallback { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--muted); padding: 20px; text-align: center; }
+
+/* ---------- charts ---------- */
+.chart-wrap { overflow-x: auto; }
+svg text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+.tick-lab { font-size: 11.5px; fill: var(--muted); }
+.axis-lab { font-size: 12px; fill: var(--ink2); }
+.row-lab { font-size: 12.5px; fill: var(--ink); cursor: pointer; }
+.band-lab { font-size: 12px; fill: var(--ink2); }
+.hairline { stroke: var(--grid); stroke-width: 1; }
+.baseline { stroke: var(--baseline); stroke-width: 1; }
+
+/* triangle des textures (D.2) */
+.triangle-svg { width: 100%; max-width: 340px; height: auto; }
+.tri-lab { font-size: 7.5px; fill: var(--ink2); pointer-events: none; }
+.tri-axe { font-size: 11px; fill: var(--ink); font-weight: 600; }
+
+/* frise des temps géologiques (C.5) — table au modèle de la charte ICS */
+.ft-wrap { padding: 10px 2px 12px; }
+#main { min-width: 0; } /* sinon la large table de la frise élargit la colonne de la grille au lieu de défiler */
+.ft-reglages { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px 16px; margin: 2px 0 0; }
+.ft-bascule { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--muted); cursor: pointer; user-select: none; }
+.ft-bascule input { position: absolute; opacity: 0; pointer-events: none; }
+.ft-bascule i { position: relative; width: 24px; height: 13px; border-radius: 7px; background: var(--baseline); transition: background .15s; }
+.ft-bascule i::after { content: ""; position: absolute; top: 2px; left: 2px; width: 9px; height: 9px; border-radius: 50%; background: var(--surface); transition: transform .15s; }
+.ft-bascule input:checked + i { background: var(--ink2); }
+.ft-bascule input:checked + i::after { transform: translateX(11px); }
+.ft-bascule input:focus-visible + i { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ft { border-collapse: collapse; font-size: 12.5px; line-height: 1.1; margin: 0 auto 0 0; }
+.ft th { font-size: 11px; font-weight: 500; color: var(--muted); text-align: left; padding: 0 6px 12px; white-space: nowrap; vertical-align: bottom; }
+.ft tbody tr { height: 22px; }
+.ft td.ft-u { border: 1px solid rgba(0, 0, 0, .38); padding: 0 7px; white-space: nowrap; vertical-align: middle; min-width: 72px; }
+.ft td.ft-u:hover { box-shadow: inset 0 0 0 2px rgba(0, 0, 0, .45); }
+.ft td.ft-vert { min-width: 0; width: 26px; padding: 3px 0; text-align: center; }
+.ft td.ft-vert span { writing-mode: vertical-rl; transform: rotate(180deg); display: inline-block; white-space: nowrap; }
+.ft td.ft-inf span { font-style: italic; }
+.ft td.ft-touche span { font-weight: 700; }
+.ft tr.ft-saut td { height: 26px; text-align: left; padding: 0 8px; font-size: 11.5px; color: var(--muted); font-style: italic; }
+.ft td.ft-age { position: relative; min-width: 48px; padding: 0; }
+.ft.ft-details td.ft-age { min-width: 112px; }
+.ft .ft-bas, .ft .ft-haut { position: absolute; left: 9px; white-space: nowrap; font-size: 11.5px; color: var(--ink2);
+  font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; gap: 3px; }
+.ft .ft-bas { bottom: 0; transform: translateY(50%); }
+.ft .ft-haut { top: 0; transform: translateY(-50%); }
+.ft td.ft-roche { position: relative; width: 28px; min-width: 28px; padding: 0; }
+.ft .ft-barre { position: absolute; left: 4px; width: 12px; min-height: 3px; background: var(--ink); }
+.ft .ft-barre.debut { border-top-left-radius: 4px; border-top-right-radius: 4px; }
+.ft .ft-barre.fin { border-bottom-left-radius: 4px; border-bottom-right-radius: 4px; }
+.ft .ft-num { position: absolute; left: 19px; top: 2px; font-size: 10.5px; font-weight: 600; color: var(--ink2); }
+#tooltip .ft-tip-chemin { opacity: .75; font-size: .92em; }
+.ft-legende-roche { margin: 0; padding-left: 20px; font-size: 13px; }
+.ft-legende-roche.seul { list-style: none; padding-left: 0; }
+.page-source { margin: 4px 4px 0; font-size: 12px; color: var(--muted); }
+.reperes-climat summary { cursor: pointer; }
+.reperes-climat summary h2 { margin: 0; }
+.reperes-climat .rc-grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.reperes-climat table.data { width: 100%; font-size: 13px; }
+
+/* stacked products bar */
+.pbar { display: flex; gap: 2px; height: 24px; margin: 14px 0 6px; }
+.pbar .seg { position: relative; min-width: 3px; }
+.pbar .seg:first-child { border-radius: 4px 0 0 4px; }
+.pbar .seg:last-child { border-radius: 0 4px 4px 0; }
+.pbar .seg:only-child { border-radius: 4px; }
+.pbar .seg span {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 11.5px; font-weight: 600; color: #fff; white-space: nowrap;
+}
+.legend { display: flex; gap: 16px; flex-wrap: wrap; margin: 8px 0 4px; font-size: 13px; color: var(--ink2); }
+.legend .key { display: flex; align-items: center; gap: 6px; }
+.legend .key i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+table.data {
+  border-collapse: collapse; width: 100%; margin-top: 10px; font-size: 13.5px;
+}
+table.data th { text-align: left; color: var(--muted); font-weight: 600; font-size: 12px; }
+table.data td, table.data th { padding: 6px 10px; border-bottom: 1px solid var(--grid); }
+table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
+table.data th.num { text-align: right; }
+
+/* ---------- stat tiles ---------- */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 14px 0; }
+.tile { background: var(--page); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.tile .lab { font-size: 12px; color: var(--muted); }
+.tile .val { font-size: 22px; font-weight: 650; margin-top: 2px; }
+.tile .val small { font-size: 13px; font-weight: 400; color: var(--ink2); }
+
+/* ---------- wikipedia ---------- */
+.wiki-box { display: flex; gap: 18px; align-items: flex-start; }
+.wiki-box img { width: 130px; border-radius: 8px; border: 1px solid var(--border); }
+.wiki-box .ext { font-size: 14.5px; color: var(--ink2); }
+.wiki-box .wiki-fig { margin: 0; flex: none; width: 130px; }
+.wiki-box .cap { font-size: 10px; color: var(--muted); margin-top: 3px; }
+.wiki-box .cap a, .cap a { color: inherit; }
+@media (max-width: 700px) { .wiki-box { flex-direction: column; } }
+
+/* ---------- tooltip ---------- */
+#tooltip {
+  position: fixed; z-index: 2000; pointer-events: none; display: none;
+  background: var(--ink); color: var(--surface);
+  padding: 8px 12px; border-radius: 8px; font-size: 12.5px; line-height: 1.45;
+  max-width: 300px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+#tooltip b { display: block; }
+
+/* ---------- overview ---------- */
+.hero h1 { font-size: 26px; margin: 0 0 6px; }
+.hero p { max-width: 80ch; color: var(--ink2); }
+.hover-row { fill: transparent; cursor: pointer; }
+.hover-row:hover { fill: var(--wash); }
+.tbl-toggle {
+  margin-top: 10px; padding: 6px 14px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--baseline); background: none; color: var(--ink2); font: inherit; font-size: 13px;
+}
+footer { max-width: 1340px; margin: 0 auto; padding: 6px 20px 40px; color: var(--muted); font-size: 12.5px; }
+footer .licence { margin: 0 0 10px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; color: var(--ink2); font-size: 13px; }
+footer .licence a { color: inherit; }
+
+/* ---------- codes de cartes ---------- */
+.code-chip {
+  display: inline-block; padding: 2px 9px; border-radius: 6px; margin: 2px 4px 2px 0;
+  background: var(--page); border: 1px solid var(--baseline);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12.5px; cursor: help;
+}
+table.notation td:first-child { font-family: ui-monospace, "SF Mono", Menlo, monospace; white-space: nowrap; }
+
+/* ---------- minéraux ---------- */
+.min-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.min-chip {
+  display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px;
+  border-radius: 999px; border: 1px solid var(--baseline); background: none;
+  color: var(--ink); font: inherit; font-size: 13px; cursor: pointer;
+}
+.min-chip:hover { background: var(--wash); }
+.min-chip .sw { width: 12px; height: 12px; border-radius: 4px; border: 1px solid var(--border); }
+.min-chip small { color: var(--muted); }
+.min-chip.on { background: var(--wash); border-color: var(--ink2); }
+.min-chip[disabled] { cursor: default; opacity: .5; }
+.min-chip[disabled]:hover { background: none; }
+.meter i.g { background: var(--prod-autre); }
+.meter i.small { width: 12px; }
+
+/* ---------- panneau latéral des fiches liées (A.2) ---------- */
+#panneau {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 0 18px 20px; overflow-y: auto; max-height: calc(100vh - 96px);
+  position: sticky; top: 76px; align-self: start;
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
+.pan-barre {
+  position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 8px;
+  margin: 0 -18px 14px; padding: 10px 12px 10px 18px;
+  background: var(--surface); border-bottom: 1px solid var(--grid);
+}
+#panneau-type {
+  margin-right: auto; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--muted); font-weight: 600;
+}
+.pan-retour, .pan-fermer {
+  height: 30px; padding: 0 10px; border: 0; border-radius: 8px;
+  background: var(--page); color: var(--ink2); font: inherit; font-size: 13px; cursor: pointer;
+}
+.pan-retour { max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pan-retour:hover, .pan-fermer:hover { color: var(--ink); background: var(--wash); }
+:is(#panneau, .fiche-min) h3 { margin: 0 0 4px; font-size: 20px; display: flex; align-items: center; gap: 10px; }
+:is(#panneau, .fiche-min) .sw-big { width: 22px; height: 22px; flex: none; border-radius: 7px; border: 1px solid var(--border); }
+:is(#panneau, .fiche-min) .formule {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 14px;
+  color: var(--ink2); margin-bottom: 6px; overflow-wrap: anywhere;
+}
+:is(#panneau, .fiche-min) .crumb { font-size: 12.5px; margin: 0 0 12px; }
+:is(#panneau, .fiche-min) table.data { width: 100%; font-size: 13.5px; }
+:is(#panneau, .fiche-min) table.data td { vertical-align: top; }
+:is(#panneau, .fiche-min) table.data td:first-child { color: var(--muted); width: 40%; }
+:is(#panneau, .fiche-min) h4 {
+  margin: 20px 0 8px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--muted); font-weight: 600;
+}
+.pan-texte { font-size: 14px; margin: 12px 0; }
+.pan-note { font-size: 12.5px; color: var(--muted); margin: -4px 0 8px; }
+.pan-suite summary { margin-top: 8px; font-size: 13px; color: var(--ink2); cursor: pointer; }
+.pan-suite .min-chips { margin-top: 8px; }
+.pan-liens { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--grid); }
+.pan-photo { margin-bottom: 12px; }
+.pan-photo .sw-ph { display: none; } /* sans image, la pastille du titre suffit */
+.pan-photo img {
+  width: 100%; height: 190px; display: block; object-fit: cover;
+  border-radius: 10px; border: 1px solid var(--grid);
+}
+.pan-photo .cap { font-size: 10px; color: var(--muted); margin-top: 3px; text-align: right; }
+/* page d'un minéral (#mineral/<id>) : mêmes blocs que le panneau, photo à droite comme les fiches d'argiles */
+.fiche-min h1 { margin: 0 0 4px; font-size: 26px; display: flex; align-items: center; gap: 10px; }
+.fiche-min .sw-big { width: 26px; height: 26px; border-radius: 8px; }
+.fiche-min .pan-photo { float: right; width: 230px; margin: 4px 0 10px 18px; }
+.fiche-min .pan-photo img { height: 155px; }
+.fiche-min table.data { clear: right; }
+@media (max-width: 640px) {
+  .fiche-min .pan-photo { float: none; width: 100%; margin: 10px 0; }
+  .fiche-min .pan-photo img { height: 200px; }
+}
+/* trois colonnes quand la place le permet ; sinon la page cède le menu, puis le panneau la recouvre */
+@media (min-width: 1401px) {
+  .layout.avec-panneau { grid-template-columns: 340px minmax(0, 1fr) 400px; max-width: 1780px; }
+}
+@media (min-width: 1100px) and (max-width: 1400px) {
+  .layout.avec-panneau { grid-template-columns: minmax(0, 1fr) 400px; }
+  .layout.avec-panneau #sidebar { display: none; }
+}
+@media (max-width: 1099px) {
+  #panneau {
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 2500;
+    width: min(440px, 100vw); max-height: none; border-radius: 0;
+    box-shadow: -12px 0 40px rgba(0, 0, 0, 0.25);
+  }
+}
+
+/* ---------- fiches argiles ---------- */
+.struct-legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 13px; color: var(--ink2); margin-top: 8px; }
+.struct-legend .key { display: flex; align-items: center; gap: 6px; }
+.struct-legend .key i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.prop-strip { margin: 18px 0 6px; }
+.prop-strip .lab { font-size: 13px; color: var(--ink2); margin-bottom: 2px; }
+.rock-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+
+/* ---------- classification ---------- */
+.crumb { color: var(--ink2); }
+.crumb span { color: var(--muted); margin: 0 2px; }
+.groupe-bloc {
+  border: 1px solid var(--grid); border-radius: 10px;
+  padding: 14px 16px; margin: 12px 0; background: var(--page);
+}
+.groupe-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 15px; }
+/* classe IV : oxydes rangés par élément */
+.ox-element { border-left: 4px solid var(--c); padding: 2px 0 2px 12px; margin: 14px 0 6px; }
+.ox-element .min-chips { margin-top: 8px; }
+.ox-element .sw-el { width: 12px; height: 12px; border-radius: 4px; background: var(--c); flex: none; }
+.groupe-section {
+  font-size: 15px; font-weight: 700; margin: 22px 0 2px;
+  padding-bottom: 6px; border-bottom: 2px solid var(--accent); color: var(--accent);
+}
+.groupe-section:first-child { margin-top: 6px; }
+/* ---------- fiches oxydes : image + pastille couleur + tag d'origine ---------- */
+.ox-fiche { display: flex; gap: 14px; align-items: flex-start; }
+.ox-fiche .ox-img { width: 134px; flex: none; }
+.ox-fiche .ox-img img,
+.ox-fiche .ox-img .sw-ph { width: 134px; height: 102px; border-radius: 9px; border: 1px solid var(--grid); display: block; object-fit: cover; }
+.ox-fiche .ox-img .cap { font-size: 10px; color: var(--muted); margin-top: 3px; text-align: center; }
+.ox-body { flex: 1; min-width: 0; }
+.origine-tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 999px;
+  border: 1px solid var(--grid); background: var(--page); color: var(--ink2); white-space: nowrap; }
+.origine-tag.pedo { color: #1a7a4a; border-color: rgba(26,122,74,.4); background: rgba(26,122,74,.08); }
+@media (max-width: 560px) {
+  .ox-fiche { flex-direction: column; }
+  .ox-fiche .ox-img, .ox-fiche .ox-img img, .ox-fiche .ox-img .sw-ph { width: 100%; }
+}
+
+/* ---------- critères structuraux (argiles) ---------- */
+.crit-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 0; }
+.crit {
+  display: flex; flex-direction: column; gap: 1px;
+  background: var(--page); border: 1px solid var(--grid); border-radius: 8px;
+  padding: 6px 11px; font-size: 13px; color: var(--ink);
+}
+.crit i {
+  font-style: normal; font-size: 10.5px; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--muted); font-weight: 600;
+}
+
+/* ---------- accueil : grille des parties ---------- */
+.hub-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px; margin-bottom: 18px;
+}
+.hub-card {
+  text-align: left; cursor: pointer; font: inherit; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 20px 22px; transition: border-color .12s, transform .12s;
+}
+.hub-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.hub-card .hub-ic {
+  width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center;
+  justify-content: center; font-size: 26px; margin-bottom: 12px;
+}
+.hub-card h2 { margin: 0 0 6px; font-size: 20px; }
+.hub-card p { margin: 0 0 12px; color: var(--ink2); font-size: 14px; }
+.hub-card .hub-go { color: var(--accent); font-weight: 600; font-size: 14px; }
+.hub-card .hub-etape {
+  margin: 0 0 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--muted);
+}
+.hub-hero { position: relative; overflow: hidden; padding-top: 26px; }
+.hub-bandeau { position: absolute; inset: 0 0 auto 0; height: 6px; display: flex; }
+.hub-bandeau i { flex: 1; }
+.hub-surtitre {
+  margin: 0 0 2px; font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--muted);
+}
+
+/* ---------- visualiseur pH–Eh ---------- */
+.pheh-lab { font-size: 14px; font-weight: 650; fill: var(--ink); }
+.pheh-lab2 { font-size: 11.5px; fill: var(--ink2); }
+#pheh-svg { display: block; min-width: 640px; }
+/* lecture du point : hauteurs fixes. Un texte qui change de longueur au passage d'une limite ne doit pas
+   déplacer la page, sinon le diagramme glisse sous le pointeur, le point change de domaine et tout recommence. */
+#pheh-xy { font-size: 18px; line-height: 1.35; height: 2.7em; white-space: nowrap; }
+#pheh-forme { font-size: 18px; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#pheh-type { visibility: hidden; }
+#pheh-desc { height: 6.4em; overflow-y: auto; }
+#pheh-min { height: 6.4em; overflow-y: auto; }
+/* curseur de concentration (H.3) : largeurs fixes, rien ne change de hauteur pendant le glisser */
+.pheh-conc {
+  display: grid; grid-template-columns: auto minmax(180px, 1fr) 11.5em auto; gap: 6px 14px; align-items: start;
+  margin: 0 0 10px; font-size: 13px; color: var(--ink2);
+}
+.pheh-conc label { font-weight: 600; color: var(--ink); padding-top: 3px; white-space: nowrap; }
+.pheh-conc-piste { position: relative; padding-bottom: 16px; }
+.pheh-conc input[type="range"] { width: 100%; margin: 3px 0 0; accent-color: var(--accent); }
+.pheh-conc-grad { position: absolute; left: 0; right: 0; bottom: 0; height: 14px; font-size: 11px; color: var(--muted); }
+.pheh-conc-grad span { position: absolute; transform: translateX(-50%); white-space: nowrap; line-height: 1; }
+.pheh-conc-grad span:nth-child(1) { left: calc(8px + (100% - 16px) * 0 / 6); }
+.pheh-conc-grad span:nth-child(2) { left: calc(8px + (100% - 16px) * 1 / 6); }
+.pheh-conc-grad span:nth-child(3) { left: calc(8px + (100% - 16px) * 2 / 6); }
+.pheh-conc-grad span:nth-child(4) { left: calc(8px + (100% - 16px) * 3 / 6); }
+.pheh-conc-grad span:nth-child(5) { left: calc(8px + (100% - 16px) * 4 / 6); }
+.pheh-conc-grad span:nth-child(6) { left: calc(8px + (100% - 16px) * 5 / 6); }
+.pheh-conc-grad span:nth-child(7) { left: calc(8px + (100% - 16px) * 6 / 6); }
+.pheh-conc-grad sup { font-size: 0.75em; }
+#pheh-conc-val { display: grid; line-height: 1.3; font-variant-numeric: tabular-nums; white-space: nowrap; }
+#pheh-conc-mol { color: var(--ink); font-weight: 650; }
+#pheh-conc-masse { font-size: 12px; color: var(--muted); }
+#pheh-conc-defaut { white-space: nowrap; }
+#pheh-conc-defaut:disabled { opacity: 0.45; cursor: default; }
+@media (max-width: 640px) {
+  .pheh-conc { grid-template-columns: 1fr auto; }
+  .pheh-conc label { grid-column: 1 / -1; }
+  .pheh-conc-piste { grid-column: 1 / -1; }
+}
+
+@media (max-width: 900px) {
+  #sidebar { max-height: 240px; position: static; }
+}
+
+/* surbrillance d'arrivée depuis « Sa fiche dans la classification » */
+.min-chip.flash, .rock-item.flash, .groupe-bloc.flash { animation: flash-min 2.4s ease; }
+@keyframes flash-min {
+  0%, 55% { box-shadow: 0 0 0 3px var(--accent); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+/* photo d'en-tête des fiches d'argiles : flotte à droite, le texte s'écoule à sa gauche */
+.rock-head .arg-photo { width: 230px; max-width: 100%; float: right; margin: 4px 0 10px 18px; }
+.rock-head .arg-photo img, .rock-head .arg-photo .sw-ph {
+  width: 230px; max-width: 100%; height: 155px; border-radius: 11px; border: 1px solid var(--grid);
+  display: block; object-fit: cover; }
+.rock-head .arg-photo .cap { font-size: 10px; color: var(--muted); margin-top: 4px; text-align: center; }
+.rock-head .meta-row { clear: right; }
+@media (max-width: 640px) {
+  .rock-head .arg-photo { float: none; width: 100%; margin: 10px 0; }
+  .rock-head .arg-photo img, .rock-head .arg-photo .sw-ph { width: 100%; height: 200px; }
+}
+
+/* ---------- structures cristallines 3D (structures3d.js, chantier A.3) ---------- */
+.s3d { margin: 6px 0 4px; position: relative; }
+/* compteur d'eau des argiles (G.4) : en haut à droite de la vue, sur le fond blanc de la 3D (mêmes couleurs dans les deux thèmes) */
+.s3d-compteur { position: absolute; right: 10px; z-index: 1; max-width: calc(100% - 20px); pointer-events: none;
+  padding: 6px 9px; border-radius: 7px; background: rgba(255, 255, 255, .9); border: 1px solid rgba(40, 110, 190, .35);
+  color: #1d2a36; font-size: 12.5px; line-height: 1.35; text-align: right; font-variant-numeric: tabular-nums; }
+.s3d-compteur b { font-size: 15px; color: #1f5f9e; }
+.s3d-compteur span { display: block; font-size: 11.5px; color: #4d5b66; }
+.s3d-vue {
+  display: block; width: 100%; height: 340px; background: #fff;
+  border: 1px solid var(--border); border-radius: 10px; cursor: grab; touch-action: none;
+}
+.s3d-vue:active { cursor: grabbing; }
+.s3d-vue.s3d-vue.is-tall { height: 75vh; }
+.fiche-min .s3d-vue { height: 420px; }
+.s3d-attente {
+  height: 120px; display: grid; place-items: center; font-size: 13px; color: var(--muted);
+  background: #fff; border: 1px solid var(--border); border-radius: 10px;
+}
+.s3d-outils { display: flex; flex-wrap: wrap; gap: 6px 10px; margin: 8px 0 6px; }
+.s3d-seg { display: inline-flex; border: 1px solid var(--baseline); border-radius: 7px; overflow: hidden; }
+.s3d-seg button {
+  border: 0; background: var(--surface); color: var(--ink2); font: inherit; font-size: 12.5px;
+  padding: 4px 9px; cursor: pointer;
+}
+.s3d-seg button + button { border-left: 1px solid var(--baseline); }
+.s3d-seg button:hover { background: var(--wash); color: var(--ink); }
+.s3d-seg button[aria-pressed="true"] { background: var(--ink); color: var(--page); }
+.s3d-legende { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; }
+.s3d-el { display: inline-flex; align-items: center; gap: 5px; }
+.s3d-el i { width: 11px; height: 11px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, .3); }
+.s3d-el small { color: var(--muted); }
+.s3d-mixte { color: var(--muted); }
+.s3d-info { font-size: 12px; color: var(--muted); margin: 6px 0 0; line-height: 1.5; }
+.s3d-tiret { width: 18px !important; height: 0 !important; border-radius: 0 !important; border: 0 !important;
+  border-top: 2px dashed rgb(20, 110, 200) !important; background: none !important; }
+
+/* ---------- page minéral rangée en panneaux ---------- */
+.fiche-min .min-intro { margin: 4px 0 16px; }
+.min-panneaux {
+  clear: right; display: grid; gap: 12px; margin-bottom: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(min(290px, 100%), 1fr));
+}
+.min-panneau {
+  background: var(--page); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 16px; min-width: 0;
+}
+.fiche-min > .min-panneau { margin-top: 12px; }
+.fiche-min .min-panneau h4 { margin-top: 0; }
+.min-panneau > p { margin: 0; font-size: 14px; }
+.fiche-min .min-panneau table.data td:first-child { width: 42%; }
+.min-sources { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--grid); clear: both; }
+.min-sources ul { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--ink2); line-height: 1.55; }
+.min-sources li + li { margin-top: 4px; }
+
+/* ---------- bloc « Formation » en tête de fiche roche (C.1) : une carte pleine largeur par panneau ---------- */
+.form-schema { container-type: inline-size; }
+/* une ligne d'étapes quand la place le permet, sinon 2 par ligne (jamais d'étape orpheline), 1 sur téléphone */
+.form-etapes {
+  list-style: none; margin: 0; padding: 0; display: grid; gap: 10px;
+  grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr));
+}
+@container (max-width: 620px) { .form-etapes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@container (max-width: 300px) { .form-etapes { grid-template-columns: minmax(0, 1fr); } }
+.form-etapes li { display: grid; gap: 6px; align-content: start; position: relative; }
+.form-case {
+  aspect-ratio: 4 / 3; background: var(--surface); border: 1px dashed var(--border); border-radius: 8px;
+  display: grid; place-items: center; overflow: hidden;
+}
+.form-case:not(:empty) { border-style: solid; }
+.form-case > svg, .form-case > img { width: 100%; height: 100%; }
+.form-etapes span { font-size: 13px; line-height: 1.35; color: var(--ink2); }
+.form-etapes span b { color: var(--muted); font-weight: 700; margin-right: 6px; font-variant-numeric: tabular-nums; }
+.form-prevu { margin: 0 0 8px !important; font-size: 13.5px !important; color: var(--ink2); }
+.form-attente { margin: 8px 0 0 !important; font-size: 13px !important; color: var(--muted); font-style: italic; }
+.form-min { margin: 0 0 8px !important; font-size: 13.5px !important; color: var(--ink2); }
+.form-structure .s3d-vue { height: 300px; }
+/* texture de la roche (C.3) : schéma de surface polie + ordre de cristallisation */
+.form-texture { container-type: inline-size; }
+.tex { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(220px, 1fr); gap: 18px 28px; align-items: start; }
+.tex-fig { margin: 0; }
+.tex-svg { display: block; width: 100%; height: auto; }
+.tex-fig figcaption { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.tex-ab { font: 700 9.5px/1 system-ui, -apple-system, sans-serif; fill: #262a27; }
+.tex-ech { font: 600 9px/1 system-ui, -apple-system, sans-serif; fill: #262a27; }
+.tex-cote h3 { margin: 0 0 10px; font-size: 14px; }
+.tex-ordre, .tex-ordre ul { list-style: none; margin: 0; padding: 0; }
+.tex-temps { display: grid; grid-template-columns: 22px 1fr; gap: 10px; padding-bottom: 12px; position: relative; }
+.tex-temps:not(:last-child)::before { content: ""; position: absolute; left: 10.5px; top: 24px; bottom: 2px; border-left: 1px solid var(--baseline); }
+.tex-num { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--baseline); display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--ink2); background: var(--surface); }
+.tex-temps p { margin: 2px 0 6px !important; font-size: 13px !important; font-weight: 600; color: var(--ink2); }
+.tex-ordre ul li { display: grid; grid-template-columns: 14px 24px 1fr; gap: 7px; align-items: baseline; margin-bottom: 5px; }
+.tex-sw { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0, 0, 0, .45); align-self: center; }
+.tex-abr { font: 700 12px/1 ui-monospace, Menlo, monospace; color: var(--muted); }
+.tex-nom { font-size: 13.5px; line-height: 1.3; }
+.tex-nom small { white-space: nowrap; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tex-nom span { display: block; font-size: 12.5px; color: var(--muted); }
+@container (max-width: 820px) {
+  .tex { grid-template-columns: 1fr; }
+  .tex-ordre { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 4px 22px; }
+  .tex-temps:not(:last-child)::before { display: none; }
+}
+.tex-mode { margin: 14px 0 0 !important; font-size: 13.5px !important; color: var(--ink2); }
+/* survol des schémas (06/10/2026) : nom du constituant à côté de la souris ; les traits et étiquettes laissent passer le pointeur */
+.tex-svg line, .tex-svg polyline, .tex-svg [fill="none"], .tex-svg .tex-etq { pointer-events: none; }
+.tex-bulle { position: fixed; z-index: 1000; max-width: 280px; padding: 7px 10px; border-radius: 6px; pointer-events: none;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--baseline); box-shadow: 0 4px 14px rgba(0, 0, 0, .18);
+  font-size: 12.5px; line-height: 1.35; }
+.tex-bulle b { display: flex; align-items: baseline; gap: 6px; font-size: 13.5px; }
+.tex-bulle b i { flex: none; width: 10px; height: 10px; border-radius: 2px; border: 1px solid rgba(0, 0, 0, .45); align-self: center; }
+.tex-bulle small { font-weight: 400; color: var(--muted); white-space: nowrap; }
+.tex-bulle span { display: block; color: var(--ink2); }
+.tex-bulle em { display: block; margin-top: 3px; font-style: normal; font-size: 12px; color: var(--muted); }
+.tex-bulle .tex-bulle-clic { color: var(--accent); }
+.tex-svg [data-min] { cursor: pointer; }
+/* variétés et faciès (C.8) : un schéma par variété */
+.tex-vars { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px 20px; }
+.tex-var { margin: 0; display: grid; gap: 6px; align-content: start; }
+.tex-var-fig { aspect-ratio: 444 / 276; }
+.tex-var-fig:not([data-tx]) { background: var(--grid); border-radius: 6px; }
+.tex-var-vide { margin: 0 !important; height: 100%; display: grid; place-items: center; font-size: 12.5px !important; color: var(--muted); }
+.tex-var figcaption { font-size: 13px; line-height: 1.35; }
+.tex-var figcaption b { display: block; font-size: 14px; }
+.tex-var figcaption span { display: block; color: var(--ink2); }
+.tex-var figcaption .tex-ecart { color: var(--muted); margin-top: 2px; }
+.tex-var-boite { position: relative; }
+.tex-var.tex-var-grand { grid-column: 1 / -1; grid-template-columns: minmax(0, 860px) minmax(200px, 1fr); column-gap: 24px; align-items: start; }
+@media (max-width: 760px) { .tex-var.tex-var-grand { grid-template-columns: 1fr; } }
+.tex-var-agr { position: absolute; right: 8px; bottom: 8px; width: 30px; height: 30px; display: grid; place-items: center; padding: 0;
+  font-size: 17px; line-height: 1; color: #262a27; background: rgba(255, 255, 255, .62); border: 1px solid rgba(38, 42, 39, .28);
+  border-radius: 6px; cursor: pointer; opacity: .75; transition: opacity .15s, background .15s; }
+.tex-var-agr:hover, .tex-var-agr:focus-visible { opacity: 1; background: rgba(255, 255, 255, .92); }
+.tex-compo { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 3px 12px; font-size: 12.5px; }
+.tex-compo li { white-space: nowrap; color: var(--ink2); }
+.tex-compo b { font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink); }
+.tex-compo-meme { margin: 6px 0 0 !important; font-size: 12.5px !important; color: var(--muted); }
+
+/* ---------- schémas de formation (C.2) et diagrammes de conditions (C.4) ---------- */
+.fs-svg { display: block; }
+.fs-lab { font: 600 10px/1 system-ui, -apple-system, sans-serif; fill: #1f2724; paint-order: stroke; stroke: rgba(255, 255, 255, .85); stroke-width: 2.6px; stroke-linejoin: round; }
+.fs-petit { font-size: 9.4px; font-weight: 600; }
+.fs-clair { fill: #fff; stroke: rgba(0, 0, 0, .55); }
+.form-conditions { container-type: inline-size; }
+.fc-svg { display: block; width: 100%; height: auto; }
+.fc { --fc-chemin: #c0392b; }
+.fc-cadre { fill: none; stroke: var(--baseline); stroke-width: 1; }
+.fc-grille { stroke: var(--grid); stroke-width: 1; }
+.fc-grille-fort { stroke: var(--baseline); stroke-width: 1; }
+.fc-tick { font-size: 10.5px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.fc-axe { font-size: 11.5px; fill: var(--ink2); font-weight: 500; }
+.fc-lab { font-size: 10.5px; fill: var(--ink2); paint-order: stroke; stroke: var(--page); stroke-width: 3px; stroke-linejoin: round; }
+.fc-lab-champ { font-weight: 600; fill: var(--ink2); }
+.fc-lab-courbe { font-size: 9.5px; fill: var(--muted); font-style: italic; }
+.fc-lab-bande { font-size: 9.5px; fill: #b0561c; font-weight: 600; }
+.fc-courbe { fill: none; stroke-width: 1.6; }
+.fc-c-magma { stroke: #d0612f; }
+.fc-c-min { stroke: var(--ink2); stroke-dasharray: 5 3; stroke-width: 1.2; }
+.fc-c-frag { stroke: var(--muted); stroke-dasharray: 2 3; stroke-width: 1.2; }
+.fc-fondu { fill: rgba(224, 96, 43, .10); }
+.fc-bande { fill: rgba(240, 150, 60, .35); stroke: #d0612f; stroke-width: 1; }
+.fc-chemin { fill: none; stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; }
+.fc-num { stroke: var(--page); stroke-width: 2; }
+.fc-num-t { font: 700 10px/1 system-ui, sans-serif; fill: #fff; }
+.fc-etapes { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
+.fc-etapes li { display: grid; grid-template-columns: 20px 1fr; gap: 8px; align-items: start; font-size: 13px; line-height: 1.4; color: var(--ink2); }
+.fc-etapes b { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: #c0392b; color: #fff; font-size: 10.5px; margin-top: 1px; }
+.fc-note { margin: 8px 0 0 !important; font-size: 13px !important; color: var(--ink2); }
+@media (prefers-color-scheme: dark) { .fc { --fc-chemin: #e8604c; } .fc-etapes b { background: #e8604c; } }
+.fc-c-eau { stroke: #3f8fd2; stroke-width: 2; }
+.fc-c-quartz { stroke: var(--ink2); stroke-width: 1.6; }
+.fc-eau { fill: rgba(63, 143, 210, .12); }
+.fc-transition { fill: rgba(215, 170, 50, .16); }
+.fc-transition2 { fill: rgba(150, 120, 90, .14); }
+.fc-sursat { fill: rgba(224, 96, 43, .08); }
+.fc-photique { fill: rgba(242, 182, 50, .14); }
+.fc-ccd { fill: rgba(63, 143, 210, .18); }
+.fc-bande-depot { fill: rgba(192, 57, 43, .12); stroke: rgba(192, 57, 43, .5); stroke-width: 1; }
+.fc-seuil0 { fill: rgba(150, 120, 90, .14); }
+.fc-seuil1 { fill: rgba(63, 143, 210, .10); }
+.fc-froid { fill: rgba(63, 143, 210, .10); }
+.fc-tempere { fill: rgba(70, 165, 95, .08); }
+.fc-chaud { fill: rgba(242, 182, 50, .10); }
+.fc-tropical { fill: rgba(224, 96, 43, .10); }
+.fc-domaine { fill: rgba(192, 57, 43, .16); stroke: #c0392b; stroke-width: 1.4; stroke-dasharray: 5 3; }
+.fc-ville { fill: var(--ink2); stroke: var(--page); stroke-width: 1.5; }
+.fc-classe1 { fill: rgba(150, 150, 150, .06); }
+.fc-classe2 { fill: rgba(150, 150, 150, .13); }
+.fc-agent { fill: rgba(120, 120, 120, .22); }
+.fc-agent-actif { fill: rgba(192, 57, 43, .55); }
+.fc-lab-agent { font-size: 10px; fill: var(--ink2); }
+.fc-lab-agent-actif { font-size: 10px; fill: var(--ink); font-weight: 700; }
+.fc-etapes li.fc-sans b { background: transparent !important; border: 1.5px solid var(--baseline); width: 8px; height: 8px; margin: 5px 0 0 5px; }
+@media (prefers-color-scheme: dark) { .fc-domaine { stroke: #e8604c; } }
+.chip-3d { margin-left: 6px; font: 700 9.5px/1 system-ui, sans-serif; padding: 2px 4px; border-radius: 4px; border: 1px solid var(--baseline); color: var(--ink2); vertical-align: 1px; }
+/* téléphone : le diagramme garde une taille lisible et défile horizontalement */
+@container (max-width: 560px) { .fc-svg { width: 560px; max-width: none; } }
+.form-conditions .fc { overflow-x: auto; }
+
+/* ============ Étapes de formation animées (C.2, 17/09/2026) — formation-anim.js ============ */
+.fa { display: grid; gap: 12px; margin-top: 8px; container-type: inline-size; }
+.fa-barres { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 8px; }
+.fa-barre { all: unset; box-sizing: border-box; cursor: pointer; display: grid; gap: 7px; min-width: 0; padding: 2px 0; }
+.fa-barre:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+.fa-jauge { display: block; height: 6px; border-radius: 3px; background: var(--grid); overflow: hidden; }
+.fa-jauge i { display: block; height: 100%; width: 0; background: #c0392b; border-radius: 3px; }
+.fa-court { font-size: 12px; line-height: 1.2; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fa-court b { margin-right: 5px; font-variant-numeric: tabular-nums; }
+.fa-barre.on .fa-court { color: var(--ink); font-weight: 600; }
+.fa-barre:hover .fa-court { color: var(--ink2); }
+.fa-scene { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background: #eef4f6; aspect-ratio: 2 / 1; }
+.fa-scene svg { display: block; width: 100%; height: 100%; }
+.fa-legende { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; min-height: 44px; }
+.fa-num { width: 28px; height: 28px; border-radius: 50%; background: #c0392b; color: #fff; display: grid; place-items: center; font: 700 13px/1 system-ui, sans-serif; }
+.fa-titre { display: block; font-size: 15px; line-height: 1.3; color: var(--ink); }
+.fa-quand { display: block; font-size: 13px; line-height: 1.35; color: var(--ink2); margin-top: 2px; }
+.fa-lecture { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--ink); display: grid; place-items: center; cursor: pointer; padding: 0; }
+.fa-lecture:hover { border-color: var(--ink2); }
+.fa-lecture svg { width: 14px; height: 14px; fill: currentColor; }
+.fa-lab { font: 600 8.5px/1 system-ui, -apple-system, sans-serif; fill: #1f2724; paint-order: stroke; stroke: rgba(255, 255, 255, .88); stroke-width: 2.6px; stroke-linejoin: round; }
+.fa-petit { font-size: 7.5px; font-weight: 500; }
+.fa-clair { fill: #ffffff; stroke: rgba(20, 30, 35, .5); }
+.fa-leg { font: 500 7.5px/1 system-ui, -apple-system, sans-serif; fill: #1f2724; }
+@container (max-width: 520px) { .fa-court { display: none; } .fa-titre { font-size: 14px; } }
+@media (prefers-color-scheme: dark) { .fa-jauge i, .fa-num { background: #e8604c; } }
+/* diagramme de conditions suivi par l'animation : étape en cours en couleur, curseur sur le chemin */
+.fc-curseur { fill: #1c5fa8; stroke: #ffffff; stroke-width: 2.2; }
+@media (prefers-color-scheme: dark) { .fc-curseur { fill: #6fb2f0; stroke: #12130f; } }
+.fc-suivi .fc-pastille { opacity: .38; }
+.fc-suivi .fc-pastille.on { opacity: 1; }
+.fc-suivi .fc-etapes li[data-n] { opacity: .55; }
+.fc-suivi .fc-etapes li.on { opacity: 1; color: var(--ink); }
+/* barres de cristallisation (« Pour aller plus loin » des roches magmatiques) */
+.form-sous { margin: 18px 0 8px; font-size: 15px; font-weight: 600; color: var(--ink); }
+.fc-crist { container-type: inline-size; }
+.fc-crist .fc-svg { max-width: none; }
+
+/* ============ Forme du cristal (F.3) — cristal.js ============ */
+/* Le dessin est sur fond blanc dans les deux thèmes, comme les structures 3D. */
+.cx { display: grid; gap: 12px; }
+.cx-outils { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; }
+.cx-onglets, .cx-bascules { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+.cx-bascule::before { content: "○ "; }
+.cx-bascule.on::before { content: "● "; }
+.cx-dessin { background: #ffffff; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.cx-svg { display: block; width: 100%; height: auto; max-width: 520px; margin: 0 auto; }
+.cx-face { stroke: #26241f; stroke-width: 1.1; stroke-linejoin: round; }
+.cx-macle { stroke-width: 1.1; }
+.cx-lab { font: italic 600 13.5px/1 Georgia, "Times New Roman", serif; fill: #14130f; paint-order: stroke; stroke: rgba(255, 255, 255, .85); stroke-width: 3.2px; stroke-linejoin: round; }
+/* traces de clivage : cachées tant que la bascule n'est pas activée */
+.cx-cliv, .cx-axe, .cx-axe-lab { display: none; }
+.cx.cx-clivages .cx-cliv { display: inline; }
+.cx.cx-axes .cx-axe, .cx.cx-axes .cx-axe-lab { display: inline; }
+.cx-cliv { stroke-width: 1.1; stroke-dasharray: 5 3.5; fill: none; }
+.cx-cliv0 { stroke: #c0392b; }
+.cx-cliv1 { stroke: #1c5fa8; }
+.cx-cliv2 { stroke: #2f7d4b; }
+.cx-strie { stroke: rgba(30, 28, 24, .30); stroke-width: .7; }
+.cx-axe { stroke: #8a8378; stroke-width: .9; stroke-dasharray: 6 4; }
+.cx-axe-lab { font: italic 11px/1 Georgia, serif; fill: #6f6a61; }
+.cx-pastille { display: inline-block; width: 16px; height: 0; border-top: 2px dashed; margin-right: 7px; vertical-align: middle; }
+.cx-pastille.cx-cliv0 { border-color: #c0392b; }
+.cx-pastille.cx-cliv1 { border-color: #1c5fa8; }
+.cx-pastille.cx-cliv2 { border-color: #2f7d4b; }
+/* indices de Miller */
+.cx-barre { text-decoration: overline; }
+.cx-hkl { font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* légende des formes */
+.cx-legende { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 3px 16px; font-size: 13px; }
+.cx-legende li { display: grid; grid-template-columns: 18px auto 1fr; gap: 8px; align-items: baseline; }
+.cx-legende b { font: italic 600 14px/1 Georgia, serif; color: var(--ink); }
+.cx-legende span { color: var(--ink2); }
+.cx-absente { opacity: .45; }
+.cx-note { margin: 0; font-size: 14px; color: var(--ink); }
+.cx-compte { margin: 0; font-size: 12.5px; color: var(--muted); }
+.cx-fiche { width: 100%; font-size: 13.5px; }
+.cx-liste { list-style: none; margin: 0; padding: 0; }
+@media (max-width: 560px) { .cx-svg { max-width: none; } }
+
+/* ---- gabarit de fiche minéral (F.3) ---- */
+.min-forme .cx { margin-top: 10px; }
+.min-pourquoi { margin: 0; font-size: 14.5px; line-height: 1.6; max-width: 78ch; }
+.fiche-min .min-pourquoi { font-size: 14px; }
+.min-formation .mf-onglets { margin: 10px 0 14px; }
+.mf-texte { margin: 0 0 14px; font-size: 14.5px; line-height: 1.6; max-width: 78ch; }
+.min-formation .fc { container-type: inline-size; }
+.min-forme h4, .min-formation h4 { margin: 18px 0 8px; font-size: 15px; }
+.min-sources.card ul { margin: 0; padding-left: 18px; }
+.min-sources.card li { font-size: 12.5px; color: var(--ink2); margin-bottom: 4px; }
+/* dans le panneau latéral, le schéma de cristal reste lisible en colonne étroite */
+#panneau .cx-svg { max-width: none; }
+#panneau .cx-legende { grid-template-columns: 1fr; }
+
+/* ---- « Même phénomène, autres roches » : graphique comparatif en bas de fiche roche (pourquoi.js, C.7, 25/09/2026) ---- */
+.pourquoi .pq { display: grid; gap: 10px; margin-top: 8px; }
+.pq-scene { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background: #f3f1ea; }
+.pq-scene svg { display: block; width: 100%; height: 100%; }
+.pq-legende { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+.pq-sym { color: var(--ink2); }
+.pq-info { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 12px; align-items: center; min-height: 44px; }
+.pq-pastille { width: 12px; height: 12px; border-radius: 50%; background: #c0392b; }
+.pq-pastille.choix { background: #2b6ea3; }
+.pq-texte { margin: 0; font-size: 14px; line-height: 1.5; color: var(--ink); }
+.pq-lien { font-size: 13.5px; white-space: nowrap; color: var(--accent); text-decoration: none; }
+.pq-lien:hover { text-decoration: underline; }
+@media (max-width: 560px) { .pq-info { grid-template-columns: auto minmax(0, 1fr) auto; } .pq-lien { grid-column: 2; } }
+@media (prefers-color-scheme: dark) { .pq-pastille { background: #e8604c; } .pq-pastille.choix { background: #6aa6d8; } }
+/* les roches dans le graphique : gris clair tant que le liquide ne les a pas atteintes, gris ensuite, rouge pour la roche
+   de la fiche, bleu pour la roche choisie d'un clic */
+.pq-r { cursor: pointer; outline: none; }
+.pq-r .pq-g { fill: #c6c9c3; stroke: #ffffff; stroke-width: .8; }
+.pq-r .pq-t { stroke: #c6c9c3; }
+.pq-r .pq-chute { stroke-dasharray: 2.2 1.8; }
+.pq-r.variante .pq-chute { stroke-dasharray: .4 2.2; stroke-width: 1.3; }
+.pq-r.variante .pq-g { fill-opacity: .75; }
+.pq-r.passe .pq-g { fill: #858b86; }
+.pq-r.passe .pq-t { stroke: #858b86; }
+.pq-r.page .pq-g { fill: #e3a79e; }
+.pq-r.page .pq-t { stroke: #e3a79e; }
+.pq-r.page.passe .pq-g { fill: #c0392b; }
+.pq-r.page.passe .pq-t { stroke: #c0392b; }
+.pq-r.choix .pq-g { fill: #2b6ea3; }
+.pq-r.choix .pq-t { stroke: #2b6ea3; }
+.pq-r.survol .pq-g { stroke: #27302d; stroke-width: 1.1; }
+.pq-r .pq-zone { fill: transparent; }
+.pq-r:focus-visible .pq-zone { fill: rgba(43, 110, 163, .12); stroke: #2b6ea3; stroke-width: .8; }
+.pq-nom { pointer-events: none; fill: #5f6560; }
+.pq-nom-fort { fill: #1f2724; font-weight: 600; }
+.pq-nom-page { fill: #a32e22; }
+.pq-nom-choix { fill: #235b88; }
+.pq-dom { fill: #8f897d; }
+.pq-cumul { pointer-events: none; }
+/* variantes du graphique « Même phénomène » (pourquoi-phenomenes.js) : contour en pointillé */
+.pq-r.variante .pq-g { stroke: #7d776c; stroke-width: 1; stroke-dasharray: 1.6 1.2; }
+.pq-mobile { pointer-events: none; }
+/* « Pour aller plus loin » : graphiques complémentaires (plus-loin.js) */
+.pl-silice { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background: #f3f1ea; margin: 6px 0 4px; }
+.pl-silice svg { display: block; width: 100%; height: auto; }
+.pl-note { margin: 0 0 14px; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+/* altération : réactions et vitesse selon la pluie (alteration-bilan.js) */
+.rx { padding-left: 18px; }
+.rx li { margin: 6px 0; }
+.rx-eq { font-size: 14px; letter-spacing: .01em; }
+.pluie { margin-top: 16px; }
+.pluie-ctrl { display: grid; gap: 8px; margin: 8px 0; }
+.pluie-ctrl label { display: grid; grid-template-columns: 170px minmax(0, 1fr) 150px; gap: 10px; align-items: center; font-size: 14px; }
+.pluie-ctrl input { width: 100%; }
+.pluie-eq { font-size: 14px; line-height: 1.6; }
+@media (max-width: 560px) { .pluie-ctrl label { grid-template-columns: 1fr; gap: 2px; } }
+
+/* ── Espacement basal d(001) des argiles en 3D (G.5) ── */
+.eb-somme { font-size: 14px; margin: 6px 0 10px; }
+#eb-3d .s3d-vue { height: 440px; }
+
+/* ---------- partie Amorphes (G.10) ---------- */
+.amo-carte { scroll-margin-top: 104px; }
+.card .sub.amo-sans { margin: 8px 0 4px; font-size: 13px; }
+.amo-carte .groupe-head .sub { margin: 0; }
+table.amo-grille, table.amo-gels { min-width: 560px; }
+table.amo-grille td, table.amo-gels td { vertical-align: top; }
+table.amo-grille tr.amo-ref td { color: var(--muted); }
+table.amo-gels .min-chip { white-space: nowrap; }
+
+/* ---------- les nombres en images (nombres.js, 01/10/2026) ---------- */
+.nb-choix { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 2px 0 14px; font-size: 13px; color: var(--ink2); clear: right; }
+.nb { margin: 2px 0 6px; min-width: 0; }
+tr.nb-ligne > td { padding-top: 0 !important; }
+.nb-svg { display: block; max-width: 100%; height: auto; overflow: visible; }
+.nb-axe { stroke: var(--ink2); stroke-width: 1.3; }
+.nb-num { font-size: 10.5px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.nb-rep { font-size: 11px; fill: var(--ink2); }
+.nb-obj { font-size: 11px; fill: var(--muted); font-style: italic; }
+.nb-tige { stroke: var(--baseline); stroke-width: 1; }
+.nb-tige-obj { stroke-dasharray: 2 2; }
+.nb-bout { font-size: 10.5px; fill: var(--muted); }
+.nb-curseur { fill: #e24b4a; }
+.nb-lui { font-size: 12px; font-weight: 600; fill: #c03b3a; }
+.nb-barre { fill: var(--baseline); }
+.nb-barre-lui { fill: #e24b4a; }
+.nb-note { margin: 4px 0 0; font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+.nb-titre { margin: 0 0 4px; font-size: 12.5px; color: var(--ink2); }
+.nb-carres { display: flex; flex-wrap: wrap; gap: 3px; max-width: calc(10 * 21px); }
+.nb-carre { position: relative; width: 18px; height: 18px; border-radius: 3px; background: var(--grid); overflow: hidden; display: inline-block; }
+.nb-carre b { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); }
+.nb-carre.nb-vert b { background: var(--prod-autre); }
+.nb-pastilles { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.nb-pas { font-size: 12.5px; padding: 3px 9px; border-radius: 6px; background: var(--grid); color: var(--ink2); }
+.nb-ok { background: rgba(27, 175, 122, .16); color: #11734f; }
+.nb-non { background: rgba(227, 73, 72, .14); color: #a83231; }
+.nb-lui-p { background: #e24b4a; color: #fff; font-weight: 600; }
+.nb-fleche { color: var(--muted); font-size: 12px; }
+.nb-litres { display: grid; gap: 3px; max-width: 460px; }
+.nb-litre { display: grid; grid-template-columns: 74px 1fr 62px; gap: 8px; align-items: center; font-size: 12.5px; color: var(--ink2); }
+.nb-litre i { height: 10px; border-radius: 3px; background: var(--grid); overflow: hidden; display: block; }
+.nb-litre b { display: block; height: 100%; background: var(--baseline); }
+.nb-litre > span:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+.nb-lui-l { color: #c03b3a; font-weight: 600; }
+.nb-lui-l b { background: #e24b4a; }
+@media (prefers-color-scheme: dark) {
+  .nb-lui { fill: #f08a89; }
+  .nb-ok { color: #5fd1a4; }
+  .nb-non { color: #f08a89; }
+  .nb-lui-l { color: #f08a89; }
+}
+/* carte « Structure » des minéraux : atomes et forme du cristal dans une seule vue (01/10/2026) */
+.s3d-seg button:disabled { opacity: .45; cursor: default; background: var(--surface); color: var(--muted); }
+.ms-manque { font-size: 12px !important; margin: 4px 0 0 !important; }
+.min-structure .ms-cristal > .s3d-outils { margin-top: 0; }
+/* forme du cristal orientable à la souris (01/10/2026) */
+.cx-dessin { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+.cx-dessin:active { cursor: grabbing; }
+/* fiche minéral : propriétés et altération sur toute la largeur, une case par nombre (01/10/2026) */
+.fiche-min .min-large { margin-bottom: 12px; }
+.mesures { display: grid; gap: 14px 28px; grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); }
+.mesure { min-width: 0; }
+.mesure-tete { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  border-bottom: 1px solid var(--grid); padding-bottom: 5px; margin-bottom: 8px; }
+.mesure-tete span { font-size: 13px; color: var(--ink2); }
+.mesure-tete b { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.mesure-tete b small { font-size: 12.5px; font-weight: 400; color: var(--muted); }
+.mesure-vide .mesure-tete b { font-size: 13px; font-weight: 400; color: var(--muted); }
+.mesure-texte { margin: 0; font-size: 14px; }
+.mesure-ligne { display: grid; grid-template-columns: 150px 1fr; gap: 12px; margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--grid); font-size: 14px; }
+.mesure-ligne > span { color: var(--ink2); font-size: 13px; }
+.mesure-ligne p { margin: 0; }
+.mesure-ligne small { color: var(--muted); }
+@media (max-width: 560px) { .mesure-ligne { grid-template-columns: 1fr; gap: 2px; } }
+/* carte « Identité » en images (identite.js, 01/10/2026) et cadres ajustés au texte */
+.fiche-min .min-panneau { padding: 12px 16px; }
+.fiche-min .min-panneau h4 { margin-bottom: 8px; }
+.min-court > p { font-size: 14px; }
+.id-grille { display: grid; gap: 14px 28px; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); }
+.id-ligne { min-width: 0; }
+.id-tete { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  border-bottom: 1px solid var(--grid); padding-bottom: 5px; margin-bottom: 8px; }
+.id-tete span { font-size: 13px; color: var(--ink2); }
+.id-tete b { font-size: 14px; font-weight: 600; text-align: right; }
+.id-systemes { display: flex; flex-wrap: wrap; gap: 3px; }
+.id-sys { display: flex; flex-direction: column; align-items: center; gap: 1px; width: 54px; padding: 4px 1px 3px; border-radius: 7px; text-align: center; line-height: 1.15; hyphens: manual;
+  border: 1px solid transparent; color: var(--muted); font-size: 10.5px; }
+.id-sys svg line { stroke: var(--baseline); stroke-width: 1.3; stroke-linecap: round; }
+.id-sys.on { border-color: #e24b4a; color: var(--ink); font-weight: 600; background: rgba(226, 75, 74, .08); }
+.id-sys.on svg line { stroke: #e24b4a; stroke-width: 1.8; }
+.id-note { margin: 5px 0 0; font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+.id-note b { color: var(--ink2); }
+.id-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.id-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 2px 8px; border-radius: 6px;
+  border: 1px solid var(--grid); color: var(--muted); text-decoration: none; }
+.id-chip.on { border-color: #e24b4a; color: var(--ink); background: rgba(226, 75, 74, .08); font-weight: 600; }
+.id-strunz .id-chip b { font-weight: 600; }
+a.id-chip:hover { border-color: var(--ink2); }
+.id-ecl { width: 12px; height: 12px; border-radius: 50%; display: inline-block; flex: none; border: 1px solid rgba(0, 0, 0, .25); }
+.id-ecl-metallique { background: radial-gradient(circle at 35% 30%, #fff 0 12%, #c9ccd0 22%, #5d6268 70%, #2c2f33); }
+.id-ecl-submetallique { background: radial-gradient(circle at 35% 30%, #e6e6e6 0 10%, #8d8f91 35%, #3d3e40); }
+.id-ecl-adamantin { background: radial-gradient(circle at 32% 28%, #fff 0 18%, #dff3ff 26%, #9fc6dc 55%, #f7f7ff 75%, #8aa7bd); }
+.id-ecl-vitreux { background: radial-gradient(circle at 35% 30%, #fff 0 14%, #cfe6e9 28%, #9fc1c7 80%); }
+.id-ecl-resineux { background: radial-gradient(circle at 35% 30%, #fff3d6 0 12%, #d99a3c 40%, #8a531a); }
+.id-ecl-gras { background: radial-gradient(circle at 40% 35%, #f6f0d8 0 20%, #cbbf8d 70%); }
+.id-ecl-cireux { background: radial-gradient(circle at 40% 35%, #fbf6e6 0 25%, #e0d1a4 80%); }
+.id-ecl-nacre { background: linear-gradient(135deg, #f7f3ff, #e8f6f1 30%, #f9ebf2 55%, #eef0ff 80%); }
+.id-ecl-soyeux { background: repeating-linear-gradient(100deg, #f4f4f4 0 1.5px, #c9c9c9 1.5px 3px); }
+.id-ecl-mat { background: #b8ab98; }
+.id-couleurs { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.id-coul { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--ink2); }
+.id-coul i { width: 16px; height: 16px; border-radius: 4px; border: 1px solid rgba(0, 0, 0, .2); display: inline-block; }
+.id-coul i.id-incolore { background: repeating-conic-gradient(#ddd 0 25%, #fff 0 50%) 0 0 / 8px 8px; }
+/* carte « Structure » : vue 3D et dessin du cristal à une taille raisonnable à côté du texte */
+.min-structure .cx-dessin { max-width: 560px; margin: 0 auto; }
+.min-structure .cx-svg { max-width: 460px; }
+/* une information par ligne, sur toute la largeur ; options sur UNE seule ligne (01/10/2026) */
+.id-grille, .mesures { grid-template-columns: 1fr; }
+.id-systemes { flex-wrap: nowrap; justify-content: space-between; }
+.id-sys { flex: 1 1 0; width: auto; min-width: 50px; }
+.id-rang { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; }
+.id-rang .id-chip { justify-content: center; text-align: center; padding: 3px 4px; min-width: 0; }
+.id-eclats .id-chip { flex-direction: column; gap: 3px; font-size: 11.5px; line-height: 1.15; }
+.id-strunz .id-chip { flex-direction: column; gap: 1px; font-size: 11px; line-height: 1.15; }
+.id-strunz .id-chip b { font-size: 13px; }
+.id-rang .id-chip span { overflow-wrap: anywhere; }
+@media (max-width: 640px) {
+  .id-rang, .id-systemes { overflow-x: auto; grid-auto-columns: minmax(64px, 1fr); padding-bottom: 4px; }
+}
+.min-plusloin h4 { margin: 4px 0 4px; }
+.min-plusloin p { margin: 0; font-size: 14px; }
+/* le choix d'affichage des nombres en tête du panneau des propriétés physiques, sans titre (01/10/2026) */
+.min-physique > .nb-choix { margin: 0 0 12px; padding-bottom: 10px; border-bottom: 1px solid var(--grid); }
+/* les cadres de la fiche passent SOUS la photo flottante (01/10/2026 : sans le titre Identité ni le bouton des nombres,
+   le premier cadre remontait à côté de la photo et la recouvrait) */
+.fiche-min > .min-panneau { clear: right; }
+/* carte « Structure » des minéraux ajustée (01/10/2026) : boutons sur UNE ligne, maille et description repliées */
+.min-structure .s3d-outils:not(.s3d-etats) { flex-wrap: nowrap; gap: 5px; overflow-x: auto; scrollbar-width: thin; align-items: center; }
+.min-structure .s3d-seg { flex: none; }
+.min-structure .s3d-seg button { padding: 3px 7px; font-size: 12px; white-space: nowrap; }
+.min-structure .s3d-outils .map-fs-btn { margin-left: auto; flex: none; white-space: nowrap; padding: 3px 8px; font-size: 12px; }
+.s3d-pied { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
+.s3d-details { font-size: 12px; color: var(--muted); }
+.s3d-details summary { cursor: pointer; display: inline-block; padding: 1px 8px; border: 1px solid var(--baseline); border-radius: 6px;
+  list-style: none; font-size: 12px; color: var(--ink2); }
+.s3d-details summary::-webkit-details-marker { display: none; }
+.s3d-details summary::before { content: "▸ "; }
+.s3d-details[open] summary::before { content: "▾ "; }
+.s3d-details[open] { flex-basis: 100%; }
+.s3d-details .s3d-info { margin-top: 6px; }
+.s3d-lab { font-size: 12px; color: var(--muted); flex: none; margin-right: -2px; }
+.min-structure .s3d-seg button { padding: 3px 6px; }
+/* page minéral : les grands cadres prennent les dimensions des petits panneaux (01/10/2026) */
+.page-min > .card { padding: 12px 16px; border-radius: 10px; margin-bottom: 12px; }
+.page-min > .card > h2 { font-size: 17px; margin-bottom: 6px; }
+.page-min .mf-texte { max-width: none; }
+
+/* G.12 — valeurs propres aux espèces d'argiles (argiles-especes-valeurs.js) */
+.esp-valeurs .esp-nr { color: var(--muted); font-style: italic; }
+.esp-valeurs sup.esp-ref { font-size: 10.5px; color: var(--muted); white-space: nowrap; }
+.esp-precision { margin: 2px 0 6px; font-size: 12.5px; color: var(--muted); }
+.mesure-ligne.mesure-vide p { color: var(--muted); font-style: italic; }
+.esp-note-nr { margin-top: 10px; }
+.esp-groupe .min-panneaux { margin-bottom: 8px; }
+/* mini schéma du feuillet octaédrique (fiches d'espèces d'argiles) */
+.eo-grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr)); gap: 8px; }
+.eo-fig { margin: 0; display: flex; gap: 10px; align-items: center; padding: 6px 8px; border: 1px solid var(--grid); border-radius: 8px; opacity: .55; }
+.eo-fig.on { opacity: 1; border-color: #e24b4a; background: rgba(226, 75, 74, .06); }
+.eo-fig svg { flex: none; border-radius: 4px; background: #fff; }
+.eo-fig figcaption { display: grid; gap: 2px; font-size: 12px; color: var(--ink2); }
+.eo-fig figcaption b { font-size: 13px; color: var(--ink); }
+.eo-al { fill: #b9cbe4; stroke: #6f88ad; stroke-width: .8; }
+.eo-mg { fill: #f2c48f; stroke: #c27d34; stroke-width: .8; }
+.eo-vide { fill: #fff; stroke: #9aa3ad; stroke-width: .8; stroke-dasharray: 2 1.6; }
+.eo-ion { fill: #2d3a4a; }
+
+/* ── clivage en image (clivage.js, 02/10/2026) : rangée des types de clivage, celui du minéral en surbrillance (comme les mailles) ── */
+.mesure-clivage .cl-ligne { grid-column: 1 / -1; }
+.mesure-clivage .cl-ligne:empty { display: none; }
+.cl-types { margin-top: 2px; flex-wrap: nowrap; justify-content: space-between; overflow-x: auto; }
+.cl-type { flex: 1 1 0; width: auto; min-width: 52px; }
+.cl-types svg polygon { fill: var(--page); stroke: var(--baseline); stroke-width: 1.1; stroke-linejoin: round; }
+.cl-types svg polygon.cl-cassure { stroke-dasharray: 2 1.6; }
+.cl-types svg path { fill: none; stroke: var(--baseline); stroke-width: 0.9; stroke-linecap: round; }
+.cl-types .on svg polygon { stroke: #e24b4a; stroke-width: 1.5; fill: color-mix(in srgb, #e24b4a 8%, var(--page)); }
+.cl-types .on svg path { stroke: #e24b4a; }
+.cl-types svg path.cl-plein { fill: var(--page); }
+.cl-types .on svg path.cl-plein { fill: color-mix(in srgb, #e24b4a 8%, var(--page)); }
+.cl-aide { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; margin-left: 5px;
+  border-radius: 50%; border: 1px solid var(--muted); color: var(--muted); font-size: 11px; font-weight: 600; cursor: help; vertical-align: 1px; }
+.cl-aide:hover, .cl-aide:focus { color: var(--ink); border-color: var(--ink); outline: none; }
+.cl-bulle { display: none; position: absolute; left: 0; top: 22px; z-index: 30; width: min(420px, 80vw); padding: 10px 12px; border-radius: 8px;
+  background: var(--surface); border: 1px solid var(--border); box-shadow: 0 6px 20px rgba(0, 0, 0, .25);
+  color: var(--ink2); font-size: 12.5px; font-weight: 400; line-height: 1.45; text-align: left; cursor: auto; }
+.cl-bulle > span { display: block; }
+.cl-bulle > span + span { margin-top: 6px; color: var(--muted); }
+.cl-aide:hover .cl-bulle, .cl-aide:focus .cl-bulle, .cl-aide:focus-within .cl-bulle { display: block; }
+/* panneau d'altération sans titre (02/10/2026) : chaque section a son titre, plus grand et en gras, séparées par un trait */
+.min-alteration .mesures { gap: 0; grid-template-columns: 1fr; }
+.min-alteration .mesure-tete span { font-size: 15px; font-weight: 600; color: var(--ink); }
+.min-alteration .mesure + .mesure { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--grid); }
+/* titres des propriétés et de l'identité à la taille de « Résistance à l'altération » (02/10/2026, sa demande) */
+.fiche-min .id-tete span, .fiche-min .min-physique .mesure-tete span, .fiche-min .mesure-ligne > span { font-size: 15px; font-weight: 600; color: var(--ink); }
+/* « En s'altérant, donne » en schéma (alteration-schema.js, 02/10/2026, 3ᵉ passe) : possibilités les unes sous les autres séparées
+   par « ou » ; dans chacune, un cadre « Ce qui réagit », une flèche SEULE, un cadre « Ce qui en sort » ; coefficients « 4 × » */
+.as-intro { margin: 0 0 8px; font-size: 13px; color: var(--ink2); }
+.as-voie-titre { margin: 0 0 2px; font-size: 14px; font-weight: 600; color: var(--ink); }
+.as-voie-titre span { color: var(--muted); font-weight: 500; margin-right: 4px; }
+.as-cond { margin: 0 0 8px; font-size: 13px; color: var(--ink2); }
+.as-ou { display: flex; align-items: center; gap: 10px; margin: 14px 0; color: var(--muted); font-size: 12.5px; font-style: italic; }
+.as-ou::before, .as-ou::after { content: ""; flex: 1; border-top: 1px dashed var(--grid); }
+.as-note-min { margin: 10px 0 0; font-size: 12px; color: var(--muted); }
+.as-reaction { display: grid; grid-template-columns: minmax(0, 1fr) 46px minmax(0, 1.4fr); align-items: center; gap: 0 6px; }
+.as-fleche { color: var(--ink2); display: flex; justify-content: center; }
+.as-fleche svg { width: 40px; height: 20px; }
+.as-cadre { border: 1px solid var(--grid); border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 10px; min-width: 0; align-self: stretch; justify-content: center; }
+.as-groupe { border-radius: 8px; padding: 6px 8px 8px; }
+.as-depart { background: var(--as-air); }
+.as-reste { background: var(--as-sol); border-bottom: 3px solid var(--as-sol-trait); }
+.as-part { background: var(--as-eau); }
+.as-air { background: var(--as-air); border: 1px dashed var(--grid); }
+.as-titre { font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 6px; }
+.as-ligne { display: flex; align-items: center; gap: 8px; text-align: left; background: none; border: 0; padding: 0; font: inherit; color: inherit; width: 100%; }
+.as-ligne + .as-ligne { margin-top: 6px; }
+.as-lien { cursor: pointer; }
+.as-lien:hover .as-nom { text-decoration: underline; }
+.as-ligne svg { flex: none; }
+.as-x { flex: none; min-width: 34px; text-align: right; font-size: 13.5px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+.as-txt { display: flex; flex-direction: column; min-width: 0; }
+.as-txt small { font-size: 11px; color: var(--muted); }
+.as-nom { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.as-f { font-size: 12.5px; color: var(--ink2); }
+.as-f:empty { display: none; }
+.as-rien { font-size: 13px; font-style: italic; color: var(--muted); }
+.as-bulle { flex: none; min-width: 34px; height: 30px; padding: 0 7px; border-radius: 15px; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--surface); border: 1.5px solid var(--as-eau-trait); font-size: 12.5px; font-weight: 600; color: var(--ink); }
+.as-bulle.as-molecule { border-style: dashed; border-radius: 8px; }
+.as-bulle.as-eau { border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; }
+.as-bulle.as-gaz { border-color: var(--muted); border-style: dotted; }
+.as-equation { margin: 8px 0 0; font-size: 12.5px; color: var(--ink2); overflow-wrap: anywhere; }
+.as-equation span { font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-right: 6px; }
+:root { --as-eau: rgba(70, 140, 210, .12); --as-eau-trait: rgba(60, 130, 200, .7); --as-sol: rgba(150, 110, 60, .1); --as-sol-trait: rgba(140, 100, 55, .45); --as-air: rgba(140, 140, 140, .08); }
+@media (max-width: 700px) { .as-reaction { grid-template-columns: 1fr; } .as-fleche svg { transform: rotate(90deg); margin: 4px 0; } }
+/* possibilités d'altération sur fond teinté léger, une teinte par possibilité ; bouton du panneau d'altération (02/10/2026) */
+.as-teinte { border-radius: 12px; padding: 10px 12px 12px; }
+.as-t0 { background: rgba(70, 140, 210, .07); } .as-t1 { background: rgba(200, 150, 50, .08); }
+.as-t2 { background: rgba(80, 170, 110, .08); } .as-t3 { background: rgba(170, 100, 190, .08); }
+.as-teinte .as-cadre { background: var(--surface); }
+.as-voir { font: inherit; font-size: 13px; padding: 4px 12px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); cursor: pointer; }
+.as-voir:hover { border-color: var(--ink2); }
+.min-alt-schema h2 { margin-top: 0; }
+.min-alt-schema { scroll-margin-top: 80px; }
+/* bouton en bas à droite du panneau d'altération ; carte « D'où vient-il ? » plus sombre, teintes franches (02/10/2026) */
+.as-voir-ligne { display: flex; justify-content: flex-end; margin-top: 10px; }
+.min-alt-origine { background: color-mix(in srgb, var(--card, var(--surface)) 86%, #000); scroll-margin-top: 80px; }
+.min-alt-origine h2 { margin-top: 0; }
+.as-o0 { background: rgba(0, 150, 140, .16); } .as-o1 { background: rgba(215, 70, 105, .15); }
+.as-o2 { background: rgba(140, 160, 20, .17); } .as-o3 { background: rgba(95, 95, 225, .16); }
+.min-alt-origine .as-cadre { background: var(--card, var(--surface)); }
+.as-src { font: inherit; font-weight: 600; color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.as-ici { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 6px; }
+.as-autres { margin-top: 14px; }
+.as-autres > summary { cursor: pointer; font-size: 13.5px; color: var(--ink); }
+.as-autres > div { margin-top: 12px; }
+.as-sous { font-size: 15px; margin: 18px 0 4px; }
+.as-milieu .as-cond { margin: 0; }
+.as-autres-ligne { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 14px; }
+.as-cherche { font: inherit; font-size: 13px; padding: 4px 10px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); min-width: 0; flex: 0 1 260px; }
+.as-trouve { margin: 8px 0 0; font-size: 12.5px; color: var(--muted); }
+[data-as-suite] > :first-child { margin-top: 12px; }
+
+/* texte écrit sous la vue 3D, rangé dans « Maille et description » (02/10/2026) */
+.s3d-apres { margin-top: 8px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+.s3d-apres p { margin: 0 0 6px; font-size: 12px; max-width: none; }
+.s3d-apres h4 { margin: 8px 0 3px; font-size: 12px; color: var(--text, inherit); }
+
+/* ============ fiche roche allégée (02/10/2026) ============ */
+.rock-head .roche-photo .sw-ph { display: block; width: 100%; height: 170px; border-radius: 10px; }
+.rock-head .roche-photo img { display: block; width: 100%; height: 170px; object-fit: cover; border-radius: 10px; }
+.en-travaux { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; vertical-align: 3px; margin-left: 6px;
+  background: rgba(242, 182, 50, .2); color: var(--ink2); border: 1px solid rgba(242, 182, 50, .6); }
+.haut-replie { margin: 0 0 10px; }
+.haut-replie > summary { cursor: pointer; font-size: 13px; color: var(--muted); }
+.haut-replie[open] > summary { margin-bottom: 6px; }
+/* conditions de formation : diagramme réduit, étapes à côté, qui apparaissent une à une avec l'animation */
+.form-conditions .fc2 { display: grid; grid-template-columns: minmax(0, 470px) minmax(0, 1fr); gap: 4px 22px; align-items: start; }
+.form-conditions .fc2 > .fc-svg { grid-row: 1 / span 3; }
+.form-conditions .fc2 > .fc-etapes { margin-top: 0; }
+.form-conditions .fc-suivi .fc-etapes li:not(.vu) { display: none; }
+.form-conditions .fc-suivi .fc-etapes li.vu:not(.on) { opacity: .6; }
+@container (max-width: 700px) {
+  .form-conditions .fc2 { grid-template-columns: minmax(0, 1fr); }
+  .form-conditions .fc2 > .fc-svg { grid-row: auto; }
+}
+/* minéraux propriété par propriété */
+.mp-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.mp-nom { font: 600 15px/1 system-ui, sans-serif; fill: var(--ink); }
+.mp-bout { font: 12.5px/1 system-ui, sans-serif; fill: var(--muted); }
+.mp-axe { stroke: var(--baseline); stroke-width: 1; }
+.mp-tick { font: 12.5px/1 system-ui, sans-serif; fill: var(--muted); text-anchor: middle; }
+.mp-disque { stroke: rgba(0, 0, 0, .5); stroke-width: 1; fill-opacity: .85; cursor: default; }
+.mp-roche { stroke: var(--ink); stroke-width: 2.4; }
+.mp-roche-t { font: 600 13px/1 system-ui, sans-serif; fill: var(--ink); }
+.mp-legende { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--ink2); margin-top: 6px; }
+.mp-legende i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, .4); margin-right: 5px; vertical-align: -1px; }
+.mp-trait { display: inline-block; width: 2.4px; height: 13px; background: var(--ink); margin-right: 6px; vertical-align: -2px; }
+.sources-roche > summary { cursor: pointer; }
+.sources-roche[open] > summary { margin-bottom: 8px; }
+.replie-travaux > summary { cursor: pointer; list-style: none; }
+.replie-travaux > summary::-webkit-details-marker { display: none; }
+.replie-travaux > summary h2 { display: inline; margin: 0; }
+.replie-travaux > summary::before { content: "▸ "; color: var(--muted); }
+.replie-travaux[open] > summary::before { content: "▾ "; }
+.replie-travaux[open] > summary { margin-bottom: 10px; }
+/* fiche roche resserrée (02/10/2026, 2ᵉ passe) */
+.page-roche .card { padding: 14px 18px; margin-bottom: 12px; }
+.page-roche .card h2 { font-size: 17px; margin-bottom: 6px; }
+.page-roche p, .page-roche .desc, .page-roche li { text-align: justify; hyphens: auto; }
+.page-roche .rock-head h1 { font-size: 24px; gap: 8px; }
+.page-roche .codes-tete { display: inline-flex; gap: 4px; }
+.page-roche .codes-tete .code-chip { font-size: 13px; }
+.page-roche .rock-head .roche-photo { width: 200px; }
+.page-roche .rock-head .roche-photo img, .page-roche .rock-head .roche-photo .sw-ph { height: 140px; }
+.page-roche .fa-scene { max-width: 860px; margin: 0 auto; width: 100%; }
+@container (min-width: 821px) { .page-roche .tex { grid-template-columns: minmax(0, 520px) minmax(200px, 1fr); } }
+.page-roche .form-structure .s3d-vue { height: 325px; }
+.page-roche .form-structure .s3d-vue.is-tall { height: 75vh; }
+.page-roche #map { height: 375px; }
+.page-roche #map.is-tall { height: 70vh; }
+.map-boite { position: relative; }
+.map-fs-sur { position: absolute; top: 10px; right: 10px; z-index: 500; }
+/* conditions : graphique sur toute la largeur, étapes dessous */
+.form-conditions .fc2 { display: block; }
+.form-conditions .fc2 > .fc-etapes { margin-top: 8px; }
+/* frise plus petite (réversible : retirer la classe frise-compacte) */
+.frise-compacte .ft { font-size: 10.5px; }
+.frise-compacte .ft th { font-size: 10px; padding-bottom: 6px; }
+.frise-compacte .ft tbody tr { height: 15px; }
+.frise-compacte .ft td.ft-u { padding: 0 4px; min-width: 50px; }
+.frise-compacte .ft td.ft-vert { width: 18px; }
+.frise-compacte .ft .ft-bas, .frise-compacte .ft .ft-haut { font-size: 10px; }
+.frise-compacte .ft-wrap { padding: 4px 2px 6px; }
+
+/* Explication « roches acides » (B.9, 06/10/2026) : trois volets I, II, III repliés de base */
+.pl-plis { display: grid; gap: 6px; margin: 4px 0 14px; }
+.pl-pli { border: 1px solid var(--border); border-radius: 8px; padding: 0 12px; }
+.pl-pli > summary { cursor: pointer; padding: 8px 0; font-weight: 600; list-style: none; }
+.pl-pli > summary::-webkit-details-marker { display: none; }
+.pl-pli > summary::before { content: "▸ "; color: var(--muted); }
+.pl-pli[open] > summary::before { content: "▾ "; }
+.pl-pli[open] { padding-bottom: 10px; }
+.pl-pli p { margin: 0 0 8px; font-size: 13.5px; line-height: 1.55; }
+.pl-tableau { overflow-x: auto; margin: 6px 0; }
+.pl-tableau table.data { font-size: 12.5px; min-width: 640px; }
+.pl-tableau tr.pl-ici td { background: #fbe9e6; }
+.pl-petit { font-size: 12px; color: var(--muted); }
+@media (prefers-color-scheme: dark) { .pl-tableau tr.pl-ici td { background: #3a2420; } }
+/* Graphique de silice refait (06/10/2026) : jauge + bande des familles, texte à l'échelle du viewBox 640 */
+.si-t { font: 600 11px/1 system-ui, -apple-system, sans-serif; fill: #2b2b28; }
+.si-p { font: 500 10px/1 system-ui, -apple-system, sans-serif; }
+.si-fort { font-weight: 700; }
+.si-doux { fill: #6b665c; }
+
+/* ── La CEC en image (G.2, 06/10/2026) — argiles-cec.js ── */
+.cec-carte h3 { margin: 18px 0 6px; font-size: 15px; }
+.cec-scene { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background: #f6f4ee; margin: 6px 0 4px; }
+.cec-scene svg { display: block; width: 100%; height: auto; }
+.cec-ion-t { font: 700 7.6px/1 system-ui, -apple-system, sans-serif; fill: #fff; }
+.cec-ion-t.cec-petit { font-size: 6px; }
+.cec-ion-t.cec-anion { fill: #3a2a24; font-size: 6.4px; }
+.cec-info { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin: 6px 0 2px; }
+.cec-etape { margin: 0; font-size: 14px; line-height: 1.45; min-height: 2.9em; }
+.cec-info .fa-lecture { flex: none; }
+.cec-legende { gap: 8px 14px; font-size: 12.5px; }
+.cec-legende .key i.cec-cle-moins, .cec-legende .key i.cec-cle-plus { width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 1px solid #3a2a24; position: relative; }
+.cec-cle-moins::after, .cec-cle-plus::after { content: ""; position: absolute; left: 2.5px; right: 2.5px; top: 4.5px; height: 1.6px; background: #3a2a24; }
+.cec-cle-plus { border-color: #2f5a2f !important; }
+.cec-cle-plus::after { background: #2f5a2f; }
+.cec-cle-plus::before { content: ""; position: absolute; top: 2.5px; bottom: 2.5px; left: 4.5px; width: 1.6px; background: #2f5a2f; }
+.cec-pastille { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; flex: none; }
+.cec-grammes, .cec-ha { max-width: 620px; margin-bottom: 6px; }
+.cec-grammes .nb-litre, .cec-ha .nb-litre { grid-template-columns: minmax(150px, 210px) 1fr 70px; }
+.cec-grammes .nb-litre span:first-child, .cec-ha .nb-litre span:first-child { display: flex; align-items: center; }
+.cec-tuiles .tile .val { font-size: 19px; }
+.cec-serie { font-size: 14px; line-height: 1.55; margin: 4px 0 8px; }
+.cec-ions { list-style: none; padding: 0; margin: 0 0 8px; display: grid; gap: 7px; font-size: 13.5px; line-height: 1.5; }
+.cec-ions li { display: block; }
+.cec-garn { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 8px; }
+.cec-pli { margin-top: 14px; }
+/* curseurs sur toute la largeur, échelle graduée dessous (07/10/2026) */
+.cec-curseurs { display: grid; gap: 14px; margin: 10px 0 14px; max-width: 620px; }
+.cec-c-tete { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; }
+.cec-c-tete b { font-variant-numeric: tabular-nums; }
+.cec-curseur input[type="range"] { width: 100%; margin: 4px 0 0; display: block; }
+.cec-regle { position: relative; height: 22px; border-top: 1px solid var(--border); margin-top: 2px; }
+.cec-regle span { position: absolute; top: 4px; transform: translateX(-50%); font-size: 11.5px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cec-regle span::before { content: ""; position: absolute; left: 50%; top: -5px; width: 1px; height: 4px; background: var(--muted); }
+.cec-regle span:first-of-type { transform: none; }
+.cec-regle span:first-of-type::before { left: 0; }
+.cec-regle span:last-of-type { transform: translateX(-100%); }
+.cec-regle span:last-of-type::before { left: auto; right: 0; }
+.cec-bande { position: absolute; top: -4px; height: 4px; background: var(--prod-argile); border-radius: 2px; min-width: 3px; }
+.cec-c-note { margin: 0; font-size: 12px; color: var(--muted); }
+/* floculer ou disperser */
+.cec-floc-ctrl { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; align-items: center; margin: 8px 0; font-size: 13.5px; }
+.cec-floc-ctrl > span { color: var(--ink2); }
+.cec-floc-ligne { display: flex; flex-wrap: wrap; gap: 6px; }
+.cec-floc-verdict { font-size: 14px; line-height: 1.5; min-height: 4.5em; margin: 8px 0 4px; }
+.cec-kao-titre { margin: 14px 0 4px; font-size: 14.5px; }
+.cec-autres { margin-top: 0; }
+@media (max-width: 560px) { .cec-floc-ctrl { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .cec-grammes .nb-litre, .cec-ha .nb-litre { grid-template-columns: 1fr 70px; } .cec-grammes .nb-litre i, .cec-ha .nb-litre i { grid-column: 1 / -1; grid-row: 2; } }

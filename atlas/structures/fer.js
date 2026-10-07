@@ -1,0 +1,3 @@
+// Structure cristalline — générée par tools/cif_vers_structure.py, ne pas retoucher à la main.
+// Source : COD 9000657 (Wilburn, D. R., Bassett, W. A., 1978).
+Structure3D.enregistrer({"id":"fer","nom":"Iron","formule":"Fe","groupe":"I m -3 m","maille":[2.866,2.866,2.866,90.0,90.0,90.0],"source":{"base":"Crystallography Open Database","cod":"9000657","auteurs":["Wilburn, D. R.","Bassett, W. A."],"annee":"1978","titre":"Hydrostatic compression of iron and related compounds: An overview P = 1 Kbar","revue":"American Mineralogist","volume":"63","pages":"591–596","doi":""},"atomes":[["Fe",0.0,0.0,0.0,"Fe"],["Fe",0.5,0.5,0.5,"Fe"]]});

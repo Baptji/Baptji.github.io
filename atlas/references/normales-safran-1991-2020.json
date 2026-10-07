@@ -1,0 +1,142 @@
+{
+ "Brest": {
+  "cell": "x4_y98",
+  "jours": 10958,
+  "T": 11.7,
+  "P": 1118,
+  "ETP": 669,
+  "AI": 1.67,
+  "Tfroid": 7.1,
+  "Tchaud": 16.9
+ },
+ "Rennes": {
+  "cell": "x30_y92",
+  "jours": 10958,
+  "T": 12.0,
+  "P": 736,
+  "ETP": 763,
+  "AI": 0.96,
+  "Tfroid": 6.0,
+  "Tchaud": 18.8
+ },
+ "Paris": {
+  "cell": "x68_y102",
+  "jours": 10958,
+  "T": 12.7,
+  "P": 668,
+  "ETP": 869,
+  "AI": 0.77,
+  "Tfroid": 5.3,
+  "Tchaud": 20.8
+ },
+ "Strasbourg": {
+  "cell": "x117_y99",
+  "jours": 10958,
+  "T": 11.5,
+  "P": 670,
+  "ETP": 780,
+  "AI": 0.86,
+  "Tfroid": 2.7,
+  "Tchaud": 20.7
+ },
+ "Bordeaux": {
+  "cell": "x39_y46",
+  "jours": 10958,
+  "T": 13.7,
+  "P": 898,
+  "ETP": 914,
+  "AI": 0.98,
+  "Tfroid": 6.6,
+  "Tchaud": 21.5
+ },
+ "Lyon": {
+  "cell": "x92_y59",
+  "jours": 10958,
+  "T": 12.8,
+  "P": 812,
+  "ETP": 938,
+  "AI": 0.86,
+  "Tfroid": 3.9,
+  "Tchaud": 22.5
+ },
+ "Toulouse": {
+  "cell": "x58_y28",
+  "jours": 10958,
+  "T": 13.9,
+  "P": 626,
+  "ETP": 971,
+  "AI": 0.64,
+  "Tfroid": 6.1,
+  "Tchaud": 22.4
+ },
+ "Marseille": {
+  "cell": "x98_y25",
+  "jours": 10958,
+  "T": 15.9,
+  "P": 528,
+  "ETP": 1252,
+  "AI": 0.42,
+  "Tfroid": 8.7,
+  "Tchaud": 24.5
+ },
+ "Montpellier": {
+  "cell": "x83_y29",
+  "jours": 10958,
+  "T": 15.1,
+  "P": 667,
+  "ETP": 1222,
+  "AI": 0.55,
+  "Tfroid": 7.1,
+  "Tchaud": 24.3
+ },
+ "Perpignan": {
+  "cell": "x73_y16",
+  "jours": 10958,
+  "T": 15.7,
+  "P": 615,
+  "ETP": 1311,
+  "AI": 0.47,
+  "Tfroid": 8.4,
+  "Tchaud": 24.4
+ },
+ "Clermont-Ferrand": {
+  "cell": "x75_y59",
+  "jours": 10958,
+  "T": 11.4,
+  "P": 700,
+  "ETP": 838,
+  "AI": 0.84,
+  "Tfroid": 3.6,
+  "Tchaud": 20.1
+ },
+ "Chamonix": {
+  "cell": "x111_y62",
+  "jours": 10958,
+  "T": 5.2,
+  "P": 1626,
+  "ETP": 724,
+  "AI": 2.24,
+  "Tfroid": -2.5,
+  "Tchaud": 13.7
+ },
+ "Mont Aigoual": {
+  "cell": "x80_y36",
+  "jours": 10958,
+  "T": 7.7,
+  "P": 1041,
+  "ETP": 817,
+  "AI": 1.27,
+  "Tfroid": 0.4,
+  "Tchaud": 16.3
+ },
+ "Nice": {
+  "cell": "x117_y31",
+  "jours": 10958,
+  "T": 15.8,
+  "P": 708,
+  "ETP": 1170,
+  "AI": 0.6,
+  "Tfroid": 8.4,
+  "Tchaud": 24.3
+ }
+}

@@ -1,0 +1,3 @@
+// Structure cristalline — générée par tools/cif_vers_structure.py, ne pas retoucher à la main.
+// Source : COD 9000107 (Skinner, B. J., 1961).
+Structure3D.enregistrer({"id":"blende","nom":"Sphalerite","formule":"S Zn","groupe":"F -4 3 m","maille":[5.4093,5.4093,5.4093,90.0,90.0,90.0],"source":{"base":"Crystallography Open Database","cod":"9000107","auteurs":["Skinner, B. J."],"annee":"1961","titre":"Unit-cell edges of natural and synthetic sphalerites","revue":"American Mineralogist","volume":"46","pages":"1399–1411","doi":""},"atomes":[["S",0.25,0.25,0.25,"S"],["S",0.25,0.75,0.75,"S"],["S",0.75,0.25,0.75,"S"],["S",0.75,0.75,0.25,"S"],["Zn",0.0,0.0,0.0,"Zn"],["Zn",0.0,0.5,0.5,"Zn"],["Zn",0.5,0.0,0.5,"Zn"],["Zn",0.5,0.5,0.0,"Zn"]]});

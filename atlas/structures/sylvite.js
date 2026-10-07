@@ -1,0 +1,3 @@
+// Structure cristalline — générée par tools/cif_vers_structure.py, ne pas retoucher à la main.
+// Source : COD 9009733 (Ahtee, M., 1969).
+Structure3D.enregistrer({"id":"sylvite","nom":"Sylvite","formule":"Cl K","groupe":"F m -3 m","maille":[6.2788,6.2788,6.2788,90.0,90.0,90.0],"source":{"base":"Crystallography Open Database","cod":"9009733","auteurs":["Ahtee, M."],"annee":"1969","titre":"Lattice constants of some binary alkali halide solid solutions.","revue":"Annales Academiae Scientiarum Fennicae Series A6: Physica","volume":"313","pages":"1–11","doi":""},"atomes":[["Cl",0.5,0.5,0.5,"Cl"],["Cl",0.5,0.0,0.0,"Cl"],["Cl",0.0,0.5,0.0,"Cl"],["Cl",0.0,0.0,0.5,"Cl"],["K",0.0,0.0,0.0,"K"],["K",0.0,0.5,0.5,"K"],["K",0.5,0.0,0.5,"K"],["K",0.5,0.5,0.0,"K"]]});

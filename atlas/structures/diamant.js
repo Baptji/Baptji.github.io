@@ -1,0 +1,3 @@
+// Structure cristalline — générée par tools/cif_vers_structure.py, ne pas retoucher à la main.
+// Source : COD 9011575 (Riley, D. P., 1944).
+Structure3D.enregistrer({"id":"diamant","nom":"Diamant","formule":"C","groupe":"F d -3 m :1","maille":[3.56679,3.56679,3.56679,90.0,90.0,90.0],"source":{"base":"Crystallography Open Database","cod":"9011575","auteurs":["Riley, D. P."],"annee":"1944","titre":"Lattice constant of diamond and the C-C single bond Sample: at T = 18 C","revue":"Nature","volume":"153","pages":"587–588","doi":""},"atomes":[["C",0.0,0.0,0.0,"C"],["C",0.0,0.5,0.5,"C"],["C",0.5,0.0,0.5,"C"],["C",0.5,0.5,0.0,"C"],["C",0.75,0.75,0.25,"C"],["C",0.75,0.25,0.75,"C"],["C",0.25,0.75,0.75,"C"],["C",0.25,0.25,0.25,"C"]]});

@@ -1,0 +1,111 @@
+/* ============ Conditions de formation, rendu refait (C.4, 25/09/2026) — formation-conditions.js ============
+   Chargé APRÈS style.css. Chemin, flèches et pastilles à l'encre (noir ; blanc en mode sombre), domaines en aplats
+   clairs, courbes en gris. Les crochets utilisés par l'animation (formation-anim.js) sont gardés :
+   .fc-chemin[data-num], .fc-pastille[data-n], .fc-curseur, .fc-etapes li[data-n], .fc-suivi. */
+.fc2 { --fc2-trait: #57544e; --fc2-trait-doux: #8d8a82; }
+.fc2-svg text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+.fc2-cadre { fill: none; stroke: var(--baseline); stroke-width: 1; }
+.fc2-grille { stroke: var(--grid); stroke-width: 1; }
+.fc2-trait { stroke: var(--baseline); stroke-width: 1; }
+.fc2-surface { stroke: var(--baseline); stroke-width: 1; }
+.fc2-tick { font-size: 10.5px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.fc2-axe { font-size: 11.5px; fill: var(--ink2); font-weight: 600; }
+.fc2-it { font-style: italic; }
+.fc2-t { font-size: 10.5px; fill: var(--ink2); paint-order: stroke; stroke: var(--page); stroke-width: 3px; stroke-linejoin: round; }
+.fc2-lab-champ { font-weight: 600; fill: var(--ink2); }
+.fc2-lab-facies { font-weight: 600; fill: var(--ink2); }
+.fc2-lab-courbe { font-size: 9.8px; font-style: italic; fill: var(--fc2-trait); }
+.fc2-lab-bande { font-size: 9.8px; font-weight: 600; fill: #9a4a12; }
+.fc2-lab-seuil { font-size: 10px; font-weight: 600; fill: var(--ink); }
+.fc2-lab-point { font-size: 9.8px; fill: var(--ink2); }
+.fc2-lab-actif { font-weight: 700; fill: var(--ink); }
+
+/* chemin de la roche : encre */
+.fc2-chemin { fill: none; stroke: var(--ink); stroke-width: 2.3; stroke-linejoin: round; stroke-linecap: round; }
+.fc2-chemin.fc-chemin { stroke: var(--ink) !important; }
+.fc2-fleche { fill: var(--ink); }
+.fc2-num { fill: var(--ink); stroke: var(--page); stroke-width: 1.8; }
+.fc2-num-t { font: 700 10.5px/1 system-ui, -apple-system, sans-serif; fill: var(--page); }
+.fc2-depart { fill: var(--page); stroke: var(--ink); stroke-width: 1.8; }
+.fc2-attache { stroke: var(--ink); stroke-width: 1.2; }
+
+/* courbes de référence */
+.fc2-courbe { fill: none; }
+.fc2-c-solidus { stroke: var(--fc2-trait); stroke-width: 1.7; }
+.fc2-c-reaction { stroke: var(--fc2-trait); stroke-width: 1.3; stroke-dasharray: 6 3; }
+.fc2-c-limite { stroke: var(--fc2-trait-doux); stroke-width: 1.3; stroke-dasharray: 2 3; }
+.fc2-c-gradient { stroke: var(--fc2-trait-doux); stroke-width: 1.2; stroke-dasharray: 1 3.5; stroke-linecap: round; }
+.fc2-c-seuil { stroke: var(--ink); stroke-width: 1.4; stroke-dasharray: 5 3; }
+.fc2-c-eau { stroke: #2f7fc4; stroke-width: 1.8; }
+.fc2-c-conc { stroke: var(--fc2-trait); stroke-width: 1.7; }
+.fc2-c-conc-actif { stroke: var(--ink); stroke-width: 1.9; }
+.fc2-moho { stroke: var(--fc2-trait-doux); stroke-width: 1; stroke-dasharray: 7 4; }
+
+/* domaines */
+.fc2-fondu { fill: rgba(224, 110, 50, .12); }
+.fc2-anatexie { fill: rgba(224, 110, 50, .16); }
+.fc2-bande { stroke: rgba(222, 128, 42, .55); stroke-width: 9; stroke-linecap: round; }
+.fc2-ductile { fill: rgba(120, 120, 120, .07); }
+.fc2-ordinaire { fill: rgba(120, 120, 120, .16); }
+.fc2-facies { stroke: rgba(255, 255, 255, .7); stroke-width: .8; }
+.fc2-f-diag { fill: rgba(150, 150, 150, .14); }
+.fc2-f-tfd { fill: rgba(165, 180, 110, .20); }
+.fc2-f-corn { fill: rgba(222, 180, 60, .22); }
+.fc2-f-sv { fill: rgba(80, 170, 100, .22); }
+.fc2-f-amph { fill: rgba(70, 135, 160, .20); }
+.fc2-f-gran { fill: rgba(215, 130, 70, .20); }
+.fc2-f-sb { fill: rgba(80, 115, 215, .20); }
+.fc2-f-ecl { fill: rgba(185, 70, 105, .18); }
+.fc2-stade { stroke: rgba(255, 255, 255, .7); stroke-width: .8; }
+.fc2-s0 { fill: rgba(150, 150, 150, .12); }
+.fc2-s1 { fill: rgba(222, 180, 60, .22); }
+.fc2-s2 { fill: rgba(222, 130, 60, .22); }
+.fc2-s3 { fill: rgba(205, 70, 55, .22); }
+.fc2-s4 { fill: rgba(130, 70, 150, .20); }
+.fc2-sursat { fill: rgba(224, 110, 50, .09); }
+.fc2-soussat { fill: rgba(47, 127, 196, .08); }
+.fc2-eau { fill: rgba(47, 127, 196, .10); }
+.fc2-zone1 { fill: rgba(150, 150, 150, .07); }
+.fc2-zone2 { fill: rgba(150, 150, 150, .14); }
+.fc2-domaine { fill: rgba(224, 110, 50, .16); stroke: var(--fc2-trait); stroke-width: 1; }
+.fc2-froid { fill: rgba(63, 143, 210, .10); }
+.fc2-tempere { fill: rgba(70, 165, 95, .09); }
+.fc2-chaud { fill: rgba(242, 182, 50, .12); }
+.fc2-tropical { fill: rgba(224, 96, 43, .10); }
+.fc2-ville { fill: var(--ink2); stroke: var(--page); stroke-width: 1.5; }
+.fc2-seuil-bande { fill: rgba(120, 120, 120, .13); }
+.fc2-erosion { fill: rgba(205, 70, 55, .10); }
+.fc2-transport { fill: rgba(242, 182, 50, .10); }
+.fc2-depot { fill: rgba(47, 127, 196, .10); }
+.fc2-classe { fill: rgba(120, 120, 120, .05); }
+
+/* liste des étapes : numéros à l'encre, comme les pastilles ; cerclé = étape sans pastille sur le diagramme */
+.fc2-etapes b { background: var(--ink) !important; color: var(--page) !important; }
+.fc2-etapes li.fc2-hors b { background: transparent !important; color: var(--ink) !important; box-shadow: inset 0 0 0 1.5px var(--ink); }
+.fc2-etapes li.fc-sans b { background: transparent !important; }
+.fc2-etapes strong { font-weight: 600; color: var(--ink); }
+
+@media (prefers-color-scheme: dark) {
+  .fc2 { --fc2-trait: #b9b6ad; --fc2-trait-doux: #8d8a82; }
+  .fc2-lab-bande { fill: #e8a061; }
+  .fc2-facies, .fc2-stade { stroke: rgba(0, 0, 0, .5); }
+}
+/* sauts (autre eau, autre époque) et chemins secondaires */
+.fc2-piste { fill: none; stroke: none !important; }
+.fc2-saut { stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 2 3; }
+.fc2-fantome { fill: none; stroke: var(--muted); stroke-width: 1.6; stroke-dasharray: 5 3; stroke-linejoin: round; }
+.fc2-fleche-fantome { fill: var(--muted); }
+.fc2-fin-fantome { fill: var(--page); stroke: var(--muted); stroke-width: 1.5; }
+/* roches sédimentaires */
+.fc2-seuil { fill: var(--page); stroke: var(--ink); stroke-width: 1.6; }
+.fc2-anhy { fill: rgba(222, 150, 70, .14); }
+.fc2-gyps { fill: rgba(150, 150, 170, .12); }
+.fc2-transition { fill: rgba(222, 180, 60, .16); }
+.fc2-transition2 { fill: rgba(150, 120, 90, .12); }
+.fc2-ccd { fill: rgba(47, 127, 196, .16); }
+.fc2-c-eau-lim { stroke: #2f7fc4; stroke-width: 1.2; stroke-dasharray: 5 3; }
+.fc2-c-classe { stroke: var(--baseline); stroke-width: 1; stroke-dasharray: 2 3; }
+.fc2-seuil0 { fill: rgba(150, 120, 90, .14); }
+.fc2-seuil1 { fill: rgba(63, 143, 210, .11); }
+/* prolongement indicatif d'une courbe (solidus du granite vers la surface) */
+.fc2-c-prolonge { stroke: var(--fc2-trait); stroke-width: 1.5; stroke-dasharray: 4 3; }

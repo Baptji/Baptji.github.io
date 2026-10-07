@@ -1,0 +1,3 @@
+// Structure cristalline — générée par tools/cif_vers_structure.py, ne pas retoucher à la main.
+// Source : COD 9011577 (Trucano, P., Chen, R., 1975).
+Structure3D.enregistrer({"id":"graphite","nom":"Graphite","formule":"C","groupe":"P 63/m m c","maille":[2.464,2.464,6.711,90.0,90.0,120.0],"source":{"base":"Crystallography Open Database","cod":"9011577","auteurs":["Trucano, P.","Chen, R."],"annee":"1975","titre":"Structure of graphite by neutron diffraction Note: natural crystals","revue":"Nature","volume":"258","pages":"136–137","doi":"10.1038/258136a0"},"atomes":[["C",0.0,0.0,0.25,"C1"],["C",0.0,0.0,0.75,"C1"],["C",0.33333,0.66667,0.25,"C2"],["C",0.66667,0.33334,0.75,"C2"]]});

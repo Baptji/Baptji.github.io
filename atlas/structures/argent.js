@@ -1,0 +1,3 @@
+// Structure cristalline — générée par tools/cif_vers_structure.py, ne pas retoucher à la main.
+// Source : COD 9008459 (Wyckoff, R. W. G., 1963).
+Structure3D.enregistrer({"id":"argent","nom":"Silver","formule":"Ag","groupe":"F m -3 m","maille":[4.0862,4.0862,4.0862,90.0,90.0,90.0],"source":{"base":"Crystallography Open Database","cod":"9008459","auteurs":["Wyckoff, R. W. G."],"annee":"1963","titre":"Second edition. Interscience Publishers, New York, New York Cubic closest packed, ccp, structure","revue":"Crystal Structures","volume":"1","pages":"7–83","doi":""},"atomes":[["Ag",0.0,0.0,0.0,"Ag"],["Ag",0.0,0.5,0.5,"Ag"],["Ag",0.5,0.0,0.5,"Ag"],["Ag",0.5,0.5,0.0,"Ag"]]});

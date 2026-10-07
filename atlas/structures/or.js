@@ -1,0 +1,3 @@
+// Structure cristalline — générée par tools/cif_vers_structure.py, ne pas retoucher à la main.
+// Source : COD 9008463 (Wyckoff, R. W. G., 1963).
+Structure3D.enregistrer({"id":"or","nom":"Gold","formule":"Au","groupe":"F m -3 m","maille":[4.07825,4.07825,4.07825,90.0,90.0,90.0],"source":{"base":"Crystallography Open Database","cod":"9008463","auteurs":["Wyckoff, R. W. G."],"annee":"1963","titre":"Second edition. Interscience Publishers, New York, New York Cubic closest packed, ccp, structure","revue":"Crystal Structures","volume":"1","pages":"7–83","doi":""},"atomes":[["Au",0.0,0.0,0.0,"Au"],["Au",0.0,0.5,0.5,"Au"],["Au",0.5,0.0,0.5,"Au"],["Au",0.5,0.5,0.0,"Au"]]});

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Atlas géologique de France — roches, âges et altération</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪨</text></svg>">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="formation-conditions.css">
+  <link rel="stylesheet" href="argiles-comparer.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">🪨 Atlas géologique de France<small>roches · minéraux · argiles</small></div>
+    <input id="search" type="search" placeholder="Chercher (granite, quartz, montmorillonite…)">
+    <nav class="chips" id="mainnav">
+      <button class="chip" data-section="accueil">Accueil</button>
+      <button class="chip" data-section="roches">🪨 Roches</button>
+      <button class="chip" data-section="mineraux">💎 Minéraux</button>
+      <button class="chip" data-section="argiles">🧱 Argiles</button>
+      <button class="chip" data-section="oxydes">🟠 Oxydes</button>
+      <button class="chip" data-section="amorphes">🫧 Amorphes</button>
+    </nav>
+  </header>
+
+  <div class="layout">
+    <aside id="sidebar"></aside>
+    <main id="main"></main>
+    <aside id="panneau" hidden aria-label="Fiche liée">
+      <div class="pan-barre">
+        <button class="pan-retour" hidden></button>
+        <span id="panneau-type"></span>
+        <button class="pan-fermer" aria-label="Fermer le panneau">✕</button>
+      </div>
+      <div id="panneau-contenu"></div>
+    </aside>
+  </div>
+
+  <footer>
+    <p class="licence"><b>Licence <a href="https://creativecommons.org/licenses/by-nc/4.0/deed.fr" target="_blank" rel="noopener license">CC BY-NC 4.0</a></b> —
+    Réutilisation libre pour l'enseignement, les exposés et les conférences, en citant l'Atlas géologique de France (B. Decobert).
+    Toute utilisation commerciale (vente, publicité, publication payante) demande une autorisation.
+    Les photos gardent la licence indiquée sous chacune d'elles.</p>
+    Données : ordres de grandeur compilés de la littérature scientifique (dénudation karstique, isotopes cosmogéniques,
+    bilans de bassins versants, profils d'altération) — à utiliser pour comparer, pas comme constantes.
+    Fond géologique : © BRGM (carte géologique de la France au 1/1 000 000, service WMS geoservices.brgm.fr).
+    Carte : © OpenStreetMap. Extraits : Wikipédia (CC BY-SA). Échelle des temps : Commission internationale de stratigraphie (2023).
+  </footer>
+
+  <div id="tooltip"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="edition.js"></script>
+  <script src="data.js"></script>
+  <script src="triangle-textures.js"></script>
+  <script src="echelle-temps.js"></script>
+  <script src="roches-arbre.js"></script>
+  <script src="mineraux.js"></script>
+  <script src="classification.js"></script>
+  <script src="argiles-especes-valeurs.js"></script>
+  <script src="mineraux-suite.js"></script>
+  <script src="nesosilicates.js"></script>
+  <script src="sorosilicates.js"></script>
+  <script src="cyclosilicates.js"></script>
+  <script src="inosilicates-chaine-simple.js"></script>
+  <script src="inosilicates-chaine-double.js"></script>
+  <script src="phyllosilicates.js"></script>
+  <script src="tectosilicates.js"></script>
+  <script src="oxydes.js"></script>
+  <script src="pourbaix-especes.js"></script>
+  <script src="pourbaix-concentration.js"></script>
+  <script src="natifs.js"></script>
+  <script src="sulfures.js"></script>
+  <script src="halogenures.js"></script>
+  <script src="carbonates.js"></script>
+  <script src="borates.js"></script>
+  <script src="sulfates.js"></script>
+  <script src="phosphates.js"></script>
+  <script src="organiques.js"></script>
+  <script src="geol50.js"></script>
+  <script src="structures3d.js"></script>
+  <script src="structures/index.js"></script>
+  <script src="formation.js"></script>
+  <script src="mineraux-formation.js"></script>
+  <script src="formation-anim.js"></script>
+  <script src="textures.js"></script>
+  <script src="textures-roches.js"></script>
+  <script src="textures-varietes.js"></script>
+  <script src="formation-anim-sed.js"></script>
+  <script src="formation-conditions.js"></script>
+  <script src="cristal.js"></script>
+  <script src="organiques-formes.js"></script>
+  <script src="natifs-formes.js"></script>
+  <script src="halogenures-formes.js"></script>
+  <script src="sulfures-formes.js"></script>
+  <script src="carbonates-formes.js"></script>
+  <script src="borates-formes.js"></script>
+  <script src="sulfates-formes.js"></script>
+  <script src="phosphates-formes.js"></script>
+  <script src="oxydes-formes.js"></script>
+  <script src="nesosilicates-formes.js"></script>
+  <script src="soro-cyclosilicates-formes.js"></script>
+  <script src="ino-phyllosilicates-formes.js"></script>
+  <script src="tectosilicates-formes.js"></script>
+  <script src="pourquoi.js"></script>
+  <script src="pourquoi-phenomenes.js"></script>
+  <script src="plus-loin.js"></script>
+  <script src="reperes-climat.js"></script>
+  <script src="alteration-bilan.js"></script>
+  <script src="alteration-reactions.js"></script>
+  <script src="alteration-schema.js"></script>
+  <script src="espacement-basal.js"></script>
+  <script src="argiles-eau.js"></script>
+  <script src="argiles-structure.js"></script>
+  <script src="argiles-particules.js"></script>
+  <script src="nombres.js"></script>
+  <script src="identite.js"></script>
+  <script src="clivage.js"></script>
+  <script src="argiles-especes-page.js"></script>
+  <script src="argiles-cec.js"></script>
+  <script src="argiles-comparer.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

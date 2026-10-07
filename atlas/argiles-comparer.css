@@ -1,0 +1,31 @@
+/* ---------- Comparer les espèces d'un groupe d'argiles en 3D (G.3, argiles-comparer.js) ---------- */
+.cmp .cmp-outils { margin-top: 12px; }
+.cmp-aspect { margin: 4px 0 6px; font-size: 13.5px; line-height: 1.5; color: var(--ink2); max-width: 90ch; }
+.cmp-aide { margin: 0 0 12px; font-size: 12.5px; color: var(--muted); }
+.cmp-grille {
+  display: grid; gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr));
+}
+.cmp-carte { margin: 0; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.cmp-vue {
+  display: block; width: 100%; aspect-ratio: 5 / 4; background: #fff;
+  border: 1px solid var(--border); border-radius: 10px; cursor: grab; touch-action: none;
+}
+.cmp-vue:active { cursor: grabbing; }
+.cmp-vide {
+  aspect-ratio: 5 / 4; display: grid; place-items: center; padding: 12px; text-align: center;
+  font-size: 13px; color: var(--muted); background: var(--surface); border: 1px dashed var(--border); border-radius: 10px;
+}
+.cmp-carte figcaption { display: grid; gap: 5px; }
+.cmp-tete { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.cmp-tete .min-chip { padding-top: 3px; padding-bottom: 3px; }
+.cmp-formule { font-size: 12.5px; color: var(--ink2); overflow-wrap: anywhere; }
+.cmp-legende { font-size: 12px; gap: 3px 10px; }
+.cmp-seq { margin: 0; font-size: 13px; color: var(--ink2); }
+.cmp-seq b { font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.cmp-dit { margin: 0; font-size: 13.5px; line-height: 1.5; }
+.cmp-modele { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.45; }
+.cmp-sources { margin-top: 14px; font-size: 12.5px; color: var(--ink2); }
+.cmp-sources summary { cursor: pointer; color: var(--muted); }
+.cmp-sources ul { margin: 6px 0 0; padding-left: 18px; line-height: 1.55; }
+.cmp-sources li + li { margin-top: 4px; }

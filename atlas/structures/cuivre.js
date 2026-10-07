@@ -1,0 +1,3 @@
+// Structure cristalline — générée par tools/cif_vers_structure.py, ne pas retoucher à la main.
+// Source : COD 9008468 (Wyckoff, R. W. G., 1963).
+Structure3D.enregistrer({"id":"cuivre","nom":"Copper","formule":"Cu","groupe":"F m -3 m","maille":[3.61496,3.61496,3.61496,90.0,90.0,90.0],"source":{"base":"Crystallography Open Database","cod":"9008468","auteurs":["Wyckoff, R. W. G."],"annee":"1963","titre":"Second edition. Interscience Publishers, New York, New York Cubic closest packed, ccp, structure","revue":"Crystal Structures","volume":"1","pages":"7–83","doi":""},"atomes":[["Cu",0.0,0.0,0.0,"Cu"],["Cu",0.0,0.5,0.5,"Cu"],["Cu",0.5,0.0,0.5,"Cu"],["Cu",0.5,0.5,0.0,"Cu"]]});
