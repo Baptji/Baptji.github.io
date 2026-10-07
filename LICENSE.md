@@ -1,10 +1,10 @@
 # Licence
 
-Le contenu de l'Atlas géologique de France (textes, schémas, animations, fiches et code) est publié sous licence
+Le contenu de l'Atlas géologique (textes, schémas, animations, fiches et code) est publié sous licence
 **Creative Commons Attribution – Pas d'utilisation commerciale 4.0 International (CC BY-NC 4.0)** :
 https://creativecommons.org/licenses/by-nc/4.0/deed.fr
 
-Réutilisation libre pour l'enseignement, les exposés et les conférences, en citant l'Atlas géologique de France
+Réutilisation libre pour l'enseignement, les exposés et les conférences, en citant l'Atlas géologique
 (B. Decobert). Toute utilisation commerciale (vente, publicité, publication payante) demande une autorisation.
 
 Ne sont pas couverts par cette licence et gardent la leur :

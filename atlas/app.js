@@ -1,4 +1,4 @@
-// ============ Atlas géologique de France — logique ============
+// ============ Atlas géologique — logique ============
 "use strict";
 
 const $ = (sel, root) => (root || document).querySelector(sel);
@@ -596,7 +596,7 @@ function renderAmorphes() {
     l'allophane, Cradwick et al. (1972, <i>Nature Physical Science</i> 240) pour l'imogolite, Eggleton et Tilley (1998,
     <i>Clays and Clay Minerals</i> 46) pour l'hisingérite. Ambre, copal, jais, bitume, ozokérite : sources détaillées
     dans chaque fiche.</p>`;
-  document.title = "Amorphes et minéraloïdes — Atlas géologique de France";
+  document.title = "Amorphes et minéraloïdes — Atlas géologique";
 }
 
 // ---------------- ACCUEIL (hub des 3 parties) ----------------
@@ -605,7 +605,7 @@ function renderHub() {
   <div class="card hero hub-hero">
     <div class="hub-bandeau" aria-hidden="true"><i style="background:var(--cat-sedimentaire)"></i><i style="background:var(--cat-magmatique)"></i><i style="background:var(--prod-argile)"></i><i style="background:var(--prod-oxydes)"></i></div>
     <p class="hub-surtitre">Accueil</p>
-    <h1>Atlas géologique de France</h1>
+    <h1>Atlas géologique</h1>
     <p class="sub" style="font-size:15px;max-width:75ch">Les roches de France, les minéraux qui les composent et ce que
     l'altération en fait. Les parties se lisent dans l'ordre où la matière se transforme : une roche est un assemblage
     de minéraux ; en s'altérant, ces minéraux donnent des argiles et des oxydes.</p>
@@ -669,7 +669,7 @@ function renderHub() {
     Transportés, ces produits se déposent et donnent de nouvelles roches sédimentaires ; laissés en place, ils
     constituent le matériau des sols.</p>
   </div>`;
-  document.title = "Atlas géologique de France";
+  document.title = "Atlas géologique";
 }
 
 // ---------------- partie ROCHES (vue d'ensemble) ----------------
@@ -767,7 +767,7 @@ function renderRoches() {
     const t = e.target.closest("[data-go]");
     if (t) go(t.dataset.go);
   });
-  document.title = "Roches — Atlas géologique de France";
+  document.title = "Roches — Atlas géologique";
 }
 
 // ---------------- arbre des roches (lexique BRGM) ----------------
@@ -847,7 +847,7 @@ function renderRocheFamille(fam) {
     <h2>Les autres familles</h2>
     <div class="min-chips">${autres}</div>
   </div>`;
-  document.title = fam.nom + " — Atlas géologique de France";
+  document.title = fam.nom + " — Atlas géologique";
 }
 
 function renderRocheBranche({ fam, branche: br }) {
@@ -882,7 +882,7 @@ function renderRocheBranche({ fam, branche: br }) {
     <p class="sub">${fam.desc}</p>
     ${voisines ? `<p class="sub" style="margin-bottom:4px"><b>Les autres branches</b> :</p><div class="min-chips">${voisines}</div>` : ""}
   </div>`;
-  document.title = br.nom + " — Atlas géologique de France";
+  document.title = br.nom + " — Atlas géologique";
 }
 
 // ---------------- frise des temps géologiques (C.5) ----------------
@@ -1449,7 +1449,7 @@ function renderRock(rock) {
   if (rock.regions && rock.regions.length) renderMap(rock);
   else { const mp = $("#map"); if (mp) mp.innerHTML = `<p class="sub" style="padding:14px;opacity:.55;font-style:italic">Localisation cartographique non renseignée pour cette roche.</p>`; }
   photoRoche(rock);
-  document.title = rock.nom + " — Atlas géologique de France";
+  document.title = rock.nom + " — Atlas géologique";
 }
 
 // ---------------- carte ----------------
@@ -1789,7 +1789,7 @@ function renderMineralPage(id) {
   brancherStructureMineral($("#main"));
   brancherFicheMineral($("#main"));
   if (window.Nombres) Nombres.rendre($("#main"));
-  document.title = MINERAUX[id].nom + " — Atlas géologique de France";
+  document.title = MINERAUX[id].nom + " — Atlas géologique";
 }
 
 // 02/10/2026 (sa demande) : carte « Comment se forme-t-il ? » RETIRÉE de la page (formationMineralCardHTML reste écrite) ;
@@ -2042,7 +2042,7 @@ function renderEspecePage(eid) {
   Structure3D.brancher($("#main"));
   if (window.Nombres) Nombres.rendre($("#main"));
   if (window.CecSchema) CecSchema.monter($("#main"));
-  document.title = ESPECES[eid].nom + " — Atlas géologique de France";
+  document.title = ESPECES[eid].nom + " — Atlas géologique";
 }
 
 // page = true : fiche en pleine page (titre, fil d'Ariane cliquable)
@@ -2201,7 +2201,7 @@ function renderClassif() {
     cristaux). Les micas vrais et les serpentines, souvent visibles à l'œil nu, sont rangés ici car ils partagent la même
     structure en feuillets. Source : nomenclature <b>AIPEA / IMA</b> (Guggenheim et al.).</p>
   </div>`;
-  document.title = "Argiles — Atlas géologique de France";
+  document.title = "Argiles — Atlas géologique";
 }
 
 // ---------------- page d'UN groupe d'argiles (= une colonne du tableau) ----------------
@@ -2265,7 +2265,7 @@ function renderGroupeArgile(fi, gi) {
   loadWikiThumbs(g.especes.map((eid) => ({ id: eid, nom: (ESPECES[eid] || {}).nom || eid })), "argimg-", "argiles");
   // G.3 (07/10/2026) : petites fiches 3D des espèces du groupe, qui tournent ensemble (argiles-comparer.js)
   if (window.ArgilesComparer) ArgilesComparer.monter($("#main"));
-  document.title = g.nom + " — Atlas géologique de France";
+  document.title = g.nom + " — Atlas géologique";
 }
 
 // ---------------- page classification des minéraux ----------------
@@ -2357,7 +2357,7 @@ function renderMineralClasse(c) {
     <div class="min-chips">${autres}</div>
   </div>
   ${c.sources ? `<p class="page-source"><b>Sources</b> — ${c.sources.join(" ; ")}</p>` : ""}`;
-  document.title = c.classe + " — Atlas géologique de France";
+  document.title = c.classe + " — Atlas géologique";
 }
 
 // ---------------- page d'UN groupe de minéraux ----------------
@@ -2410,7 +2410,7 @@ function renderMineralGroupe(c, gi) {
     ${voisins.trim() ? `<p class="sub" style="margin-bottom:4px"><b>Les autres groupes de la classe ${c.num}</b> :</p>
       <div class="min-chips">${voisins}</div>` : ""}
   </div>`;
-  document.title = g.nom + " — Atlas géologique de France";
+  document.title = g.nom + " — Atlas géologique";
 }
 
 // ---------------- vue d'ensemble des minéraux ----------------
@@ -2468,7 +2468,7 @@ function renderMineraux() {
     complète, traverse les âges et finit en sable. Les autres classes (carbonates, oxydes, sulfates, sulfures…) se rangent,
     elles, par leur <b>anion</b> — le groupement chimique qui les définit (CO₃, O, SO₄, S…).</p>
   </div>`;
-  document.title = "Minéraux — Atlas géologique de France";
+  document.title = "Minéraux — Atlas géologique";
 }
 
 // ---------------- page oxydes & hydroxydes ----------------
@@ -2525,7 +2525,7 @@ function renderOxydes() {
   document.querySelectorAll("[data-oxyde]").forEach((b) => b.addEventListener("click", (e) => {
     e.stopPropagation(); location.hash = "oxyde/" + b.dataset.oxyde;
   }));
-  document.title = "Oxydes & hydroxydes — Atlas géologique de France";
+  document.title = "Oxydes & hydroxydes — Atlas géologique";
 }
 
 // charge une vignette par item : d'abord une image LOCALE (images/<dossier>/<id>.jpg, déposée par
@@ -2940,7 +2940,7 @@ function renderOxydeElement(id) {
     }
     majCurseur(); majLecture();
   }
-  document.title = fam.element + " — Oxydes — Atlas géologique de France";
+  document.title = fam.element + " — Oxydes — Atlas géologique";
 }
 
 // ---------------- visualiseur pH–Eh (Pourbaix) ----------------
@@ -3139,7 +3139,7 @@ function renderPourbaix() {
     if (eh < basEau) $("#pheh-desc").textContent += " ⚠️ En dessous de la limite de stabilité de l'eau : conditions irréalisables dans une eau naturelle.";
   }
   majLecture();
-  document.title = "Visualiseur pH–Eh — Atlas géologique de France";
+  document.title = "Visualiseur pH–Eh — Atlas géologique";
 }
 
 // ---------------- schéma de structure des argiles ----------------
@@ -3387,7 +3387,7 @@ function renderArgile(a) {
     wiki: decodeURIComponent((a.wikipedia || "").split("/wiki/").pop() || a.nom),
     wikiAlts: (a.especes || []).map((eid) => (ESPECES[eid] || {}).nom || "").filter(Boolean).map((n) => n.split(" (")[0]),
   }], "argpimg-", "argiles");
-  document.title = a.nom + " — Atlas géologique de France";
+  document.title = a.nom + " — Atlas géologique";
 }
 
 // ---------------- démarrage ----------------

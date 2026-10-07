@@ -1,6 +1,6 @@
-# Programmes de B. Decobert
+# Strates
 
-Site : https://baptji.github.io/ — l'Atlas géologique de France est en `atlas/` (édition légère).
+Site : https://baptji.github.io/ — l'Atlas géologique est en `atlas/` (édition légère).
 
 Mise à jour : `./publier.sh "message"` recopie l'édition légère de l'Atlas et envoie le site.
 
