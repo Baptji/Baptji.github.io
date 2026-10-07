@@ -35,13 +35,18 @@ h1, h2 { margin: 0; line-height: 1.1; text-wrap: balance; }
 .ouvrir:hover { filter: brightness(1.08); }
 .ouvrir:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
 
-.galerie { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; }
-.galerie figure { margin: 0; display: grid; gap: 8px; align-content: start; min-width: 0; }
-.galerie .large { grid-column: 1 / -1; }
-.galerie video { width: 100%; max-width: 100%; height: auto; display: block; border-radius: 12px;
+.defile { width: 100%; max-width: 640px; display: grid; gap: 10px; }
+.fenetre { position: relative; aspect-ratio: 16 / 9; max-width: 100%; border-radius: 12px; overflow: hidden;
   border: 1px solid var(--border); background: #fff; }
-.galerie figcaption { font-size: .9rem; color: var(--ink2); }
-@media (max-width: 640px) { .galerie { grid-template-columns: 1fr; } }
+.fenetre video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
+  opacity: 0; transition: opacity .6s ease; }
+.fenetre video.actif { opacity: 1; }
+.points { display: flex; gap: 8px; justify-content: center; }
+.points button { width: 10px; height: 10px; padding: 0; border-radius: 50%; border: 0; cursor: pointer;
+  background: var(--muted); opacity: .45; }
+.points button[aria-current="true"] { background: var(--accent); opacity: 1; }
+.points button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .fenetre video { transition: none; } }
 
 footer { border-top: 1px solid var(--border); padding-top: 16px; color: var(--muted); font-size: .8rem; }
 footer p { margin: 0 0 6px; }
@@ -62,19 +67,17 @@ footer a { color: inherit; }
       <a class="ouvrir" href="atlas/">Ouvrir l'Atlas</a>
     </div>
 
-    <div class="galerie">
-      <figure class="large">
-        <video src="medias/formation.mp4" poster="medias/formation.jpg" autoplay muted loop playsinline preload="metadata"></video>
-        <figcaption>Chaque roche se forme sous vos yeux, étape par étape.</figcaption>
-      </figure>
-      <figure>
-        <video src="medias/argile-eau.mp4" poster="medias/argile-eau.jpg" autoplay muted loop playsinline preload="metadata"></video>
-        <figcaption>Une argile qui gonfle en prenant l'eau.</figcaption>
-      </figure>
-      <figure>
-        <video src="medias/quartz.mp4" poster="medias/quartz.jpg" autoplay muted loop playsinline preload="metadata"></video>
-        <figcaption>Les cristaux en 3D, atome par atome.</figcaption>
-      </figure>
+    <div class="defile">
+      <div class="fenetre">
+        <video src="medias/formation.mp4" poster="medias/formation.jpg" muted playsinline preload="auto" class="actif" aria-label="Formation du granite, étape par étape"></video>
+        <video src="medias/argile-eau.mp4" poster="medias/argile-eau.jpg" muted playsinline preload="metadata" aria-label="Une argile qui gonfle en prenant l'eau, en 3D"></video>
+        <video src="medias/quartz.mp4" poster="medias/quartz.jpg" muted playsinline preload="metadata" aria-label="Structure du quartz en 3D"></video>
+      </div>
+      <div class="points" role="group" aria-label="Choisir une animation">
+        <button type="button" aria-label="Formation d'une roche" aria-current="true"></button>
+        <button type="button" aria-label="Argile et eau, en 3D"></button>
+        <button type="button" aria-label="Cristal en 3D"></button>
+      </div>
     </div>
   </section>
 
@@ -85,19 +88,30 @@ footer a { color: inherit; }
   </footer>
 </main>
 <script>
-  // les vidéos jouent quand elles sont à l'écran ; mouvement réduit demandé : arrêtées, avec les commandes
-  var videos = document.querySelectorAll("video");
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    videos.forEach(function (v) { v.removeAttribute("autoplay"); v.pause(); v.controls = true; });
-  } else if ("IntersectionObserver" in window) {
-    var obs = new IntersectionObserver(function (entrees) {
-      entrees.forEach(function (e) {
-        if (e.isIntersecting) { var p = e.target.play(); if (p && p.catch) p.catch(function () { e.target.controls = true; }); }
-        else e.target.pause();
-      });
-    }, { threshold: 0.25 });
-    videos.forEach(function (v) { obs.observe(v); });
-  }
+  // fenêtre qui défile : chaque vidéo joue jusqu'au bout, puis la suivante ; à l'arrêt hors écran
+  (function () {
+    var videos = document.querySelectorAll(".fenetre video"), points = document.querySelectorAll(".points button");
+    var i = 0, visible = true, calme = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    function jouer() {
+      var v = videos[i];
+      if (calme || !visible) { v.pause(); return; }
+      var p = v.play(); if (p && p.catch) p.catch(function () {});
+    }
+    function montrer(k) {
+      videos[i].pause();
+      videos[i].classList.remove("actif"); points[i].removeAttribute("aria-current");
+      i = (k + videos.length) % videos.length;
+      videos[i].currentTime = 0; videos[i].preload = "auto";
+      videos[i].classList.add("actif"); points[i].setAttribute("aria-current", "true");
+      jouer();
+    }
+    videos.forEach(function (v) { v.addEventListener("ended", function () { if (v === videos[i]) montrer(i + 1); }); });
+    points.forEach(function (b, k) { b.addEventListener("click", function () { montrer(k); }); });
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(function (e) { visible = e[0].isIntersecting; jouer(); }, { threshold: 0.25 })
+        .observe(document.querySelector(".fenetre"));
+    } else jouer();
+  })();
 </script>
 </body>
 </html>
