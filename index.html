@@ -7,7 +7,7 @@
 <meta name="description" content="Atlas géologique et autres outils, à ouvrir dans le navigateur.">
 <link rel="icon" href="medias/favicon.png">
 <style>
-/* Une colonne : le programme, puis ses fonctionnalités en vidéo. Polices du système (aucune ressource extérieure). */
+/* Colonne centrée : le nom du site, puis un panneau par programme (en-tête, puis ses animations). Polices du système (aucune ressource extérieure). */
 :root {
   --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink2: #52514e; --muted: #898781;
   --border: rgba(11, 11, 11, 0.10); --accent: #2a78d6;
@@ -20,22 +20,24 @@
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--page); color: var(--ink);
   font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
-main { max-width: 1000px; margin: 0 auto; padding: 48px 20px 56px; display: grid; gap: 36px; }
+main { max-width: 820px; margin: 0 auto; padding: 48px 20px 56px; display: grid; gap: 32px; justify-items: center; text-align: center; }
+main > * { width: 100%; }
 h1, h2 { margin: 0; line-height: 1.1; text-wrap: balance; }
 .site h1 { font-size: 1.15rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
 
-.programme { display: grid; gap: 22px; }
-.entete { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
-.entete img { width: 96px; height: 96px; flex: none; }
-.entete div { flex: 1 1 260px; min-width: 0; }
+.programme { display: grid; gap: 22px; justify-items: center; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 18px; padding: 28px 24px 22px; }
+.entete { display: grid; gap: 10px; justify-items: center; }
+.entete img { width: 88px; height: 88px; }
 .entete h2 { font-size: clamp(1.9rem, 5vw, 2.6rem); letter-spacing: -0.01em; }
-.entete p { margin: 6px 0 0; color: var(--ink2); }
-.ouvrir { flex: none; padding: 12px 22px; border-radius: 10px; background: var(--accent); color: #fff;
+.entete p { margin: 0; color: var(--ink2); }
+.ouvrir { margin-top: 6px; padding: 12px 22px; border-radius: 10px; background: var(--accent); color: #fff;
   text-decoration: none; font-weight: 600; }
 .ouvrir:hover { filter: brightness(1.08); }
 .ouvrir:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
 
 .defile { width: 100%; max-width: 640px; display: grid; gap: 10px; }
+@media (max-width: 520px) { .programme { padding: 22px 14px 18px; } }
 .fenetre { position: relative; aspect-ratio: 16 / 9; max-width: 100%; border-radius: 12px; overflow: hidden;
   border: 1px solid var(--border); background: #fff; }
 .fenetre video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
@@ -48,7 +50,7 @@ h1, h2 { margin: 0; line-height: 1.1; text-wrap: balance; }
 .points button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .fenetre video { transition: none; } }
 
-footer { border-top: 1px solid var(--border); padding-top: 16px; color: var(--muted); font-size: .8rem; }
+footer { border-top: 1px solid var(--border); padding-top: 16px; max-width: 640px; color: var(--muted); font-size: .8rem; }
 footer p { margin: 0 0 6px; }
 footer a { color: inherit; }
 </style>
@@ -60,10 +62,8 @@ footer a { color: inherit; }
   <section class="programme" aria-labelledby="atlas">
     <div class="entete">
       <img src="medias/atlas-icone.png" alt="" width="96" height="96">
-      <div>
-        <h2 id="atlas">Atlas géologique</h2>
-        <p>Roches, minéraux et argiles de France.</p>
-      </div>
+      <h2 id="atlas">Atlas géologique</h2>
+      <p>Roches, minéraux et argiles de France.</p>
       <a class="ouvrir" href="atlas/">Ouvrir l'Atlas</a>
     </div>
 
