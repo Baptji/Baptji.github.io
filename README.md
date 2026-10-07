@@ -1,4 +1,4 @@
-# Strates
+# Squid
 
 Site : https://baptji.github.io/ — l'Atlas géologique est en `atlas/` (édition légère).
 
