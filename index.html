@@ -25,19 +25,21 @@ main > * { width: 100%; }
 h1, h2 { margin: 0; line-height: 1.1; text-wrap: balance; }
 .site h1 { font-size: 1.15rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
 
-.programme { display: grid; gap: 22px; justify-items: center; background: var(--surface); border: 1px solid var(--border);
-  border-radius: 18px; padding: 28px 24px 22px; }
-.entete { display: grid; gap: 10px; justify-items: center; }
-.entete img { width: 88px; height: 88px; }
-.entete h2 { font-size: clamp(1.9rem, 5vw, 2.6rem); letter-spacing: -0.01em; }
-.entete p { margin: 0; color: var(--ink2); }
-.ouvrir { margin-top: 6px; padding: 12px 22px; border-radius: 10px; background: var(--accent); color: #fff;
+.programme { display: grid; grid-template-columns: 72px minmax(0, 1fr); column-gap: 18px; row-gap: 14px; text-align: left;
+  max-width: 760px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px 22px 18px; }
+.programme > img { width: 72px; height: 72px; grid-row: 1; grid-column: 1; }
+.entete { grid-column: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; }
+.entete .titre { flex: 1 1 220px; min-width: 0; }
+.entete h2 { font-size: 1.6rem; letter-spacing: -0.01em; }
+.entete p { margin: 2px 0 0; color: var(--ink2); font-size: .95rem; }
+.ouvrir { flex: none; padding: 9px 18px; border-radius: 10px; background: var(--accent); color: #fff;
   text-decoration: none; font-weight: 600; }
 .ouvrir:hover { filter: brightness(1.08); }
 .ouvrir:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
 
-.defile { width: 100%; max-width: 640px; display: grid; gap: 10px; }
-@media (max-width: 520px) { .programme { padding: 22px 14px 18px; } }
+.defile { grid-column: 2; width: 100%; max-width: 600px; display: grid; gap: 8px; }
+@media (max-width: 520px) { .programme { grid-template-columns: 52px minmax(0, 1fr); column-gap: 12px; padding: 16px 14px; }
+  .programme > img { width: 52px; height: 52px; } .defile { grid-column: 1 / -1; } }
 .fenetre { position: relative; aspect-ratio: 16 / 9; max-width: 100%; border-radius: 12px; overflow: hidden;
   border: 1px solid var(--border); background: #fff; }
 .fenetre video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
@@ -60,10 +62,12 @@ footer a { color: inherit; }
   <header class="site"><h1>Squid</h1></header>
 
   <section class="programme" aria-labelledby="atlas">
+    <img src="medias/atlas-icone.png" alt="" width="72" height="72">
     <div class="entete">
-      <img src="medias/atlas-icone.png" alt="" width="96" height="96">
-      <h2 id="atlas">Atlas géologique</h2>
-      <p>Roches, minéraux et argiles de France.</p>
+      <div class="titre">
+        <h2 id="atlas">Atlas géologique</h2>
+        <p>Roches, minéraux et argiles de France.</p>
+      </div>
       <a class="ouvrir" href="atlas/">Ouvrir l'Atlas</a>
     </div>
 
