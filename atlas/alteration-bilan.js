@@ -86,7 +86,22 @@
     graphite: R({ limon: 1, pourquoi: "graphite : inaltéré, en paillettes" }),
     matorg: R({ autre: 1, pourquoi: "matière organique : oxydée, repart en CO₂" }),
     verre: R({ argile: 0.4, oxydes: 0.05, dissous: 0.55, pourquoi: "verre volcanique → halloysite, allophane, smectite ; silice et alcalins dissous" }),
+    // minéraux des météorites (B.5, 08/10/2026)
+    fer_natif: R({ oxydes: 0.9, dissous: 0.1, pourquoi: "fer-nickel : rouille en goethite et akaganéite ; le nickel part avec l'eau" }),
+    taenite: R({ oxydes: 0.65, dissous: 0.35, pourquoi: "taénite (fer-nickel riche en nickel) : le fer rouille, le nickel part avec l'eau" }),
+    troilite: R({ oxydes: 0.6, dissous: 0.4, pourquoi: "sulfure de fer : fer en oxydes, soufre emporté en sulfate" }),
+    pyrrhotite: R({ oxydes: 0.6, dissous: 0.4, pourquoi: "sulfure de fer : fer en oxydes, soufre emporté en sulfate" }),
+    schreibersite: R({ oxydes: 0.75, dissous: 0.25, pourquoi: "phosphure de fer et de nickel : fer en oxydes, phosphore et nickel dissous" }),
+    cohenite: R({ oxydes: 0.9, autre: 0.1, pourquoi: "carbure de fer : fer en oxydes, carbone oxydé en CO₂" }),
+    oldhamite: R({ dissous: 1, pourquoi: "sulfure de calcium : se dissout entièrement" }),
+    daubreelite: R({ oxydes: 0.7, dissous: 0.3, pourquoi: "sulfure de fer et de chrome : chrome et fer restent en oxydes, soufre emporté" }),
+    merrillite: R({ res: 0.1, dissous: 0.9, pourquoi: "phosphate de calcium : dissous lentement" }),
+    moissanite: R({ res: 1, pourquoi: "carbure de silicium : inaltérable" }),
+    pigeonite: PYROX, tridymite: R({ res: 0.97, dissous: 0.03, pourquoi: "silice de haute température : reste en grains" }),
+    cristobalite: R({ res: 0.95, dissous: 0.05, pourquoi: "silice de haute température : reste en grains" }),
+    ilmenite: R({ oxydes: 1, pourquoi: "oxyde de fer et de titane : résistant" }),
   };
+  if (!DEVENIR.anorthite && DEVENIR.plagioclases) DEVENIR.anorthite = DEVENIR.plagioclases;
   const DEFAUT = R({ argile: 0.35, dissous: 0.65, pourquoi: "règle par défaut : silicate altérable" });
   const CLES = ["sable", "limon", "argile", "oxydes", "dissous", "autre"];
 

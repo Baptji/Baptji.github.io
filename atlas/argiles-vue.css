@@ -1,0 +1,91 @@
+/* ---------- Vue d'ensemble des argiles : un panneau par groupe (08/10/2026, argiles-vue.js) ---------- */
+.argv-intro { font-size: 15px; max-width: 80ch; margin-bottom: 10px; }
+.argv-sommaire { margin: 4px 0 10px; }
+.argv-fam { margin-top: 26px; }
+.argv-fam > h2 { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; font-size: 19px; margin: 0 0 4px; }
+.argv-fam-desc { margin: 0 0 12px; max-width: 90ch; }
+.argv-grp { border-left: 4px solid var(--argv-c, var(--baseline)); }
+.argv-tete { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.argv-tete h3 { margin: 0; font-size: 17px; }
+.argv-tete .sw-big { width: 20px; height: 20px; border-radius: 6px; border: 1px solid var(--border); flex: none; }
+.argv-info {
+  margin-left: 4px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+  padding: 2px 10px; border: 1px solid var(--border); border-radius: 999px; font: inherit; font-size: 12px; color: var(--ink2);
+  background: var(--surface);
+}
+.argv-info::before { content: "+"; font-weight: 700; color: var(--muted); width: 8px; text-align: center; }
+.argv-info[aria-expanded="true"]::before { content: "−"; }
+.argv-info:hover { border-color: var(--ink2); color: var(--ink); }
+.argv-info-txt { margin: 8px 0 0; padding: 8px 12px; border-left: 3px solid var(--argv-c, var(--baseline)); background: var(--surface); border-radius: 0 8px 8px 0; }
+.argv-info-txt p { margin: 0 0 6px; font-size: 13.5px; line-height: 1.5; max-width: 100ch; }
+.argv-grp .cmp { margin-top: 10px; }
+
+/* puces repliées (texte sous les figures, explications) */
+.cmp-puce { font-size: 13px; color: var(--ink2); }
+.cmp-puce > summary {
+  cursor: pointer; display: inline-flex; align-items: center; gap: 6px; list-style: none;
+  padding: 2px 9px; border: 1px solid var(--border); border-radius: 999px; font-size: 12px; color: var(--ink2);
+  background: var(--surface); user-select: none;
+}
+.cmp-puce > summary::-webkit-details-marker { display: none; }
+.cmp-puce > summary::before { content: "+"; font-weight: 700; color: var(--muted); width: 8px; text-align: center; }
+.cmp-puce[open] > summary::before { content: "−"; }
+.cmp-puce > summary:hover { border-color: var(--ink2); color: var(--ink); }
+.cmp-puce[open] > summary { margin-bottom: 6px; }
+.cmp-puce > p { margin: 0 0 6px; line-height: 1.5; }
+.cmp-intro { margin: 0 0 8px; }
+.cmp-intro > p { max-width: 95ch; font-size: 13.5px; }
+.cmp-carte .cmp-puce .cmp-dit { font-size: 13px; }
+.argv .hero .cmp-puce { margin-top: 6px; }
+.argv .hero .cmp-puce > p { font-size: 13.5px; max-width: 90ch; }
+
+/* vues 3D sur toute la largeur du panneau : les cartes s'étirent (auto-fit), plus aplaties quand elles sont peu nombreuses */
+/* toujours 3 cartes par ligne au plus (sa règle : 8 espèces = 3 lignes) ; 1 ou 2 espèces prennent toute la largeur */
+.argv-grp .cmp-grille {
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, max(200px, calc((100% - (var(--cols, 3) - 1) * 12px) / var(--cols, 3)))), 1fr));
+}
+/* le nom seul au-dessus de la vue (formule retirée à sa demande, 09/10) : toutes les vues d'une rangée commencent à la même hauteur */
+.argv-grp .cmp-tete { display: flex; min-height: 30px; align-items: center; }
+.argv-grp .cmp-n1 .cmp-vue, .argv-grp .cmp-n1 .cmp-vide { aspect-ratio: 21 / 9; }
+.argv-grp .cmp-n2 .cmp-vue, .argv-grp .cmp-n2 .cmp-vide { aspect-ratio: 16 / 10; }
+.argv-sources { margin-top: 14px; }
+.argv-sources ul { margin: 8px 0 0; padding-left: 18px; font-size: 12.5px; line-height: 1.55; color: var(--ink2); }
+.argv-sources li + li { margin-top: 4px; }
+
+/* bulle au survol des jauges */
+.argv-bulle {
+  position: fixed; z-index: 3000; max-width: 360px; pointer-events: none; padding: 8px 11px; border-radius: 8px;
+  background: var(--ink); color: var(--page); font-size: 12.5px; line-height: 1.45; box-shadow: 0 6px 20px rgba(0, 0, 0, .25);
+}
+.argv-bulle p { margin: 0 0 4px; }
+.argv-bulle .argv-b-n { opacity: .8; }
+.argv-bulle ul { margin: 2px 0 0; padding-left: 14px; }
+.argv-bulle li.on { color: #ffd166; }
+
+/* caractéristiques du groupe : une jauge par grandeur, échelle commune à tous les groupes */
+.argv-carac {
+  display: grid; gap: 6px; margin: 12px 0 8px; padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--surface);
+}
+.argv-j { display: grid; grid-template-columns: 130px minmax(120px, 1fr) minmax(150px, 210px); gap: 12px; align-items: center; font-size: 13px; }
+.argv-j-nom { color: var(--ink2); font-weight: 600; }
+.argv-j-piste {
+  position: relative; height: 12px; border-radius: 6px; background: var(--grid);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+.argv-j-piste > i { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--border); }
+.argv-j-plage { position: absolute; top: 1px; bottom: 1px; border-radius: 5px; background: var(--argv-c); filter: saturate(1.3) brightness(.85); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .3); }
+.argv-j-pt {
+  position: absolute; top: 50%; width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%;
+  background: var(--ink); box-shadow: 0 0 0 1.5px var(--surface);
+}
+.argv-j-vide { background: repeating-linear-gradient(135deg, var(--grid) 0 5px, transparent 5px 10px); }
+.argv-j-val { font-variant-numeric: tabular-nums; color: var(--ink2); min-width: 0; }
+.argv-j-val b { white-space: nowrap; }
+.argv-j-val b { color: var(--ink); font-weight: 600; }
+.argv-j-val small { display: block; font-size: 11px; color: var(--muted); line-height: 1.2; }
+@media (max-width: 640px) {
+  .argv-j { grid-template-columns: minmax(0, 1fr) minmax(0, auto); gap: 4px 10px; }
+  .argv-j-piste { grid-column: 1 / -1; grid-row: 2; }
+}

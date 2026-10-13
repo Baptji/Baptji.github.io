@@ -12,6 +12,7 @@
   --cat-sedimentaire: #2a78d6;
   --cat-magmatique: #1baf7a;
   --cat-metamorphique: #4a3aa7;
+  --cat-meteoritique: #a8641f;
   --prod-sable: #eda100;
   --prod-limon: #eb6834;
   --prod-argile: #e87ba4;
@@ -34,6 +35,7 @@
     --cat-sedimentaire: #3987e5;
     --cat-magmatique: #199e70;
     --cat-metamorphique: #9085e9;
+    --cat-meteoritique: #d68a45;
     --prod-sable: #c98500;
     --prod-limon: #d95926;
     --prod-argile: #d55181;
@@ -80,8 +82,9 @@ a { color: var(--accent); }
 
 /* ---------- layout ---------- */
 .layout {
-  display: grid; grid-template-columns: 340px minmax(0, 1fr);
-  gap: 20px; max-width: 1340px; margin: 0 auto; padding: 20px;
+  --menu-l: 370px;
+  display: grid; grid-template-columns: var(--menu-l) minmax(0, 1fr);
+  gap: 20px; max-width: 1370px; margin: 0 auto; padding: 20px;
 }
 @media (max-width: 900px) {
   .layout { grid-template-columns: 1fr; }
@@ -322,7 +325,7 @@ table.data th.num { text-align: right; }
   margin-top: 10px; padding: 6px 14px; border-radius: 8px; cursor: pointer;
   border: 1px solid var(--baseline); background: none; color: var(--ink2); font: inherit; font-size: 13px;
 }
-footer { max-width: 1340px; margin: 0 auto; padding: 6px 20px 40px; color: var(--muted); font-size: 12.5px; }
+footer { max-width: 1370px; margin: 0 auto; padding: 6px 20px 40px; color: var(--muted); font-size: 12.5px; }
 footer .licence { margin: 0 0 10px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; color: var(--ink2); font-size: 13px; }
 footer .licence a { color: inherit; }
 
@@ -410,16 +413,16 @@ table.notation td:first-child { font-family: ui-monospace, "SF Mono", Menlo, mon
 }
 /* trois colonnes quand la place le permet ; sinon la page cède le menu, puis le panneau la recouvre */
 @media (min-width: 1401px) {
-  .layout.avec-panneau { grid-template-columns: 340px minmax(0, 1fr) 400px; max-width: 1780px; }
+  .layout.avec-panneau { grid-template-columns: var(--menu-l) minmax(0, 1fr) 360px; max-width: 1780px; }
 }
 @media (min-width: 1100px) and (max-width: 1400px) {
-  .layout.avec-panneau { grid-template-columns: minmax(0, 1fr) 400px; }
+  .layout.avec-panneau { grid-template-columns: minmax(0, 1fr) 360px; }
   .layout.avec-panneau #sidebar { display: none; }
 }
 @media (max-width: 1099px) {
   #panneau {
     position: fixed; top: 0; right: 0; bottom: 0; z-index: 2500;
-    width: min(440px, 100vw); max-height: none; border-radius: 0;
+    width: min(400px, 100vw); max-height: none; border-radius: 0;
     box-shadow: -12px 0 40px rgba(0, 0, 0, 0.25);
   }
 }
@@ -867,6 +870,11 @@ table.notation td:first-child { font-family: ui-monospace, "SF Mono", Menlo, mon
 .pq-scene svg { display: block; width: 100%; height: 100%; }
 .pq-legende { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
 .pq-sym { color: var(--ink2); }
+/* mesure + légende (+ « comment lire ») repliées sous le graphique (12/10/2026) */
+.pq-note { border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; }
+.pq-note > summary { cursor: pointer; font-size: 12.5px; color: var(--muted); }
+.pq-note[open] > summary { margin-bottom: 6px; }
+.pq-note .pq-legende + .pq-legende { margin-top: 6px; }
 .pq-info { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 12px; align-items: center; min-height: 44px; }
 .pq-pastille { width: 12px; height: 12px; border-radius: 50%; background: #c0392b; }
 .pq-pastille.choix { background: #2b6ea3; }
@@ -903,6 +911,10 @@ table.notation td:first-child { font-family: ui-monospace, "SF Mono", Menlo, mon
 /* variantes du graphique « Même phénomène » (pourquoi-phenomenes.js) : contour en pointillé */
 .pq-r.variante .pq-g { stroke: #7d776c; stroke-width: 1; stroke-dasharray: 1.6 1.2; }
 .pq-mobile { pointer-events: none; }
+/* bulle de survol d'une roche (graphique « courant » : seuils d'érosion et de dépôt, 12/10/2026) */
+.pq-bulle-fond { fill: #ffffff; fill-opacity: .94; stroke: #8f897d; stroke-width: .7; }
+.pq-bulle-t { fill: #3d4440; }
+.pq-bulle-titre { fill: #1f2724; font-weight: 600; }
 /* « Pour aller plus loin » : graphiques complémentaires (plus-loin.js) */
 .pl-silice { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background: #f3f1ea; margin: 6px 0 4px; }
 .pl-silice svg { display: block; width: 100%; height: auto; }
@@ -1059,6 +1071,8 @@ a.id-chip:hover { border-color: var(--ink2); }
 .fiche-min > .min-panneau { clear: right; }
 /* carte « Structure » des minéraux ajustée (01/10/2026) : boutons sur UNE ligne, maille et description repliées */
 .min-structure .s3d-outils:not(.s3d-etats) { flex-wrap: nowrap; gap: 5px; overflow-x: auto; scrollbar-width: thin; align-items: center; }
+/* dans le panneau de droite (étroit) : les boutons passent à la ligne au lieu d'être coupés au bord */
+#panneau .min-structure .s3d-outils:not(.s3d-etats) { flex-wrap: wrap; overflow-x: visible; row-gap: 6px; }
 .min-structure .s3d-seg { flex: none; }
 .min-structure .s3d-seg button { padding: 3px 7px; font-size: 12px; white-space: nowrap; }
 .min-structure .s3d-outils .map-fs-btn { margin-left: auto; flex: none; white-space: nowrap; padding: 3px 8px; font-size: 12px; }
@@ -1244,8 +1258,8 @@ a.id-chip:hover { border-color: var(--ink2); }
 .page-roche .codes-tete .code-chip { font-size: 13px; }
 .page-roche .rock-head .roche-photo { width: 200px; }
 .page-roche .rock-head .roche-photo img, .page-roche .rock-head .roche-photo .sw-ph { height: 140px; }
-.page-roche .fa-scene { max-width: 860px; margin: 0 auto; width: 100%; }
-@container (min-width: 821px) { .page-roche .tex { grid-template-columns: minmax(0, 520px) minmax(200px, 1fr); } }
+.page-roche .fa-scene { max-width: min(100%, 118vh); margin: 0 auto; width: 100%; } /* 12/10/2026 : toute la largeur, bornée par la hauteur d'écran */
+@container (min-width: 821px) { .page-roche .tex { grid-template-columns: minmax(0, 1.5fr) minmax(220px, 1fr); } }
 .page-roche .form-structure .s3d-vue { height: 325px; }
 .page-roche .form-structure .s3d-vue.is-tall { height: 75vh; }
 .page-roche #map { height: 375px; }
@@ -1333,3 +1347,54 @@ a.id-chip:hover { border-color: var(--ink2); }
 .cec-autres { margin-top: 0; }
 @media (max-width: 560px) { .cec-floc-ctrl { grid-template-columns: 1fr; } }
 @media (max-width: 560px) { .cec-grammes .nb-litre, .cec-ha .nb-litre { grid-template-columns: 1fr 70px; } .cec-grammes .nb-litre i, .cec-ha .nb-litre i { grid-column: 1 / -1; grid-row: 2; } }
+
+/* ---------- météorites (B.5) : site de référence à l'étranger sur la carte des chutes ---------- */
+.chute-ref span { display: block; width: 14px; height: 14px; margin: 2px; transform: rotate(45deg); border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.35); }
+
+/* Vue d'ensemble des minéraux (11/10/2026) : sous-familles, pastille « néoformée », « Pour aller plus loin » replié */
+.min-sf { margin: 8px 0 4px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.min-chip .min-tag { margin-left: 6px; padding: 0 6px; border-radius: 999px; font-size: 11px; font-weight: 600;
+  background: var(--prod-oxydes); color: #fff; }
+.min-plus { margin-top: 12px; }
+.min-plus > :not(summary) { margin-bottom: 10px; }
+
+/* ============ fiche roche sur toute la largeur (12/10/2026) ============ */
+/* la page roche n'est plus bornée à 1370 px : elle occupe toute la fenêtre, menu et panneau compris */
+.layout:has(.page-roche), .layout.avec-panneau:has(.page-roche) { max-width: none; }
+/* en-tête : texte à gauche, photo à droite calée en haut de la carte (plus de photo flottante qui déborde) */
+.page-roche .rock-head { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 4px 22px; align-items: start; }
+.page-roche .rock-head .desc { max-width: none; }
+.page-roche .rock-head .rock-head-texte > .sub:last-child { margin-bottom: 0; }
+.page-roche .rock-head .roche-photo { float: none; width: 300px; margin: 0; }
+.page-roche .rock-head .roche-photo img, .page-roche .rock-head .roche-photo .sw-ph { width: 100%; height: 190px; }
+@media (max-width: 760px) {
+  .page-roche .rock-head { grid-template-columns: minmax(0, 1fr); }
+  .page-roche .rock-head .roche-photo { width: 100%; grid-row: 1; }
+  .page-roche .rock-head .roche-photo img, .page-roche .rock-head .roche-photo .sw-ph { height: 200px; }
+}
+/* « Où la trouver ? » et « Quand s'est-elle formée ? » sur la même ligne, la carte plus grande */
+.roche-ou-quand { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 0 12px; align-items: stretch; margin-bottom: 12px; }
+.roche-ou-quand > .card { min-width: 0; margin-bottom: 0; }
+/* la carte remplit la hauteur de sa colonne (celle de la frise si elle est plus haute) */
+.roche-ou-quand .map-card { display: flex; flex-direction: column; }
+.roche-ou-quand .map-card .map-boite { flex: 1 1 auto; display: flex; flex-direction: column; }
+.page-roche .roche-ou-quand #map { height: auto; flex: 1 1 auto; min-height: 560px; }
+.roche-ou-quand.frise-grande .map-card .map-boite { flex: none; }
+.page-roche .roche-ou-quand.frise-grande #map { flex: none; height: 560px; min-height: 0; }
+.page-roche .roche-ou-quand #map.is-tall { height: 80vh; }
+.roche-ou-quand.frise-grande { grid-template-columns: minmax(0, 1fr); }
+/* frise trop serrée à côté de la carte (panneau de droite ouvert) : elle passe dessous (13/10/2026) */
+.roche-ou-quand.frise-dessous { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.roche-ou-quand.frise-dessous .map-card .map-boite { flex: none; }
+.page-roche .roche-ou-quand.frise-dessous #map:not(.is-tall) { flex: none; height: 460px; min-height: 0; }
+.quand-card .ft-reglages { justify-content: flex-start; align-items: center; margin-top: 6px; }
+.quand-card .ft-reglages .map-fs-btn { flex: none; white-space: nowrap; padding: 3px 9px; font-size: 12px; }
+.quand-card .ft-wrap { overflow-x: hidden; }
+.roche-ou-quand.frise-grande .quand-card .ft-wrap { overflow-x: auto; }
+@media (max-width: 1000px) {
+  .roche-ou-quand { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .page-roche .roche-ou-quand #map, .page-roche .roche-ou-quand.frise-grande #map { flex: none; height: 420px; min-height: 0; }
+  .page-roche .roche-ou-quand #map.is-tall { height: 75vh; }
+}
+body:has(.page-roche) footer { max-width: none; }
+

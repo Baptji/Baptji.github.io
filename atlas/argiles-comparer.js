@@ -1,5 +1,6 @@
 // ============ Comparer les espèces d'un groupe d'argiles en 3D (chantier G.3, 07/10/2026) ============
-// Page d'un groupe d'argiles (#argrp/<famille>-<groupe>) SEULEMENT (demande de l'utilisateur) : une petite fiche par espèce,
+// Vue d'ensemble des argiles (#argiles), dans le panneau de chaque groupe (08/10/2026 : les pages de groupe #argrp n'existent plus,
+// argiles-vue.js ; avant : page du groupe seulement, ni fiche d'espèce ni fiche d'argile) : une petite fiche par espèce,
 // avec un modèle 3D simple. Les vues d'un même groupe ont la même orientation, la même échelle et tournent ensemble (glisser
 // sur l'une fait tourner toutes les autres) ; des boutons allument ce qui change d'une espèce à l'autre (sites vides du kaolin,
 // cation des octaèdres, aluminium à la place du silicium, ce qui est entre les feuillets…), le reste est estompé
@@ -586,48 +587,79 @@
     else modele = `Structure affinée : ${reference(P.base)}.`;
     const seq = P && P.seq ? `<p class="cmp-seq">Site de la lacune, feuillet après feuillet : <b>${P.seq.join(" · ")}</b></p>` : "";
     return `<figure class="cmp-carte" data-cmp="${eid}">
+      <div class="cmp-tete"><button type="button" class="min-chip" data-espece="${eid}"><b>${e.nom}</b></button></div>
       ${P ? `<canvas class="cmp-vue" role="img" aria-label="Structure de ${e.nom} : faire glisser pour tourner"></canvas>` : `<div class="cmp-vide">${modele}</div>`}
       <figcaption>
-        <div class="cmp-tete"><button type="button" class="min-chip" data-espece="${eid}"><b>${e.nom}</b></button>
-          <span class="cmp-formule">${e.formule}</span></div>
         <div class="cmp-legende s3d-legende"></div>
         ${seq}
-        <p class="cmp-dit">${spec.dit || e.note}</p>
-        ${P ? `<p class="cmp-modele">${modele}</p>` : ""}
+        <details class="cmp-puce"><summary>${cfg.seul ? "Description" : "Ce qui la distingue"}</summary>
+          <p class="cmp-dit">${spec.dit || e.note}</p>
+          ${P ? `<p class="cmp-modele">${modele}</p>` : ""}
+        </details>
       </figcaption>
     </figure>`;
   }
 
   // ── page du groupe ────────────────────────────────────────────────────────
+  // groupes à une seule espèce (08/10/2026, vue d'ensemble) : une vue seule, sans boutons d'aspect
+  const SEULS = { halloysite: { vue: "objet" } };
+  function configCle(cle) {
+    if (GROUPES[cle]) return GROUPES[cle];
+    if (!ESPECES[cle]) return null;
+    return Object.assign({ seul: true, intro: "", aspects: [A_TOUT], especes: {}, sources: [] }, SEULS[cle] || {});
+  }
   function configDe(g) {
-    if (!g || !g.especes || g.especes.length < 2) return null;
-    return GROUPES[g.especes[0]] || null;
+    if (!g || !g.especes || !g.especes.length) return null;
+    return g.especes.length === 1 || GROUPES[g.especes[0]] ? configCle(g.especes[0]) : null;
   }
   function html(g) {
     const cfg = configDe(g);
     if (!cfg) return "";
-    return `<div class="card cmp" data-cmp-groupe="${g.especes[0]}">
-      <h2>Comparer les espèces en 3D</h2>
-      <p class="sub">${cfg.intro}</p>
+    const n = g.especes.length;
+    return `<div class="cmp cmp-n${Math.min(n, 3)}${cfg.seul ? " cmp-seul" : ""}" data-cmp-groupe="${g.especes[0]}">
       <div class="s3d-outils cmp-outils">
-        <div class="s3d-seg" data-cmp-aspects>${cfg.aspects.map((x, i) => `<button type="button" data-aspect="${x.id}" aria-pressed="${i === 0}">${x.nom}</button>`).join("")}</div>
+        ${cfg.aspects.length > 1 ? `<div class="s3d-seg" data-cmp-aspects>${cfg.aspects.map((x, i) => `<button type="button" data-aspect="${x.id}" aria-pressed="${i === 0}">${x.nom}</button>`).join("")}</div>` : ""}
         <div class="s3d-seg"><button type="button" data-mode="polyedres" aria-pressed="true">Polyèdres</button><button type="button" data-mode="billes" aria-pressed="false">Billes</button></div>
         <div class="s3d-seg"><button type="button" data-zoom="1.2" aria-label="Zoomer">+</button><button type="button" data-zoom="0.83" aria-label="Dézoomer">−</button></div>
         <div class="s3d-seg"><button type="button" data-tourne aria-pressed="true">Rotation</button></div>
       </div>
-      <p class="cmp-aspect" aria-live="polite"></p>
-      <p class="cmp-aide">${cfg.vue === "objet" || cfg.partage === false ? "Chaque objet garde son orientation de départ ; faire glisser sur une vue pour la tourner, double-clic pour revenir au départ."
-        : "Les vues ont la même orientation et la même échelle : faire glisser sur l'une fait tourner toutes les autres ; double-clic pour revenir au départ."}</p>
-      <div class="cmp-grille">${g.especes.map((eid) => `<figure class="cmp-carte cmp-attente" data-cmp="${eid}"><div class="cmp-vide">Chargement…</div></figure>`).join("")}</div>
-      <details class="cmp-sources"><summary>Sources</summary><ul></ul></details>
+      <p class="cmp-aspect" aria-live="polite" hidden></p>
+      <div class="cmp-grille" style="--cols:${Math.min(n, 3)}">${g.especes.map((eid) => `<figure class="cmp-carte cmp-attente" data-cmp="${eid}" data-espece-bloc="${eid}"><div class="cmp-tete"><b>${ESPECES[eid].nom}</b></div><div class="cmp-vide">Chargement…</div></figure>`).join("")}</div>
     </div>`;
   }
+  // texte « ce qui change d'une espèce à l'autre » d'un groupe (repris dans la puce du panneau, argiles-vue.js)
+  const introDe = (g) => { const c = configDe(g); return c && c.intro ? c.intro : ""; };
+  // toutes les sources des modèles 3D de ces groupes (carte repliée en bas de la vue d'ensemble) : charge les structures
+  async function sourcesDe(groupes) {
+    const lit = new Set(), refs = new Set();
+    for (const g of groupes) {
+      const cfg = configDe(g);
+      if (!cfg) continue;
+      (cfg.sources || []).forEach((x) => lit.add(x));
+      for (const eid of g.especes) {
+        const ent = S.entree(eid), X = EB.ARGILES3D[eid];
+        if (!ent || !X) continue;
+        const f = ent.fichier || X[0];
+        await Promise.race([charger(f), new Promise((ok) => setTimeout(ok, 4000))]);
+        if (S.donnees[f]) refs.add(S.referenceHTML(S.donnees[f]));
+      }
+    }
+    return [...lit, ...refs];
+  }
 
-  async function monter(racine) {
-    const bloc = racine && racine.querySelector("[data-cmp-groupe]");
+  function monter(racine) {
+    if (!racine) return;
+    const blocs = [...racine.querySelectorAll("[data-cmp-groupe]")].filter((b) => !b.dataset.monte);
+    if (!window.IntersectionObserver) { blocs.forEach(monterBloc); return; }
+    const io = new IntersectionObserver((x) => x.forEach((it) => {
+      if (it.isIntersecting) { io.unobserve(it.target); monterBloc(it.target); }
+    }), { rootMargin: "400px 0px" });
+    blocs.forEach((b) => io.observe(b));
+  }
+  async function monterBloc(bloc) {
     if (!bloc || bloc.dataset.monte) return;
     bloc.dataset.monte = "1";
-    const cfg = GROUPES[bloc.dataset.cmpGroupe];
+    const cfg = configCle(bloc.dataset.cmpGroupe);
     const especes = [...bloc.querySelectorAll(".cmp-carte")].map((x) => x.dataset.cmp);
     const partage = cfg.vue !== "objet" && cfg.partage !== false;
     const reduit = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -637,6 +669,7 @@
     // une fiche par espèce
     const grille = bloc.querySelector(".cmp-grille");
     grille.innerHTML = especes.map((eid, i) => carteHTML(eid, P[i], cfg)).join("");
+    grille.querySelectorAll(".cmp-carte").forEach((f) => { f.dataset.especeBloc = f.dataset.cmp; });
     const vues = [];
     especes.forEach((eid, i) => {
       if (!P[i]) return;
@@ -648,7 +681,8 @@
       v.R = v.R0;
       vues.push(v);
     });
-    if (partage && vues.length) etat.R = vues[0].R0;
+    if (!vues.length) return;
+    if (partage) etat.R = vues[0].R0;
     // même échelle pour tout le groupe : la plus grande étendue
     const recadrer = () => {
       vues.forEach((v) => { if (partage) v.R = etat.R; v.etendue = etendue(v); });
@@ -674,7 +708,8 @@
     appliquerAspect();
     // sources : celles du groupe + les structures montrées
     const refs = [...new Set(P.filter(Boolean).map((p) => S.referenceHTML(p.base)))];
-    bloc.querySelector(".cmp-sources ul").innerHTML = (cfg.sources || []).concat(refs).map((s) => `<li>${s}</li>`).join("");
+    const ulSrc = bloc.querySelector(".cmp-sources ul");
+    if (ulSrc) ulSrc.innerHTML = (cfg.sources || []).concat(refs).map((s) => `<li>${s}</li>`).join("");
 
     // boutons
     bloc.querySelector(".cmp-outils").addEventListener("click", (e) => {
@@ -696,14 +731,17 @@
         if (!glisse || glisse.v !== v || (!e.buttons && e.pointerType === "mouse")) { if (glisse && glisse.v === v) glisse = null; return; }
         const dx = e.clientX - glisse.x, dy = e.clientY - glisse.y;
         glisse.x = e.clientX; glisse.y = e.clientY;
-        const R = mult(rotation(dy * 0.01, dx * 0.01), partage ? etat.R : v.R);
-        if (partage) { etat.R = R; dessiner(); } else { v.R = R; dessiner([v]); }
+        // toutes les vues tournent ensemble : orientation commune (feuillets), ou même rotation appliquée à chacune
+        // (objets et fibres, qui gardent chacun leur orientation de départ ; demande du 09/10/2026)
+        const Rd = rotation(dy * 0.01, dx * 0.01);
+        if (partage) etat.R = mult(Rd, etat.R); else vues.forEach((w) => { w.R = mult(Rd, w.R); });
+        dessiner();
       });
       const fin = () => { glisse = null; };
       c.addEventListener("pointerup", fin); c.addEventListener("pointercancel", fin); c.addEventListener("lostpointercapture", fin);
       c.addEventListener("dblclick", () => {
         etat.zoom = 1;
-        if (partage) etat.R = vues[0].R0; else v.R = v.R0;
+        if (partage) etat.R = vues[0].R0; else vues.forEach((w) => { w.R = w.R0; });
         recadrer(); dessiner();
       });
     });
@@ -728,5 +766,5 @@
     }
   }
 
-  window.ArgilesComparer = { html, monter, GROUPES, _preparer: preparer, _lacunes: lacunes };
+  window.ArgilesComparer = { html, monter, introDe, sourcesDe, GROUPES, _preparer: preparer, _lacunes: lacunes };
 })();

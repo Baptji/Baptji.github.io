@@ -1321,6 +1321,242 @@
     //@@ROCHES@@
   };
 
+  // ─────────────────────────────── MÉTÉORITES (B.5, 08/10/2026) ───────────────────────────────
+  // Trois modes propres aux météorites ; les achondrites et les mésosidérites se dessinent avec les modes existants
+  // (grenue, mosaïque, détritique : réglages dans meteorites-textures.js).
+  //
+  // CHONDRITIQUE : chondres (gouttes de silicates fondues puis figées en quelques heures), grains de métal et de troïlite,
+  // inclusions réfractaires blanches, dans une matrice fine. `net` (0–1) = netteté des chondres : 1 pour le type 3
+  // (bords nets, matrice sombre), ≈ 0,3 pour le type 6 (recristallisés, bords estompés). Sans chondres (CI d'Orgueil) :
+  // seulement les `grains` (framboïdes de magnétite, plaquettes de sulfure, rhomboèdres de carbonate) dans la matrice.
+  // Réglages : chondres { part, taille [mm], types { po, bo, rp, pop : poids }, bordMetal }, cai { part, taille },
+  // grains [{ min, part, taille, forme: "grain" | "framboise" | "plaque" | "rhombe", role }], matrice { nom, fond, taches, role }, net.
+  const CHONDRES = {
+    po: { cle: "ch:olivine", nom: "Chondres porphyriques à olivine", fond: "#c3cc6a", verre: "#8f8b68", role: "cristaux d'olivine dans un peu de verre" },
+    bo: { cle: "chb:olivine", nom: "Chondres à barres d'olivine", fond: "#c7cf72", verre: "#625d48", role: "lamelles parallèles d'olivine, figées d'une goutte entièrement fondue" },
+    rp: { cle: "ch:enstatite", nom: "Chondres radiés de pyroxène", fond: "#d4cfae", verre: "#8c8a68", role: "fibres de pyroxène qui rayonnent d'un point" },
+    pop: { cle: "chp:enstatite", nom: "Chondres à olivine et pyroxène", fond: "#b9bd82", verre: "#7b7656", role: "olivine et pyroxène mêlés" },
+  };
+  function chondreSVG(c, R, net, t) {
+    const T = { ...CHONDRES[c.type], ...((t.couleursChondres || {})[c.type] || {}) }, k = nid("chd"), r = c.r, flou = net < 0.6;
+    let dedans = poly(c.pts, T.verre);
+    if (c.type === "po" || c.type === "pop") {
+      const n = Math.max(4, Math.round(r * r / (flou ? 55 : 28)));
+      for (let i = 0; i < n; i++) {
+        const a = R() * 6.283, d = Math.sqrt(R()) * r * 0.9, x = c.cx + Math.cos(a) * d, y = c.cy + Math.sin(a) * d;
+        const s = entre(R, [0.14, 0.3]) * r * (flou ? 1.35 : 1), px = c.type === "pop" && R() < 0.45;
+        dedans += poly(polyRegulier(x, y, s, s * entre(R, [0.6, 0.9]), R() * 3.14, px ? 8 : 6), px ? "#d4cfae" : T.fond, contour(0.35));
+      }
+    } else if (c.type === "bo") {
+      const a = R() * 3.14, ca = Math.cos(a), sa = Math.sin(a), e = Math.max(1.4, r * 0.11);
+      for (let d = -r; d < r; d += e * 2.1) dedans += trait(c.cx - ca * r - sa * d, c.cy - sa * r + ca * d, c.cx + ca * r - sa * d, c.cy + sa * r + ca * d, T.fond, e);
+      dedans += poly(c.pts, "none", ` stroke="${T.fond}" stroke-width="${r1(Math.max(1.6, r * 0.16))}"`);
+    } else {
+      const ox = c.cx + (R() - 0.5) * r * 1.1, oy = c.cy + (R() - 0.5) * r * 1.1, n = Math.max(14, Math.round(r * 1.6));
+      for (let i = 0; i < n; i++) { const a = i / n * 6.283 + R() * 0.08; dedans += trait(ox, oy, ox + Math.cos(a) * r * 2.3, oy + Math.sin(a) * r * 2.3, T.fond, Math.max(0.8, r * 0.06)); }
+    }
+    const bord = c.metal ? poly(c.pts, "none", ` stroke="#d7dadc" stroke-width="${r1(Math.max(1.6, r * 0.13))}"`) : "";
+    return tg(T.cle, `<clipPath id="${k}"><polygon points="${pts2(c.pts)}"/></clipPath><g clip-path="url(#${k})">${dedans}</g>${bord}`
+      + poly(c.pts, "none", contour(flou ? 0.45 : 0.9) + (flou ? ' stroke-opacity=".5" stroke-dasharray="3 2"' : "")));
+  }
+  // objet de forme irrégulière posé sur la grille ; renvoie le nombre de cellules prises (0 si refusé)
+  function poserObjet(G, liste, o, K, R, forme) {
+    const cx = -0.04 * Wp + R() * 1.08 * Wp, cy = -0.04 * Hp + R() * 1.08 * Hp;
+    if (G.lire(cx, cy) >= 0) return 0;
+    const L = entre(R, o.taille) * K, a = R() * 3.14;
+    const pts = forme === "plaque" ? rectOriente(cx, cy, L, L / entre(R, [3, 6]), a)
+      : forme === "rhombe" ? polyRegulier(cx, cy, L / 2, L / 2 * 0.62, a, 4)
+      : forme === "rond" ? polyRegulier(cx, cy, L / 2, L / 2 * entre(R, [0.8, 1]), a, 18)
+      : polyIrregulier(cx, cy, L / 2, L / 2 * entre(R, [0.45, 0.9]), a, 9, R, 0.55);
+    const libres = poser(G, pts, liste.length, 0, 0.4);
+    if (!libres) return 0;
+    liste.push({ o, min: o.min, cle: o.cle || o.min, pts, cx, cy, L, l: L * 0.6, ang: a, cel: libres.length, forme, n: liste.length });
+    return libres.length;
+  }
+  const COUL_MET = { fer_natif: "#d3d6d8", taenite: "#e3e2db", troilite: "#b39a62", schreibersite: "#d2c897", cohenite: "#cfc6a8", magnetite: "#1b1b1d", pyrrhotite: "#8e7351", chromite: "#1d1d1f" };
+  function objetSVG(c, R) {
+    const f = c.o.fond || COUL_MET[c.min] || hab(c.min).fond;
+    if (c.forme === "framboise") {    // framboïde : amas de petites billes de magnétite
+      let s = "";
+      const n = Math.max(6, Math.round(c.L * c.L / 9));
+      for (let i = 0; i < n; i++) { const a = R() * 6.283, d = Math.sqrt(R()) * c.L * 0.42; s += `<circle cx="${r1(c.cx + Math.cos(a) * d)}" cy="${r1(c.cy + Math.sin(a) * d)}" r="${r1(Math.max(0.7, c.L * 0.08))}" fill="${f}"/>`; }
+      return tg(c.cle, poly(c.pts, "rgba(0,0,0,0)") + s);
+    }
+    const reflet = /fer_natif|taenite|schreibersite|cohenite/.test(c.min) ? poly(c.pts.map(([x, y]) => [c.cx + (x - c.cx) * 0.45 - c.L * 0.08, c.cy + (y - c.cy) * 0.45 - c.L * 0.08]), "#f4f5f5", ' fill-opacity=".55"') : "";
+    return tg(c.cle, poly(c.pts, f, contour(0.6)) + reflet);
+  }
+  MODES.chondritique = function (roche, t, K, R) {
+    const G = Grille(), chondres = [], objets = [], net = t.net ?? 1;
+    // inclusions réfractaires (CAI), d'abord : grandes et blanches
+    if (t.cai) for (let e = 0, acq = 0; e < 3000 && acq < t.cai.part * G.N; e++) {
+      const n = poserObjet(G, objets, { min: "cai", cle: "cai", fond: "#f3efe3", taille: t.cai.taille }, K, R, "grain"); acq += n;
+    }
+    if (t.chondres) {
+      const types = Object.entries(t.chondres.types), tot = types.reduce((s, [, w]) => s + w, 0);
+      const tirer = () => { let u = R() * tot; for (const [k, w] of types) { if ((u -= w) <= 0) return k; } return types[0][0]; };
+      for (let e = 0, acq = 0; e < 6000 && acq < t.chondres.part * G.N; e++) {
+        const cx = -0.05 * Wp + R() * 1.1 * Wp, cy = -0.05 * Hp + R() * 1.1 * Hp;
+        if (G.lire(cx, cy) >= 0) continue;
+        const r = entre(R, t.chondres.taille) * K / 2, pts = polyRegulier(cx, cy, r, r * entre(R, [0.82, 1]), R() * 3.14, 22);
+        const libres = poser(G, pts, chondres.length, 0, 0.35);
+        if (!libres) continue;
+        const type = tirer();
+        chondres.push({ type, cle: CHONDRES[type].cle, pts, cx, cy, r, L: 2 * r, l: 2 * r, cel: libres.length, n: chondres.length,
+          metal: t.chondres.bordMetal && R() < t.chondres.bordMetal });
+        acq += libres.length;
+      }
+    }
+    (t.grains || []).forEach((o) => { for (let e = 0, acq = 0; e < (o.essais || 5000) && acq < o.part * G.N; e++) acq += poserObjet(G, objets, o, K, R, o.forme || "grain"); });
+    const m = t.matrice;
+    const p = fondMouchete(m.fond, m.taches, m.pas || 3, R, m.rayon || [0.5, 1.1]);
+    let corps = p.defs + fondRect("matrice", p.fill);
+    corps += chondres.map((c) => chondreSVG(c, R, net, t)).join("") + objets.map((c) => c.min === "cai" ? tg("cai", poly(c.pts, "#f3efe3", contour(0.7))) : objetSVG(c, R)).join("");
+    const mesure = mesurer([...chondres, ...objets], G);
+    mesure.matrice = 1 - Object.values(mesure).reduce((a, b) => a + b, 0);
+    const vus = [...new Set(chondres.map((c) => c.type))].sort((a, b) => Object.keys(CHONDRES).indexOf(a) - Object.keys(CHONDRES).indexOf(b));
+    const reperes = [
+      ...vus.map((k) => repereSur(G, chondres.filter((c) => c.type === k), k === "po" ? "PO" : k === "bo" ? "BO" : k === "rp" ? "RP" : "POP", 30)),
+      ...(t.cai ? [repereSur(G, objets.filter((c) => c.min === "cai"), "CAI", 26)] : []),
+      ...(t.grains || []).map((o) => repereSur(G, objets.filter((c) => c.cle === (o.cle || o.min)), o.ab || hab(o.min).ab, 24)),
+    ];
+    const groupes = [];
+    if (t.cai) groupes.push({ titre: "Les premiers solides du Système solaire", lignes: [{ ab: "CAI", nom: "Inclusions réfractaires", cle: "cai", couleur: "#f3efe3", role: "riches en calcium et en aluminium, 4 567 millions d'années" }] });
+    if (vus.length) groupes.push({ titre: t.titreChondres || "Chondres : gouttes fondues puis figées en quelques heures, dans le disque autour du Soleil",
+      lignes: vus.map((k) => ({ ab: k === "po" ? "PO" : k === "bo" ? "BO" : k === "rp" ? "RP" : "POP", nom: CHONDRES[k].nom, cle: CHONDRES[k].cle, couleur: CHONDRES[k].fond, role: CHONDRES[k].role })) });
+    if ((t.grains || []).length) groupes.push({ titre: t.titreGrains || "Grains de métal et de sulfure", lignes: t.grains.map((o) => ({ ...ligne(roche, o.min, o.role, o.cle || o.min), couleur: o.fond || COUL_MET[o.min] || hab(o.min).fond, ...(o.ab ? { ab: o.ab } : {}) })) });
+    groupes.push({ titre: t.titreMatrice || "Matrice : la poussière fine qui a soudé le tout", lignes: [{ nom: m.nom, role: m.role, couleur: m.fond, cle: "matrice", fond: true }] });
+    return { corps, reperes, mesure, legende: { titre: t.titreLegende || "De quoi est faite la chondrite", groupes } };
+  };
+
+  // WIDMANSTÄTTEN : tranche polie d'une météorite de fer attaquée à l'acide. `structure` : "octaedrite" (lamelles de kamacite
+  // selon les quatre familles de plans d'un octaèdre, bordées de taénite, plessite entre elles), "hexaedrite" (un seul cristal
+  // de kamacite rayé de lignes de Neumann), "ataxite" (mélange trop fin pour être vu). Réglages : largeur (mm, lamelles),
+  // longueur [mm], part (kamacite), nodules [{ min, n, taille, liseré }], aiguilles { min, n, taille } (rhabdites).
+  MODES.widmanstatten = function (roche, t, K, R) {
+    const G = Grille(), lam = [], noeuds = [], aig = [];
+    (t.nodules || []).forEach((o) => {
+      for (let i = 0, e = 0; i < o.n && e < 400; e++) {
+        const cx = Wp * (0.15 + 0.7 * R()), cy = Hp * (0.2 + 0.6 * R()), r = entre(R, o.taille) * K / 2;
+        const pts = polyIrregulier(cx, cy, r, r * entre(R, [0.6, 0.85]), R() * 3.14, 16, R, 0.22);
+        const libres = poser(G, pts, 100000 + noeuds.length, 0, 0.7);
+        if (!libres) continue;
+        noeuds.push({ o, min: o.min, cle: o.min, pts, cx, cy, L: 2 * r, l: 2 * r, cel: libres.length, n: 100000 + noeuds.length }); i++;
+      }
+    });
+    // une section quelconque d'un octaèdre coupe ses quatre familles de plans : trois directions bien marquées, une quatrième rare
+    const angs = (t.angles || [0.18, 1.23, 2.28, 2.8]).map((a) => a + (R() - 0.5) * 0.08);
+    const poids = t.poids || [1, 1, 1, 0.25], ptot = poids.reduce((a, b) => a + b, 0);
+    const direction = () => { let u = R() * ptot; for (let i = 0; i < poids.length; i++) if ((u -= poids[i]) <= 0) return i; return 0; };
+    const TONS = ["#a3a7ab", "#bfc2c5", "#8e9296", "#b2b5b8"];
+    let perim = 0;
+    if (t.structure === "octaedrite") {
+      const cible = (t.part ?? 0.75) * G.N;
+      for (let e = 0, acq = 0, echecs = 0; e < 20000 && acq < cible && echecs < 2500; e++, echecs++) {
+        const cx = -0.08 * Wp + R() * 1.16 * Wp, cy = -0.08 * Hp + R() * 1.16 * Hp;
+        if (G.lire(cx, cy) >= 0) continue;
+        const k = direction(), L = entre(R, t.longueur) * K, l = t.largeur * K * entre(R, [0.8, 1.2]);
+        const pts = rectOriente(cx, cy, L, l, angs[k] + (R() - 0.5) * 0.02, 0.15);
+        const libres = tester(G, pts, 0.22, 0.3);
+        if (!libres) continue;
+        libres.forEach((c) => { G.g[c] = lam.length; });
+        lam.push({ min: "fer_natif", cle: "fer_natif", pts, cx, cy, L, l, k, cel: libres.length, n: lam.length });
+        perim += 2 * (L + l); acq += libres.length; echecs = 0;
+      }
+    }
+    if (t.aiguilles) for (let i = 0; i < t.aiguilles.n; i++) {
+      const cx = R() * Wp, cy = R() * Hp, L = entre(R, t.aiguilles.taille) * K, a = angs[Math.floor(R() * 3)];
+      aig.push({ pts: rectOriente(cx, cy, L, Math.max(1.2, L / 9), a), cx, cy });
+    }
+    // fond : plessite (octaédrite), kamacite (hexaédrite) ou mélange très fin (ataxite)
+    const fond = t.structure === "octaedrite" ? fondMouchete("#6f7276", ["#9da0a4", "#55585c", "#c9cbcd"], 2, R, [0.4, 0.8])
+      : t.structure === "hexaedrite" ? { defs: "", fill: "#aeb2b5" } : fondMouchete("#9a9ea2", ["#b9bcbf", "#85898d"], 2, R, [0.3, 0.6]);
+    const cleFond = t.structure === "octaedrite" ? "plessite" : t.structure === "hexaedrite" ? "fer_natif" : "ataxite";
+    let corps = fond.defs + fondRect(cleFond, fond.fill);
+    if (t.structure === "hexaedrite") {     // lignes de Neumann : macles fines nées des chocs, trois directions
+      let s = "";
+      for (let i = 0; i < 70; i++) { const a = angs[i % 3], cx = R() * Wp, cy = R() * Hp, L = entre(R, [20, 90]); s += trait(cx - Math.cos(a) * L / 2, cy - Math.sin(a) * L / 2, cx + Math.cos(a) * L / 2, cy + Math.sin(a) * L / 2, "#7d8185", 0.5); }
+      corps += s;
+    }
+    if (t.structure === "ataxite") {      // fuseaux de kamacite microscopiques
+      let s = "";
+      for (let i = 0; i < 120; i++) { const a = angs[i % 4], cx = R() * Wp, cy = R() * Hp; s += poly(rectOriente(cx, cy, entre(R, [4, 9]), 1.2, a), "#c3c6c9"); }
+      corps += tg(cleFond, s);
+    }
+    // lamelles : les dernières posées passent sous les premières ; liseré clair = la taénite qui les borde
+    corps += lam.slice().reverse().map((c) => tg("fer_natif", poly(c.pts, TONS[c.k], ` stroke="#eceae2" stroke-width="1.3" stroke-linejoin="round"`))).join("");
+    corps += aig.map((a) => tg("schreibersite", poly(a.pts, COUL_MET.schreibersite, contour(0.4)))).join("");
+    corps += noeuds.map((c) => tg(c.cle, poly(c.pts, COUL_MET[c.min] || hab(c.min).fond, contour(0.8))
+      + (c.o.liseré ? tg(c.o.liseré, poly(c.pts, "none", ` stroke="${COUL_MET[c.o.liseré]}" stroke-width="${r1(Math.max(2, c.L * 0.07))}"`)) : ""))).join("");
+    const mesure = {};
+    const tot = G.N * PAS * PAS;
+    noeuds.forEach((c) => { mesure[c.cle] = (mesure[c.cle] || 0) + c.cel / G.N; });
+    const nod = Object.values(mesure).reduce((a, b) => a + b, 0);
+    if (t.structure === "octaedrite") {
+      const lamelles = lam.reduce((s, c) => s + c.cel, 0) / G.N;
+      mesure.taenite = Math.min(lamelles * 0.3, perim * 0.65 / tot);
+      mesure.fer_natif = lamelles - mesure.taenite;
+      mesure.plessite = Math.max(0, 1 - nod - lamelles);
+    } else mesure[cleFond] = 1 - nod;
+    if (aig.length) mesure.schreibersite = (mesure.schreibersite || 0) + aig.reduce((s, a) => s + aire(a.pts), 0) / tot;
+    const reperes = [
+      lam.length ? repereSur(G, lam, "Km", 40) : { ab: "Km", x: Wp * 0.3, y: Hp * 0.3 },
+      ...(t.nodules || []).map((o) => repereSur(G, noeuds.filter((c) => c.min === o.min), hab(o.min).ab, 30)),
+    ];
+    const groupes = t.structure === "octaedrite" ? [
+      { titre: "Au-dessus de 700 °C, le métal n'était qu'un grand cristal de taénite", lignes: [
+        { ab: "Pl", nom: "Plessite", cle: "plessite", couleur: "#6f7276", role: "mélange très fin de kamacite et de taénite, formé en dernier entre les lamelles", fond: true }] },
+      { titre: "De 700 à 450 °C, en quelques millions d'années : la kamacite pousse en lamelles", lignes: [
+        { ...ligne(roche, "fer_natif", "kamacite (5 à 7 % de nickel) : lamelles selon les quatre directions des faces d'un octaèdre ; l'acide les teinte différemment selon leur orientation"), ab: "Km", couleur: TONS[1] },
+        { ...ligne(roche, "taenite", "liseré brillant qui borde les lamelles : la taénite enrichie en nickel qu'elles ont rejeté"), couleur: "#eceae2" }] },
+    ] : [{ titre: t.structure === "hexaedrite" ? "Un seul cristal de kamacite (moins de 6 % de nickel)" : "Plus de 16 % de nickel : un mélange trop fin pour l'œil",
+      lignes: [{ ...ligne(roche, t.structure === "hexaedrite" ? "fer_natif" : "taenite", t.structure === "hexaedrite" ? "rayé de lignes de Neumann, macles fines nées des chocs" : "fuseaux microscopiques de kamacite dans la taénite"), cle: cleFond, couleur: t.structure === "hexaedrite" ? "#aeb2b5" : "#9a9ea2", fond: t.structure === "ataxite" }] }];
+    const incl = [...(t.nodules || []).flatMap((o) => [ligne(roche, o.min, o.role), ...(o.liseré ? [{ ...ligne(roche, o.liseré, "liseré autour des nodules"), couleur: COUL_MET[o.liseré] }] : [])]),
+      ...(t.aiguilles ? [{ ...ligne(roche, "schreibersite", "aiguilles (rhabdites)"), couleur: COUL_MET.schreibersite }] : [])]
+      .map((l) => ({ ...l, couleur: l.couleur && l.couleur !== hab(l.cle).fond ? l.couleur : COUL_MET[l.cle] || l.couleur }));
+    if (incl.length) groupes.push({ titre: "Inclusions", lignes: incl.filter((l, i, a) => a.findIndex((x) => x.cle === l.cle) === i) });
+    return { corps, reperes: reperes.filter(Boolean), mesure, legende: { titre: t.titreLegende || "Tranche polie, attaquée à l'acide", groupes } };
+  };
+
+  // PALLASITIQUE : cristaux d'olivine (arrondis ou anguleux) enchâssés dans du fer-nickel, petits grains de troïlite et de
+  // chromite dans le métal. Réglages : taille [mm], jointif [f], arrondi, olivine { fond, tons }, grains (dans le métal).
+  MODES.pallasitique = function (roche, t, K, R) {
+    const G = Grille(), ol = [], objets = [];
+    const germes = germesTries(R, K, t.taille, t.serre ?? 0.98);
+    const cellules = voronoi(germes);
+    const tons = (t.olivine && t.olivine.tons) || ["#c9b84c", "#bfae3c", "#d3c35d", "#b9a83f"];
+    germes.forEach((g, i) => {
+      const cell = cellules[i];
+      if (cell.length < 3) return;
+      const f = entre(R, t.jointif || [0.72, 0.84]);
+      let pts = cell.map(([x, y]) => [g.x + (x - g.x) * f, g.y + (y - g.y) * f]);
+      pts = t.arrondi ? lissePoints(pts) : casser(pts, g.x, g.y, R, 1);
+      const cel = G.cellules(pts);
+      if (!cel.length) return;
+      cel.forEach((c) => { G.g[c] = ol.length; });
+      const [cx, cy] = centre(pts);
+      ol.push({ min: "olivine", cle: "olivine", pts, cx, cy, L: 2 * g.r, l: 2 * g.r, cel: cel.length, n: ol.length, ton: tons[i % tons.length] });
+    });
+    (t.extra || []).forEach((o) => { for (let e = 0, acq = 0; e < 3000 && acq < o.part * G.N; e++) acq += poserObjet(G, objets, o, K, R, o.forme || "grain"); });
+    (t.grains || []).forEach((o) => { for (let e = 0, acq = 0; e < 3000 && acq < o.part * G.N; e++) acq += poserObjet(G, objets, o, K, R, o.forme || "grain"); });
+    // métal : fond clair, quelques lamelles de kamacite là où il est large
+    let corps = fondRect("metal", "#c4c7ca");
+    let s = "";
+    for (let i = 0; i < 90; i++) { const a = [0.4, 1.45, 2.5][i % 3], cx = R() * Wp, cy = R() * Hp, L = entre(R, [10, 40]); s += trait(cx - Math.cos(a) * L / 2, cy - Math.sin(a) * L / 2, cx + Math.cos(a) * L / 2, cy + Math.sin(a) * L / 2, "#a9adb1", entre(R, [1.5, 3.5])); }
+    corps += tg("metal", s);
+    corps += ol.map((c) => tg("olivine", poly(c.pts, c.ton, contour(0.9)) + marque(hab("olivine"), c, c.cx, c.cy, R() * 3.14, c.L * 0.8, c.l * 0.5, R))).join("");
+    corps += objets.map((c) => objetSVG(c, R)).join("");
+    const mesure = mesurer([...ol, ...objets], G);
+    mesure.metal = 1 - Object.values(mesure).reduce((a, b) => a + b, 0);
+    const reperes = [repereSur(G, ol, "Ol", 40), ...[...(t.extra || []), ...(t.grains || [])].map((o) => repereSur(G, objets.filter((c) => c.cle === (o.cle || o.min)), o.ab || hab(o.min).ab, 26))];
+    const groupes = [
+      { titre: t.titreOlivine || "Cristaux du manteau d'un astéroïde", lignes: [ligne(roche, "olivine", t.roleOlivine || "cristaux jaune-vert de 0,5 à 2 cm, translucides en tranche fine"),
+        ...(t.extra || []).map((o) => ligne(roche, o.min, o.role, o.cle || o.min))] },
+      { titre: "Métal d'un noyau, injecté entre eux", lignes: [{ ab: "Fe", nom: "Fer-nickel (kamacite et taénite)", cle: "metal", couleur: "#c4c7ca", role: "figures de Widmanstätten là où le métal est assez large", fond: true },
+        ...(t.grains || []).map((o) => ({ ...ligne(roche, o.min, o.role, o.cle || o.min), couleur: COUL_MET[o.min] || hab(o.min).fond }))] },
+    ];
+    return { corps, reperes: reperes.filter(Boolean), mesure, legende: { titre: "Tranche polie", groupes } };
+  };
+
   // ─────────────────────────────── cadre, repères, échelle, légende ───────────────────────────────
   function dessiner(roche, t, res, K) {
     const M = 12, cadre = nid("txc");

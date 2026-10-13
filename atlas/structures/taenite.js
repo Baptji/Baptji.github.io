@@ -1,0 +1,3 @@
+// Structure cristalline — générée par tools/cif_vers_structure.py, ne pas retoucher à la main.
+// Source : COD 9010017 (Clarke, R. S., Scott, E. R. D., 1980).
+Structure3D.enregistrer({"id":"taenite","nom":"Tetrataenite","formule":"Fe Ni","groupe":"P 4/m m m","maille":[2.533,2.533,3.582,90.0,90.0,90.0],"source":{"base":"Crystallography Open Database","cod":"9010017","auteurs":["Clarke, R. S.","Scott, E. R. D."],"annee":"1980","titre":"Tetrataenite - ordered FeNi, a new mineral in meteorites","revue":"American Mineralogist","volume":"65","pages":"624–630","doi":""},"atomes":[["Fe",0.0,0.0,0.0,"Fe"],["Ni",0.5,0.5,0.5,"Ni"]]});

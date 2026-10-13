@@ -9,18 +9,25 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="formation-conditions.css">
   <link rel="stylesheet" href="argiles-comparer.css">
+  <link rel="stylesheet" href="argiles-vue.css">
+  <link rel="stylesheet" href="mineraux-vue.css">
+  <link rel="stylesheet" href="roches-surface.css">
+  <link rel="stylesheet" href="argiles-charge.css">
+  <link rel="stylesheet" href="liaisons.css">
+  <link rel="stylesheet" href="oxydes-transformations.css">
+  <link rel="stylesheet" href="oxydes-fer-chemins.css">
+  <link rel="stylesheet" href="gres-ciment.css">
+  <link rel="stylesheet" href="perso.css">
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">🪨 Atlas géologique<small>roches · minéraux · argiles</small></div>
+    <div class="brand">🪨 Atlas géologique<small>géologie · minéralogie · pédologie</small></div>
     <input id="search" type="search" placeholder="Chercher (granite, quartz, montmorillonite…)">
     <nav class="chips" id="mainnav">
       <button class="chip" data-section="accueil">Accueil</button>
-      <button class="chip" data-section="roches">🪨 Roches</button>
-      <button class="chip" data-section="mineraux">💎 Minéraux</button>
-      <button class="chip" data-section="argiles">🧱 Argiles</button>
-      <button class="chip" data-section="oxydes">🟠 Oxydes</button>
-      <button class="chip" data-section="amorphes">🫧 Amorphes</button>
+      <button class="chip" data-section="geologie">Géologie</button>
+      <button class="chip" data-section="mineralogie">Minéralogie</button>
+      <button class="chip" data-section="pedologie">Pédologie</button>
     </nav>
   </header>
 
@@ -53,9 +60,11 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="edition.js"></script>
   <script src="data.js"></script>
-  <script src="triangle-textures.js"></script>
+  <script src="meteorites.js"></script>
   <script src="echelle-temps.js"></script>
   <script src="roches-arbre.js"></script>
+  <script src="roches-surfaces.js"></script>
+  <script src="roches-surface.js"></script>
   <script src="mineraux.js"></script>
   <script src="classification.js"></script>
   <script src="argiles-especes-valeurs.js"></script>
@@ -78,17 +87,22 @@
   <script src="sulfates.js"></script>
   <script src="phosphates.js"></script>
   <script src="organiques.js"></script>
+  <script src="meteorites-mineraux.js"></script>
+  <script src="mineraux-sol.js"></script>
   <script src="geol50.js"></script>
   <script src="structures3d.js"></script>
   <script src="structures/index.js"></script>
+  <script src="essai-unite.js"></script>
   <script src="formation.js"></script>
   <script src="mineraux-formation.js"></script>
   <script src="formation-anim.js"></script>
   <script src="textures.js"></script>
   <script src="textures-roches.js"></script>
   <script src="textures-varietes.js"></script>
+  <script src="meteorites-textures.js"></script>
   <script src="formation-anim-sed.js"></script>
   <script src="formation-conditions.js"></script>
+  <script src="meteorites-formation.js"></script>
   <script src="cristal.js"></script>
   <script src="organiques-formes.js"></script>
   <script src="natifs-formes.js"></script>
@@ -105,6 +119,7 @@
   <script src="tectosilicates-formes.js"></script>
   <script src="pourquoi.js"></script>
   <script src="pourquoi-phenomenes.js"></script>
+  <script src="meteorites-pourquoi.js"></script>
   <script src="plus-loin.js"></script>
   <script src="reperes-climat.js"></script>
   <script src="alteration-bilan.js"></script>
@@ -120,6 +135,26 @@
   <script src="argiles-especes-page.js"></script>
   <script src="argiles-cec.js"></script>
   <script src="argiles-comparer.js"></script>
+  <script src="argiles-vue.js"></script>
+  <script src="mineraux-vue.js"></script>
+  <script src="argiles-charge.js"></script>
+  <script src="liaisons.js"></script>
+  <script src="perso.js"></script>
+  <script src="liaisons-donnees.js"></script>
+  <script src="liaisons-carbonates.js"></script>
+  <script src="liaisons-sels-solubles.js"></script>
+  <script src="liaisons-sels-peu-solubles.js"></script>
+  <script src="liaisons-tetraedres.js"></script>
+  <script src="liaisons-chaines.js"></script>
+  <script src="liaisons-feuillets.js"></script>
+  <script src="liaisons-charpentes.js"></script>
+  <script src="liaisons-sulfures.js"></script>
+  <script src="liaisons-oxydes.js"></script>
+  <script src="oxydes-transformations.js"></script>
+  <script src="oxydes-fer-chemins.js"></script>
+  <script src="gres-ciment.js"></script>
+  <script src="liaisons-natifs.js"></script>
+  <script src="liaisons-amorphes.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

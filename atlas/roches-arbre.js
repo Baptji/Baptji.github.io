@@ -293,6 +293,90 @@ const ROCHES_ARBRE = [
       },
     ],
   },
+  // 4ᵉ famille (B.5, 08/10/2026) : fiches dans meteorites.js. Le lexique range les roches météoritiques selon deux axes
+  // qui se croisent : composition (pierreuse, de fer, mixte) et histoire du corps parent (non différencié ou différencié).
+  {
+    id: "meteoritique", nom: "Roches météoritiques",
+    desc: "Roches venues de l'espace et tombées sur Terre : fragments d'astéroïdes, plus rarement de Mars ou de la Lune. Le lexique du BRGM les range selon leur composition (pierreuses, de fer, mixtes) et selon l'histoire de leur corps parent : resté tel quel depuis la naissance du Système solaire (météorites primitives) ou fondu et séparé en noyau, manteau et croûte (météorites différenciées).",
+    plus: `<p>Une météorite est un objet solide qui a traversé l'atmosphère sans se consumer entièrement. Freinée à quelques
+      dizaines de kilomètres d'altitude, elle finit sa chute en quelques minutes, à la vitesse d'un caillou lâché d'un avion
+      (quelques centaines de km/h). Sa surface a fondu pendant la traversée : il en reste une <b>croûte de fusion</b> noire de
+      moins d'un millimètre, signe le plus sûr pour la reconnaître ; l'intérieur, lui, n'a pas eu le temps de chauffer.</p>
+      <p>Les <b>météorites primitives</b>, ou non différenciées, sont surtout des <b>chondrites</b> : des agglomérats de petites billes
+      fondues (les chondres), de grains de métal et de poussière, réunis dans des astéroïdes trop petits ou formés trop tard pour
+      fondre. Leurs plus vieux constituants, des inclusions blanches riches en calcium et en aluminium, ont 4 567 millions
+      d'années : c'est l'âge du Système solaire. Les <b>météorites différenciées</b> viennent de corps qui ont fondu, chauffés par
+      la désintégration de l'aluminium 26 radioactif : le métal est descendu former un noyau (les <b>météorites de fer</b>), les
+      silicates ont donné un manteau et une croûte basaltique (les <b>achondrites</b>). Les <b>sidérolithes</b>, moitié métal moitié
+      silicates, viennent de mélanges entre les deux.</p>
+      <p>Sur les chutes observées, les chondrites font environ 87 %, les achondrites 8 %, les fers 5 % et les sidérolithes moins de 1 %.
+      Plus de 70 000 météorites sont répertoriées par la Meteoritical Society, dont un peu plus de 1 400 chutes vues ; la
+      plupart des autres ont été trouvées dans les déserts chauds et en Antarctique, où elles se conservent et se repèrent
+      facilement. La France compte environ 70 météorites, presque toutes des chutes des XVIIIᵉ et XIXᵉ siècles.</p>
+      <p>Ne pas confondre avec l'<b>impactite</b> (fiche du métamorphisme dynamique) : c'est une roche TERRESTRE transformée par le
+      choc d'une météorite, comme les brèches de Rochechouart, où l'astéroïde lui-même s'est vaporisé.</p>`,
+    branches: [
+      {
+        code: "E.1", nom: "Météorites primitives", brgm: "Météorite non-différenciée (primitive)",
+        note: "Leur astéroïde n'a jamais fondu : elles gardent les chondres et la composition chimique du disque où sont nées les planètes. Les achondrites primitives ont commencé à fondre sans aller au bout.",
+        plus: `<p>Les chondrites sont classées par <b>groupe chimique</b> (H, L, LL pour les ordinaires ; CI, CM, CO, CV… pour les
+          carbonées ; EH, EL pour les chondrites à enstatite), chaque groupe venant d'un astéroïde différent, et par <b>type
+          pétrologique</b>, de 1 à 6 (Van Schmus et Wood 1967). Le type 3 est presque intact ; les types 1 et 2 ont été transformés
+          par de l'eau liquide circulant dans l'astéroïde, vers 20 à 150 °C ; les types 4 à 6 ont été chauffés sans fondre, de
+          600 à 950 °C environ, et leurs chondres s'estompent. La chaleur venait surtout de l'aluminium 26, radioactif, dont la
+          moitié disparaît en 717 000 ans : un astéroïde formé tôt chauffait beaucoup, un astéroïde formé tard presque pas.</p>
+          <p>Dans un même astéroïde, le cœur chauffait le plus et refroidissait le dernier : les chondrites H les plus recuites
+          (type 6) ont refroidi des dizaines de millions d'années après les moins recuites (type 4), comme les couches d'un
+          oignon. Les chondrites françaises de Sainte-Marguerite (H4, Nord, 1962) et de Kernouvé (H6, Morbihan, 1869) ont servi
+          à le montrer.</p>`,
+        groupes: [
+          { nom: "Chondrites", brgm: "Chondrite", note: "Petites billes fondues (chondres), grains de métal et poussière fine agglomérés : plus de huit chutes sur dix.",
+            roches: ["chondrite_ordinaire", "chondrite_carbonee", "chondrite_enstatite"] },
+          { nom: "Achondrites primitives", brgm: "Achondrite primitive", note: "Une chondrite chauffée jusqu'au début de la fusion : composition de chondrite, grains recristallisés, chondres effacés.",
+            roches: ["achondrite_primitive"] },
+        ],
+      },
+      {
+        code: "E.2", nom: "Achondrites", brgm: "Achondrite",
+        note: "Roches pierreuses sans chondres, cristallisées d'un magma dans un corps qui avait fondu : un astéroïde comme Vesta, Mars ou la Lune.",
+        plus: `<p>Une achondrite ressemble à une roche magmatique terrestre : basalte, gabbro, roche à olivine ou à pyroxène. Ce qui
+          trahit son origine, c'est la signature de ses atomes d'oxygène (rapports des isotopes 16, 17 et 18), propre à chaque
+          corps du Système solaire, et pour Mars, les gaz de son atmosphère piégés dans le verre de choc.</p>
+          <p>Les achondrites d'astéroïdes (eucrites, diogénites, howardites, aubrites…) sont presque aussi vieilles que le Système
+          solaire. Les martiennes sont bien plus jeunes, de 150 millions à 4,4 milliards d'années, parce que Mars, plus grosse, a
+          gardé un volcanisme actif longtemps. Pour quitter Mars, un fragment doit être lancé à plus de 5 km/s par l'impact d'un
+          astéroïde ; pour quitter la Lune, 2,4 km/s suffisent.</p>`,
+        groupes: [
+          { nom: "Achondrites", brgm: "Achondrite", note: "Selon leur corps parent : astéroïde, Mars ou Lune.",
+            roches: ["achondrite_asteroidale", "achondrite_martienne", "achondrite_lunaire"] },
+        ],
+      },
+      {
+        code: "E.3", nom: "Météorites de fer", brgm: "Météorite de fer",
+        note: "Fer et nickel presque purs, venus du noyau d'astéroïdes qui avaient fondu, puis brisés par des collisions.",
+        plus: `<p>Plus de 50 astéroïdes différents ont fourni des météorites de fer : il existait donc au début du Système solaire bien
+          plus de corps fondus que ceux qui restent aujourd'hui. On les classe par leur structure (octaédrites, hexaédrites,
+          ataxites, selon la teneur en nickel) et par leur chimie (groupes IAB, IIAB, IIIAB, IVA…, d'après le gallium, le germanium
+          et l'iridium).</p>
+          <p>Les figures de Widmanstätten se forment entre 700 et 450 °C, quand la taénite riche en nickel rejette des lamelles de
+          kamacite ; il faut pour cela un refroidissement de quelques dizaines à quelques milliers de degrés par million d'années.
+          La largeur des lamelles donne la vitesse de refroidissement, donc la taille du noyau d'origine.</p>`,
+        groupes: [
+          { nom: "Météorites de fer", brgm: "Météorite de fer", note: "", roches: ["meteorite_fer"] },
+        ],
+      },
+      {
+        code: "E.4", nom: "Sidérolithes", brgm: "Sidérolithe",
+        note: "Météorites mixtes, faites de métal et de silicates à parts presque égales.",
+        plus: `<p>Deux groupes très différents : les <b>pallasites</b>, cristaux d'olivine du manteau enchâssés dans du métal de noyau, et
+          les <b>mésosidérites</b>, brèches de croûte basaltique mêlée de métal. Dans les deux cas, il a fallu une collision pour réunir
+          ce qu'un astéroïde avait séparé en fondant. Elles ne font qu'environ 1 % des chutes.</p>`,
+        groupes: [
+          { nom: "Sidérolithes", brgm: "Sidérolithe", note: "", roches: ["pallasite", "mesosiderite"] },
+        ],
+      },
+    ],
+  },
 ];
 
 // Correspondance de chaque fiche avec le lexique du BRGM :
@@ -366,6 +450,14 @@ const ROCHES_BRGM = {
   serpentinite: ["Serpentinite", "Roche métasomatique"], greisen: ["Greisen", "Roche métasomatique"],
   fenite: ["Fénite", "Roche métasomatique"], rodingite: ["Rodingite", "Roche métasomatique"],
   spilite: ["Spilite", "Roche métasomatique"],
+  // — E.1 à E.4 météorites (meteorites.js) —
+  chondrite_ordinaire: ["Chondrite ordinaire", "Chondrite"], chondrite_carbonee: ["Chondrite carbonée", "Chondrite"],
+  chondrite_enstatite: ["Chondrite à enstatite", "Chondrite"], achondrite_primitive: ["Achondrite primitive", "Achondrite"],
+  achondrite_asteroidale: ["Achondrite astéroïdale", "Météorite différenciée"],
+  achondrite_martienne: ["Météorite (achondrite) martienne", "Météorite différenciée"],
+  achondrite_lunaire: ["Météorite (achondrite) lunaire", "Météorite différenciée"],
+  meteorite_fer: ["Météorite de fer", "Roche météoritique"],
+  pallasite: ["Pallasite", "Sidérolithe"], mesosiderite: ["Mésosidérite", "Sidérolithe"],
 };
 const ROCHES_HORS_LEXIQUE = {
   porphyre: "« Porphyre » désigne une texture (gros cristaux dans une pâte fine), pas une lithologie : le lexique n'a pas de terme correspondant.",

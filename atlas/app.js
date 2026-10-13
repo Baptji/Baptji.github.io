@@ -20,7 +20,6 @@ function cssVar(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 const catColor = (cat) => `var(--cat-${cat})`;
-const prodColor = (id) => `var(--prod-${id})`;
 const geomean = (r) => Math.sqrt(r.alteration.vmin * r.alteration.vmax);
 // roches dont la « vitesse » est surtout de l'érosion physique / dissolution au contact de l'eau
 const EROSION_IDS = new Set(["marne", "argile", "sable", "loess", "sel", "gypse", "tourbe", "sylvinite", "anhydrite", "vase_tangue"]);
@@ -52,22 +51,34 @@ function go(id) { location.hash = id ? "roche/" + id : ""; }
 window.addEventListener("hashchange", route);
 
 // La navigation est organisée en grandes PARTIES ; on la déduit de l'URL.
+// 12/10/2026 (sa demande) : trois parties — Géologie (les roches), Minéralogie (Strunz, avec toutes les fiches de
+// minéraux dont les oxydes, et les amorphes), Pédologie (minéraux du sol par rôle, argiles, oxydes du sol).
+// Les adresses des pages n'ont pas changé ; seule leur partie a changé.
 function currentSection() {
   const h = location.hash;
-  if (h.startsWith("#roche/") || h === "#roches" || h.startsWith("#rocfam/") || h.startsWith("#rocbr/")) return "roches";
-  if (h.startsWith("#argile/") || h.startsWith("#espece/") || h.startsWith("#argrp/") || h === "#argiles") return "argiles";
-  if (h === "#mineraux" || h.startsWith("#mineral/") || h.startsWith("#mincls/") || h.startsWith("#mingrp/")) return "mineraux";
-  if (h === "#oxydes" || h.startsWith("#oxyde/")) return "oxydes";
-  if (h === "#amorphes") return "amorphes";
+  if (h.startsWith("#roche/") || h === "#roches" || h.startsWith("#rocfam/") || h.startsWith("#rocbr/") || h === "#rocsurf" || h.startsWith("#rocsurf/")) return "geologie";
+  if (h === "#mineraux" || h.startsWith("#mineral/") || h.startsWith("#mincls/") || h.startsWith("#mingrp/") || h === "#amorphes") return "mineralogie";
+  if (pedoSousPartie()) return "pedologie";
   return "accueil";
+}
+// sous-partie de la Pédologie ouverte (null hors de la Pédologie)
+function pedoSousPartie() {
+  const h = location.hash;
+  if (h === "#pedologie") return "accueil";
+  if (h === "#minsol" || h.startsWith("#minsol/")) return "minsol";
+  if (h.startsWith("#argile/") || h.startsWith("#espece/") || h.startsWith("#argrp/") || h.startsWith("#argfam/") || h === "#argiles") return "argiles";
+  if (h === "#oxydes" || h.startsWith("#oxyde/")) return "oxydes";
+  return null;
 }
 
 function route() {
   const mr = location.hash.match(/^#roche\/(.+)$/);
   const ma = location.hash.match(/^#argile\/(.+)$/);
   const mg = location.hash.match(/^#argrp\/(\d+)-(\d+)$/);
+  const mfa = location.hash.match(/^#argfam\/(\d+)$/);
   const mc = location.hash.match(/^#mincls\/(\d+)$/);
   const mgr = location.hash.match(/^#mingrp\/(\d+)-(\d+)$/);
+  const msol = location.hash.match(/^#minsol\/([a-z]+)(?:-(\d+))?$/);
   const mm = location.hash.match(/^#mineral\/(.+)$/);
   const minId = mm && MINERAUX[decodeURIComponent(mm[1])] ? decodeURIComponent(mm[1]) : null;
   const me = location.hash.match(/^#espece\/(.+)$/);
@@ -78,26 +89,74 @@ function route() {
   const arg = ma ? ARGILES.find((a) => a.id === decodeURIComponent(ma[1])) : null;
   const cls = mc ? MIN_CLASSIF.find((c) => c.n === +mc[1]) : null;
   const clsG = mgr ? MIN_CLASSIF.find((c) => c.n === +mgr[1]) : null;
-  if (rock) renderRock(rock);
+  // 12/10/2026 : « Ce qui tient un grès : son ciment » (gres-ciment.js), page à côté de la fiche du grès
+  if (location.hash === "#roche/gres/ciment" && window.GresCiment) GresCiment.page();
+  else if (rock) renderRock(rock);
   else if (arg) renderArgile(arg);
   else if (minId) renderMineralPage(minId);
   else if (espId) renderEspecePage(espId);
-  else if (mg && CLASSIF[+mg[1]] && CLASSIF[+mg[1]].groupes[+mg[2]]) renderGroupeArgile(+mg[1], +mg[2]);
-  else if (clsG && clsG.groupes[+mgr[2]]) renderMineralGroupe(clsG, +mgr[2]);
-  else if (cls) renderMineralClasse(cls);
-  else if (location.hash === "#roches") renderRoches();
-  else if (location.hash.startsWith("#rocfam/") && ROCHES_ARBRE.find((f) => f.id === location.hash.slice(8)))
+  // 08/10/2026 : plus de page de groupe — #argrp/<f>-<g> et #argfam/<f> ouvrent la vue d'ensemble à la hauteur du groupe
+  else if (mg && CLASSIF[+mg[1]] && CLASSIF[+mg[1]].groupes[+mg[2]]) renderClassif(`argrp-${+mg[1]}-${+mg[2]}`);
+  else if (mfa && CLASSIF[+mfa[1]]) renderClassif(`argfam-${+mfa[1]}`);
+  // 11/10/2026 : plus de page de classe ni de groupe — #mincls et #mingrp ouvrent la vue d'ensemble à leur hauteur ;
+  // venant d'une fiche (« Sa fiche dans la classification »), on surligne le minéral au lieu de défiler jusqu'au groupe
+  else if (clsG && clsG.groupes[+mgr[2]]) {
+    minVersStrunz(clsG.n, +mgr[2], window.__flashMin);
+    renderMineraux(window.__flashMin ? null : `mingrp-${clsG.n}-${+mgr[2]}`);
+  }
+  else if (cls) { minVersStrunz(cls.n); renderMineraux(`mincls-${cls.n}`); }
+  else if (msol && MIN_SOL.some((g) => g.id === msol[1])) renderMineraux("minsol-" + msol[1] + (msol[2] != null ? "-" + msol[2] : ""));
+  // 12/10/2026 : la vue « Minéraux du sol par rôle » passe en Pédologie, à sa propre adresse
+  else if (location.hash === "#minsol") renderMineraux();
+  else if (location.hash === "#pedologie") renderPedologie();
+  // 12/10/2026 : les roches rangées par surface en France (roches-surface.js) ; #rocsurf/<tranche> défile jusqu'à la tranche
+  else if (location.hash === "#rocsurf" || location.hash.startsWith("#rocsurf/")) {
+    RochesSurface.choisir("surface");
+    if (location.hash.length > 9) window.__ancreArg = "rocsurf-" + location.hash.slice(9);
+    RochesSurface.page();
+  }
+  else if (location.hash === "#roches") { RochesSurface.choisir("arbre"); renderRoches(); }
+  else if (location.hash.startsWith("#rocfam/") && ROCHES_ARBRE.find((f) => f.id === location.hash.slice(8))) {
+    RochesSurface.choisir("arbre");
     renderRocheFamille(ROCHES_ARBRE.find((f) => f.id === location.hash.slice(8)));
-  else if (location.hash.startsWith("#rocbr/") && brancheParCode(decodeURIComponent(location.hash.slice(7))))
+  }
+  else if (location.hash.startsWith("#rocbr/") && brancheParCode(decodeURIComponent(location.hash.slice(7)))) {
+    RochesSurface.choisir("arbre");
     renderRocheBranche(brancheParCode(decodeURIComponent(location.hash.slice(7))));
-  else if (location.hash === "#argiles") renderClassif();
+  }
+  else if (location.hash === "#argiles") renderClassif(null);
   else if (location.hash === "#mineraux") renderMineraux();
   else if (location.hash === "#oxydes") renderOxydes();
+  // 12/10/2026 : « Comment naissent les oxydes de fer », nouvelle partie à côté de l'onglet du fer (oxydes-fer-chemins.js)
+  else if (location.hash === "#oxyde/fer/chemins" && window.FerChemins) FerChemins.page();
   else if (location.hash.startsWith("#oxyde/")) renderOxydeElement(decodeURIComponent(location.hash.slice(7)));
   else if (location.hash === "#amorphes") renderAmorphes();
   else renderHub();
   renderSidebar();
   // arrivée depuis « Sa fiche dans la classification » : défiler jusqu'au minéral et le surligner
+  const ancre = window.__ancreArg;
+  window.__ancreArg = undefined;
+  if (ancre !== undefined) {
+    const el = ancre && document.getElementById(ancre);
+    const haut = (($(".topbar") || {}).offsetHeight || 76) + 10;   // sous la barre du haut (plus haute sur téléphone)
+    const placer = (essai) => {
+      if (!el) { window.scrollTo({ top: 0 }); return; }
+      const r = el.getBoundingClientRect();
+      if (r.top === 0 && r.bottom === 0 && essai < 6) { setTimeout(() => placer(essai + 1), 150); return; }
+      window.scrollTo({ top: Math.max(0, r.top + window.scrollY - haut) });
+      // les vues 3D au-dessus se montent ensuite et grandissent : garder le groupe en haut tant que le lecteur ne défile pas
+      let pose = window.scrollY, n = 0;
+      const tenir = () => {
+        if (!el.isConnected || Math.abs(window.scrollY - pose) > 2 || ++n > 12) return;
+        const d = el.getBoundingClientRect().top - haut;
+        if (Math.abs(d) > 2) { window.scrollTo({ top: Math.max(0, window.scrollY + d) }); pose = window.scrollY; }
+        setTimeout(tenir, 250);
+      };
+      setTimeout(tenir, 250);
+    };
+    placer(0);
+    return;
+  }
   const fid = window.__flashMin;
   window.__flashMin = null;
   const cibleFlash = fid ? document.querySelector(`#main [data-min="${fid}"], #main [data-minopen="${fid}"], #main [data-espece="${fid}"], #main [data-espece-bloc="${fid}"]`) : null;
@@ -174,35 +233,35 @@ function renderSidebar() {
       html += `<div class="side-group"><h3>Argiles</h3>` + args.map((a) =>
         `<button class="rock-item" data-argile="${a.id}"><span class="sw" style="background:${a.swatch}"></span>${a.nom.split(" (")[0]}</button>`).join("") + `</div>`;
     }
-    side.innerHTML = html || `<p class="sub" style="padding:10px">Aucune fiche ne correspond.</p>`;
+    side.innerHTML = `<div class="side-complet">${html || `<p class="sub" style="padding:10px">Aucune fiche ne correspond.</p>`}</div>`;
     wireSidebar(side);
     return;
   }
 
   // ---- barre latérale contextuelle selon la partie ----
+  const sub = pedoSousPartie();
+  // Pédologie : ses sous-parties en tête, puis le menu de celle qui est ouverte
+  if (sec === "pedologie") html += pedoMenuHTML(sub);
   if (sec === "accueil") {
-    // Accueil : sommaire des parties (et non le menu d'une partie)
+    // Accueil : sommaire des trois parties (et non le menu d'une partie)
     const nOx = OXYDES.reduce((s, f) => s + f.especes.length, 0);
-    const parties = [
-      { page: "roches", nom: "Roches", n: ROCHES.length, sw: "var(--cat-sedimentaire)" },
-      { page: "mineraux", nom: "Minéraux", n: Object.keys(MINERAUX).length, sw: "var(--cat-magmatique)" },
-      { page: "argiles", nom: "Argiles", n: Object.keys(ESPECES).length, sw: "var(--prod-argile)" },
-      { page: "oxydes", nom: "Oxydes", n: nOx, sw: "var(--prod-oxydes)" },
-    ];
-    html += `<div class="side-group"><h3>Sommaire de l'atlas</h3>`;
-    parties.forEach((p) => {
-      html += `<button class="rock-item" data-page="${p.page}">
-        <span class="sw" style="background:${p.sw}"></span><b>${p.nom}</b><span class="fac">${p.n}</span></button>`;
-      if (p.page === "roches") {
-        ROCHES_ARBRE.forEach((fam) => {
-          html += `<button class="rock-item sub-item" data-rocfam="${fam.id}">${fam.nom}</button>`;
-        });
-      }
+    html += `<div class="side-group"><h3>Sommaire de l'atlas</h3>
+      <button class="rock-item" data-page="roches"><span class="sw" style="background:var(--cat-sedimentaire)"></span><b>Géologie</b><span class="fac">${ROCHES.length}</span></button>`;
+    ROCHES_ARBRE.forEach((fam) => {
+      html += `<button class="rock-item sub-item" data-rocfam="${fam.id}">${fam.nom}</button>`;
     });
-    html += `</div><div class="side-group"><h3>Annexe</h3>
-      <button class="rock-item" data-page="amorphes">
-        <span class="sw" style="background:linear-gradient(135deg,#6a5a52 50%,#4a3a2a 50%)"></span>Amorphes et minéraloïdes</button></div>`;
-  } else if (sec === "roches") {
+    html += `<button class="rock-item" data-page="mineraux"><span class="sw" style="background:var(--cat-magmatique)"></span><b>Minéralogie</b><span class="fac">${Object.keys(MINERAUX).length}</span></button>
+      <button class="rock-item sub-item" data-page="amorphes">Amorphes et minéraloïdes</button>
+      <button class="rock-item" data-page="pedologie"><span class="sw" style="background:var(--prod-argile)"></span><b>Pédologie</b></button>
+      <button class="rock-item sub-item" data-page="minsol">Minéraux du sol</button>
+      <button class="rock-item sub-item" data-classif="1">Argiles <span class="fac">${Object.keys(ESPECES).length}</span></button>
+      <button class="rock-item sub-item" data-page="oxydes">Oxydes et hydroxydes <span class="fac">${nOx}</span></button>
+    </div>`;
+  } else if (sec === "geologie" && RochesSurface.vue() === "surface") {
+    // 12/10/2026 : vue « par surface en France » — tranches de surface puis roches, de la plus étendue à la plus rare
+    html += RochesSurface.menu(current ? decodeURIComponent(current) : null);
+  } else if (sec === "geologie") {
+    html += RochesSurface.boutons(true);
     // Arbre du lexique BRGM : famille → branches (codes) ; la branche ouverte déplie ses roches
     const curFam = (location.hash.match(/^#rocfam\/(.+)$/) || [])[1];
     const curBr = (location.hash.match(/^#rocbr\/(.+)$/) || [])[1];
@@ -210,7 +269,7 @@ function renderSidebar() {
     const brOuverte = curBr ? decodeURIComponent(curBr) : (place ? place.branche.code : null);
     html += `<div class="side-group"><h3>Classification du BRGM</h3>
       <button class="rock-item ${location.hash === "#roches" ? "on" : ""}" data-page="roches">
-        <span class="sw" style="background:linear-gradient(135deg,var(--cat-magmatique) 33%,var(--cat-sedimentaire) 33%,var(--cat-sedimentaire) 66%,var(--cat-metamorphique) 66%)"></span>
+        <span class="sw" style="background:linear-gradient(135deg,var(--cat-magmatique) 25%,var(--cat-sedimentaire) 25%,var(--cat-sedimentaire) 50%,var(--cat-metamorphique) 50%,var(--cat-metamorphique) 75%,var(--cat-meteoritique) 75%)"></span>
         <b>Vue d'ensemble</b></button></div>`;
     // Colonnes emboîtées (principe de la charte des temps) : bande famille | bande branche | roches.
     // Chaque bande est aussi haute que la liste qu'elle contient ; étiquette verticale, ramenée au code seul
@@ -244,72 +303,112 @@ function renderSidebar() {
       html += `</div></div>`;
     }
     html += `</div>`;
-  } else if (sec === "mineraux") {
+  } else if (sec === "mineralogie" || sub === "minsol") {
+    // Trois vues (11/10/2026) : Minéraux (Strunz) · Minéraux du sol (Strunz réduite) · Rôle dans le sol (MIN_SOL).
+    // 12/10/2026 : « Rôle dans le sol » est en Pédologie (#minsol) ; les deux autres restent en Minéralogie.
     // Colonnes emboîtées (même principe que l'arbre des roches et le menu des argiles) :
     // classe de Strunz | groupe (ou famille d'oxydes pour la classe IV, cf. #oxydes) | minéraux.
-    html += `<div class="side-group"><h3>Classes de Strunz</h3>
-      <button class="rock-item ${location.hash === "#mineraux" ? "on" : ""}" data-page="mineraux">
-        <span class="sw" style="background:linear-gradient(135deg,#e8d8a8 33%,#a04030 33%,#a04030 66%,#7f9fd4 66%)"></span>
-        <b>Vue d'ensemble</b></button></div>`;
+    const vue = minVue();
+    if (sec === "mineralogie") {
+      html += `<div class="side-group"><h3>Classement</h3>` + MIN_VUES.filter(([k]) => k !== "role").map(([k, nom]) =>
+        `<button class="rock-item ${vue === k && location.hash !== "#amorphes" ? "on" : ""}" data-minvue="${k}"><b>${nom}</b></button>`).join("");
+      // Amorphes et minéraloïdes : hors de la classification de Strunz, rangés en Minéralogie
+      html += `<button class="rock-item ${location.hash === "#amorphes" ? "on" : ""}" data-page="amorphes"><b>Amorphes et minéraloïdes</b></button>`;
+      if (location.hash === "#amorphes") AMO_PARTIES.forEach((p) => { html += `<button class="rock-item sub-item" data-ancre="${p.id}">${p.nom}</button>`; });
+      html += `</div>`;
+    }
     let curCls = (location.hash.match(/^#min(?:cls|grp)\/(\d+)/) || [])[1];
     let curGrp = (location.hash.match(/^#mingrp\/\d+-(\d+)/) || [])[1];
     const curMin = decodeURIComponent((location.hash.match(/^#mineral\/(.+)$/) || [])[1] || "");
-    if (curMin) MIN_CLASSIF.forEach((c) => c.groupes.forEach((g, gi) => {
-      if (!curCls && groupeIds(g).includes(curMin)) { curCls = String(c.n); curGrp = String(gi); }
-    }));
     html += `<div class="arbre">`;
-    [...MIN_CLASSIF].sort((a, b) => a.n - b.n).forEach((c) => {
-      const premierId = c.n === 4
-        ? (OXYDES[0] && OXYDES[0].especes[0] && OXYDES[0].especes[0].id)
-        : c.groupes.map(groupeIds).flat().find((id) => MINERAUX[id]);
-      const coul = (premierId && MINERAUX[premierId] && MINERAUX[premierId].swatch) || "var(--baseline)";
-      const clsOn = String(c.n) === curCls;
-      let branchesHTML = "";
-      if (c.n === 4) {
-        // Classe IV : les sous-bandes sont les 12 familles d'oxydes par élément (détail : #oxydes).
-        OXYDES.forEach((f) => {
-          const especesHTML = f.especes.map((e) => `<button class="arbre-roche ${e.id === curMin ? "on" : ""}" data-min="${e.id}">
-            <span class="sw" style="background:${f.couleur}"></span><span>${e.nom}</span></button>`).join("");
+    if (vue === "role") {
+      const curSol = (location.hash.match(/^#minsol\/([a-z]+)/) || [])[1];
+      MIN_SOL.forEach((g) => {
+        const sous = g.sous || [{ nom: "", mineraux: g.mineraux }];
+        const elts = sous.flatMap((s) => s.mineraux);
+        const famOn = g.id === curSol ? "on" : curMin && elts.some((e) => (e.id || e) === curMin) ? "chemin" : "";
+        let branchesHTML = "";
+        sous.forEach((s, si) => {
+          const especesHTML = s.mineraux.map((e, mi) => {
+            const it = solItem(e);
+            return it ? `<button class="arbre-roche ${mi === 0 && si ? "sep" : ""} ${it.cle === curMin && !e.tag ? "on" : ""}" ${it.attr}>
+              <span class="sw" style="background:${it.sw}"></span><span>${it.nom}</span></button>` : "";
+          }).join("");
+          const court = s.nom.split(/[ (—]/)[0].slice(0, 6);
           branchesHTML += `<div class="arbre-br">
-            <button class="arbre-band br" data-oxyde="${f.id}" data-court="${f.symbole}" title="${f.element}"><span>${f.element}</span></button>
+            ${sous.length > 1 ? `<button class="arbre-band br" data-minsol="${g.id}-${si}" data-court="${court}" title="${s.nom}"><span>${s.nom}</span></button>` : ""}
             <div class="arbre-roches">${especesHTML}</div>
           </div>`;
         });
-      } else {
-        c.groupes.forEach((g, gi) => {
-          const brOn = clsOn && String(gi) === curGrp;
-          let especesHTML = "";
-          const ajoute = (mid, sep) => {
-            const m = MINERAUX[mid];
-            if (!m) return;
-            especesHTML += `<button class="arbre-roche ${sep ? "sep" : ""} ${mid === curMin ? "on" : ""}" data-min="${mid}">
-              <span class="sw" style="background:${m.swatch}"></span><span>${m.nom.split(" (")[0]}</span></button>`;
-          };
-          if (g.sousGroupes) g.sousGroupes.forEach((sf, sfi) => sf.mineraux.forEach((mid, mi) => ajoute(mid, sfi && !mi)));
-          else groupeIds(g).forEach((mid) => ajoute(mid, false));
-          const court = (g.code || g.nom.split(" —")[0].split(" (")[0]).slice(0, 6);
-          branchesHTML += `<div class="arbre-br">
-            ${c.groupes.length > 1 ? `<button class="arbre-band br ${brOn ? "on" : ""}" data-mingrp="${c.n}-${gi}" data-court="${court}" title="${g.nom}">
-              <span>${g.code || g.nom.split(" —")[0].split(" (")[0]}</span></button>` : ""}
-            <div class="arbre-roches">${especesHTML}</div>
-          </div>`;
-        });
-      }
-      html += `<div class="arbre-fam" style="--c:${coul}">
-        <button class="arbre-band fam ${clsOn ? "on" : ""}" data-mincls="${c.n}" title="${c.classe}"><span>${c.num}</span></button>
-        <div class="arbre-branches">${branchesHTML}</div>
-      </div>`;
-    });
-    html += `</div>`;
-  } else if (sec === "argiles") {
+        html += `<div class="arbre-fam" style="--c:${g.swatch}">
+          <button class="arbre-band fam ${famOn}" data-minsol="${g.id}" title="${g.nom}"><span>${g.court}</span></button>
+          <div class="arbre-branches">${branchesHTML}</div>
+        </div>`;
+      });
+      html += `</div>`;
+    } else {
+      if (curMin) MIN_CLASSIF.forEach((c) => c.groupes.forEach((g, gi) => {
+        if (!curCls && groupeIds(g).includes(curMin)) { curCls = String(c.n); curGrp = String(gi); }
+      }));
+      [...MIN_CLASSIF].sort((a, b) => a.n - b.n).forEach((c) => {
+        const premierId = c.n === 4
+          ? (OXYDES[0] && OXYDES[0].especes[0] && OXYDES[0].especes[0].id)
+          : c.groupes.map(groupeIds).flat().find((id) => MINERAUX[id]);
+        const coul = (premierId && MINERAUX[premierId] && MINERAUX[premierId].swatch) || "var(--baseline)";
+        const clsOn = String(c.n) === curCls;
+        let branchesHTML = "";
+        if (c.n === 4) {
+          // Classe IV : les sous-bandes sont les 12 familles d'oxydes par élément (détail : #oxydes).
+          OXYDES.forEach((f) => {
+            const ids = minVisibles(f.especes.map((e) => e.id));
+            if (!ids.length) return;
+            const especesHTML = f.especes.filter((e) => ids.includes(e.id)).map((e) => `<button class="arbre-roche ${e.id === curMin ? "on" : ""}" data-min="${e.id}">
+              <span class="sw" style="background:${f.couleur}"></span><span>${e.nom}</span></button>`).join("");
+            branchesHTML += `<div class="arbre-br">
+              <button class="arbre-band br" data-oxyde="${f.id}" data-court="${f.symbole}" title="${f.element}"><span>${f.element}</span></button>
+              <div class="arbre-roches">${especesHTML}</div>
+            </div>`;
+          });
+        } else {
+          const groupes = c.groupes.map((g, gi) => [g, gi]).filter(([g]) => minVisibles(groupeIds(g)).length);
+          groupes.forEach(([g, gi]) => {
+            const brOn = clsOn && String(gi) === curGrp;
+            let especesHTML = "";
+            const ajoute = (mid, sep) => {
+              const m = MINERAUX[mid];
+              if (!m) return;
+              especesHTML += `<button class="arbre-roche ${sep ? "sep" : ""} ${mid === curMin ? "on" : ""}" data-min="${mid}">
+                <span class="sw" style="background:${m.swatch}"></span><span>${m.nom.split(" (")[0]}</span></button>`;
+            };
+            if (g.sousGroupes) g.sousGroupes.map((sf) => minVisibles(sf.mineraux)).filter((ids) => ids.length)
+              .forEach((ids, sfi) => ids.forEach((mid, mi) => ajoute(mid, sfi && !mi)));
+            else minVisibles(groupeIds(g)).forEach((mid) => ajoute(mid, false));
+            const court = (g.code || g.nom.split(" —")[0].split(" (")[0]).slice(0, 6);
+            branchesHTML += `<div class="arbre-br">
+              ${groupes.length > 1 ? `<button class="arbre-band br ${brOn ? "on" : ""}" data-mingrp="${c.n}-${gi}" data-court="${court}" title="${g.nom}">
+                <span>${g.code || g.nom.split(" —")[0].split(" (")[0]}</span></button>` : ""}
+              <div class="arbre-roches">${especesHTML}</div>
+            </div>`;
+          });
+        }
+        if (!branchesHTML) return;
+        html += `<div class="arbre-fam" style="--c:${coul}">
+          <button class="arbre-band fam ${clsOn ? "on" : ""}" data-mincls="${c.n}" title="${c.classe}"><span>${c.num}</span></button>
+          <div class="arbre-branches">${branchesHTML}</div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+  } else if (sub === "argiles") {
     // Colonnes emboîtées (G.1, même principe que l'arbre des roches et la charte des temps) :
     // grande famille | sous-famille dioct./trioct. (si elle existe) | espèces, chaque bande aussi
     // haute que ce qu'elle contient.
     html += `<div class="side-group"><h3>Minéraux argileux</h3>
       <button class="rock-item ${location.hash === "#argiles" ? "on" : ""}" data-classif="1">
         <span class="sw" style="background:linear-gradient(135deg,#e9e4da 25%,#8fa387 25%,#8fa387 50%,#c9b98a 50%,#c9b98a 75%,#6f8f72 75%)"></span>
-        <b>Classification complète</b></button></div>`;
+        <b>Vue d'ensemble</b></button></div>`;
     html += `<div class="arbre">`;
+    const argFam = +((location.hash.match(/^#arg(?:fam|grp)\/(\d+)/) || [])[1] ?? -1);
     for (const gf of ARGILE_GRANDES) {
       const fichesGf = [...new Set(gf.sousFamilles.flatMap((f) => f.groupes.map((g) => g.fiche)).filter(Boolean))]
         .map((id) => ARGILES.find((a) => a.id === id)).filter(Boolean);
@@ -319,7 +418,9 @@ function renderSidebar() {
       for (const fam of gf.sousFamilles) {
         const trioct = /trioctaédriques/i.test(fam.famille);
         const sousLabel = gf.sousFamilles.length > 1 ? (trioct ? "Trioctaédrique" : "Dioctaédrique") : null;
-        let brChemin = false;
+        const fi = CLASSIF.indexOf(fam);
+        let brChemin = fi === argFam;
+        if (brChemin) gfChemin = true;
         let especesHTML = "";
         fam.groupes.forEach((g, gi) => {
           g.especes.forEach((eid, ei) => {
@@ -334,17 +435,17 @@ function renderSidebar() {
           });
         });
         branchesHTML += `<div class="arbre-br">
-          ${sousLabel ? `<button class="arbre-band br ${brChemin ? "chemin" : ""}" data-court="${trioct ? "Trioct." : "Dioct."}"><span>${sousLabel}</span></button>` : ""}
+          ${sousLabel ? `<button class="arbre-band br ${brChemin ? "chemin" : ""}" data-argfam="${fi}" data-court="${trioct ? "Trioct." : "Dioct."}"><span>${sousLabel}</span></button>` : ""}
           <div class="arbre-roches">${especesHTML}</div>
         </div>`;
       }
       html += `<div class="arbre-fam" style="--c:${coul}">
-        <button class="arbre-band fam ${gfChemin ? "chemin" : ""}"><span>${gf.nom}</span></button>
+        <button class="arbre-band fam ${gfChemin ? "chemin" : ""}" data-argfam="${CLASSIF.indexOf(gf.sousFamilles[0])}"><span>${gf.nom}</span></button>
         <div class="arbre-branches">${branchesHTML}</div>
       </div>`;
     }
     html += `</div>`;
-  } else if (sec === "oxydes") {
+  } else if (sub === "oxydes") {
     const curOx = (location.hash.match(/^#oxyde\/(.+)$/) || [])[1];
     html += `<div class="side-group"><h3>Oxydes &amp; hydroxydes</h3>
       <button class="rock-item ${location.hash === "#oxydes" ? "on" : ""}" data-page="oxydes">
@@ -352,18 +453,18 @@ function renderSidebar() {
     OXYDES.forEach((f) => {
       html += `<button class="rock-item sub-item ${f.id === curOx ? "on" : ""}" data-oxyde="${f.id}">
         <span class="sw" style="background:${f.couleur}"></span>${f.element} <span class="fac">${f.especes.length}</span></button>`;
+      if (f.id === "fer" && window.FerChemins) html += `<button class="rock-item sub-item ${location.hash === "#oxyde/fer/chemins" ? "on" : ""}" data-page="oxyde/fer/chemins" style="padding-left:30px">
+        <span class="sw chf-sw-titre"></span>Fer : chemins de formation</button>`;
     });
     html += `</div>`;
-  } else if (sec === "amorphes") {
-    html += `<div class="side-group"><h3>Amorphes et minéraloïdes</h3>
-      <button class="rock-item ${location.hash === "#amorphes" ? "on" : ""}" data-page="amorphes">
-        <span class="sw" style="background:linear-gradient(135deg,#6a5a52 50%,#4a3a2a 50%)"></span>
-        <b>Vue d'ensemble</b></button>`;
-    AMO_PARTIES.forEach((p) => { html += `<button class="rock-item sub-item" data-ancre="${p.id}">${p.nom}</button>`; });
-    html += `</div>`;
   }
-  side.innerHTML = html || `<p class="sub" style="padding:10px">Aucune fiche ne correspond.</p>`;
+  side.innerHTML = `<div class="side-complet">${html || `<p class="sub" style="padding:10px">Aucune fiche ne correspond.</p>`}</div>`;
   wireSidebar(side);
+  ajusterSidebar(side);
+}
+
+// Mise en page de l'arbre de la barre latérale
+function ajusterSidebar(side) {
   // arbre des roches : étiquette de branche trop longue pour sa bande → code seul
   // (seulement si la mise en page est disponible : hauteur 0 = barre non affichée)
   side.querySelectorAll(".arbre-band.br").forEach((b) => {
@@ -372,10 +473,12 @@ function renderSidebar() {
     if (court && b.clientHeight && s.getBoundingClientRect().height > b.clientHeight - 4) s.textContent = court;
   });
   // arbre des roches : amener la fiche ouverte dans la partie visible de la barre latérale
-  const active = side.querySelector(".arbre-roche.on");
+  const active = side.querySelector(".arbre-roche.on") || side.querySelector(".arbre-band.on");
   if (active) {
     const ra = active.getBoundingClientRect(), rs = side.getBoundingClientRect();
-    if (ra.top < rs.top || ra.bottom > rs.bottom) side.scrollTop += ra.top - rs.top - rs.height / 2;
+    // une bande (classe ou groupe ouvert sans fiche) est souvent haute : on amène son début en haut
+    const haut = active.classList.contains("arbre-band");
+    if (ra.top < rs.top || ra.bottom > rs.bottom) side.scrollTop += ra.top - rs.top - (haut ? 8 : rs.height / 2);
   }
 }
 
@@ -387,14 +490,19 @@ function wireSidebar(side) {
       if (cible) cible.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
-    if (b.dataset.classif) location.hash = "argiles";
-    else if (b.dataset.arggrp) location.hash = "argrp/" + b.dataset.arggrp;
+    if (b.dataset.classif) allerArgiles("argiles");
+    else if (b.dataset.argfam != null) allerArgiles("argfam/" + b.dataset.argfam);
+    else if (b.dataset.arggrp) allerArgiles("argrp/" + b.dataset.arggrp);
     else if (b.dataset.page) location.hash = b.dataset.page;
     else if (b.dataset.oxyde) location.hash = "oxyde/" + b.dataset.oxyde;
     else if (b.dataset.rocfam) location.hash = "rocfam/" + b.dataset.rocfam;
     else if (b.dataset.rocbr) location.hash = "rocbr/" + b.dataset.rocbr;
-    else if (b.dataset.mingrp) location.hash = "mingrp/" + b.dataset.mingrp;
-    else if (b.dataset.mincls != null) location.hash = "mincls/" + b.dataset.mincls;
+    else if (b.dataset.minvue) allerMinVue(b.dataset.minvue);
+    else if (b.dataset.rocvue) allerRocVue(b.dataset.rocvue);
+    else if (b.dataset.roctranche) allerMin("rocsurf/" + b.dataset.roctranche);
+    else if (b.dataset.minsol) allerMin("minsol/" + b.dataset.minsol);
+    else if (b.dataset.mingrp) allerMin("mingrp/" + b.dataset.mingrp);
+    else if (b.dataset.mincls != null) allerMin("mincls/" + b.dataset.mincls);
     else if (b.dataset.minopen) location.hash = "mineral/" + b.dataset.minopen;
     else if (b.dataset.argile) location.hash = "argile/" + b.dataset.argile;
     else if (b.dataset.id) go(b.dataset.id);
@@ -458,7 +566,7 @@ function renderAmorphes() {
 
   $("#main").innerHTML = `
   <div class="card hero">
-    <h1>🫧 Amorphes et minéraloïdes</h1>
+    <h1>Amorphes et minéraloïdes</h1>
     <p class="sub" style="font-size:15px;max-width:80ch">Un minéral est un solide naturel dont les atomes sont rangés en
     réseau et dont la composition s'écrit par une formule. Les substances de cette partie manquent l'une de ces deux
     dernières conditions : ce sont des <b>minéraloïdes</b>. Elles sont rangées ci-dessous selon la condition qui leur manque.</p>
@@ -601,64 +709,51 @@ function renderAmorphes() {
 
 // ---------------- ACCUEIL (hub des 3 parties) ----------------
 function renderHub() {
+  // 12/10/2026 : trois parties, Géologie · Minéralogie · Pédologie. Pas d'emoji devant les noms (sa demande) :
+  // le carré de couleur attend l'icône de chaque partie, à dessiner avec lui.
+  const nOx = OXYDES.reduce((s, f) => s + f.especes.length, 0);
   $("#main").innerHTML = `
   <div class="card hero hub-hero">
-    <div class="hub-bandeau" aria-hidden="true"><i style="background:var(--cat-sedimentaire)"></i><i style="background:var(--cat-magmatique)"></i><i style="background:var(--prod-argile)"></i><i style="background:var(--prod-oxydes)"></i></div>
+    <div class="hub-bandeau" aria-hidden="true"><i style="background:var(--cat-sedimentaire)"></i><i style="background:var(--cat-magmatique)"></i><i style="background:var(--prod-argile)"></i></div>
     <p class="hub-surtitre">Accueil</p>
     <h1>Atlas géologique</h1>
-    <p class="sub" style="font-size:15px;max-width:75ch">Les roches de France, les minéraux qui les composent et ce que
-    l'altération en fait. Les parties se lisent dans l'ordre où la matière se transforme : une roche est un assemblage
-    de minéraux ; en s'altérant, ces minéraux donnent des argiles et des oxydes.</p>
+    <p class="sub" style="font-size:15px;max-width:75ch">Les roches de France, les minéraux qui les composent et les sols qui en
+    naissent. Les parties se lisent dans l'ordre où la matière se transforme : une roche est un assemblage de minéraux ; en
+    s'altérant, ces minéraux donnent des argiles et des oxydes, la matière d'un sol.</p>
   </div>
 
   <div class="hub-grid">
     <button class="hub-card" onclick="location.hash='roches'">
-      <div class="hub-ic" style="background:var(--cat-sedimentaire)">🪨</div>
+      <div class="hub-ic" style="background:var(--cat-sedimentaire)" aria-hidden="true"></div>
       <p class="hub-etape">1 · Les assemblages</p>
-      <h2>Roches</h2>
-      <p>Rangées selon le lexique du BRGM : magmatiques, sédimentaires, métamorphiques.
-      Où elles affleurent, leur âge, leur altération.</p>
+      <h2>Géologie</h2>
+      <p>Les roches, rangées selon le lexique du BRGM : magmatiques, sédimentaires, métamorphiques, météoritiques.
+      Où elles affleurent, leur âge, leur formation, leur altération.</p>
       <span class="hub-go">${ROCHES.length} roches →</span>
     </button>
     <button class="hub-card" onclick="location.hash='mineraux'">
-      <div class="hub-ic" style="background:var(--cat-magmatique)">💎</div>
+      <div class="hub-ic" style="background:var(--cat-magmatique)" aria-hidden="true"></div>
       <p class="hub-etape">2 · Leurs briques</p>
-      <h2>Minéraux</h2>
-      <p>Les substances pures, rangées selon la classification de Strunz : silicates, oxydes, carbonates,
-      sulfures… Formule, propriétés, image.</p>
+      <h2>Minéralogie</h2>
+      <p>Les minéraux, rangés selon la classification de Strunz : silicates, oxydes, carbonates, sulfures…
+      Formule, structure, propriétés. Et ce qui n'est pas cristallin : verres, gels, ambre.</p>
       <span class="hub-go">${Object.keys(MINERAUX).length} fiches →</span>
     </button>
-    <button class="hub-card" onclick="location.hash='argiles'">
-      <div class="hub-ic" style="background:var(--prod-argile)">🧱</div>
+    <button class="hub-card" onclick="location.hash='pedologie'">
+      <div class="hub-ic" style="background:var(--prod-argile)" aria-hidden="true"></div>
       <p class="hub-etape">3 · Ce qu'en fait l'altération</p>
-      <h2>Argiles</h2>
-      <p>Les phyllosilicates en feuillets nés de l'altération des silicates, rangés d'après leur structure.</p>
-      <span class="hub-go">${Object.keys(ESPECES).length} espèces →</span>
+      <h2>Pédologie</h2>
+      <p>Les sols : les minéraux qu'on y trouve et leur rôle, les argiles, les oxydes et hydroxydes de fer,
+      de manganèse et d'aluminium.</p>
+      <span class="hub-go">${Object.keys(ESPECES).length} argiles · ${nOx} oxydes →</span>
     </button>
-    <button class="hub-card" onclick="location.hash='oxydes'">
-      <div class="hub-ic" style="background:var(--prod-oxydes)">🟠</div>
-      <p class="hub-etape">3 · Ce qu'en fait l'altération</p>
-      <h2>Oxydes</h2>
-      <p>Oxydes et hydroxydes de fer, manganèse, aluminium, titane… : leurs conditions de formation et leurs
-      diagrammes pH–Eh.</p>
-      <span class="hub-go">${OXYDES.reduce((s, f) => s + f.especes.length, 0)} espèces →</span>
-    </button>
-  </div>
-
-  <div class="card">
-    <h2>🫧 Amorphes et minéraloïdes <span class="badge outline">annexe</span></h2>
-    <p class="sub">Ce qui ressemble à un minéral sans en être un : les <b>verres</b> (obsidienne, ponce), les
-    <b>gels et nanophases</b> (opale, allophane, ferrihydrite) et la <b>matière organique</b> (ambre, charbons).</p>
-    <div class="min-chips">
-      <button class="min-chip" onclick="location.hash='amorphes'"><b>🫧 Amorphes et minéraloïdes →</b></button>
-    </div>
   </div>
 
   <div class="card">
     <h2>Pour aller plus loin : comment les parties s'enchaînent</h2>
     <p>Un <b>minéral</b> est une substance de composition et de structure cristalline définies : le quartz (SiO₂), la
     calcite (CaCO₃), l'orthose (KAlSi₃O₈). Une <b>roche</b> est un assemblage de minéraux : un granite associe quartz,
-    feldspaths et micas. La partie Minéraux classe les substances par chimie et structure ; la partie Roches classe les
+    feldspaths et micas. La Minéralogie classe les substances par chimie et structure ; la Géologie classe les
     assemblages par origine.</p>
     <p>À la surface, les minéraux formés en profondeur ou en mer ne sont plus stables. L'eau chargée de CO₂ les attaque
     à des vitesses très différentes : l'olivine et les plagioclases calciques s'altèrent vite, le quartz presque pas
@@ -667,14 +762,69 @@ function renderHub() {
     hématite), qui colorent les sols en ocre et en rouge.</p>
     <p>Les grains résistants, surtout le quartz, deviennent des sables ; argiles et oxydes forment la fraction fine.
     Transportés, ces produits se déposent et donnent de nouvelles roches sédimentaires ; laissés en place, ils
-    constituent le matériau des sols.</p>
+    constituent le matériau des sols, dont s'occupe la Pédologie.</p>
   </div>`;
   document.title = "Atlas géologique";
 }
 
+// ---------------- partie PÉDOLOGIE (12/10/2026) ----------------
+// Pour l'instant, elle réunit ce qui existait : la vue « Minéraux du sol par rôle » (#minsol), les argiles (#argiles…)
+// et les oxydes (#oxydes…). Le reste du plan (matière organique, processus, types de sols, « quel sol ici ? ») est
+// noté dans CLAUDE.md §26 et dans la tâche I.1 des chantiers.
+const PEDO_PARTIES = [
+  { id: "minsol", page: "minsol", nom: "Minéraux du sol", sw: "var(--cat-magmatique)" },
+  { id: "argiles", page: "argiles", nom: "Argiles", sw: "var(--prod-argile)" },
+  { id: "oxydes", page: "oxydes", nom: "Oxydes et hydroxydes", sw: "var(--prod-oxydes)" },
+];
+function pedoMenuHTML(sub) {
+  return `<div class="side-group"><h3>Pédologie</h3>
+    <button class="rock-item pedo-part ${sub === "accueil" ? "on" : ""}" data-page="pedologie"><b>Vue d'ensemble</b></button>`
+    + PEDO_PARTIES.map((p) => `<button class="rock-item pedo-part ${sub === p.id ? "on" : ""}" data-page="${p.page}">
+      <span class="sw" style="background:${p.sw}"></span><b>${p.nom}</b></button>`).join("") + `</div>`;
+}
+function renderPedologie() {
+  const nOx = OXYDES.reduce((s, f) => s + f.especes.length, 0);
+  const nSol = typeof MIN_SOL !== "undefined" ? MIN_SOL.reduce((s, g) => s + minSolElements(g).length, 0) : 0;
+  $("#main").innerHTML = `
+  <div class="card hero hub-hero">
+    <div class="hub-bandeau" aria-hidden="true"><i style="background:var(--cat-magmatique)"></i><i style="background:var(--prod-argile)"></i><i style="background:var(--prod-oxydes)"></i></div>
+    <p class="hub-surtitre">Pédologie</p>
+    <h1>Les sols</h1>
+    <p class="sub" style="font-size:15px;max-width:75ch">Un sol est la roche transformée par l'eau, l'air et les êtres vivants.
+    Il garde des minéraux de la roche et en fabrique d'autres : moins d'un pour cent d'oxydes de fer suffit à le colorer
+    en ocre ou en rouge.</p>
+  </div>
+  <div class="hub-grid">
+    <button class="hub-card" onclick="location.hash='minsol'">
+      <div class="hub-ic" style="background:var(--cat-magmatique)" aria-hidden="true"></div>
+      <h2>Minéraux du sol</h2>
+      <p>Ce que le sol hérite de la roche et ce qu'il fabrique, rangé par rôle : minéraux altérables, résistants,
+      argileux, oxydes, carbonates, sels…</p>
+      <span class="hub-go">${nSol} minéraux →</span>
+    </button>
+    <button class="hub-card" onclick="location.hash='argiles'">
+      <div class="hub-ic" style="background:var(--prod-argile)" aria-hidden="true"></div>
+      <h2>Argiles</h2>
+      <p>Les minéraux en feuillets nés de l'altération des silicates : leur structure, l'eau qu'ils retiennent,
+      les cations qu'ils échangent.</p>
+      <span class="hub-go">${Object.keys(ESPECES).length} espèces →</span>
+    </button>
+    <button class="hub-card" onclick="location.hash='oxydes'">
+      <div class="hub-ic" style="background:var(--prod-oxydes)" aria-hidden="true"></div>
+      <h2>Oxydes et hydroxydes</h2>
+      <p>Fer, manganèse, aluminium, titane… : comment ils naissent dans le sol, d'un oxyde à l'autre, et leurs
+      diagrammes pH–Eh.</p>
+      <span class="hub-go">${nOx} espèces →</span>
+    </button>
+  </div>`;
+  document.title = "Pédologie — Atlas géologique";
+}
+
 // ---------------- partie ROCHES (vue d'ensemble) ----------------
 function renderRoches() {
-  const sorted = [...ROCHES].sort((a, b) => geomean(b) - geomean(a));
+  // les météorites (B.5) n'ont pas de vitesse d'altération chiffrée : elles ne figurent pas sur ce graphique
+  const sorted = ROCHES.filter((r) => r.alteration && r.alteration.vmin != null && r.alteration.vmax != null)
+    .sort((a, b) => geomean(b) - geomean(a));
   const rowH = 26, top = 46, left = 218, right = 985, H = top + sorted.length * rowH + 16;
 
   let svg = `<svg viewBox="0 0 1000 ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vitesses d'altération comparées des roches de France">`;
@@ -698,7 +848,7 @@ function renderRoches() {
   });
   svg += "</svg>";
 
-  const legend = Object.entries(CATEGORIES).map(([id, m]) =>
+  const legend = Object.entries(CATEGORIES).filter(([id]) => sorted.some((r) => r.categorie === id)).map(([id, m]) =>
     `<span class="key"><i style="background:${catColor(id)}"></i>${m.nom}s</span>`).join("");
 
   const tableRows = sorted.map((r) => `<tr>
@@ -711,14 +861,16 @@ function renderRoches() {
     <h1>Les roches de France</h1>
     <p class="sub" style="font-size:15px;max-width:78ch">Une <b>roche</b> est un <b>assemblage de minéraux</b> — comme un mur
     fait de plusieurs briques. On les range par <b>origine</b> : sédimentaires (déposées grain par grain), magmatiques
-    (cristallisées depuis un magma), métamorphiques (transformées par la chaleur et la pression). Choisis-en une pour
-    voir où elle affleure, son âge, et ce qu'elle devient en s'altérant.</p>
+    (cristallisées depuis un magma), métamorphiques (transformées par la chaleur et la pression), et météoritiques (tombées
+    de l'espace). Choisis-en une pour voir où elle affleure, son âge, et ce qu'elle devient en s'altérant.</p>
+    ${RochesSurface.boutons(false)}
   </div>
 
   <div class="card">
     <h2>Vitesse d'altération comparée</h2>
     <p class="sub">Recul du front d'altération ou de dissolution, en mm par an (ordres de grandeur, climat tempéré : 8–15 °C, 600–1 100 mm/an).
-    Chaque barre va de la vitesse minimale à la vitesse maximale typique. Cliquer sur une ligne ouvre la fiche.</p>
+    Chaque barre va de la vitesse minimale à la vitesse maximale typique. Cliquer sur une ligne ouvre la fiche. Les météorites,
+    sans vitesse chiffrée, n'y figurent pas.</p>
     <div class="legend">${legend}</div>
     <div class="chart-wrap" id="ov-chart">${svg}</div>
     <p class="sub">* Pour les roches meubles ou solubles (marnes, argiles, lœss, sables, gypse, sel et sels potassiques, anhydrite, vases, tourbe), la vitesse indiquée
@@ -741,7 +893,7 @@ function renderRoches() {
   </div>
 
   <div class="card">
-    <h2>Pour aller plus loin : les trois grandes familles de roches</h2>
+    <h2>Pour aller plus loin : les grandes familles de roches</h2>
     <p>Toute roche raconte son histoire par son origine. Les <b>roches sédimentaires</b> (calcaire, craie, grès, argile…)
     naissent du dépôt et du compactage de débris ou de précipités chimiques au fond des mers, des lacs et des vallées :
     elles couvrent les trois quarts de la surface de la France et gardent la mémoire des climats passés — un calcaire, c'est
@@ -755,6 +907,9 @@ function renderRoches() {
     minéraux se réorganisent et s'alignent en lits — cette « foliation » explique pourquoi l'ardoise se débite en plaques
     régulières. Clique sur n'importe quelle roche pour ouvrir sa fiche : carte d'affleurement, âge, vitesse d'altération, et
     le bilan de ce qu'elle produit en se défaisant.</p>
+    <p>Les <b>roches météoritiques</b> forment une quatrième famille, à part : elles ne sont pas nées sur Terre mais sur des
+    astéroïdes, sur Mars ou sur la Lune, et sont tombées du ciel. Une chondrite a 4 567 millions d'années, l'âge du Système
+    solaire ; une météorite de fer est un morceau du noyau d'un astéroïde.</p>
   </div>`;
 
   $("#tbl-btn").addEventListener("click", () => {
@@ -822,6 +977,7 @@ function renderRocheFamille(fam) {
 
   $("#main").innerHTML = `
   <div class="card rock-head">
+    <div class="rock-head-texte">
     <h1><span class="sw-big" style="background:${catColor(fam.id)}"></span>${fam.nom}</h1>
     <p class="sub crumb">Roches <span>→</span> <b>${fam.nom}</b> · <a href="#roches">vue d'ensemble</a></p>
     <p class="desc">${fam.desc}</p>
@@ -1016,9 +1172,9 @@ function friseTableHTML(rock) {
   return html + "</tbody></table>";
 }
 
-function friseHTML(rock) {
+function friseHTML(rock, bouton = "") {
   const bascule = (cle, nom) => `<label class="ft-bascule"><input type="checkbox" data-ftregl="${cle}"${ftReglages[cle] ? " checked" : ""}><i></i>${nom}</label>`;
-  return `<div class="ft-reglages">${bascule("tout", "Toute l'échelle")}${bascule("details", "Âges détaillés")}</div>
+  return `<div class="ft-reglages">${bascule("tout", "Toute l'échelle")}${bascule("details", "Âges détaillés")}${bouton}</div>
     <div class="chart-wrap ft-wrap" id="ft-table">${friseTableHTML(rock)}</div>`;
 }
 function friseSourceHTML() {
@@ -1033,96 +1189,69 @@ function brancherFrise(rock) {
   racine.closest(".card").querySelectorAll("[data-ftregl]").forEach((c) => c.addEventListener("change", () => {
     ftReglages[c.dataset.ftregl] = c.checked;
     racine.innerHTML = friseTableHTML(rock);
+    ajusterFrise();
   }));
+}
+// frise posée à côté de la carte (12/10/2026) : réduite (zoom) pour tenir dans sa colonne sans défilement ;
+// en grand (« Agrandir »), taille normale. Recalculée quand la largeur de la page change.
+// 13/10/2026 : colonne trop étroite (panneau de droite ouvert) → la frise passe sous la carte au lieu d'être coupée.
+let _friseObs = null;
+function ajusterFrise() {
+  const wrap = $("#ft-table"), boite = $("#roche-ou-quand");
+  if (!wrap || !boite) return;
+  const dessous = boite.classList.contains("frise-dessous");
+  wrap.style.zoom = "";
+  boite.classList.remove("frise-dessous");
+  if (!boite.classList.contains("frise-grande")) {
+    let dispo = wrap.clientWidth - 4;
+    const besoin = wrap.scrollWidth;
+    if (dispo > 0 && besoin * 0.55 > dispo) { boite.classList.add("frise-dessous"); dispo = wrap.clientWidth - 4; }
+    if (dispo > 0 && besoin > dispo) wrap.style.zoom = Math.max(0.55, dispo / besoin).toFixed(3);
+  }
+  if (map && dessous !== boite.classList.contains("frise-dessous")) setTimeout(() => map.invalidateSize(), 0);
+  if (!_friseObs && window.ResizeObserver) {
+    let largeur = 0;
+    _friseObs = new ResizeObserver((e) => {
+      const w = Math.round(e[0].contentRect.width);
+      if (w !== largeur) { largeur = w; requestAnimationFrame(ajusterFrise); }
+    });
+  }
+  // on suit la boîte carte + frise (sa largeur ne dépend pas de la place de la frise : pas de va-et-vient)
+  if (_friseObs) { _friseObs.disconnect(); _friseObs.observe(boite); }
 }
 
 // ---------------- réglette de vitesse ----------------
 function rateStripSVG(rock) {
   const W = 1000, H = 108, x0 = 14, x1 = 986, cy = 66;
   let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vitesse d'altération sur une échelle logarithmique">`;
-  svg += `<text x="${x0}" y="14" class="axis-lab">mm par an — échelle logarithmique (points gris : les ${ROCHES.length - 1} autres roches)</text>`;
+  // seules les roches à vitesse chiffrée ont un point (les autres donnaient cx = NaN, 12/10/2026)
+  const autres = ROCHES.filter((r) => r.id !== rock.id && r.alteration && r.alteration.vmin != null && r.alteration.vmax != null);
+  // 12/10/2026 (sa demande) : lu en mm PAR 100 ANS ; les données restent en mm/an (alteration.vmin/vmax), seul l'affichage × 100
+  const s100 = (v) => fmtRate(v * 100);
+  svg += `<text x="${x0}" y="14" class="axis-lab">mm perdus en 100 ans — échelle logarithmique (points gris : les ${autres.length} autres roches chiffrées)</text>`;
   for (const d of DECADES) {
     const xd = xLog(d, x0, x1);
     svg += `<line x1="${xd}" y1="24" x2="${xd}" y2="${H - 24}" class="hairline"/>
-      <text x="${xd}" y="${H - 8}" text-anchor="middle" class="tick-lab">${fmt(d, 2)}</text>`;
+      <text x="${xd}" y="${H - 8}" text-anchor="middle" class="tick-lab">${fmt(d * 100, 2)}</text>`;
   }
-  for (const r of ROCHES) {
-    if (r.id === rock.id) continue;
+  for (const r of autres) {
     svg += `<circle cx="${xLog(geomean(r), x0, x1)}" cy="${cy}" r="4" fill="var(--baseline)"
-      data-tip="<b>${r.nom}</b>${fmtRate(r.alteration.vmin)} à ${fmtRate(r.alteration.vmax)} mm/an"/>`;
+      data-tip="<b>${r.nom}</b>${s100(r.alteration.vmin)} à ${s100(r.alteration.vmax)} mm en 100 ans"/>`;
   }
   const xa = xLog(rock.alteration.vmin, x0, x1), xb = xLog(rock.alteration.vmax, x0, x1);
   svg += `<rect x="${xa}" y="${cy - 7}" width="${Math.max(xb - xa, 6)}" height="14" rx="7"
       fill="${catColor(rock.categorie)}" stroke="var(--surface)" stroke-width="2"
-      data-tip="<b>${rock.nom}</b>${fmtRate(rock.alteration.vmin)} à ${fmtRate(rock.alteration.vmax)} mm/an"/>
-    <text x="${xa - 10}" y="${cy + 4}" text-anchor="end" class="band-lab">${fmtRate(rock.alteration.vmin)}</text>
-    <text x="${xb + 10}" y="${cy + 4}" text-anchor="start" class="band-lab">${fmtRate(rock.alteration.vmax)}</text>`;
+      data-tip="<b>${rock.nom}</b>${s100(rock.alteration.vmin)} à ${s100(rock.alteration.vmax)} mm en 100 ans"/>
+    <text x="${xa - 10}" y="${cy + 4}" text-anchor="end" class="band-lab">${s100(rock.alteration.vmin)}</text>
+    <text x="${xb + 10}" y="${cy + 4}" text-anchor="start" class="band-lab">${s100(rock.alteration.vmax)}</text>`;
+  // repères posés sur la bande (grès : ce que donne chaque type de ciment, gres-ciment.js)
+  for (const rp of rock.alteration.reperes || []) {
+    const xr = xLog(rp.v, x0, x1);
+    svg += `<line x1="${xr}" y1="${cy - 13}" x2="${xr}" y2="${cy + 13}" stroke="var(--ink)" stroke-width="1.6"/>
+    <text x="${xr}" y="${cy - 17}" text-anchor="middle" class="tick-lab">${rp.label}</text>`;
+  }
   svg += "</svg>";
   return svg;
-}
-
-// ---------------- produits pour 1 kg ----------------
-function productsHTML(rock) {
-  const present = PRODUITS_META.filter((p) => (rock.produits[p.id] || 0) > 0);
-  const segs = present.map((p) => {
-    const v = rock.produits[p.id];
-    const pct = v / 10;
-    const label = v >= 90 ? `<span>${fmt(v)} g</span>` : "";
-    return `<div class="seg" style="flex:${v};background:${prodColor(p.id)}"
-      data-tip="<b>${p.nom}</b>${fmt(v)} g pour 1 kg (${fmt(pct, 3)} %)">${label}</div>`;
-  }).join("");
-  const legend = present.map((p) => `<span class="key"><i style="background:${prodColor(p.id)}"></i>${p.nom}</span>`).join("");
-  const rows = present.map((p) => `<tr><td><span class="key"><i style="background:${prodColor(p.id)};width:10px;height:10px;display:inline-block;border-radius:3px;margin-right:8px"></i>${p.id === "autre" && rock.autreLabel ? rock.autreLabel : p.nom}</span></td>
-    <td class="num">${fmt(rock.produits[p.id])} g</td><td class="num">${fmt(rock.produits[p.id] / 10, 3)} %</td></tr>`).join("");
-  return `<div class="pbar" id="pbar">${segs}</div><div class="legend">${legend}</div>
-    <table class="data"><thead><tr><th>Produit</th><th class="num">pour 1 kg</th><th class="num">part</th></tr></thead><tbody>${rows}</tbody></table>
-    <div class="note">${rock.produitsNote}</div>
-    ${window.BilanAlteration ? BilanAlteration.explicationHTML(rock) : ""}`;
-}
-
-// ---------------- triangle des textures (D.2) ----------------
-function textureTriangleHTML(rock) {
-  const p = rock.produits || {};
-  const sable = p.sable || 0, limon = p.limon || 0, argile = p.argile || 0;
-  if (sable + limon + argile <= 0) {
-    return `<p class="sub">Triangle des textures non représentable : cette roche ne libère pratiquement pas de sable, de limon ou d'argile (l'essentiel part en solution).</p>`;
-  }
-  const r = geppaClasser(sable, limon, argile);
-  const [x0, baseY, side] = [42, 268, 250];
-  // escala : coordonnées cartésiennes normalisées (déjà issues de geppaXY) -> repère SVG
-  const escala = ([nx, ny]) => [x0 + nx * side, baseY - ny * side];
-  // toXY : fraction [argile, limon, sable] -> repère SVG (fait les deux conversions)
-  const toXY = (frac) => escala(geppaXY(frac));
-  const c = catColor(rock.categorie);
-  let svg = `<svg viewBox="0 0 340 300" class="triangle-svg" role="img" aria-label="Triangle des textures GEPPA">`;
-  svg += GEPPA_CLASSES.map((cl) => {
-    const sommets = geppaPolyOf(cl);
-    const pts = sommets.map(escala).map((p) => p.join(",")).join(" ");
-    const surligne = r && r.classe.code === cl.code;
-    const cx = sommets.reduce((s, p) => s + p[0], 0) / sommets.length;
-    const cy = sommets.reduce((s, p) => s + p[1], 0) / sommets.length;
-    const [lx2, ly2] = escala([cx, cy]);
-    return `<polygon points="${pts}" fill="${surligne ? c : "none"}" fill-opacity="${surligne ? 0.22 : 0}"
-        stroke="${surligne ? c : "var(--border)"}" stroke-width="${surligne ? 1.6 : 1}" pointer-events="all"
-        data-tip="<b>${cl.nom}</b> (${cl.code})"/>
-      <text x="${lx2}" y="${ly2}" text-anchor="middle" dominant-baseline="middle" class="tri-lab"${surligne ? ' font-weight="700"' : ""}>${cl.code}</text>`;
-  }).join("");
-  const [ax, ay] = toXY([1, 0]), [sx, sy] = toXY([0, 0]), [lxv, lyv] = toXY([0, 1]);
-  svg += `<polygon points="${ax},${ay} ${sx},${sy} ${lxv},${lyv}" fill="none" stroke="var(--ink)" stroke-width="1.6"/>`;
-  svg += `<text x="${ax}" y="${ay - 12}" text-anchor="middle" class="tri-axe">Argile 100 %</text>
-    <text x="${sx - 6}" y="${sy + 18}" text-anchor="start" class="tri-axe">Sable 100 %</text>
-    <text x="${lxv + 6}" y="${lyv + 18}" text-anchor="end" class="tri-axe">Limon 100 %</text>`;
-  if (r) {
-    const [px, py] = toXY(r.frac);
-    svg += `<circle cx="${px}" cy="${py}" r="6" fill="${c}" stroke="var(--surface)" stroke-width="2"
-      data-tip="<b>${rock.nom}</b>${fmt(r.frac[2] * 100, 3)} % sable · ${fmt(r.frac[1] * 100, 3)} % limon · ${fmt(r.frac[0] * 100, 3)} % argile<br>Classe GEPPA : <b>${r.classe.nom}</b>"/>`;
-  }
-  svg += "</svg>";
-  const note = r
-    ? `<p class="sub"><b>Texture dominante : ${r.classe.nom}</b> (${r.classe.code}) — d'après les seules proportions de sable, limon et argile produites (dissous et oxydes exclus, ${fmt(sable, 3)}/${fmt(limon, 3)}/${fmt(argile, 3)} g pour 1 kg, ramenés à 100 %).</p>`
-    : "";
-  return `<div class="chart-wrap">${svg}</div>${note}
-    <p class="note">Triangle du GEPPA (Groupe d'étude des problèmes de pédologie appliquée, 1963), la référence en pédologie française (Baize, 1995). Limites granulométriques du GEPPA : argile &lt; 2 µm, limon 2–50 µm, sable 50–2000 µm — légèrement différentes de la convention sédimentologique 2–63 µm utilisée ci-dessus pour les produits d'altération ; le classement reste donc approximatif.</p>`;
 }
 
 // ---------------- bloc « Formation » en tête de fiche roche (C.1) ----------------
@@ -1226,6 +1355,13 @@ function formationHTML(rock) {
     ${texture}
   </div>` : ""}
 
+  ${rock.varietes && rock.varietes.length ? `<div class="card form-varietes">
+    <h2>Variétés &amp; faciès</h2>
+    ${window.Textures ? Textures.varietes(rock) : ""}
+  </div>` : ""}
+
+  ${window.LamesPerso ? LamesPerso.carte("roche", rock.id) : ""}
+
   <div class="card form-structure">
     ${structure}
   </div>`;
@@ -1300,7 +1436,8 @@ function mineralesProprietesHTML(rock) {
     { champ: "stabilite", nom: "Altérabilité", min: 1, max: 10, ticks: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], bouts: ["s'altère vite", "inaltérable"], u: (v) => `${fmt(v, 2)}/10` },
     { champ: "densite", nom: "Masse volumique", min: 1, max: 5, ticks: [1, 2, 3, 4, 5], bouts: ["léger", "lourd"], u: (v) => `${fmt(v, 3)} g/cm³` },
   ];
-  const W = 1000, G = 118, D = 985;
+  // D laisse 30 unités à droite : un gros disque (rayon 18) posé sur 10 ne déborde plus du cadre
+  const W = 1000, G = 118, D = 965;
   const X = (L, v) => G + (Math.max(L.min, Math.min(L.max, v)) - L.min) / (L.max - L.min) * (D - G);
   let svg = "", y = 0;
   for (const L of LIGNES) {
@@ -1320,100 +1457,76 @@ function mineralesProprietesHTML(rock) {
         data-tip="<b>${m.nom.split(" (")[0]}</b>${fmt(Math.round(q.p * 100))} %"/>`;
     });
     const xm = X(L, moy).toFixed(1);
+    // étiquette près d'un bord : calée sur ce bord au lieu d'être centrée sur le trait (sinon elle sort du cadre)
+    const [xt, ancre] = xm > W - 110 ? [W, "end"] : xm < G + 60 ? [G - 10, "start"] : [xm, "middle"];
     svg += `<line x1="${xm}" x2="${xm}" y1="${ya - 21}" y2="${ya + 19}" class="mp-roche"/>`
-      + `<text x="${xm}" y="${ya - 25}" class="mp-roche-t" text-anchor="middle">${rock.nom} : ${L.u(moy)}</text>`;
+      + `<text x="${xt}" y="${ya - 25}" class="mp-roche-t" text-anchor="${ancre}">${rock.nom} : ${L.u(moy)}</text>`;
     y += 66;
   }
   const leg = liste.slice().sort((a, b) => b[1] - a[1]).map(([id, p]) =>
     `<span><i style="background:${MINERAUX[id].swatch}"></i>${MINERAUX[id].nom.split(" (")[0]} ${fmt(Math.round(p / total * 100))} %</span>`).join("");
   return `<div class="card min-proprietes">
-    <div class="chart-wrap" id="mp-chart"><svg viewBox="0 0 ${W} ${y + 4}" class="mp-svg" role="img" aria-label="Dureté, altérabilité et masse volumique des minéraux de la roche">${svg}</svg></div>
+    <div class="chart-wrap" id="mp-chart"><svg viewBox="0 0 ${W} ${y + 8}" class="mp-svg" role="img" aria-label="Dureté, altérabilité et masse volumique des minéraux de la roche">${svg}</svg></div>
   </div>`;
 }
 
 function renderRock(rock) {
   const a = rock.alteration || null;
   const hasRate = !!(a && a.vmin != null && a.vmax != null);
-  const hasProd = !!rock.produits;
   const grise = "<span style=\"opacity:.55;font-style:italic\">non renseignée pour cette roche</span>";
-  const cube = Math.cbrt(1 / rock.densite) * 1000; // arête (mm) d'un cube d'1 kg
-  const tMin = hasRate ? cube / 2 / a.vmax : null, tMax = hasRate ? cube / 2 / a.vmin : null;
-  const meter = a && a.facilite != null ? Array.from({ length: 5 }, (_, i) => `<i class="${i < a.facilite ? "f" : ""}"></i>`).join("") : "";
 
   $("#main").innerHTML = `<div class="page-roche">
   <div class="card rock-head">
+    <div class="rock-head-texte">
     <h1><span class="sw-big" style="background:${rock.swatch}"></span>${rock.nom}
       <span class="badge" style="background:${catColor(rock.categorie)}">${CATEGORIES[rock.categorie].nom}</span>
       <span class="badge outline">${rock.sousType}</span>
       ${rock.codes ? `<span class="codes-tete">${rock.codes.map((c) => `<span class="code-chip" data-tip="<b>${c.code}</b>${c.sens}">${c.code}</span>`).join("")}</span>` : ""}</h1>
     ${rocheCrumbHTML(rock)}
-    <div class="arg-photo roche-photo" id="roche-photo"><span class="sw-ph" style="background:${rock.swatch}"></span></div>
     <p class="desc">${rock.description}</p>
     <p class="sub"><b>Minéralogie :</b> ${rock.mineralogie}</p>
+    </div>
+    <div class="arg-photo roche-photo" id="roche-photo"><span class="sw-ph" style="background:${rock.swatch}"></span></div>
   </div>
 
   ${mineralesProprietesHTML(rock)}
 
   ${formationHTML(rock)}
 
+  <div class="roche-ou-quand" id="roche-ou-quand">
   <div class="card map-card" id="map-card">
-    <h2>${rock.regions && rock.regions.length && rock.regions.every((r) => r.etranger) ? "Où la trouver ?" : "Où la trouver en France ?"}</h2>
-    ${rock.regions && rock.regions.length && rock.regions.every((r) => r.etranger) ? `<p class="sub"><b>Roche absente de France</b> (ou sans affleurement notable) : la pastille marque le site de référence à l'étranger, celui que suit l'animation de formation.</p>` : ""}
+    ${window.CartesChutes && rock.categorie === "meteoritique" ? CartesChutes.entete(rock) : `<h2>${rock.regions && rock.regions.length && rock.regions.every((r) => r.etranger) ? "Où la trouver ?" : "Où la trouver en France ?"}</h2>
+    ${rock.regions && rock.regions.length && rock.regions.every((r) => r.etranger) ? `<p class="sub"><b>Roche absente de France</b> (ou sans affleurement notable) : la pastille marque le site de référence à l'étranger, celui que suit l'animation de formation.</p>` : ""}`}
     <div class="map-boite"><div id="map"></div><button type="button" class="map-fs-btn map-fs-sur" id="map-fs-btn">⤢ Agrandir</button></div>
   </div>
 
-  ${rock.varietes && rock.varietes.length ? `<div class="card form-varietes">
-    <h2>Variétés &amp; faciès</h2>
-    ${window.Textures ? Textures.varietes(rock) : ""}
-  </div>` : ""}
-
-  <div class="card">
+  <div class="card quand-card">
     <h2>Quand s'est-elle formée ?</h2>
-    ${rock.ages && rock.ages.length ? `${friseHTML(rock)}` : `<p class="sub">Âge de formation ${grise}.</p>`}
+    ${rock.ages && rock.ages.length ? `${friseHTML(rock, `<button type="button" class="map-fs-btn" id="frise-grand-btn">⤢ Agrandir</button>`)}` : `<p class="sub">Âge de formation ${grise}.</p>`}
+  </div>
   </div>
 
   <details class="card replie-travaux"><summary><h2>À quelle vitesse s'altère-t-elle ? ${EN_TRAVAUX}</h2></summary>
     ${a && (a.mecanisme || a.climat) ? (`${a.mecanisme ? `<p><b>Mécanisme :</b> ${a.mecanisme}</p>` : ""}
     ${hasRate && a.climat ? `<p><b>Effet du climat / mesures :</b> ${a.climat}</p>` : ""}`) : ""}
     ${hasRate ? `<div class="chart-wrap" id="rate-chart">${rateStripSVG(rock)}</div>
-    <div class="tiles">
-      <div class="tile"><div class="lab">Un cube d'1 kg (arête ${fmt(Math.round(cube))} mm) exposé à l'air s'altère entièrement en…</div>
-        <div class="val">${fmtAns(tMin)} <small>à</small> ${fmtAns(tMax)}</div></div>
-      <div class="tile"><div class="lab">Production de régolithe (à vitesse moyenne)</div>
-        <div class="val">${fmt(geomean(rock) * rock.densite, 2)} <small>g par m² et par an</small></div></div>
-    </div>
-    ${window.BilanAlteration ? BilanAlteration.pluieHTML(rock) : ""}` : `<p class="sub">Vitesse d'altération chiffrée ${grise}. Le mécanisme qualitatif est décrit ci-dessus.</p>`}
-    ${window.BilanAlteration ? BilanAlteration.reactionsHTML(rock) : ""}
-  </details>
-
-  <details class="card replie-travaux"><summary><h2>1 kg altéré : qu'est-ce qui en sort ? ${EN_TRAVAUX}</h2></summary>
-    ${hasProd ? `<p class="sub">Bilan de masse d'1 kg de ${rock.nom.toLowerCase()} entièrement altéré, en climat tempéré (8–15 °C, 600–1 100 mm/an), calculé à partir de sa composition minérale.</p>
-    <div id="prod-chart">${productsHTML(rock)}</div>
-    ${argilesProduitesHTML(rock)}
-    <h3 style="margin-top:18px">Quelle texture, une fois altérée ?</h3>
-    <p class="sub">La part solide de ce bilan — sable, limons, argiles — placée sur le triangle des textures, pour nommer le matériau qui en résulte.</p>
-    <div id="texture-chart">${textureTriangleHTML(rock)}</div>` : `<p class="sub">Bilan de masse chiffré ${grise}. À la louche, d'après la minéralogie ci-dessus : le quartz donne du sable, les feldspaths et micas des argiles + ions dissous, les minéraux ferro-magnésiens (pyroxènes, amphiboles, biotite, olivine) des argiles + oxydes de fer.</p>`}
+    ${a.ecart ? `<p class="sub"><b>Pourquoi un tel écart ?</b> ${a.ecart}</p>` : ""}` : `<p class="sub">Vitesse d'altération chiffrée ${grise}. Le mécanisme qualitatif est décrit ci-dessus.</p>`}
+    ${rock.id === "gres" && window.GresCiment ? `<div class="gc-renvoi"><p><b>Nouvelle page, à valider :</b> ce qui tient un grès, son ciment — les cinq ciments côte à côte, la vitesse d'altération calculée pour chacun, et quand le climat prend le relais.</p><a class="chip" href="#roche/gres/ciment">Ouvrir →</a></div>` : ""}
   </details>
 
   ${window.Pourquoi ? Pourquoi.carte(rock) : ""}
 
-  <details class="card replie-travaux"><summary><h2>Pour aller plus loin</h2></summary>
-    <p class="sub"><b>Usages :</b> ${rock.usages}</p>
-    ${window.PlusLoin ? PlusLoin.html(rock) : ""}
-  </details>
   <details class="card sources-roche"><summary><h2 style="display:inline">Sources</h2></summary>
   ${window.Formation ? Formation.sources(rock) : ""}
   ${window.Pourquoi ? Pourquoi.sources(rock) : ""}
-  ${window.PlusLoin ? PlusLoin.sources(rock) : ""}
   ${(() => { const m = formationMineral3D(rock).affiche; return m ? `<p class="page-source" data-s3d-ref="${m.id}"></p>` : ""; })()}
   ${rock.ages && rock.ages.length ? friseSourceHTML() : ""}
   ${rock.pedologieAuto ? `<p class="page-source"><b>Côté sols</b> — Baize D. et Girard M.-C., dir. (2009), <i>Référentiel pédologique 2008</i>, AFES, Quæ (références du Référentiel, attribuées par grand type de matériau).</p>` : ""}
-  ${rock.alteration && rock.alteration.vmin != null ? `<p class="page-source"><b>Vitesse selon la pluie</b> — Turc L. (1961), <i>Annales agronomiques</i> 12, 13 ; Maher K. (2011), <i>Earth and Planetary Science Letters</i> 312, 48 ; White A. F. et Blum A. E. (1995), <i>Geochimica et Cosmochimica Acta</i> 59, 1729.</p>` : ""}
   <p class="page-source"><b>Photo de la roche</b> — <a href="${rock.wikipedia}" target="_blank" rel="noopener">Wikipédia</a> / Wikimedia Commons (licences libres, auteurs sur la page de l'image).</p>
   ${rocheBrgmHTML(rock).replace('class="sub"', 'class="page-source"')}
   </details></div>`;
 
-  ["rate-chart", "prod-chart", "texture-chart", "mp-chart"].forEach((id) => { const el = $("#" + id); if (el) bindTips(el); });
+  ["rate-chart", "mp-chart"].forEach((id) => { const el = $("#" + id); if (el) bindTips(el); });
   const structChips = $("#form-struct-chips");
   if (structChips) structChips.addEventListener("click", (e) => {
     const b = e.target.closest("[data-s3d-pick]");
@@ -1431,6 +1544,16 @@ function renderRock(rock) {
     Structure3D.brancher(viewer);
   });
   if (rock.ages && rock.ages.length) brancherFrise(rock);
+  // frise à côté de la carte, réduite à la largeur de sa colonne ; « Agrandir » la remet en grand sous la carte (12/10/2026)
+  const friseBtn = $("#frise-grand-btn"), ouQuand = $("#roche-ou-quand");
+  if (friseBtn && ouQuand) friseBtn.addEventListener("click", () => {
+    const grand = ouQuand.classList.toggle("frise-grande");
+    friseBtn.textContent = grand ? "⤡ Réduire" : "⤢ Agrandir";
+    ajusterFrise();
+    if (map) setTimeout(() => map.invalidateSize(), 0);
+    if (!grand) ouQuand.scrollIntoView({ block: "nearest" });
+  });
+  ajusterFrise();
   // conditions : on retire le blanc au-dessus du diagramme (02/10/2026)
   const fcSvg = $(".form-conditions .fc-svg");
   if (fcSvg && fcSvg.viewBox && fcSvg.viewBox.baseVal) {
@@ -1443,7 +1566,6 @@ function renderRock(rock) {
   if ($("#form-anim")) FormationAnim.monter($("#form-anim"), rock, { lien: $(".form-conditions .fc") });
   if ($("#pourquoi .pq")) Pourquoi.monter($("#pourquoi .pq"), rock);
   if (window.Textures) Textures.remplir($(".form-varietes"));
-  if (window.BilanAlteration) BilanAlteration.brancherPluie($("#main"), rock);
   Structure3D.brancher($("#main"));
   bindTips($("#main .rock-head"));
   if (rock.regions && rock.regions.length) renderMap(rock);
@@ -1466,7 +1588,7 @@ const LITHO50_KW = {
   sable: ["sable", "sablo"], gres: ["gres"], conglomerat: ["conglomerat", "poudingue"],
   arkose: ["arkose"], grauwacke: ["grauwacke", "greywacke"], siltite: ["siltite", "silt"],
   breche_sedimentaire: ["breche"], molasse: ["molasse"], flysch: ["flysch"],
-  tillite: ["tillite", "diamictite"], loess: ["loess", "lehm"], alluvions: ["alluvion", "alluvio"],
+  tillite: ["tillite", "diamictite"], loess: ["loess", "lehm", "limon des plateaux", "limons des plateaux"], alluvions: ["alluvion", "alluvio", "terrasse"],
   colluvions: ["colluvion"], eboulis: ["eboulis", "greze"], moraine: ["moraine", "till"],
   alterite: ["alterite", "arene", "saprolite"], dunes: ["dune"],
   terra_rossa: ["terra rossa", "decalcification"], argile_silex: ["argile a silex"],
@@ -1499,9 +1621,9 @@ const LITHO50_KW = {
   trachybasalte: ["trachybasalte"], breche_volcanique: ["breche volcanique", "agglomerat"],
   microdiorite: ["microdiorite"], essexite: ["essexite"], carbonatite: ["carbonatite", "sovite"],
   // — Métamorphiques —
-  gneiss: ["gneiss"], micaschiste: ["micaschiste"], ardoise: ["ardoise", "schiste ardoisier"],
+  gneiss: ["gneiss", "paragneiss", "orthogneiss"], micaschiste: ["micaschiste"], ardoise: ["ardoise", "schiste ardoisier"],
   quartzite: ["quartzite"], marbre: ["marbre", "cipolin"], serpentinite: ["serpentin"],
-  amphibolite: ["amphibolite"], eclogite: ["eclogite"], migmatite: ["migmatite", "anatexite"],
+  amphibolite: ["amphibolite"], eclogite: ["eclogite"], migmatite: ["migmatite", "anatexite", "metatexite", "diatexite"],
   leptynite: ["leptynite"], granulite_meta: ["granulite"],
   schiste_bleu: ["glaucophan", "schiste bleu"], schiste_vert: ["prasinite", "schiste vert"],
   corneenne: ["corneenne", "hornfels"], skarn: ["skarn"], mylonite: ["mylonite", "ultramylonite"],
@@ -1541,6 +1663,12 @@ function renderMap(rock) {
     return;
   }
   if (map) { map.remove(); map = null; }
+  // météorites (B.5) : carte des chutes et trouvailles en France, sans fond géologique (meteorites.js)
+  if (rock.categorie === "meteoritique" && window.CartesChutes) {
+    map = CartesChutes.rendre(div, rock, cssVar("--cat-meteoritique") || "#a8641f");
+    wireMapFullscreen();
+    return;
+  }
   map = L.map(div, { scrollWheelZoom: false, preferCanvas: true });
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 18, attribution: "© OpenStreetMap",
@@ -1679,21 +1807,6 @@ async function loadWiki(rock) {
   }
 }
 
-function argilesProduitesHTML(rock) {
-  if (!rock.argiles) return "";
-  const chips = rock.argiles.length
-    ? rock.argiles.map((id) => {
-        const a = ARGILES.find((x) => x.id === id);
-        return `<button class="min-chip" data-goargile="${id}">
-          <span class="sw" style="background:${a.swatch}"></span>${a.nom.split(" (")[0]}
-          <small>${a.type.split(" ")[0]}</small></button>`;
-      }).join("")
-    : `<span class="sub">— pratiquement aucune</span>`;
-  return `<p class="sub" style="margin-top:16px;margin-bottom:0"><b>Quelles argiles cette roche fabrique-t-elle ?</b> (cliquer pour la fiche complète)</p>
-    <div class="min-chips">${chips}</div>
-    ${rock.argilesNote ? `<div class="note">${rock.argilesNote}</div>` : ""}`;
-}
-
 // ---------------- panneau latéral : fiches liées (A.2) ----------------
 // Un minéral, une espèce d'argile ou une fiche d'argile cliqué depuis une page s'ouvre dans une colonne
 // à droite, sans quitter la page en cours. Les liens cliqués DANS le panneau s'empilent (bouton Retour).
@@ -1779,8 +1892,11 @@ function renderMineralPage(id) {
   $("#main").innerHTML = `<div class="page-min">
     <div class="card fiche-min">${ficheMineralHTML(id, true)}</div>
     ${structureCristalHTML(id, true)}
+    ${window.LamesPerso ? LamesPerso.carte("mineral", id) : ""}
     ${rochesCardHTML(id)}
     ${window.AlterationSchema ? AlterationSchema.carte(id) : ""}
+    ${window.Liaisons ? Liaisons.cartes(id) : ""}
+    ${window.OxTransfo ? OxTransfo.carteMineral(id) : ""}
     ${plusLoinMineralHTML(id)}
     ${sourcesFicheHTML(id, placeMineral(id), true)}</div>`;
   chargerVignetteMineral(id, "minpimg-");
@@ -1789,6 +1905,8 @@ function renderMineralPage(id) {
   brancherStructureMineral($("#main"));
   brancherFicheMineral($("#main"));
   if (window.Nombres) Nombres.rendre($("#main"));
+  if (window.Liaisons) Liaisons.brancher($("#main"));
+  if (window.OxTransfo) OxTransfo.monter($("#main"));
   document.title = MINERAUX[id].nom + " — Atlas géologique";
 }
 
@@ -2090,7 +2208,7 @@ function ficheEspeceHTML(eid, page) {
     ${autres.length ? `<h4>Autres espèces du groupe</h4><div class="min-chips">${autres.map((x) => especeChip(x, sw)).join("")}</div>` : ""}
     <div class="pan-liens">
       ${fiche ? `<button class="min-chip" data-goargile="${fiche.id}">Fiche ${ficheNom} (structure, sols, usages) →</button>` : ""}
-      ${lienGroupe ? `<button class="min-chip" data-arggrp="${lienGroupe}">Page du groupe →</button>` : ""}
+      ${lienGroupe ? `<button class="min-chip" data-arggrp="${lienGroupe}">Son groupe dans la vue d'ensemble →</button>` : ""}
     </div>
     ${typeof ValeursEspeces !== "undefined" ? ValeursEspeces.sources(eid, sourcesFicheHTML(eid, null)) : sourcesFicheHTML(eid, null)}`;
 }
@@ -2136,136 +2254,20 @@ function especeChip(eid, sw) {
     <small>${e.formule.length > 34 ? e.formule.slice(0, 32) + "…" : e.formule}</small></button>`;
 }
 
-// ---------------- page classification ----------------
-function renderClassif() {
-  const fams = CLASSIF.map((fam, fi) => {
-    const nbEsp = fam.groupes.reduce((s, g) => s + g.especes.length, 0);
-    const fichesFam = [...new Set(fam.groupes.map((g) => g.fiche).filter(Boolean))]
-      .map((id) => ARGILES.find((a) => a.id === id)).filter(Boolean);
-    const coul = fichesFam.length ? fichesFam[0].swatch : "var(--baseline)";
-    return `
-    <div class="card">
-      <h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="sw-big" style="background:${coul};display:inline-block"></span> ${fam.famille}
-        <span class="badge outline">${fam.groupes.length} groupe${fam.groupes.length > 1 ? "s" : ""} · ${nbEsp} espèces</span></h2>
-      <p class="sub">${fam.desc}</p>
-      ${fam.groupes.map((g, gi) => `
-        <div class="groupe-bloc" id="argrp-${fi}-${gi}">
-          <div class="groupe-head">
-            <b>${g.nom}</b>
-            <button class="min-chip" data-arggrp="${fi}-${gi}" style="margin-left:auto">Ouvrir ce groupe →</button>
-          </div>
-          <div class="crit-row">
-            <span class="crit"><i>Feuillet O</i>${g.octa}</span>
-            ${g.teSi ? `<span class="crit"><i>Tétraèdres</i>${g.teSi}</span>` : ""}
-            ${g.oc ? `<span class="crit"><i>Octaèdres</i>${g.oc}</span>` : ""}
-            ${g.espace ? `<span class="crit"><i>Espacement</i>${g.espace}</span>` : ""}
-            <span class="crit"><i>Charge</i>${g.charge}</span>
-          </div>
-          <p class="sub" style="margin:8px 0 8px">${g.note}</p>
-          <div class="min-chips">${g.especes.map((eid) => especeChip(eid, (ARGILES.find((a) => a.id === g.fiche) || {}).swatch || coul)).join("")}</div>
-        </div>`).join("")}
-    </div>`;
-  }).join("");
-
-  $("#main").innerHTML = `
-  <div class="card hero">
-    <h1>🧱 Les argiles</h1>
-    <p class="sub" style="font-size:15px;max-width:80ch">Les argiles sont ce que <b>deviennent les minéraux quand ils
-    s'altèrent</b> : l'eau et le CO₂ attaquent les feldspaths et les micas, et il en naît ces minuscules cristaux en feuillets
-    qui font la terre des champs, la poterie et le retrait-gonflement des maisons. Chimiquement, ce sont des
-    <b>phyllosilicates</b> — la même famille en feuillets que les micas, en plus petit.</p>
-    <p class="sub crumb" style="font-size:13.5px">Classe des <b>silicates</b> <span>→</span> sous-classe des <b>phyllosilicates</b>
-    <span>→</span> familles par type d'empilement <span>→</span> groupes <span>→</span> espèces.</p>
-    <div class="note"><b>Comment lire la classification.</b> Chaque groupe est défini par quatre critères structuraux —
-    ceux du tableau de référence de Wikipédia. <b>Feuillet O</b> : rempli d'Al³⁺ (2 sites sur 3) = <b>dioctaédrique</b>,
-    ou de Mg²⁺/Fe²⁺ (3 sites sur 3) = <b>trioctaédrique</b>. <b>Te/Si</b> mesure les substitutions dans le feuillet
-    <b>tétraédrique</b> (Te/Si = 4 ou 8 → aucune ; &lt; 4 ou &lt; 8 → de l'Al remplace du Si). <b>Oc</b> mesure celles du
-    feuillet <b>octaédrique</b> (Oc = 12/12 → aucune). Ces substitutions créent un <b>déficit de charge</b> que doivent
-    compenser des cations interfoliaires — et c'est ce qui décide si l'argile <b>gonfle</b> (espacement variable) ou
-    reste verrouillée (espacement stable).</div>
-  </div>
-  ${fams}
-  <div class="card">
-    <h2>Pour aller plus loin : les trois façons de naître, et deux sens du mot « argile »</h2>
-    <p>Une argile peut apparaître dans un sol de trois manières. Par <b>héritage</b> : elle était déjà dans la roche, l'altération
-    la libère telle quelle (l'illite des marnes). Par <b>transformation</b> : un minéral en feuillets existant se modifie pas à
-    pas — un mica perd son potassium et devient vermiculite, puis smectite. Par <b>néoformation</b> : elle cristallise à partir
-    de zéro, à partir des ions dissous dans l'eau du sol (la kaolinite des climats tropicaux, ≥ 22 °C).</p>
-    <p>Ce qui distingue les familles, c'est l'empilement des deux briques de base — le feuillet <b>T</b> (tétraèdres de silice)
-    et le feuillet <b>O</b> (octaèdres d'aluminium, magnésium ou fer) — et surtout la <b>charge électrique</b> du feuillet, qui
-    décide de ce qui se loge entre les couches : rien (talc), de l'eau qui fait gonfler (smectites), du potassium qui verrouille
-    (illites, micas). Un feuillet O rempli d'Al³⁺ (2 sites sur 3) est <b>dioctaédrique</b> ; rempli de Mg²⁺/Fe²⁺ (3 sites sur 3),
-    il est <b>trioctaédrique</b> — presque chaque groupe existe dans les deux versions.</p>
-    <p>Attention enfin au mot lui-même : « argile » a <b>deux sens</b>. Un sens <b>granulométrique</b> (toute particule de moins
-    de 2 µm, quelle que soit sa nature) et un sens <b>minéralogique</b> (les phyllosilicates de cette page, même en gros
-    cristaux). Les micas vrais et les serpentines, souvent visibles à l'œil nu, sont rangés ici car ils partagent la même
-    structure en feuillets. Source : nomenclature <b>AIPEA / IMA</b> (Guggenheim et al.).</p>
-  </div>`;
+// ---------------- vue d'ensemble des argiles (argiles-vue.js) ----------------
+// 08/10/2026 (sa demande : « on est perdu entre la vue d'ensemble et le groupe de chaque argile ») : une seule page, un panneau
+// par groupe avec la comparaison des espèces en 3D ; les pages de groupe #argrp n'existent plus, #argrp/<f>-<g> et
+// #argfam/<f> ouvrent cette page à la hauteur voulue. Déjà affichée : on ne la refait pas (les 3D restent montées), on défile.
+function renderClassif(ancre) {
+  window.__ancreArg = ancre || null;
+  if ($("#main [data-argv]")) return;
+  $("#main").innerHTML = ArgilesVue.html();
+  if (window.ArgilesComparer) ArgilesComparer.monter($("#main"));
   document.title = "Argiles — Atlas géologique";
 }
-
-// ---------------- page d'UN groupe d'argiles (= une colonne du tableau) ----------------
-function renderGroupeArgile(fi, gi) {
-  const fam = CLASSIF[fi], g = fam.groupes[gi];
-  const fiche = g.fiche ? ARGILES.find((a) => a.id === g.fiche) : null;
-  // les groupes voisins de la même famille, pour naviguer sans repasser par la liste
-  const voisins = fam.groupes.map((o, i) => i === gi ? "" :
-    `<button class="min-chip" data-arggrp="${fi}-${i}">${o.nom}</button>`).join("");
-
-  $("#main").innerHTML = `
-  <div class="card rock-head">
-    <h1><span class="sw-big" style="background:${fiche ? fiche.swatch : "var(--baseline)"}"></span>${g.nom}</h1>
-    <p class="sub crumb">Silicates <span>→</span> Phyllosilicates <span>→</span> <b>${fam.famille.split(" — ")[0]}</b>
-      · <a href="#argiles">voir toute la classification</a></p>
-    <div class="crit-row">
-      <span class="crit"><i>Feuillet O</i>${g.octa}</span>
-      ${g.teSi ? `<span class="crit"><i>Tétraèdres</i>${g.teSi}</span>` : ""}
-      ${g.oc ? `<span class="crit"><i>Octaèdres</i>${g.oc}</span>` : ""}
-      ${g.espace ? `<span class="crit"><i>Espacement</i>${g.espace}</span>` : ""}
-      <span class="crit"><i>Charge foliaire</i>${g.charge}</span>
-    </div>
-    <p class="desc" style="margin-top:14px">${g.note}</p>
-    ${fiche ? `<button class="wiki-btn" style="border:0;cursor:pointer;font:inherit" data-goargile="${fiche.id}">
-      Fiche complète : ${fiche.nom.split(" (")[0]} (CEC, structure, sols, usages) →</button>` : ""}
-  </div>
-  ${window.ArgilesComparer ? ArgilesComparer.html(g) : ""}
-
-  <div class="card">
-    <h2>Les espèces de ce groupe</h2>
-    <p class="sub">${g.especes.length} espèce${g.especes.length > 1 ? "s" : ""} partagent exactement ces critères structuraux.</p>
-    ${g.especes.map((eid) => {
-      const e = ESPECES[eid];
-      if (!e) return "";
-      const cible = e.fiche || (ARGILES.find((a) => a.id === eid) ? eid : null);
-      const cibleNom = cible ? (ARGILES.find((a) => a.id === cible) || {}).nom : null;
-      return `
-      <div class="groupe-bloc" data-espece-bloc="${eid}">
-        <div class="ox-fiche">
-          <div class="ox-img" id="argimg-${eid}"><span class="sw-ph" style="background:${fiche ? fiche.swatch : "var(--baseline)"}"></span></div>
-          <div class="ox-body">
-            <div class="groupe-head" style="margin-bottom:4px"><b>${e.nom}</b>
-              <span class="badge outline">${e.formule.length > 40 ? e.formule.slice(0, 38) + "…" : e.formule}</span>
-              ${e.octa ? `<span class="origine-tag">${e.octa}</span>` : ""}</div>
-            <p class="sub" style="margin:6px 0">${e.note}</p>
-            <button class="min-chip" data-espece="${eid}">Fiche de l'espèce →</button>
-            ${cible ? `<button class="min-chip" data-goargile="${cible}">Fiche complète : ${(cibleNom || cible).split(" (")[0]} →</button>` : ""}
-          </div>
-        </div>
-      </div>`;
-    }).join("")}
-  </div>
-
-  <div class="card">
-    <h2>Sa place dans la famille</h2>
-    <p class="sub">${fam.desc}</p>
-    ${voisins.trim() ? `<p class="sub" style="margin-bottom:4px"><b>Les autres cas de cette famille</b>
-      (mêmes feuillets, critères différents) :</p><div class="min-chips">${voisins}</div>` : ""}
-  </div>`;
-
-  loadWikiThumbs(g.especes.map((eid) => ({ id: eid, nom: (ESPECES[eid] || {}).nom || eid })), "argimg-", "argiles");
-  // G.3 (07/10/2026) : petites fiches 3D des espèces du groupe, qui tournent ensemble (argiles-comparer.js)
-  if (window.ArgilesComparer) ArgilesComparer.monter($("#main"));
-  document.title = g.nom + " — Atlas géologique";
+// lien vers la vue d'ensemble : si l'adresse ne change pas, défiler quand même
+function allerArgiles(cible) {
+  if (location.hash === "#" + cible) route(); else location.hash = cible;
 }
 
 // ---------------- page classification des minéraux ----------------
@@ -2282,193 +2284,78 @@ function groupeIds(g) {
   return g.dynamique === "oxydes" ? OXYDES.flatMap((f) => f.especes.map((e) => e.id)) : g.mineraux;
 }
 
-// oxydes rangés par élément (fer, manganèse, aluminium, titane…) : un bloc par famille d'OXYDES,
-// avec lien vers son onglet (diagramme de Pourbaix). Sert aux pages de classe, de groupe et d'ensemble.
-function oxydesParElementHTML() {
-  return OXYDES.map((f) => `<div class="ox-element" style="--c:${f.couleur}">
-      <div class="groupe-head">
-        <span class="sw-el" aria-hidden="true"></span>
-        <b>${f.element}</b><span class="badge outline">${f.symbole}</span>
-        <span class="sub">${f.especes.length} espèce${f.especes.length > 1 ? "s" : ""}</span>
-        <button class="min-chip" data-gopage="oxyde/${f.id}" style="margin-left:auto">Ouvrir l'onglet ${f.element} →</button>
-      </div>
-      <div class="min-chips">${f.especes.map((e) => minChipHTML(e.id)).join("")}</div>
-    </div>`).join("");
-}
-
-// ---------------- page d'UNE classe de Strunz ----------------
-function renderMineralClasse(c) {
-  const nbMin = c.groupes.reduce((s, g) => s + groupeIds(g).length, 0);
-  const autres = MIN_CLASSIF.filter((o) => o.n !== c.n).sort((a, b) => a.n - b.n)
-    .map((o) => `<button class="min-chip" data-mincls="${o.n}"><span class="num" style="margin-right:4px">${o.num}</span>${o.classe}</button>`).join("");
-
-  const groupes = c.groupes.map((g, gi) => `
-    <div class="groupe-bloc">
-      <div class="groupe-head">
-        ${g.code ? `<span class="strunz-code">${g.code}</span>` : ""}
-        <b>${g.nom}</b>
-        ${g.motif ? `<span class="badge outline">${g.motif}</span>` : ""}
-        <button class="min-chip" data-mingrp="${c.n}-${gi}" style="margin-left:auto">Ouvrir ce groupe →</button>
-      </div>
-      <p class="sub" style="margin:4px 0 8px">${g.note}</p>
-      ${g.dynamique === "oxydes" ? oxydesParElementHTML() : g.sousGroupes
-        ? `<p class="sub" style="margin:6px 0 4px"><b>${g.sousGroupes.length} sous-familles</b>
-             · ${groupeIds(g).length} minéraux décrits :</p>
-           <div class="min-chips">${g.sousGroupes.map((sf) =>
-             `<button class="min-chip" data-mingrp="${c.n}-${gi}">${sf.nom} <small>${sf.mineraux.length}</small></button>`).join("")}</div>`
-        : `<div class="min-chips">${groupeIds(g).map(minChipHTML).join("")}</div>`}
-    </div>`).join("");
-
-  $("#main").innerHTML = `
-  <div class="card rock-head">
-    <h1><span class="num">${c.num}</span>${c.icone} ${c.classe}
-      ${c.achever ? `<span class="badge" style="background:var(--prod-sable)">🚧 à compléter</span>` : ""}</h1>
-    <p class="sub crumb">Minéraux <span>→</span> classification de Strunz <span>→</span> <b>classe ${c.num}</b>
-      · <a href="#mineraux">voir toutes les classes</a></p>
-    <p class="desc">${c.desc}</p>
-    ${c.lien ? `<button class="wiki-btn" style="border:0;cursor:pointer;font:inherit" data-gopage="${c.lien.hash.slice(1)}">${c.lien.label}</button>` : ""}
-    <div class="tiles">
-      <div class="tile"><div class="lab">Numéro de Strunz</div><div class="val">${c.num}</div></div>
-      <div class="tile"><div class="lab">Groupes</div><div class="val">${c.groupes.length}</div></div>
-      <div class="tile"><div class="lab">Minéraux décrits</div><div class="val">${nbMin}</div></div>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>Les groupes de cette classe</h2>
-    <p class="sub">Cliquer sur un minéral ouvre sa carte d'identité ; « Ouvrir ce groupe » donne le détail du groupe.
-      Les badges (ex. ${c.groupes[0] && c.groupes[0].code ? c.groupes[0].code : "IX.A"}) situent chaque groupe dans les subdivisions officielles de Strunz —
-      les lettres absentes correspondent à des subdivisions sans espèce courante, que l'atlas ne détaille pas.</p>
-    ${groupes}
-  </div>
-
-  ${(c.encarts || []).map((e) => `<div class="card">
-    <h2>${e.titre}</h2>
-    ${e.html}
-  </div>`).join("")}
-
-  ${c.plus ? `<div class="card">
-    <h2>Pour aller plus loin</h2>
-    ${c.plus}
-  </div>` : ""}
-
-  <div class="card">
-    <h2>Les autres classes de Strunz</h2>
-    <div class="min-chips">${autres}</div>
-  </div>
-  ${c.sources ? `<p class="page-source"><b>Sources</b> — ${c.sources.join(" ; ")}</p>` : ""}`;
-  document.title = c.classe + " — Atlas géologique";
-}
-
-// ---------------- page d'UN groupe de minéraux ----------------
-function renderMineralGroupe(c, gi) {
-  const g = c.groupes[gi];
-  const ids = groupeIds(g);
-  const voisins = c.groupes.map((o, i) => i === gi ? "" :
-    `<button class="min-chip" data-mingrp="${c.n}-${i}">${o.nom}</button>`).join("");
-
-  $("#main").innerHTML = `
-  <div class="card rock-head">
-    <h1>${g.nom}</h1>
-    <p class="sub crumb">Minéraux <span>→</span> <b data-mincls="${c.n}" style="cursor:pointer;text-decoration:underline">${c.num} · ${c.classe}</b>
-      <span>→</span> ce groupe · <a href="#mineraux">toutes les classes</a></p>
-    ${g.motif ? `<div class="crit-row"><span class="crit"><i>Motif structural</i>${g.motif}</span>
-      <span class="crit"><i>Code de Strunz</i>${g.code || c.num} — ${c.classe}</span>
-      <span class="crit"><i>Minéraux décrits</i>${ids.length}</span></div>` : ""}
-    <p class="desc" style="margin-top:14px">${g.note}</p>
-    ${g.lien ? `<button class="wiki-btn" style="border:0;cursor:pointer;font:inherit" data-gopage="${g.lien.hash.slice(1)}">${g.lien.label}</button>` : ""}
-  </div>
-
-  ${g.sousGroupes ? `
-  <div class="card">
-    <h2>Les sous-familles</h2>
-    <p class="sub">${g.sousGroupes.length} sous-familles regroupent ces ${ids.length} minéraux.
-    Cliquer sur un minéral ouvre sa carte d'identité complète.</p>
-    ${(function () { let cur = null; return g.sousGroupes.map((sf) => {
-      let head = "";
-      if (sf.section && sf.section !== cur) { head = `<h3 class="groupe-section">${sf.section}</h3>`; cur = sf.section; }
-      return `${head}
-      <div class="groupe-bloc">
-        <div class="groupe-head"><b>${sf.nom}</b>
-          ${sf.formule ? `<span class="badge outline">${sf.formule}</span>` : ""}</div>
-        <p class="sub" style="margin:4px 0 8px">${sf.note}</p>
-        <div class="min-chips">${sf.mineraux.map(minChipHTML).join("")}</div>
-      </div>`; }).join(""); })()}
-  </div>` : `
-  <div class="card">
-    <h2>Les minéraux de ce groupe</h2>
-    <p class="sub">${g.dynamique === "oxydes"
-      ? `${ids.length} espèces rangées par élément métallique (${OXYDES.length} familles). « Ouvrir l'onglet » donne les fiches illustrées et le diagramme de Pourbaix de l'élément.`
-      : `${ids.length} minéral${ids.length > 1 ? "s partagent" : " partage"} ce motif structural.
-    Cliquer ouvre la carte d'identité (formule, dureté, densité, altération).`}</p>
-    ${g.dynamique === "oxydes" ? oxydesParElementHTML() : `<div class="min-chips">${ids.map(minChipHTML).join("")}</div>`}
-  </div>`}
-
-  <div class="card">
-    <h2>Sa place dans la classe</h2>
-    <p class="sub">${c.desc}</p>
-    ${voisins.trim() ? `<p class="sub" style="margin-bottom:4px"><b>Les autres groupes de la classe ${c.num}</b> :</p>
-      <div class="min-chips">${voisins}</div>` : ""}
-  </div>`;
-  document.title = g.nom + " — Atlas géologique";
-}
-
 // ---------------- vue d'ensemble des minéraux ----------------
-function renderMineraux() {
-  const cards = [...MIN_CLASSIF].sort((a, b) => a.n - b.n).map((c) => {
-    const groupes = c.groupes.map((g) => {
-      let ids = g.mineraux;
-      if (g.dynamique === "oxydes") ids = OXYDES.flatMap((f) => f.especes.map((e) => e.id));
-      return `<div class="groupe-bloc">
-        <div class="groupe-head">${g.code ? `<span class="strunz-code">${g.code}</span>` : ""}<b>${g.nom}</b>
-          ${g.motif ? `<span class="badge outline">${g.motif}</span>` : ""}
-          ${g.lien ? `<button class="min-chip" data-gopage="${g.lien.hash.slice(1)}" style="margin-left:auto">${g.lien.label}</button>` : ""}
-        </div>
-        <p class="sub" style="margin:4px 0 8px">${g.note}</p>
-        ${g.dynamique === "oxydes" ? oxydesParElementHTML() : `<div class="min-chips">${ids.map(minChipHTML).join("")}</div>`}
-      </div>`;
-    }).join("");
-    return `<div class="card" id="mincls-${c.n}">
-      <h2><span class="num">${c.num}</span>${c.icone} ${c.classe}${c.achever ? ` <span class="badge" style="background:var(--prod-sable)">🚧 à compléter</span>` : ""}</h2>
-      <p class="sub">${c.desc}</p>
-      <div class="min-chips" style="margin-bottom:8px">
-        <button class="min-chip" data-mincls="${c.n}"><b>Ouvrir la classe ${c.num} →</b></button>
-        ${c.lien ? `<button class="min-chip" data-gopage="${c.lien.hash.slice(1)}"><b>${c.lien.label}</b></button>` : ""}
-      </div>
-      ${groupes}
-    </div>`;
-  }).join("");
+// 11/10/2026 (sa demande : « on s'y perdait ») : plus de page de classe ni de groupe. Une seule page, trois vues
+// choisies en haut du menu et en haut de la page : « Minéraux » (Strunz), « Minéraux du sol » (Strunz réduite aux minéraux de MIN_SOL_IDS)
+// et « Rôle dans le sol » (groupes de MIN_SOL, mineraux-sol.js). #mincls/<n> et #mingrp/<n>-<gi> ouvrent cette page à
+// la hauteur de la classe ou du groupe (vue Strunz), #minsol/<groupe>[-<sous-famille>] à celle d'un groupe du sol.
+// 12/10/2026 : « Rôle dans le sol » quitte la Minéralogie pour la Pédologie (#minsol) ; la vue se lit alors dans l'adresse.
+// Les trois boutons restent en haut de la page et du menu : « par rôle » mène en Pédologie, les deux autres en Minéralogie.
+const MIN_VUES = [["tous", "Tous les minéraux"], ["sol", "Minéraux principaux des sols"], ["role", "Minéraux du sol par rôle"]];
+function minVue() {
+  if (location.hash === "#minsol" || location.hash.startsWith("#minsol/")) return "role";
+  try { const v = localStorage.getItem("atlas-min-vue"); if (v === "tous" || v === "sol") return v; } catch (e) { /* stockage indisponible */ }
+  return "tous";
+}
+function choisirMinVue(v) {
+  if (v === "role") return;
+  try { localStorage.setItem("atlas-min-vue", v); } catch (e) { /* stockage indisponible */ }
+}
+function allerMinVue(v) {
+  choisirMinVue(v);
+  const cible = v === "role" ? "minsol" : "mineraux";
+  if (location.hash === "#" + cible) { route(); window.scrollTo({ top: 0 }); } else location.hash = cible;
+}
+// minéraux d'un groupe de Strunz affichés dans la vue en cours
+function minVisibles(ids) {
+  return minVue() === "sol" ? ids.filter((id) => MIN_SOL_IDS.has(id)) : ids;
+}
+// ancre d'une classe ou d'un groupe de Strunz : on quitte la vue « Rôle dans le sol », et « Minéraux du sol »
+// si la cible n'y figure pas
+function minVersStrunz(n, gi, mid) {
+  const c = MIN_CLASSIF.find((x) => x.n === n);
+  const ids = (gi == null ? c.groupes : [c.groupes[gi]]).flatMap(groupeIds);
+  const v = minVue();
+  if (v === "sol" && (mid ? !MIN_SOL_IDS.has(mid) : !ids.some((id) => MIN_SOL_IDS.has(id)))) choisirMinVue("tous");
+}
+// changement de classement des roches (roches-surface.js) : la page d'ensemble de la vue choisie
+function allerRocVue(v) {
+  RochesSurface.choisir(v);
+  const cible = v === "surface" ? "rocsurf" : "roches";
+  if (location.hash === "#" + cible) { route(); window.scrollTo({ top: 0 }); }
+  else if (location.hash.startsWith("#roche/")) renderSidebar();   // sur une fiche : seul le menu change
+  else location.hash = cible;
+}
+// lien vers la vue d'ensemble : si l'adresse ne change pas, défiler quand même
+function allerMin(cible) {
+  if (location.hash === "#" + cible) route(); else location.hash = cible;
+}
 
-  $("#main").innerHTML = `
-  <div class="card hero hub-hero">
-    <div class="hub-bandeau" aria-hidden="true"><i style="background:var(--cat-magmatique)"></i></div>
-    <p class="hub-surtitre">Minéraux</p>
-    <h1>💎 Les minéraux</h1>
-    <p class="sub" style="font-size:15px;max-width:78ch">Un <b>minéral</b> est une <b>substance pure</b> : une composition
-    chimique et une structure cristalline précises (le quartz, c'est <code>SiO₂</code> ; la calcite, <code>CaCO₃</code>).
-    C'est la <b>brique</b>. Une <b>roche</b>, elle, est un <b>assemblage de minéraux</b> — le mur fait de briques
-    (le granite = quartz + feldspath + mica).</p>
-    <p class="sub crumb" style="font-size:13.5px">Rangés selon la <b>classification de Strunz</b> (I → X), la référence actuelle
-    (IMA, Mindat) — les <b>silicates (IX)</b> forment à eux seuls ~92 % de la croûte terrestre.</p>
-  </div>
-  ${cards}
-  <div class="card">
-    <h2>Pour aller plus loin : pourquoi classer par la structure ?</h2>
-    <p>On pourrait ranger les minéraux par couleur ou par dureté, mais les minéralogistes ont choisi la <b>chimie</b> puis
-    la <b>structure atomique</b>, parce que c'est elle qui commande presque tout le reste. Dans les <b>silicates</b> — 92 %
-    du volume de la croûte terrestre — la brique de base est toujours la même : le tétraèdre <code>SiO₄</code>. Ce qui change,
-    c'est la façon dont ces tétraèdres se relient.</p>
-    <p>Isolés, ils donnent des minéraux compacts et denses (<b>nésosilicates</b> : olivine, grenat, zircon). Reliés en
-    <b>chaînes</b>, ils font les minéraux sombres des roches volcaniques (pyroxènes, amphiboles). Empilés en <b>feuillets</b>,
-    ils donnent tout ce qui se clive en lamelles : les <b>micas</b> et, en plus petit et un peu dégradé, les <b>argiles</b>.
-    Reliés en <b>charpente 3D</b>, ils forment les minéraux les plus abondants et les plus durables : le <b>quartz</b> et les
-    <b>feldspaths</b>.</p>
-    <p>Cette logique a une conséquence directe pour l'altération : plus les tétraèdres sont connectés, plus le minéral résiste
-    (c'est la « série de Goldich »). L'olivine, faite de briques isolées, se défait la première ; le quartz, charpente
-    complète, traverse les âges et finit en sable. Les autres classes (carbonates, oxydes, sulfates, sulfures…) se rangent,
-    elles, par leur <b>anion</b> — le groupement chimique qui les définit (CO₃, O, SO₄, S…).</p>
-  </div>`;
-  document.title = "Minéraux — Atlas géologique";
+// nom et pastille d'un élément de MIN_SOL, pour le menu
+function solItem(e) {
+  const id = typeof e === "string" ? e : e.id;
+  if (id.startsWith("esp:")) {
+    const k = id.slice(4), es = ESPECES[k];
+    if (!es) return null;
+    const g = CLASSIF.flatMap((fa) => fa.groupes).find((x) => x.especes.includes(k));
+    const f = ARGILES.find((a) => a.id === (es.fiche || (g && g.fiche)));
+    return { attr: `data-espece="${k}"`, cle: k, nom: es.nom, sw: f ? f.swatch : "var(--prod-argile)" };
+  }
+  if (id.startsWith("arg:")) {
+    const a = ARGILES.find((x) => x.id === id.slice(4));
+    return a ? { attr: `data-goargile="${a.id}"`, cle: a.id, nom: a.nom.split(" (")[0], sw: a.swatch } : null;
+  }
+  const m = MINERAUX[id];
+  return m ? { attr: `data-min="${id}"`, cle: id, nom: m.nom.split(" (")[0] + (e.tag ? ` · ${e.tag}` : ""), sw: m.swatch } : null;
+}
+
+// 11/10/2026 (2ᵉ passe, sa demande) : refaite sur le modèle de la vue d'ensemble des argiles — un panneau par groupe,
+// une vignette (photo) par minéral, jauges sur une échelle commune ; les trois classements aussi en haut de page (mineraux-vue.js)
+function renderMineraux(ancre) {
+  if (typeof ancre === "string") window.__ancreArg = ancre;
+  $("#main").innerHTML = MinerauxVue.html(minVue());
+  MinerauxVue.brancher($("#main"));
+  document.title = (minVue() === "role" ? "Minéraux du sol" : "Minéraux") + " — Atlas géologique";
 }
 
 // ---------------- page oxydes & hydroxydes ----------------
@@ -2512,7 +2399,7 @@ function renderOxydes() {
 
   $("#main").innerHTML = `
   <div class="card hero">
-    <h1>🟠 Oxydes, hydroxydes &amp; oxy-hydroxydes métalliques</h1>
+    <h1>Oxydes, hydroxydes &amp; oxy-hydroxydes métalliques</h1>
     <p>Les <b>produits finaux de l'altération</b> : quand les silicates ont rendu leurs cations, il reste les métaux —
     fer, manganèse, aluminium, titane… — verrouillés sous forme d'oxydes. Ce sont les <b>pigments des paysages</b>
     (ocres, rouges, noirs) et des archives du climat. <b>Ouvre l'onglet d'un élément</b> pour le détail de ses espèces
@@ -2842,12 +2729,14 @@ function renderOxydeElement(id) {
   const chaleur = fam.id === "fer";
   $("#main").innerHTML = `
   <div class="card rock-head">
+    <div class="rock-head-texte">
     <h1><span class="sw-big" style="background:${fam.couleur};display:inline-block"></span> ${fam.element}</h1>
     <p class="sub crumb"><b data-page="oxydes" style="cursor:pointer;text-decoration:underline">Oxydes</b> <span>→</span> ${fam.element}
       · ${fam.especes.length} espèces</p>
     <p class="desc">${fam.intro}</p>
   </div>
-  ${chaleur ? feFormationCard() : ""}
+  ${chaleur && window.FerChemins ? `<div class="card chf-renvoi-carte"><p><b>Nouvelle partie, à valider :</b> comment naissent les oxydes de fer des sols — la carte des chemins, chaque étape à l'échelle des atomes, et ce qui oriente vers la goethite, l'hématite ou la lépidocrocite.</p><button class="chip" data-page="oxyde/fer/chemins">Ouvrir →</button></div>` : ""}
+  ${window.OxTransfo && OxTransfo.T[fam.id] ? OxTransfo.carte(fam.id) : (chaleur ? feFormationCard() : "")}
   ${chaleur ? feChaleurCard() : ""}
   <div class="card">
     <h2>Les espèces</h2>
@@ -2860,6 +2749,7 @@ function renderOxydeElement(id) {
   loadOxImages(fam.especes);
   document.querySelectorAll("[data-page]").forEach((b) => b.addEventListener("click", () => location.hash = b.dataset.page));
   if (chaleur) initFeChaleur();
+  if (window.OxTransfo) OxTransfo.monter($("#main"));
 
   if (sys) {
     document.querySelectorAll("[data-phmil]").forEach((b) => b.addEventListener("click", () => {
@@ -3303,6 +3193,7 @@ function renderArgile(a) {
 
   $("#main").innerHTML = `
   <div class="card rock-head">
+    <div class="rock-head-texte">
     <h1><span class="sw-big" style="background:${a.swatch}"></span>${a.nom}
       <span class="badge" style="background:var(--prod-argile)">Minéral argileux</span>
       <span class="badge outline">${a.type}</span></h1>
@@ -3338,6 +3229,8 @@ function renderArgile(a) {
   </div>
 
   ${window.EspacementBasal ? EspacementBasal.carte(a) : ""}
+
+  ${window.ChargeArgile ? ChargeArgile.carte(a) : ""}
 
   <div class="card">
     <h2>Ses propriétés, comparées aux autres argiles</h2>
@@ -3380,6 +3273,7 @@ function renderArgile(a) {
 
   ["struct-chart", "prop-charts"].forEach((id) => bindTips($("#" + id)));
   if (window.CecSchema) CecSchema.monter($("#main"));
+  if (window.ChargeArgile) ChargeArgile.monter($("#main"));
   if (window.Structure3D) Structure3D.brancher($("#main"));
   loadWiki(a);
   loadWikiThumbs([{
@@ -3406,7 +3300,7 @@ document.addEventListener("click", (e) => {
   const quitter = () => { if (dansPanneau && matchMedia(PANNEAU_ETROIT).matches) fermerPanneau(); };
   // dans les parties Minéraux et Argiles (et depuis le menu), un lien de fiche ouvre sa page ;
   // ailleurs (roches, oxydes…), il ouvre le panneau à côté de la page en cours
-  const pageDirecte = !dansPanneau && (dansMenu || currentSection() === "mineraux" || currentSection() === "argiles");
+  const pageDirecte = !dansPanneau && (dansMenu || currentSection() === "mineralogie" || pedoSousPartie() === "argiles" || pedoSousPartie() === "minsol");
   const min = e.target.closest("[data-min]");
   if (min) {
     if (pageDirecte) location.hash = "mineral/" + min.dataset.min;
@@ -3429,15 +3323,23 @@ document.addEventListener("click", (e) => {
   const gp = e.target.closest("[data-gopage]");
   if (gp) { if (dansPanneau) fermerPanneau(); location.hash = gp.dataset.gopage; return; }
   const gg = e.target.closest("[data-arggrp]");
-  if (gg) { quitter(); location.hash = "argrp/" + gg.dataset.arggrp; return; }
+  if (gg) { quitter(); allerArgiles("argrp/" + gg.dataset.arggrp); return; }
+  const gf = e.target.closest("[data-argfam]");
+  if (gf && !dansMenu) { quitter(); allerArgiles("argfam/" + gf.dataset.argfam); return; }
+  const grv = e.target.closest("[data-rocvue]");
+  if (grv && !dansMenu) { allerRocVue(grv.dataset.rocvue); return; }
+  const gmv = e.target.closest("[data-minvue]");
+  if (gmv && !dansMenu) { allerMinVue(gmv.dataset.minvue); return; }
+  const gms = e.target.closest("[data-minsol]");
+  if (gms && !dansMenu) { quitter(); allerMin("minsol/" + gms.dataset.minsol); return; }
   const gc = e.target.closest("[data-mincls]");
-  if (gc) { quitter(); location.hash = "mincls/" + gc.dataset.mincls; return; }
+  if (gc) { quitter(); allerMin("mincls/" + gc.dataset.mincls); return; }
   const grf = e.target.closest("[data-rocfam]");
   if (grf) { quitter(); location.hash = "rocfam/" + grf.dataset.rocfam; return; }
   const grb = e.target.closest("[data-rocbr]");
   if (grb) { quitter(); location.hash = "rocbr/" + grb.dataset.rocbr; return; }
   const gmg = e.target.closest("[data-mingrp]");
-  if (gmg) { quitter(); location.hash = "mingrp/" + gmg.dataset.mingrp; return; }
+  if (gmg) { quitter(); allerMin("mingrp/" + gmg.dataset.mingrp); return; }
   const gml = e.target.closest("[data-gominloc]");
   if (gml) {
     const [n, gi, ...idParts] = gml.dataset.gominloc.split("-");
@@ -3460,9 +3362,10 @@ document.addEventListener("keydown", (e) => { if (e.key === "Escape") fermerPann
 
 $("#search").addEventListener("input", (e) => { state.query = e.target.value; renderSidebar(); });
 // navigation principale : chaque partie ouvre sa page d'accueil
-const SECTION_HASH = { accueil: "", roches: "roches", mineraux: "mineraux", argiles: "argiles", oxydes: "oxydes", amorphes: "amorphes" };
+const SECTION_HASH = { accueil: "", geologie: "roches", mineralogie: "mineraux", pedologie: "pedologie" };
 document.querySelectorAll("#mainnav .chip").forEach((c) => c.addEventListener("click", () => {
   location.hash = SECTION_HASH[c.dataset.section] || "";
 }));
 $(".brand").addEventListener("click", () => { location.hash = ""; });
+
 route();

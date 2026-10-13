@@ -45,7 +45,9 @@
       const cls = `as-ligne${ici && e.id === ici ? " as-ici" : ""}`;
       return e.lien ? `<button class="${cls} as-lien" data-gopage="${e.lien}">${corps}</button>` : `<div class="${cls}">${corps}</div>`;
     }
-    return `<div class="as-ligne">${fois(n)}${bulle(e)}${txt(e.nom, "", (reactif && NOTE_REACTIF[k]) || "")}</div>`;
+    // réactions hors du sol (ALT_ORIGINES, type « perso ») : l'acide carbonique n'y vient pas forcément de la pluie
+    const note = reactif === "perso" && k === "H2CO3" ? "le CO₂ dissous dans l'eau" : reactif && NOTE_REACTIF[k];
+    return `<div class="as-ligne">${fois(n)}${bulle(e)}${txt(e.nom, "", note || "")}</div>`;
   }
   // ce qui accompagne le minéral : précision sur son origine
   const NOTE_REACTIF = { H2CO3: "le CO₂ dissous dans l'eau de pluie et du sol", O2: "dissous dans l'eau", "Mg2+": "apporté par l'eau du sol",
@@ -68,7 +70,7 @@
     const autres = v.reactifs.filter(([, k]) => k !== id);
     const sorte = (f) => v.produits.filter(([, k]) => f(E()[k].t));
     const reste = sorte((t) => SOLIDES.has(t)), eau = sorte((t) => ["ion", "molecule", "eau"].includes(t)), air = sorte((t) => t === "gaz");
-    const lignes = (L, reactif) => L.map(([n, k]) => ligne(n, k, reactif, ici)).join("");
+    const lignes = (L, reactif) => L.map(([n, k]) => ligne(n, k, reactif && (v.type === "perso" ? "perso" : true), ici)).join("");
     const terme = (n, k) => `${n > 1 ? n + " " : ""}${k === id ? r.formule : E()[k].f}`;
     const eq = v.reactifs.map(([n, k]) => terme(n, k)).join(" + ") + " → " + v.produits.map(([n, k]) => terme(n, k)).join(" + ");
     return `<div class="as-reaction">
@@ -205,10 +207,37 @@
     if (c) remplir(c.closest("[data-as-origine]"), c.value.trim());
   });
 
+  // l'autre sens des ORIGINES (09/10/2026, sa remarque : « la magnésite vient de la serpentine, mais la fiche de la
+  // serpentine ne le dit pas ») : ce que ce minéral devient HORS du sol (CO₂ en profondeur, enfouissement, zone oxydée
+  // d'un gîte, vase sans oxygène…). Rangé à part des possibilités du sol, qui restent exclusives entre elles.
+  const devenirs = (id) => {
+    const L = [];
+    for (const [cible, liste] of Object.entries(window.ALT_ORIGINES || {}))
+      for (const o of liste) if (o.src === id && mineraux()[cible]) L.push({ cible, v: o });
+    return L.sort((a, b) => nomDe(a.cible).localeCompare(nomDe(b.cible), "fr"));
+  };
+  function devenirHTML(id, { cible, v }, j) {
+    const r = R()[id];
+    const cond = v.texte ? esc(v.texte.charAt(0).toUpperCase() + v.texte.slice(1)) + "." : "";
+    return `<section class="as-voie as-teinte as-o${j % 4}">
+      <h5 class="as-voie-titre"><span>Devient</span> <button class="as-src" data-gopage="mineral/${cible}">${esc(nomDe(cible))}</button>${v.titre ? ` · ${esc(v.titre)}` : ""}</h5>
+      ${cond ? `<p class="as-cond">${cond}</p>` : ""}
+      ${reactionHTML(id, r, v)}
+    </section>`;
+  }
+  function ailleursHTML(id, apres) {
+    const L = R()[id] ? devenirs(id) : [];
+    if (!L.length) return "";
+    return `${apres ? `<h3 class="as-sous">Hors du sol, il peut aussi devenir</h3>` : ""}
+      <p class="as-cond">Dans d'autres milieux que le sol : en profondeur, dans l'eau d'un gîte ou d'une vase, avec un apport extérieur.</p>
+      ${L.map((d, j) => devenirHTML(id, d, j)).join(OU_)}`;
+  }
+
   // carte « Ce que donne son altération » : les schémas, ou le texte de la fiche quand il n'y a pas de réaction
   const carteAlteration = (id) => {
     const m = mineraux()[id] || {};
-    const corps = existe(id) ? html(id) : m.devient ? `<p class="as-cond">${m.devient}</p>` : "";
+    const sol = existe(id) ? html(id) : m.devient ? `<p class="as-cond">${m.devient}</p>` : "";
+    const corps = sol + ailleursHTML(id, !!sol);
     return corps ? `<div class="card min-alt-schema" id="alteration-resultats"><h2>Ce que donne son altération</h2>${corps}</div>` : "";
   };
   const carte = (id) => carteAlteration(id) + carteOrigine(id);
@@ -219,5 +248,5 @@
     if (c) c.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
   });
 
-  window.AlterationSchema = { html, carte, bouton, SOURCE, existe, origines };
+  window.AlterationSchema = { html, carte, bouton, SOURCE, existe, origines, devenirs };
 })();

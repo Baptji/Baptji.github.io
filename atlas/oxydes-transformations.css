@@ -1,0 +1,64 @@
+/* Comment un oxyde de fer ou de manganèse se change en un autre (11/10/2026) — oxydes-transformations.js */
+.ot { --ot-fe3: #c8742c; --ot-fe2: #6aa597; --ot-mn4: #7f4a93; --ot-mn3: #b48ac4; --ot-mn2: #e0b3d0; --ot-al: #9fc2dd; --ot-li: #93d08c;
+  --ot-trait: #3d3a36; --ot-case: #fbf8f2; --ot-case-bord: #d9d1c3; --ot-eau: #7fb6df; --ot-h: #ffffff; --ot-h-bord: #9a948a; --ot-elec: #7d4fc4;
+  --ot-ox: #c0392b; --ot-red: #2f6fb3; --ot-dis: #2a8a6a; --ot-sol: #a0702a; --ot-bio: #6f8f3e; --ot-ici: #c0392b; --ot-pt: #6a645c; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .ot { --ot-trait: #d8d2c8; --ot-case: #24211e; --ot-case-bord: #4a443c; --ot-pt: #b3aca2;
+  --ot-ox: #e57366; --ot-red: #6fa5e0; --ot-dis: #5cc39e; --ot-sol: #d6a35a; --ot-bio: #9cc062; --ot-h-bord: #77716a; } }
+:root[data-theme="dark"] .ot { --ot-trait: #d8d2c8; --ot-case: #24211e; --ot-case-bord: #4a443c; --ot-pt: #b3aca2;
+  --ot-ox: #e57366; --ot-red: #6fa5e0; --ot-dis: #5cc39e; --ot-sol: #d6a35a; --ot-bio: #9cc062; --ot-h-bord: #77716a; }
+.ot-cadre { overflow-x: auto; }
+.ot-svg { display: block; width: 100%; min-width: 560px; height: auto; }
+.ot-case { fill: var(--ot-case); stroke: var(--ot-case-bord); stroke-width: 1.2; }
+.ot-noeud { cursor: pointer; }
+.ot-noeud:hover .ot-case, .ot-noeud:focus .ot-case { stroke: var(--ot-trait); }
+.ot-noeud.ot-ici .ot-case { stroke: var(--ot-ici); stroke-width: 2.4; }
+.ot-noeud.ot-on .ot-case { stroke: var(--ot-trait); stroke-width: 2.4; }
+.ot-nom { font-size: 13px; font-weight: 600; text-anchor: middle; fill: var(--ot-trait); }
+.ot-oct { stroke: var(--ot-trait); stroke-width: .7; stroke-linejoin: round; fill-opacity: .9; }
+.ot-fe3 { fill: var(--ot-fe3); } .ot-fe2 { fill: var(--ot-fe2); } .ot-mn4 { fill: var(--ot-mn4); } .ot-mn3 { fill: var(--ot-mn3); }
+.ot-mn2 { fill: var(--ot-mn2); } .ot-al { fill: var(--ot-al); } .ot-li { fill: var(--ot-li); }
+.ot-cat { fill: var(--ot-trait); opacity: .55; }
+.ot-vide { fill: none; stroke: var(--ot-trait); stroke-width: .7; stroke-dasharray: 2 2; opacity: .6; }
+.ot-eau { fill: var(--ot-eau); stroke: var(--ot-trait); stroke-width: .4; }
+.ot-h { fill: var(--ot-h); stroke: var(--ot-h-bord); stroke-width: .5; }
+.ot-hb { stroke: var(--ot-pt); stroke-width: .8; stroke-dasharray: 1.5 2; }
+.ot-anion { fill: #8c8c8c; stroke: var(--ot-trait); stroke-width: .4; }
+.ot-ion { stroke: var(--ot-trait); stroke-width: .5; } .ot-na { fill: #f2d64b; } .ot-mg { fill: #f2a35a; }
+.ot-ion-t { font-size: 5.5px; text-anchor: middle; fill: #222; font-weight: 700; }
+.ot-elec { fill: var(--ot-elec); } .ot-elec-t { font-size: 6px; text-anchor: middle; fill: #fff; font-weight: 700; }
+.ot-bact { fill: #d8cbe6; stroke: #8d73b3; stroke-width: 1; }
+.ot-pt { font-size: 8.5px; fill: var(--ot-pt); } .ot-c { text-anchor: middle; }
+.ot-pointe { fill: context-stroke; }
+.ot-fl { stroke: var(--ot-trait); stroke-width: 1; fill: none; } .ot-fl-e { stroke: var(--ot-elec); } .ot-fl-eau { stroke: var(--ot-eau); }
+.ot-passage { cursor: pointer; }
+.ot-trait { fill: none; stroke-width: 2.2; }
+.ot-prise { stroke: transparent; stroke-width: 16; fill: none; }
+.ot-ox .ot-trait { stroke: var(--ot-ox); } .ot-red .ot-trait { stroke: var(--ot-red); stroke-dasharray: 7 4; }
+.ot-dis .ot-trait { stroke: var(--ot-dis); } .ot-sol .ot-trait { stroke: var(--ot-sol); } .ot-bio .ot-trait { stroke: var(--ot-bio); }
+.ot-num { fill: var(--ot-case); stroke: var(--ot-trait); stroke-width: 1.2; }
+.ot-num-t { font-size: 11px; font-weight: 700; text-anchor: middle; fill: var(--ot-trait); }
+.ot-passage.ot-on .ot-trait { stroke-width: 4; } .ot-passage.ot-on .ot-num { fill: var(--ot-trait); } .ot-passage.ot-on .ot-num-t { fill: var(--ot-case); }
+.ot-passage:hover .ot-num, .ot-passage:focus .ot-num { stroke-width: 2.4; }
+.ot-leg { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink2, #666); margin: 6px 0 4px; }
+.ot-leg i { display: inline-block; width: 22px; height: 0; border-top: 3px solid; vertical-align: middle; margin-right: 6px; }
+.ot-l-ox { border-color: var(--ot-ox) !important; } .ot-l-red { border-color: var(--ot-red) !important; border-top-style: dashed !important; }
+.ot-l-dis { border-color: var(--ot-dis) !important; } .ot-l-sol { border-color: var(--ot-sol) !important; } .ot-l-bio { border-color: var(--ot-bio) !important; }
+.ot-detail { border-top: 1px solid var(--line, #ddd); margin-top: 8px; padding-top: 8px; }
+.ot-detail h3 { margin: 4px 0 6px; font-size: 16px; }
+.ot-cond { font-size: 13.5px; color: var(--ink2, #666); margin: 0 0 8px; }
+.ot-type { display: inline-block; font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 10px; margin-right: 6px; color: #fff; }
+.ot-type.ot-ox { background: var(--ot-ox); } .ot-type.ot-red { background: var(--ot-red); } .ot-type.ot-dis { background: var(--ot-dis); }
+.ot-type.ot-sol { background: var(--ot-sol); } .ot-type.ot-bio { background: var(--ot-bio); }
+.ot-vigs { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: center; gap: 6px; margin: 4px 0 8px; }
+.ot-vigs-1 { grid-template-columns: minmax(0, 320px); }
+.ot-vig { margin: 0; background: var(--ot-case); border: 1px solid var(--ot-case-bord); border-radius: 8px; padding: 4px; }
+.ot-vig svg { display: block; width: 100%; height: auto; }
+.ot-vig figcaption { font-size: 12.5px; text-align: center; color: var(--ink2, #666); margin-top: 2px; }
+.ot-vig-fl { font-size: 20px; color: var(--ink2, #888); }
+.ot-f { font-weight: 400; font-size: 14px; color: var(--ink2, #666); margin-left: 6px; }
+.ot-l { margin: 2px 0 8px; padding-left: 18px; } .ot-l li { margin: 2px 0; }
+.ot-lien { background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; cursor: pointer; font: inherit; text-align: left; }
+.ot-liens { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.ot-sources summary { cursor: pointer; font-size: 13px; color: var(--ink2, #666); }
+.ot-sources ul { font-size: 12.5px; color: var(--ink2, #666); }
+@media (max-width: 640px) { .ot-vigs { grid-template-columns: 1fr; } .ot-vig-fl { transform: rotate(90deg); text-align: center; } }

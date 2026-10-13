@@ -656,6 +656,8 @@
     projection: "Dessin calculé : le solide est l'intersection des demi-espaces définis par les faces, en projection clinographique (rotation de 18°26′, inclinaison de 9°28′). Les distances au centre sont réglées pour retrouver l'habitus décrit dans la littérature : ce sont des cristaux idéaux, pas des mesures d'échantillons.",
   };
 
-  window.Cristal = { existe, panneau, brancher, calcul, indices, CRISTAUX, SOURCES,
+  // svg(id, i) : le dessin seul, vue de départ (vignettes de la vue d'ensemble des minéraux, 11/10/2026)
+  const svg = (id, i = 0) => { const cr = CRISTAUX[id]; if (!cr) return ""; if (!cr._R) cr._R = repere(cr.maille); return svgFacies(id, i); };
+  window.Cristal = { existe, panneau, brancher, calcul, indices, svg, CRISTAUX, SOURCES,
     _outils: { repere, normale, groupe, polyedre, centrage } };
 })();

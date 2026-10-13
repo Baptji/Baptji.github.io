@@ -71,6 +71,9 @@
     "Th-O": 2.6, "Nb-O": 2.25,
     // silicates (classe IX)
     "Ni-O": 2.3, "Hf-O": 2.4, "Ce-F": 2.6, "Mg-F": 2.2, "Sc-O": 2.4, "Cs-O": 3.6, "K-Ow": 3.15, "Ba-Ow": 3.2, "Sr-Ow": 2.9, "Cs-Ow": 3.6, "Li-F": 2.0, "Be-F": 1.7,
+    // minéraux des météorites (B.5, 08/10/2026) : tétrataénite Fe–Ni 2,53 ; schreibersite Fe–P 2,25–2,39 ; cohénite Fe–C 2,01–2,02 ;
+    // moissanite Si–C 1,89 ; oldhamite Ca–S 2,85 ; daubréelite Cr–S 2,40 (Fe–S 2,34, déjà couvert)
+    "Fe-Ni": 2.6, "Ni-Ni": 2.6, "Fe-P": 2.45, "Fe-C": 2.1, "Si-C": 2.0, "Ca-S": 3.0, "Cr-S": 2.5,
   };
   const POLYEDRES = ["Si", "Al", "Mg", "Fe", "Mn", "Ti", "Cr", "Zr", "Sn", "Be", "C", "S", "P", "B"];
 
@@ -450,8 +453,9 @@
       if (a.el === "Ow" || a.el === "Oh" || a.el === "Os") return 0.5;
       if (v.cote && ["K", "Na", "Ca", "Cs"].includes(a.el)) return BILLE[a.el];
       // vue « Structure » des argiles : les cations entre les feuillets et ceux de la couche diffuse ressortent (G.4)
-      if (v.particule && ["K", "Na", "Ca", "Cs"].includes(a.el)) return BILLE[a.el] * 1.6;
-      if (v.particule && a.el === "Mg" && !a.estCentre) return BILLE.Mg * 1.6;
+      // (« unite » : une seule unité de formule, essai-unite.js — tailles vraies, rien de grossi)
+      if (v.particule && v.particule !== "unite" && ["K", "Na", "Ca", "Cs"].includes(a.el)) return BILLE[a.el] * 1.6;
+      if (v.particule && v.particule !== "unite" && a.el === "Mg" && !a.estCentre) return BILLE.Mg * 1.6;
       if (mode === "polyedres") {
         const centre = !!a.estCentre;
         if (!centre && v.cote && a.el === "Mg") return BILLE.Mg;   // Mg²⁺ entre les feuillets (vermiculite)
@@ -727,6 +731,12 @@
       if (o._etat === undefined) o = Object.assign({}, o, { _etat: o.etatDefaut || 0 });
       d = o.etats[o._etat].construire(base, !!o._plus);
     }
+    // « 1 unité » (essai magnésite, 09/10/2026) : o.unite = { nom, construire(structure publiée) → une unité de formule, note } ;
+    // onglet à gauche de « 1 maille » dans la même rangée, affiché d'office
+    if (o.unite) {
+      if (o._unite === undefined) o = Object.assign({}, o, { _unite: true });
+      if (o._unite) d = o.unite.construire(base);
+    }
     // « Structure » (argiles, 30/09/2026) : un petit objet entier, atome par atome (argiles-particules.js) ;
     // « Vue d'ensemble » : la forme des feuillets à l'échelle du nanomètre, en surfaces (argiles-structure.js)
     const particule = o._atomes && window.ArgilesParticules && ArgilesParticules.a(o.cle) ? ArgilesParticules.construire(o.cle, o._etat || 0) : null;
@@ -737,7 +747,7 @@
       rayons: o.rayonsCompacts || d.rayonsCompacts || null,
       particule: d.particule || null,
       mode: o._mode || o.mode || d.mode || "billes",
-      repetition: (o.etats && d.repetition) || o.repetition || d.repetition || [1, 1, 1],
+      repetition: o._unite ? [1, 1, 1] : (o.etats && d.repetition) || o.repetition || d.repetition || [1, 1, 1],
       zoom: 1,
       hydrogene: o.hydrogene !== false,
       cote: (o.etats && d.cote) || o.cote || null,
@@ -757,7 +767,7 @@
     const vueDep = particule ? d.vue : o.vue || d.vue;
     const vue0 = vueDep;
     const axe0 = vue0 && vue0.axe && !(vue0.inclinaison || []).some(Boolean) ? vue0.axe : "";   // vue de départ « selon a »…
-    const note = (particule ? [d.note, o.noteEspece] : [o.note, d.etatNote]).filter(Boolean).join("<br>");
+    const note = (particule ? [d.note, o.noteEspece] : o._unite ? [o.unite.note] : [o.note, d.etatNote]).filter(Boolean).join("<br>");
     // rangée d'échelles des argiles : 1 maille · 2 × 2 · Structure (remplace 1 maille / 2 × 2 × 2 et Un espace / Plusieurs feuillets)
     const echelles = o.echelles ? o.echelles.filter(([k]) => (k !== "e" || (window.ArgilesStructure && ArgilesStructure.a(o.cle)))
       && (k !== "s" || (window.ArgilesParticules && ArgilesParticules.a(o.cle)))) : null;
@@ -786,6 +796,8 @@
         <div class="s3d-seg">${boutons([["billes", o.replier ? "Billes" : "Billes et liaisons"], ["polyedres", "Polyèdres"], ["compact", "Compact"]], "mode", v.mode)}</div>
         <div class="s3d-seg">${boutons(o.replier ? [["a", "a"], ["b", "b"], ["c", "c"]] : [["a", "selon a"], ["b", "selon b"], ["c", "selon c"]], "axe", axe0)}</div>
         ${echelles ? `<div class="s3d-seg">${boutons(echelles, "ech", echActive)}</div>`
+          : o.unite ? `<div class="s3d-seg">${boutons([["u", o.unite.nom], ["1", "1 maille"], ["2", "2 × 2 × 2"]], "rep", o._unite ? "u" : v.repetition.join("") === "111" ? "1" : "2")}${o.cristal
+            ? `<button type="button" data-cristal aria-pressed="false"${o.cristal === "oui" ? "" : " disabled"}>Forme du cristal</button>` : ""}</div>`
           : v.cote ? (o.etats ? `<div class="s3d-seg">${boutons([["0", "Un espace"], ["1", "Plusieurs feuillets"]], "plus", o._plus ? "1" : "0")}</div>` : "")
           : d.particule ? (o.cristal ? `<div class="s3d-seg"><button type="button" data-cristal aria-pressed="false"${o.cristal === "oui" ? "" : " disabled"}>Forme du cristal</button></div>` : "")
           : `<div class="s3d-seg">${boutons([["1", "1 maille"], ["2", "2 × 2 × 2"]], "rep", v.repetition.join("") === "111" ? "1" : "")}${o.cristal
@@ -864,6 +876,12 @@
         return;
       }
       if (bt.dataset.ech !== undefined) { changerEchelle(conteneur, d0, o, v, bt.dataset.ech); return; }
+      // unité ⇄ cristal : autre structure, on remonte la vue (orientation et mode gardés)
+      if (o.unite && bt.dataset.rep && (bt.dataset.rep === "u") !== !!o._unite) {
+        monter(conteneur, d0, Object.assign({}, o, { _unite: bt.dataset.rep === "u", repetition: bt.dataset.rep === "2" ? [2, 2, 2] : [1, 1, 1],
+          _R: v.R, _tourne: v.tourne, _mode: v.mode }));
+        return;
+      }
       // forme du cristal : c'est la fiche qui bascule de vue (app.js, brancherStructureMineral)
       if (bt.hasAttribute("data-cristal")) { conteneur.dispatchEvent(new CustomEvent("s3d-cristal", { bubbles: true })); return; }
       // agrandir le panneau (hauteur seulement, comme la carte) ; le ResizeObserver redessine

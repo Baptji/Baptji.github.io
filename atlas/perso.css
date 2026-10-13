@@ -1,0 +1,47 @@
+/* perso.css — carte « Lames minces » et visionneuse de la couche personnelle (perso.js) */
+.lames-carte .lm-tete { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.lames-carte .lm-tete h2 { margin: 0; }
+.lm-tag { font-size: 11px; padding: 1px 7px; border-radius: 999px; border: 1px dashed var(--baseline); color: var(--muted); }
+.lm-n { font-size: 13px; color: var(--muted); margin-left: auto; }
+.lm-filtres { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0 0; }
+.lm-puce { font: inherit; font-size: 12.5px; padding: 3px 9px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface); color: var(--ink2); }
+.lm-puce i { font-style: normal; color: var(--muted); margin-left: 2px; }
+.lm-puce.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.lm-puce.on i { color: rgba(255, 255, 255, .8); }
+.lm-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 6px; margin-top: 10px; }
+.lm-vig { position: relative; padding: 0; border: 0; border-radius: 6px; overflow: hidden; cursor: zoom-in;
+  aspect-ratio: 3 / 2; background: var(--grid); }
+.lm-vig img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lm-vig:hover img, .lm-vig:focus-visible img { filter: brightness(1.08); }
+.lm-lum { position: absolute; left: 4px; bottom: 4px; font-size: 10.5px; line-height: 1; padding: 3px 5px; border-radius: 4px;
+  background: rgba(0, 0, 0, .62); color: #fff; }
+.lm-plus { font: inherit; font-size: 13px; margin-top: 8px; padding: 5px 12px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface); color: var(--ink2); }
+.lm-credit { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+.lm-credit a { color: inherit; }
+
+/* visionneuse */
+.lm-vue { position: fixed; inset: 0; z-index: 3000; display: none; }
+.lm-vue.on { display: flex; align-items: center; justify-content: center; }
+.lm-vue-fond { position: absolute; inset: 0; background: rgba(0, 0, 0, .82); }
+.lm-vue-cadre { position: relative; margin: 0; max-width: min(1100px, 94vw); display: flex; flex-direction: column; align-items: center; }
+.lm-vue-cadre img { max-width: 100%; max-height: 74vh; border-radius: 6px; display: block; background: #111; }
+.lm-vue-cadre figcaption { margin-top: 10px; color: #e8e8e4; font-size: 13.5px; max-width: 900px; text-align: center; }
+.lm-vue-cadre figcaption p { margin: 4px 0; }
+.lm-vue-meta { color: #b9b8b1; font-size: 12.5px; }
+.lm-vue-meta a { color: #b9d4f5; }
+.lm-vue-meta .lm-puce { background: rgba(255, 255, 255, .1); color: #fff; border-color: rgba(255, 255, 255, .25); }
+.lm-vue-x { position: absolute; top: -6px; right: -6px; transform: translate(50%, -50%); width: 32px; height: 32px; border-radius: 50%;
+  border: 0; background: #fff; color: #111; font-size: 15px; cursor: pointer; z-index: 2; }
+.lm-vue-nav { position: absolute; top: 37vh; transform: translateY(-50%); width: 40px; height: 56px; border: 0; border-radius: 8px;
+  background: rgba(0, 0, 0, .45); color: #fff; font-size: 30px; line-height: 1; cursor: pointer; z-index: 2; }
+.lm-prec { left: 6px; }
+.lm-suiv { right: 6px; }
+html.lm-bloque { overflow: hidden; }
+@media (max-width: 640px) {
+  .lm-grille { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); }
+  .lm-vue-x { transform: none; top: 4px; right: 4px; }
+  .lm-vue-cadre img { max-height: 62vh; }
+  .lm-vue-nav { top: 31vh; }
+}

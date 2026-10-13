@@ -51,6 +51,9 @@ const ROCHES = [
       { nom: "calcaire bioclastique / à entroques", note: "fait de débris d'organismes (crinoïdes, algues calcaires)." },
       { nom: "calcaire lacustre", note: "déposé en lac — Limagne, Beauce." },
       { nom: "stromatolithe", note: "calcaire microbien finement lité, parmi les plus vieilles traces de vie." },
+      { nom: "calcirudite / calcarénite / calcisiltite / calcilutite", note: "calcaires nommés d'après la taille de leurs grains (classification de Grabau) : débris de plus de 2 mm, sable calcaire (0,063 à 2 mm), silt, ou boue fine." },
+      { nom: "microbialites : thrombolite, dendrolite, léiolite", note: "calcaires bâtis par des voiles de bactéries : en lamines (stromatolithe, ci-dessus), en grumeaux (thrombolite), en buissons (dendrolite) ou sans structure visible (léiolite)." },
+      { nom: "encroûtement algaire", note: "croûtes d'algues calcaires rouges (corallinacées) qui tapissent le fond ou enrobent des galets en boules, les rhodolithes ; le maërl en est la forme libre." }
     ],
     regions: [
       { nom: "Jura (lapiaz, reculées)", lat: 46.7, lng: 5.9 },
@@ -89,6 +92,7 @@ const ROCHES = [
     varietes: [
       { nom: "tuf calcaire (travertin poreux)", note: "spongieux, incrustant, des cascades et pentes de source." },
       { nom: "travertin massif (onyx calcaire)", note: "dense et zoné, poli en pierre ornementale." },
+      { nom: "geysérite", note: "équivalent siliceux du travertin : opale déposée par les sources chaudes et les geysers (Islande, Yellowstone) ; pas de dépôt actif en France." }
     ],
     regions: [
       { nom: "Travertins de Sézanne (Marne)", lat: 48.72, lng: 3.72 },
@@ -194,6 +198,7 @@ const ROCHES = [
       { nom: "Terres Noires", note: "marnes noires très riches en pyrite, mondialement connues pour leur érosion en badlands (Alpes du Sud)." },
       { nom: "marne à foraminifères (globigérines)", note: "faciès pélagique très pur, presque sans apport détritique." },
       { nom: "marno-calcaire", note: "transition vers le calcaire, où le carbonate dépasse 65 %." },
+      { nom: "concrétions (miches, septarias)", note: "nodules durs de calcaire ou de pyrite formés dans la marne pendant l'enfouissement ; les septarias, fendus de fentes de retrait remplies de calcite, en sont l'exemple le plus connu." }
     ],
     regions: [
       { nom: "Terres Noires de Draix-Digne", lat: 44.14, lng: 6.36 },
@@ -223,6 +228,7 @@ const ROCHES = [
     varietes: [
       { nom: "argile plastique (Sparnacien)", note: "pauvre en carbonate, très déformable et kaolinique — poteries et céramiques de Provins." },
       { nom: "bentonite", note: "presque uniquement de la smectite, née de l'altération de cendres volcaniques ; pouvoir de gonflement exceptionnel." },
+      { nom: "argilolite", note: "argile durcie par l'enfouissement, sans le feuilletage d'un schiste." }
     ],
     regions: [
       { nom: "Argiles des Flandres (Ypresien)", lat: 50.8, lng: 2.4 },
@@ -283,6 +289,8 @@ const ROCHES = [
       { nom: "quartzarénite", note: "grès quasi pur en quartz (> 95 %) — grès armoricain, grès de Fontainebleau." },
       { nom: "litharénite (grès lithique)", note: "riche en fragments de roches plutôt qu'en grains de quartz isolés, proche de la grauwacke mais avec moins de matrice." },
       { nom: "grès ferrugineux", note: "cimenté par des oxydes de fer, teinte rouge à brune — le grès rose des Vosges." },
+      { nom: "sublitharénite / litharénite feldspathique", note: "entre la quartzarénite et la litharénite : 5 à 25 % de fragments de roches (sublitharénite) ; la litharénite feldspathique contient aussi des feldspaths, mais moins que de fragments de roches." },
+      { nom: "psammite", note: "ancien nom des grès fins et micacés qui se débitent en dalles le long des lits de mica ; désigne aussi un grès métamorphisé." }
     ],
     regions: [
       { nom: "Vosges du Nord (grès rose)", lat: 48.9, lng: 7.3 },
@@ -298,6 +306,8 @@ const ROCHES = [
       vmin: 0.002, vmax: 0.05, facilite: 2,
       mecanisme: "Tout dépend du ciment : un ciment carbonaté se dissout (le grès redevient sable en quelques milliers d'années), un ciment siliceux résiste presque comme du quartzite. Désagrégation granulaire, alvéoles (taffonis) en bord de mer.",
       climat: "Le gel exploite la porosité : les corniches de grès vosgien s'écaillent surtout en hiver.",
+      // 12/10/2026 (sa question : « pourquoi un écart si grand ? ») — détail et calculs : gres-ciment.js, page #roche/gres/ciment
+      ecart: "parce que « grès » réunit des roches tenues par des ciments différents. Un ciment calcaire se dissout dans l'eau de pluie (≈ 4 mm en 100 ans par le calcul) ; un ciment siliceux, ferrugineux ou argileux ne se dissout presque pas, et ce sont le gel et les sels qui grignotent la pierre (0,3 à 1,8 mm en 100 ans mesurés sur des pierres tombales). À ciment égal, il reste un facteur 2 à 3 selon l'exposition : une face d'un même édifice s'use jusqu'à trois fois plus vite qu'une autre.",
     },
     produits: { sable: 850, limon: 50, argile: 50, oxydes: 15, dissous: 35 },
     produitsNote: "1 kg de grès ≈ 850 g de sable rendu à la nature : la boucle sable → grès → sable est l'un des grands recyclages sédimentaires.",
@@ -313,6 +323,7 @@ const ROCHES = [
       { nom: "conglomérat polygénique", note: "galets de nature variée, hérités de plusieurs roches sources — poudingues de la Sainte-Victoire." },
       { nom: "conglomérat oligomictique (monogénique)", note: "galets d'une seule roche, souvent du quartz ou du calcaire." },
       { nom: "microconglomérat (granule)", note: "éléments plus fins (2 à 4 mm), à la limite du grès grossier." },
+      { nom: "métaconglomérat", note: "conglomérat recristallisé par le métamorphisme, dont les galets sont aplatis et étirés par la déformation." }
     ],
     regions: [
       { nom: "Sainte-Victoire (poudingues rouges)", lat: 43.53, lng: 5.65 },
@@ -427,6 +438,8 @@ const ROCHES = [
     varietes: [
       { nom: "brèche de pente", note: "éboulis cimentés au pied des falaises." },
       { nom: "brèche d'effondrement / karstique", note: "dans les grottes et cavités dissoutes." },
+      { nom: "microbrèche", note: "brèche à éléments de moins de 2 à 4 mm." },
+      { nom: "mégabrèche", note: "brèche à blocs métriques, souvent glissés en masse au pied d'un escarpement sous-marin (olistostromes des Alpes)." }
     ],
     regions: [
       { nom: "Brèches de pente des Alpes / Provence", lat: 44.10, lng: 6.30 },
@@ -573,6 +586,7 @@ const ROCHES = [
       { nom: "alluvions récentes (Fz)", note: "du lit majeur, encore inondables ; sables et limons de crue." },
       { nom: "terrasses alluviales (Fy, Fx)", note: "anciens lits perchés au-dessus de la rivière — archives des glaciations." },
       { nom: "cône de déjection", note: "éventail déposé là où un torrent débouche dans une vallée." },
+      { nom: "cailloutis et graviers", note: "alluvions grossières, faites surtout de galets (cailloutis) ou de grains de 2 à 20 mm (graviers) : les terrasses des grandes vallées en sont faites." }
     ],
     regions: [
       { nom: "Val de Loire (sables et graviers)", lat: 47.40, lng: 0.70 },
@@ -679,6 +693,7 @@ const ROCHES = [
       { nom: "moraine de fond (till)", note: "compactée sous le glacier, très dense." },
       { nom: "moraine frontale / latérale", note: "bourrelets marquant les positions du front glaciaire." },
       { nom: "bloc erratique", note: "bloc isolé transporté loin de sa roche d'origine — la preuve des glaciations." },
+      { nom: "diamicton", note: "terme descriptif : tout dépôt meuble non trié où des blocs flottent dans une matrice fine, quelle que soit son origine (glacier, coulée de boue) ; consolidé, c'est une diamictite." }
     ],
     regions: [
       { nom: "Amphithéâtre morainique du Rhône (Lyonnais, Bugey)", lat: 45.80, lng: 5.30 },
@@ -906,6 +921,8 @@ const ROCHES = [
       { nom: "houille grasse", note: "riche en matières volatiles, cokéfiable — la plus recherchée pour la sidérurgie." },
       { nom: "houille maigre", note: "pauvre en volatils, proche de l'anthracite par son pouvoir calorifique." },
       { nom: "tonstein", note: "fin niveau d'argile kaolinique (cendres volcaniques altérées) intercalé dans les veines, repère des mineurs pour corréler les couches." },
+      { nom: "boghead", note: "charbon fait d'algues (Botryococcus) accumulées dans un lac, très riche en huile ; celui d'Autun a été exploité pour en distiller de l'huile." },
+      { nom: "cannel-coal", note: "charbon mat et compact, fait de spores et de débris fins déposés dans des mares de la forêt houillère ; il brûle avec une flamme claire, comme une chandelle (candle)." }
     ],
     regions: [
       { nom: "Bassin minier du Nord (Lens, terrils)", lat: 50.43, lng: 2.83 },
@@ -1023,6 +1040,9 @@ const ROCHES = [
       { nom: "ampélite", note: "schiste noir carboné et pyriteux du Paléozoïque." },
       { nom: "schistes carton (Toarcien)", note: "fins feuillets bruns, très riches en matière organique." },
       { nom: "sapropèle", note: "boue organique actuelle, précurseur non consolidé." },
+      { nom: "black shales", note: "argiles noires riches en matière organique, déposées sous une eau sans oxygène ; les grands épisodes d'anoxie océanique (Toarcien, Cénomanien–Turonien) en ont laissé partout." },
+      { nom: "sapropélite", note: "sapropèle durcie : la roche issue des boues organiques des lacs et des mers stagnantes." },
+      { nom: "asphalte et bitume", note: "le pétrole remonté, qui a perdu ses éléments légers, imprègne un calcaire ou un sable : les calcaires asphaltiques de Seyssel (Ain, Haute-Savoie) ont servi aux trottoirs de Paris." }
     ],
     regions: [
       { nom: "Bassin d'Autun (Permien)", lat: 46.95, lng: 4.30 },
@@ -1048,6 +1068,7 @@ const ROCHES = [
       { nom: "meulière de Brie", note: "la plus réputée, à grosses cavités connectées — meules de moulin exportées dans toute l'Europe." },
       { nom: "meulière de Montmorency", note: "variété plus fine, du nord parisien." },
       { nom: "meulière massive (moellon)", note: "peu caverneuse, utilisée en construction (pavillons de banlieue) plutôt qu'en meules." },
+      { nom: "silcrète", note: "croûte de silice précipitée dans un sol ou au toit d'une nappe, qui cimente le sable : le grès de Fontainebleau est une silcrète de nappe." }
     ],
     regions: [
       { nom: "Hurepoix, plateau de Saclay", lat: 48.66, lng: 2.10 },
@@ -1079,6 +1100,7 @@ const ROCHES = [
       { nom: "chert", note: "silex en bancs continus (pas seulement en rognons)." },
       { nom: "jaspe", note: "chert coloré en rouge/vert par des oxydes de fer." },
       { nom: "silexite / phtanite", note: "roche siliceuse noire à matière organique." },
+      { nom: "lydienne", note: "chert noir à grain très fin, la « pierre de touche » des orfèvres, qui y frottaient l'or pour en juger le titre ; synonyme ancien de phtanite." }
     ],
     regions: [
       { nom: "Craie du Bassin parisien / Normandie", lat: 49.30, lng: 0.60 },
@@ -1245,6 +1267,7 @@ const ROCHES = [
     varietes: [
       { nom: "carnallite", note: "sel double KMgCl₃·6H₂O, très soluble et déliquescent." },
       { nom: "kaïnite", note: "sel potassique sulfaté." },
+      { nom: "roche à polyhalite", note: "sel sulfaté de potassium, de magnésium et de calcium, en lits dans les évaporites ; extrait en Angleterre (Yorkshire) comme engrais." }
     ],
     regions: [
       { nom: "Bassin potassique d'Alsace (Wittelsheim)", lat: 47.80, lng: 7.25 },
@@ -1274,6 +1297,7 @@ const ROCHES = [
     varietes: [
       { nom: "cuirasse ferrugineuse (ferricrète)", note: "croûte durcie d'oxydes de fer." },
       { nom: "carapace / grésière", note: "niveau induré moins compact, fossile en France." },
+      { nom: "alios et garluche", note: "attention, ce ne sont pas des latérites : grès tendres cimentés de matière organique et d'oxydes de fer, formés dans l'horizon d'accumulation des podzols des Landes ; la garluche, plus riche en fer, a servi de pierre à bâtir." }
     ],
     regions: [
       { nom: "Cuirasses fossiles du Périgord / Sud-Ouest", lat: 44.90, lng: 0.80 },
@@ -1467,6 +1491,7 @@ const ROCHES = [
       { nom: "minette de Lorraine", note: "oolithique, calcaire, phosphoreuse : il a fallu le procédé Thomas (1877) pour savoir la fondre." },
       { nom: "fer fort", note: "le chapeau résiduel riche (goethite) des plateaux lorrains, exploité dès l'âge du fer." },
       { nom: "collobriérite", note: "le fer métamorphisé des Maures (grenat + magnétite), curiosité française nommée d'après Collobrières." },
+      { nom: "exhalite", note: "roche chimique déposée sur le fond marin par des sources hydrothermales (silice, oxydes de fer ou de manganèse, sulfures), souvent près des amas sulfurés." }
     ],
     regions: [
       { nom: "Bassin ferrifère lorrain (Briey, Longwy)", lat: 49.30, lng: 5.90 },
@@ -1500,6 +1525,8 @@ const ROCHES = [
       { nom: "granite porphyroïde", note: "gros phénocristaux de feldspath rose dans une pâte plus fine — le granite rose de Ploumanac'h." },
       { nom: "leucogranite (granite à deux micas)", note: "pauvre en biotite, riche en muscovite — les leucogranites du Limousin, source du kaolin de Saint-Yrieix." },
       { nom: "granite alcalin", note: "riche en feldspath alcalin sodique, ± amphibole sodique (riebeckite) — les granites alcalins de Corse (Ajaccio)." },
+      { nom: "monzogranite / syénogranite", note: "les deux moitiés du champ des granites (IUGS) : le monzogranite a autant de plagioclase que de feldspath potassique, le syénogranite surtout du feldspath potassique (le plagioclase fait moins de 35 % des feldspaths). La plupart des granites du Massif central et de Bretagne sont des monzogranites." },
+      { nom: "métagranite / métamonzogranite", note: "granite déformé et recristallisé par le métamorphisme, qui garde sa composition ; quand la foliation devient nette, on parle d'orthogneiss." }
     ],
     regions: [
       { nom: "Côte de granit rose (Ploumanac'h)", lat: 48.83, lng: -3.47 },
@@ -1539,6 +1566,7 @@ const ROCHES = [
       { nom: "à biotite", note: "le faciès courant, sombre et bien grenu." },
       { nom: "à biotite et cordiérite", note: "faciès anatectique (né de la fusion de roches alumineuses), typique du Massif central." },
       { nom: "à amphibole", note: "transition vers la tonalite et la diorite." },
+      { nom: "métagranodiorite", note: "granodiorite recristallisée par le métamorphisme, à biotite et amphibole alignées." }
     ],
     regions: [
       { nom: "Massif du Mont-Blanc", lat: 45.83, lng: 6.87 },
@@ -1570,6 +1598,8 @@ const ROCHES = [
     varietes: [
       { nom: "trondhjémite", note: "tonalite très claire à plagioclase sodique (voir sa fiche)." },
       { nom: "quartz-diorite", note: "pôle plus sombre, vers la diorite." },
+      { nom: "microtonalite", note: "tonalite à grain fin, en filons ou en enclaves." },
+      { nom: "métatonalite", note: "tonalite recristallisée par le métamorphisme." }
     ],
     regions: [
       { nom: "Maures (Var)", lat: 43.27, lng: 6.38 },
@@ -1599,6 +1629,8 @@ const ROCHES = [
     argilesNote: "Presque un seul fournisseur : l'oligoclase, qui se kaolinise en argiles blanches — d'où des profils d'altération très pâles.",
     varietes: [
       { nom: "plagiogranite", note: "équivalent des croûtes océaniques (dans les ophiolites)." },
+      { nom: "microtrondhjémite", note: "trondhjémite à grain fin, en filons." },
+      { nom: "métatrondhjémite / métaplagiogranite", note: "trondhjémite ou plagiogranite d'ophiolite recristallisé : l'albite remplace le plagioclase, la chlorite et l'épidote les minéraux sombres (ophiolites métamorphiques de Corse alpine)." }
     ],
     regions: [
       { nom: "Ophiolite du Chenaillet (plagiogranite)", lat: 44.90, lng: 6.76 },
@@ -1626,8 +1658,10 @@ const ROCHES = [
     argiles: ["smectites", "vermiculite", "chlorite"],
     argilesNote: "Plagioclases calciques et hornblende donnent surtout des smectites ; biotite → vermiculite. Bilan à mi-chemin du granite et du gabbro.",
     varietes: [
-      { nom: "quartz-diorite", note: "avec 5–20 % de quartz, transition vers la tonalite." },
+      { nom: "quartz-diorite", note: "avec 5–20 % de quartz, transition vers la tonalite. Nom du lexique BRGM : diorite quartzifère." },
       { nom: "diorite orbiculaire (corsite / napoléonite)", note: "célèbre roche à sphères concentriques de Sainte-Lucie-de-Tallano, en Corse." },
+      { nom: "diorite foïdifère / foïdique", note: "diorite à néphéline, sans quartz : moins de 10 % de foïdes (diorite foïdifère) ou 10 à 60 % (diorite foïdique)." },
+      { nom: "métadiorite / métaquartzdiorite", note: "diorite (ou quartz-diorite) recristallisée par le métamorphisme." }
     ],
     regions: [
       { nom: "Sainte-Lucie-de-Tallano (corsite, Corse)", lat: 41.68, lng: 9.06 },
@@ -1656,8 +1690,11 @@ const ROCHES = [
     argiles: ["illite", "kaolinite", "smectites"],
     argilesNote: "Deux feldspaths, deux destins : l'orthose file vers illite et kaolinite, le plagioclase vers les smectites.",
     varietes: [
-      { nom: "quartz-monzonite (adamellite)", note: "avec plus de quartz, transition vers le granite." },
+      { nom: "quartz-monzonite (adamellite)", note: "avec plus de quartz, transition vers le granite. Nom du lexique BRGM : monzonite quartzifère." },
       { nom: "monzodiorite", note: "plus riche en plagioclase (voir sa fiche)." },
+      { nom: "monzonite foïdifère", note: "jusqu'à 10 % de néphéline, sans quartz." },
+      { nom: "micromonzonite", note: "monzonite à grain fin, en filons ; existe aussi en micromonzonite quartzifère ou foïdifère." },
+      { nom: "métamonzonite", note: "monzonite recristallisée par le métamorphisme." }
     ],
     regions: [
       { nom: "Massif de l'Estérel (roches permiennes)", lat: 43.47, lng: 6.87 },
@@ -1698,7 +1735,7 @@ const ROCHES = [
     produitsNote: "≈ 440 g d'argiles, 130 g de sable, 70 g d'oxydes, 280 g d'ions : le plagioclase et les ferromagnésiens font l'essentiel du travail.",
     usages: "Granulats.",
     wikipedia: "https://fr.wikipedia.org/wiki/Monzodiorite",
-    varietes: [{ nom: "Monzodiorite quartzifère", note: "5 à 20 % de quartz." }, { nom: "Micromonzodiorite", note: "même composition à grain fin, en filons." }, { nom: "Métamonzodiorite", note: "monzodiorite transformée par le métamorphisme." }],
+    varietes: [{ nom: "Monzodiorite quartzifère", note: "5 à 20 % de quartz." }, { nom: "Micromonzodiorite", note: "même composition à grain fin, en filons. Existe aussi quartzifère ou foïdifère." }, { nom: "Métamonzodiorite", note: "monzodiorite transformée par le métamorphisme." }, { nom: "Monzodiorite foïdifère", note: "jusqu'à 10 % de néphéline, sans quartz ; son équivalent filonien est la micromonzodiorite foïdifère (micromonzodiorite quartzifère quand c'est le quartz qui apparaît)." } ],
   },
   {
     id: "syenite", nom: "Syénite", categorie: "magmatique", sousType: "plutonique intermédiaire",
@@ -1714,6 +1751,10 @@ const ROCHES = [
     varietes: [
       { nom: "syénite alcaline", note: "à amphibole/pyroxène sodiques (aegyrine, riébeckite)." },
       { nom: "syénite néphélinique", note: "sous-saturée, à néphéline (voir sa fiche)." },
+      { nom: "syénite quartzifère", note: "5 à 20 % de quartz : vers le syénogranite ; se dit aussi des syénites alcalines (syénite alcaline quartzifère)." },
+      { nom: "syénite foïdifère", note: "jusqu'à 10 % de néphéline, sans quartz (de même la syénite alcaline foïdifère) ; au-delà, c'est une syénite foïdique (voir la fiche syénite néphélinique)." },
+      { nom: "microsyénite", note: "syénite à grain fin, en filons ; elle se décline comme la syénite : microsyénite alcaline (et alcaline quartzifère ou foïdifère), quartzifère, foïdifère ou foïdique." },
+      { nom: "métasyénite", note: "syénite recristallisée par le métamorphisme." }
     ],
     regions: [
       { nom: "Massif du Champ du Feu (Vosges)", lat: 48.40, lng: 7.28 },
@@ -1743,8 +1784,9 @@ const ROCHES = [
     argilesNote: "Tout est ferromagnésien : smectites magnésiennes massives, chlorite héritée des zones ouralitisées.",
     varietes: [
       { nom: "webstérite", note: "à orthopyroxène + clinopyroxène." },
-      { nom: "orthopyroxénite / clinopyroxénite", note: "dominées par l'un ou l'autre pyroxène." },
+      { nom: "orthopyroxénite / clinopyroxénite", note: "dominées par l'un ou l'autre pyroxène. Noms du lexique BRGM : orthopyroxénolite, clinopyroxénolite." },
       { nom: "hornblendite", note: "équivalent à amphibole (voir sa fiche)." },
+      { nom: "métapyroxénite / métapyroxénolite", note: "pyroxénite recristallisée par le métamorphisme ; une partie du pyroxène devient amphibole." }
     ],
     regions: [
       { nom: "Lherz / massif de l'étang de Lers (Pyrénées)", lat: 42.80, lng: 1.35 },
@@ -1798,6 +1840,8 @@ const ROCHES = [
     varietes: [
       { nom: "foyaïte", note: "faciès à texture typique, à feldspath alcalin en lattes." },
       { nom: "litchfieldite", note: "à néphéline et albite." },
+      { nom: "miaskite", note: "syénite néphélinique pauvre en sodium par rapport à l'aluminium (dite miaskitique), à biotite plutôt qu'à aegyrine ; nommée d'après Miass, dans l'Oural." },
+      { nom: "monzosyénite foïdique", note: "le plagioclase rejoint le feldspath alcalin (10 à 35 % des feldspaths), avec 10 à 60 % de foïdes ; à grain fin et en filon : micromonzosyénite foïdique." }
     ],
     alteration: {
       vmin: 0.005, vmax: 0.04, facilite: 3,
@@ -1824,6 +1868,7 @@ const ROCHES = [
     argilesNote: "Les foïdes dominants s'effondrent en kaolinite ; l'aegyrine et les pyroxènes ajoutent des smectites sodiques.",
     varietes: [
       { nom: "urtite / melteigite", note: "pôles plus riches en néphéline ou en pyroxène." },
+      { nom: "microfoïdolite", note: "foïdolite à grain fin, en filons." }
     ],
     alteration: {
       vmin: 0.008, vmax: 0.06, facilite: 4,
@@ -1850,6 +1895,7 @@ const ROCHES = [
     argilesNote: "Bilan granitique (kaolinite, illite) ; l'hypersthène — un orthopyroxène, représenté ici par l'enstatite — rouille en fauve.",
     varietes: [
       { nom: "enderbite", note: "pôle plus plagioclasique (charnockite « dioritique »)." },
+      { nom: "mangérite", note: "l'équivalent de la monzonite dans la série des charnockites : feldspaths potassique et plagioclase en parts voisines, orthopyroxène, presque pas de quartz." }
     ],
     alteration: {
       vmin: 0.001, vmax: 0.015, facilite: 2,
@@ -1872,6 +1918,11 @@ const ROCHES = [
       { nom: "norite", note: "pauvre en plagioclase, dominée par l'orthopyroxène plutôt que le clinopyroxène." },
       { nom: "anorthosite", note: "presque uniquement du plagioclase (> 90 %), roche claire et dense." },
       { nom: "troctolite", note: "riche en olivine, roche mouchetée verte et blanche (« pierre truite », de son aspect)." },
+      { nom: "gabbronorite", note: "clinopyroxène et orthopyroxène en parts voisines : le gabbro des grands massifs lités." },
+      { nom: "gabbro quartzifère / foïdifère / foïdique", note: "un peu de quartz (5 à 20 %, gabbro quartzifère) ou, à l'inverse, de néphéline (moins de 10 %, gabbro foïdifère ; 10 à 60 %, gabbro foïdique) ; jamais les deux ensemble." },
+      { nom: "monzogabbro", note: "un peu de feldspath potassique (10 à 35 % des feldspaths) ; existe aussi en monzogabbro quartzifère, monzogabbro foïdifère ou monzogabbro foïdique (voir aussi la fiche essexite)." },
+      { nom: "microgabbro, micronorite, microtroctolite, microanorthosite", note: "équivalents à grain fin (0,5 à 2 mm) du gabbro et de ses variétés (microgabbro quartzifère ou foïdifère, micromonzogabbro, micromonzogabbro quartzifère ou foïdifère), en filons ou en bordures refroidies ; le microgabbro est très proche de la dolérite (voir sa fiche)." },
+      { nom: "métagabbro / métamonzogabbro", note: "gabbro recristallisé : selon la température et la pression, il devient amphibolite, schiste vert, schiste bleu ou éclogite ; dans les ophiolites alpines (Queyras, Corse), les métagabbros gardent souvent la forme des anciens pyroxènes, changés en amphibole verte." }
     ],
     regions: [
       { nom: "Massif du Chenaillet (Montgenèvre)", lat: 44.90, lng: 6.75 },
@@ -1899,7 +1950,8 @@ const ROCHES = [
     varietes: [
       { nom: "basalte en orgues (prismé)", note: "refroidissement lent en colonnes hexagonales — orgues de Bort-les-Orgues, d'Espaly." },
       { nom: "basalte à olivine", note: "la variété la plus courante du Massif central, riche en olivine visible à l'œil nu." },
-      { nom: "hyaloclastite", note: "basalte fragmenté au contact de l'eau ou de la glace, en brèches vitreuses." },
+      { nom: "hyaloclastite", note: "basalte fragmenté au contact de l'eau ou de la glace, en brèches vitreuses. Nom du lexique BRGM : roche hyaloclastique." },
+      { nom: "métabasalte", note: "basalte recristallisé : selon la profondeur, il devient spilite ou schiste vert (chlorite, albite, épidote), amphibolite ou schiste bleu (voir ces fiches)." }
     ],
     regions: [
       { nom: "Chaîne des Puys", lat: 45.79, lng: 2.96 },
@@ -1951,6 +2003,7 @@ const ROCHES = [
     varietes: [
       { nom: "trachyte phonolitique", note: "transition vers la phonolite, plus riche en feldspathoïdes (rare en France)." },
       { nom: "trachydacite", note: "variété plus siliceuse, à la limite de la dacite." },
+      { nom: "métatrachyte", note: "trachyte recristallisé par le métamorphisme." }
     ],
     regions: [
       { nom: "Puy de Dôme", lat: 45.772, lng: 2.965 },
@@ -1975,6 +2028,7 @@ const ROCHES = [
     varietes: [
       { nom: "rhyolite fluidale (rubanée)", note: "rubans d'écoulement figés dans la lave visqueuse, bien visibles au cap Dramont (Estérel)." },
       { nom: "porphyre rhyolitique", note: "phénocristaux de quartz et feldspath dans une pâte fine — les « porphyres » de l'Estérel taillés pour les voies romaines." },
+      { nom: "métarhyolite", note: "rhyolite recristallisée, souvent schisteuse ; les « porphyroïdes » des Ardennes et du Massif armoricain en sont." }
     ],
     regions: [
       { nom: "Massif de l'Estérel (Cap Dramont)", lat: 43.42, lng: 6.85 },
@@ -2056,7 +2110,7 @@ const ROCHES = [
     argiles: ["kaolinite", "illite", "smectites"],
     argilesNote: "Néphéline et haüyne cèdent d'abord (kaolinite), la sanidine suit (illite) — la patine ocre des orgues phonolitiques.",
     varietes: [
-      { nom: "téphriphonolite", note: "phonolite plus basique, vers la téphrite." },
+      { nom: "téphriphonolite", note: "phonolite plus basique, vers la téphrite. Nom du lexique BRGM : phonolite téphritique." },
     ],
     regions: [
       { nom: "Rocher Saint-Michel d'Aiguilhe (Le Puy-en-Velay)", lat: 45.05, lng: 3.88 },
@@ -2090,6 +2144,8 @@ const ROCHES = [
       { nom: "néphélinite", note: "à néphéline dominante, sans feldspath." },
       { nom: "leucitite", note: "à leucite, laves ultra-potassiques." },
       { nom: "mélilitite", note: "très sous-saturée, à mélilite (Devès)." },
+      { nom: "téphrite phonolitique", note: "téphrite riche en feldspath alcalin et en foïdes, vers la phonolite (appelée phonotéphrite dans le diagramme TAS)." },
+      { nom: "ougandite", note: "lave ultrapotassique du rift ougandais (Toro-Ankole), très riche en olivine et en pyroxène, à leucite dans la pâte ; ses voisines à kalsilite, un feldspathoïde potassique, sont les mafurites." }
     ],
     regions: [
       { nom: "Plateau du Devès (Velay)", lat: 45.00, lng: 3.72 },
@@ -2224,6 +2280,10 @@ const ROCHES = [
     varietes: [
       { nom: "cinérite", note: "tuf de cendres fines." },
       { nom: "lapilli / tuf à lapilli", note: "à fragments millimétriques à centimétriques." },
+      { nom: "ponce", note: "verre volcanique si bulleux (60 à 90 % de vides) qu'il flotte ; en France, les ponces du Mont-Dore (Neschers) et du Cantal." },
+      { nom: "tuffite", note: "tuf mêlé de sédiment ordinaire (25 à 75 % de débris volcaniques), déposé dans l'eau." },
+      { nom: "volcanoclastite / épiclastite", note: "volcanoclastite : toute roche faite de débris volcaniques ; épiclastite : débris de roches volcaniques déjà solides, remaniés par l'eau ou le vent (grès et conglomérats volcaniques)." },
+      { nom: "métatuf", note: "tuf transformé par le métamorphisme : le verre devient séricite, chlorite et quartz, et la roche se débite en feuillets." }
     ],
     regions: [
       { nom: "Cinérites de Limagne (Puy-de-Dôme)", lat: 45.80, lng: 3.20 },
@@ -2354,6 +2414,8 @@ const ROCHES = [
     varietes: [
       { nom: "microgranite porphyrique", note: "à phénocristaux de quartz/feldspath dans une pâte fine." },
       { nom: "granophyre", note: "à intercroissance quartz-feldspath (texture granophyrique)." },
+      { nom: "micromonzogranite / microsyénogranite", note: "équivalents à grain fin du monzogranite et du syénogranite, en filons ou en bordure des massifs." },
+      { nom: "microgranodiorite", note: "granodiorite à grain fin, en filons : plus de plagioclase que de feldspath potassique, un peu d'amphibole." }
     ],
     regions: [
       { nom: "Filons du Massif central", lat: 45.60, lng: 2.60 },
@@ -2411,6 +2473,7 @@ const ROCHES = [
     varietes: [
       { nom: "pegmatite à éléments rares (LCT)", note: "à lithium-césium-tantale (spodumène, lépidolite) — les gîtes de lithium." },
       { nom: "pegmatite à terres rares (NYF)", note: "à niobium-yttrium-fluor." },
+      { nom: "quartzolite", note: "roche plutonique faite à plus de 90 % de quartz (IUGS) : les cœurs de quartz des pegmatites zonées et certains filons de quartz d'origine magmatique." }
     ],
     regions: [
       { nom: "Pegmatites d'Ambazac / Chanteloube (Haute-Vienne)", lat: 45.95, lng: 1.40 },
@@ -2472,6 +2535,8 @@ const ROCHES = [
       { nom: "kersantite", note: "biotite + plagioclase (localité type : Kersanton, Bretagne)." },
       { nom: "vogésite", note: "amphibole + feldspath potassique." },
       { nom: "spessartite", note: "amphibole + plagioclase." },
+      { nom: "camptonite", note: "lamprophyre alcalin : amphibole riche en titane (kaersutite) et augite dans une pâte de plagioclase, souvent avec des ocelles de calcite ou d'analcime." },
+      { nom: "monchiquite", note: "lamprophyre alcalin sans feldspath : olivine, augite et amphibole dans une pâte de verre ou d'analcime ; nommé d'après la Serra de Monchique (Portugal)." }
     ],
     regions: [
       { nom: "Kersanton (rade de Brest)", lat: 48.33, lng: -4.35 },
@@ -2527,6 +2592,9 @@ const ROCHES = [
       { nom: "lherzolite", note: "le type le plus courant en France (olivine + deux pyroxènes) — l'étang de Lers, qui lui a donné son nom." },
       { nom: "harzburgite", note: "pauvre en clinopyroxène (olivine + orthopyroxène), résidu d'une fusion partielle poussée." },
       { nom: "dunite", note: "quasi mono-minérale (> 90 % olivine), verte, dense." },
+      { nom: "wehrlite", note: "olivine et clinopyroxène (augite), presque sans orthopyroxène." },
+      { nom: "webstérite à olivine", note: "pyroxénite à deux pyroxènes avec 10 à 40 % d'olivine : la transition entre péridotite et pyroxénite." },
+      { nom: "métapéridotite", note: "péridotite transformée par le métamorphisme : avec de l'eau, elle devient serpentinite (voir sa fiche) ; à sec, elle recristallise en grains aplatis d'olivine et de pyroxène." }
     ],
     regions: [
       { nom: "Étang de Lers (Ariège)", lat: 42.80, lng: 1.38 },
@@ -2596,6 +2664,8 @@ const ROCHES = [
       { nom: "brèche d'avalanche de débris", note: "l'effondrement d'un flanc entier — blocs kilométriques transportés à des dizaines de km (Cantal, ~ 7 Ma)." },
       { nom: "lahar (brèche laharique)", note: "coulée de boue volcanique indurée — les « nappes » qui emballent les vallées cantaliennes." },
       { nom: "brèche autoclastique", note: "la carapace fracturée qu'une coulée se fabrique en avançant." },
+      { nom: "pépérite", note: "roche pépéritique : brèche née quand un magma pénètre un sédiment encore gorgé d'eau : la lave se fragmente et se mêle au sédiment ; le nom vient de Limagne (Puy de Crouël, Gergovie), où le basalte a traversé les marnes et calcaires des lacs oligocènes." },
+      { nom: "métabrèche", note: "brèche volcanique recristallisée par le métamorphisme." }
     ],
     regions: [
       { nom: "Cantal (vallées de la Cère, de la Jordanne)", lat: 45.05, lng: 2.75 },
@@ -2628,6 +2698,7 @@ const ROCHES = [
       { nom: "microdiorite quartzique", note: "la plus courante — celle de Logonna-Daoulas." },
       { nom: "porphyrite", note: "le nom ancien des microdiorites porphyriques, encore lu sur les vieilles notices." },
       { nom: "micromonzodiorite", note: "la déclinaison à deux feldspaths." },
+      { nom: "microdiorite foïdifère", note: "un peu de néphéline (moins de 10 %) à la place du quartz." }
     ],
     regions: [
       { nom: "Rade de Brest (Logonna-Daoulas)", lat: 48.33, lng: -4.30 },
@@ -2659,7 +2730,7 @@ const ROCHES = [
     varietes: [
       { nom: "théralite", note: "le gabbro à néphéline franche — décrite dans les intrusions du Cantal." },
       { nom: "teschénite", note: "la variante à analcime, nommée d'après Těšín (Silésie)." },
-      { nom: "microessexite / microthéralite", note: "les faciès filoniens de bordure." },
+      { nom: "microessexite / microthéralite / microteschénite", note: "les faciès filoniens de bordure." },
     ],
     regions: [
       { nom: "Cantal (intrusions du cœur du stratovolcan)", lat: 45.08, lng: 2.72 },
@@ -2717,6 +2788,7 @@ const ROCHES = [
       { nom: "paragneiss", note: "dérivé d'un sédiment (protolithe détritique)." },
       { nom: "gneiss œillé", note: "à gros « yeux » de feldspath étirés (ex-phénocristaux)." },
       { nom: "kinzigite", note: "paragneiss de haut grade à grenat et sillimanite." },
+      { nom: "métaplutonite", note: "toute roche plutonique (granite, diorite, gabbro) transformée par le métamorphisme ; les orthogneiss en sont les plus fréquentes." }
     ],
     regions: [
       { nom: "La Hague (gneiss icartiens, ~2 Ga)", lat: 49.68, lng: -1.88 },
@@ -2747,6 +2819,7 @@ const ROCHES = [
       { nom: "micaschiste à grenat", note: "porte de gros grenats rouges poussés pendant le métamorphisme — Cévennes, Alpes." },
       { nom: "micaschiste à staurotide", note: "cristaux bruns en croix (macles) — massifs cristallins alpins." },
       { nom: "séricitoschiste", note: "variété fine à séricite dominante, presque satinée." },
+      { nom: "métapélite", note: "terme général : toute roche métamorphique issue d'une argile (pélite), de l'ardoise au gneiss alumineux ; le micaschiste en est le cas le plus courant." }
     ],
     regions: [
       { nom: "Cévennes (vallées schisteuses)", lat: 44.20, lng: 3.90 },
@@ -2856,6 +2929,7 @@ const ROCHES = [
     varietes: [
       { nom: "listvénite", note: "serpentinite carbonatée par des fluides riches en CO₂, jaunâtre, souvent porteuse de quartz et de talc." },
       { nom: "talcschiste (stéatite)", note: "serpentinite transformée en talc pur, tendre — la « pierre de savon »." },
+      { nom: "birbirite", note: "serpentinite altérée sous climat tropical en silice et oxydes de fer, qui peut contenir du platine ; nommée d'après la rivière Birbir (Éthiopie)." }
     ],
     regions: [
       { nom: "Queyras (Saint-Véran, col Agnel)", lat: 44.68, lng: 6.87 },
@@ -3057,6 +3131,7 @@ const ROCHES = [
       { nom: "prasinite", note: "schiste vert massif dérivé d'une roche basique." },
       { nom: "chloritoschiste", note: "très riche en chlorite, tendre et onctueux." },
       { nom: "ovardite", note: "prasinite albitique des Alpes." },
+      { nom: "métavolcanite", note: "toute roche volcanique (lave ou tuf) transformée par le métamorphisme ; dans le faciès schiste vert, basaltes et tufs deviennent ces roches vertes." }
     ],
     regions: [
       { nom: "Zones internes des Alpes (Vanoise, Queyras)", lat: 45.40, lng: 6.80 },
@@ -3114,6 +3189,8 @@ const ROCHES = [
     varietes: [
       { nom: "skarn à tungstène", note: "à scheelite — Costabonne, Salau (Pyrénées)." },
       { nom: "skarn à fer / à étain", note: "à magnétite ou cassitérite selon les fluides." },
+      { nom: "endoskarn / exoskarn", note: "l'exoskarn remplace le calcaire, l'endoskarn la roche magmatique au contact (plus riche en plagioclase et en pyroxène)." },
+      { nom: "grenatite", note: "roche faite presque uniquement de grenat (grossulaire, andradite), au cœur de certains skarns." }
     ],
     regions: [
       { nom: "Costabonne (Pyrénées-Orientales)", lat: 42.45, lng: 2.42 },
@@ -3144,6 +3221,8 @@ const ROCHES = [
     varietes: [
       { nom: "protomylonite", note: "faiblement mylonitisée (porphyroclastes abondants)." },
       { nom: "ultramylonite", note: "broyage extrême, presque tout en matrice fine." },
+      { nom: "blastomylonite", note: "mylonite dont les grains ont recristallisé et grossi après la déformation, si bien que la structure laminée s'efface." },
+      { nom: "phyllonite", note: "mylonite très riche en micas, à l'éclat soyeux d'un phyllade : la déformation a changé les feldspaths en mica blanc." }
     ],
     regions: [
       { nom: "Cisaillement sud-armoricain (Bretagne)", lat: 47.90, lng: -3.00 },
@@ -3174,6 +3253,8 @@ const ROCHES = [
     varietes: [
       { nom: "brèche de faille", note: "à gros fragments, moins broyée." },
       { nom: "gouge de faille", note: "farine de roche non cohésive (argileuse)." },
+      { nom: "protocataclasite", note: "cataclasite peu broyée : la matrice fine fait moins de la moitié de la roche." },
+      { nom: "ultracataclasite", note: "cataclasite presque entièrement réduite en poudre (plus de 90 % de matrice), noire et compacte ; à ne pas confondre avec une pseudotachylite, qui a fondu." }
     ],
     ages: [{ de: 340, a: 0, label: "Le long des failles (de l'Hercynien à l'actuel)" }],
     alteration: {

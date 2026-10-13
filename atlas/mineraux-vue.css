@@ -1,0 +1,58 @@
+/* ---------- Vue d'ensemble des minéraux : un panneau par groupe, une vignette par minéral (11/10/2026, mineraux-vue.js) ---------- */
+/* les panneaux reprennent les classes des argiles (argv-*) ; ici, ce qui leur est propre */
+
+/* les trois classements, en haut de la page (mêmes boutons que le menu) */
+.minv-vues { display: flex; flex-wrap: wrap; gap: 0; margin: 4px 0 10px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; width: fit-content; max-width: 100%; }
+.minv-vues button {
+  font: inherit; font-size: 13.5px; padding: 7px 14px; border: 0; border-right: 1px solid var(--border);
+  background: var(--surface); color: var(--ink2); cursor: pointer;
+}
+.minv-vues button:last-child { border-right: 0; }
+.minv-vues button:hover { color: var(--ink); background: var(--grid); }
+.minv-vues button[aria-pressed="true"] { background: var(--ink); color: var(--page); font-weight: 600; }
+.minv-cls > h2 .num { margin-right: 8px; }
+.minv-section { margin: 14px 0 2px; font-size: 13px; font-weight: 700; color: var(--ink2); text-transform: uppercase; letter-spacing: .04em; }
+.minv-grp .min-sf { margin: 12px 0 6px; }
+.minv-grp .min-sf:first-of-type { margin-top: 10px; }
+.minv-ancre > .minv-grp + .minv-grp, .minv-cls > .minv-grp + .minv-grp { margin-top: 12px; }
+.min-plus.card { margin-top: 12px; }
+.min-plus.card > summary { cursor: pointer; font-weight: 600; }
+
+/* vignettes */
+.minv-grille { display: grid; gap: 10px; margin-top: 10px; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); }
+.minv-carte {
+  display: flex; flex-direction: column; align-items: stretch; gap: 3px; padding: 0 0 7px; min-width: 0;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--ink);
+  font: inherit; text-align: left; cursor: pointer; overflow: hidden;
+}
+.minv-carte:hover { border-color: var(--ink2); }
+.minv-carte:hover .minv-img img { transform: scale(1.04); }
+.minv-carte:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.minv-img {
+  display: block; aspect-ratio: 1 / 1; overflow: hidden; position: relative;
+  background: var(--sw, var(--grid)); border-bottom: 1px solid var(--border);
+}
+/* tant que la photo n'est pas là : la couleur du minéral, voilée */
+.minv-img:not(.minv-fait)::after { content: ""; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255, 255, 255, .28), rgba(0, 0, 0, .08)); }
+.minv-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .25s ease; }
+/* sans photo : la forme calculée du cristal sur fond blanc (comme sur la fiche) */
+.minv-img.minv-cx { background: #fff; }
+.minv-img.minv-cx svg { width: 100%; height: 100%; display: block; }
+.minv-img.minv-cx .cx-lab { display: none; }
+.minv-carte { position: relative; }
+.minv-code {
+  position: absolute; top: 6px; left: 6px; padding: 1px 6px; border-radius: 6px; font-size: 11px; font-weight: 700;
+  font-variant-numeric: tabular-nums; background: rgba(20, 19, 15, .72); color: #fff; pointer-events: none;
+}
+.minv-nom { padding: 0 8px; font-size: 13px; font-weight: 600; line-height: 1.25; overflow-wrap: anywhere; }
+.minv-nom .min-tag { display: inline-block; margin: 2px 0 0 4px; padding: 0 6px; border-radius: 999px; font-size: 10.5px; font-weight: 600; background: var(--grid); color: var(--ink2); }
+.minv-f { padding: 0 8px; font-size: 11.5px; color: var(--muted); line-height: 1.25; overflow-wrap: anywhere; }
+.minv-carte.flash { animation: flash-min 2.4s ease; }
+
+@media (max-width: 640px) {
+  .minv-grille { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+  .minv-vues button { padding: 6px 10px; font-size: 12.5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .minv-img img { transition: none; }
+}

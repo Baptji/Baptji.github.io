@@ -1,0 +1,68 @@
+/* roches-surface.css — vue « Les roches par surface en France » (12/10/2026) */
+.rs-vues { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.rs-vues .chip { cursor: pointer; }
+
+/* part de chaque famille */
+.rs-familles { display: flex; height: 22px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); margin: 6px 0 10px; }
+.rs-seg { display: block; height: 100%; }
+.rs-seg + .rs-seg { border-left: 2px solid var(--surface); }
+.rs-seg-reste, .rs-reste-i {
+  background: repeating-linear-gradient(135deg, var(--grid) 0 4px, var(--surface) 4px 8px);
+}
+.rs-reste-i { border: 1px solid var(--baseline); }
+
+/* classement */
+.rs-tr {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px;
+  margin: 22px 0 6px; padding-bottom: 4px; border-bottom: 1px solid var(--grid); font-size: 15px;
+}
+.rs-tr:first-child { margin-top: 4px; }
+.rs-tr span { font-size: 12.5px; font-weight: 400; color: var(--muted); }
+.rs-ligne { border-radius: 7px; }
+.rs-ligne > summary {
+  display: grid; grid-template-columns: 30px 12px minmax(120px, 230px) minmax(0, 1fr) 96px;
+  align-items: center; gap: 10px; padding: 4px 6px; cursor: pointer; list-style: none; border-radius: 7px;
+}
+.rs-ligne > summary::-webkit-details-marker { display: none; }
+.rs-ligne > summary:hover, .rs-ligne[open] > summary { background: var(--wash); }
+.rs-n { color: var(--muted); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+.rs-ligne .sw { width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--border); }
+.rs-nom { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rs-barre { height: 12px; background: var(--grid); border-radius: 3px; overflow: hidden; }
+.rs-barre i { display: block; height: 100%; min-width: 2px; background: var(--c); border-radius: 3px; }
+.rs-val { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.rs-val b { font-size: 13.5px; }
+.rs-val small { font-size: 11px; color: var(--muted); }
+.rs-detail { margin: 2px 0 10px 52px; padding: 8px 12px; border-left: 3px solid var(--c); font-size: 13px; color: var(--ink2); }
+.rs-detail p { margin: 0 0 6px; }
+.rs-detail ul, .rs-ex { margin: 0 0 8px; padding-left: 18px; }
+.rs-detail li span, .rs-ex li span { color: var(--muted); white-space: nowrap; margin-left: 4px; }
+.rs-fiche { font-weight: 600; }
+
+.rs-abs { display: flex; flex-wrap: wrap; gap: 6px; }
+.rs-abs-i {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border: 1px solid var(--border);
+  border-radius: 999px; color: var(--ink); text-decoration: none; font-size: 13px; background: var(--surface);
+}
+.rs-abs-i:hover { background: var(--wash); }
+.rs-abs-i .sw { width: 10px; height: 10px; border-radius: 3px; border: 1px solid var(--border); }
+.rs-abs-i small { color: var(--muted); font-size: 11px; }
+
+.rs-plus > summary { cursor: pointer; }
+.rs-plus > summary h2 { display: inline; }
+.rs-plus p { max-width: 82ch; }
+table.rs-reste td:first-child { white-space: normal; }
+
+/* menu de gauche en vue « surface » */
+.rs-menu .rs-tranche { margin-top: 6px; }
+.rs-menu .rs-tranche.chemin { background: var(--wash); }
+.rs-menu .rs-roche { display: flex; align-items: center; gap: 8px; width: 100%; }
+.rs-menu .rs-roche > span:nth-child(2) { flex: 1; min-width: 0; }
+.rs-pct { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rs-roche.on .rs-pct { color: inherit; opacity: .75; }
+
+@media (max-width: 640px) {
+  .rs-ligne > summary { grid-template-columns: 22px 10px minmax(0, 1fr) 70px; gap: 7px; }
+  .rs-barre { grid-column: 3 / 5; grid-row: 2; height: 8px; }
+  .rs-detail { margin-left: 14px; }
+}

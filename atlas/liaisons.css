@@ -1,0 +1,181 @@
+/* ---------- Liaisons du cristal (09/10/2026, liaisons.js) : « Au plus près du cristal » + « Énergie de liaison et cinétique » ---------- */
+/* Couleurs des atomes = celles de la vue 3D (structures3d.js), adoucies ; thème sombre suivi comme le reste de l'atlas. */
+.lp {
+  --lp-mg: #f08127; --lp-c: #5e4636; --lp-o: #e0473a; --lp-ow: #3a8bd8; --lp-h: #ffffff; --lp-hline: #8d8a83;
+  --lp-hplus: #1f8f5b; --lp-cl: #b9b6ad; --lp-ca: #4f8fbf; --lp-blanc: #ffffff;
+  --lp-eau: #e7f0f8; --lp-acide: #eef3df; --lp-cristal: #efe8da; --lp-cristal-trait: #d6cab3;
+  --lp-lien: #9a6c4c; --lp-lien-eau: #5d9fdc;
+}
+@media (prefers-color-scheme: dark) {
+  .lp {
+    --lp-mg: #f5923f; --lp-c: #b8987f; --lp-o: #ef6455; --lp-ow: #57a3ec; --lp-h: #ececec; --lp-hline: #77746d;
+    --lp-hplus: #36b97c; --lp-cl: #6d6a63; --lp-ca: #6fa9d6;
+    --lp-eau: #132130; --lp-acide: #1b2416; --lp-cristal: #29241d; --lp-cristal-trait: #40382c;
+    --lp-lien: #c19470; --lp-lien-eau: #4f86bd;
+  }
+}
+.lp { display: grid; gap: 14px; }
+.lp h2 { margin: 0; }
+.lp h3 { margin: 0; font-size: 15px; }
+.lp p { margin: 0; }
+.lp-tete { display: flex; justify-content: space-between; align-items: baseline; gap: 10px 16px; flex-wrap: wrap; }
+.lp-choix { display: flex; gap: 6px; flex-wrap: wrap; }
+.lp-choix button, .lp-btn {
+  font: inherit; font-size: 13px; border: 1px solid var(--baseline); background: none; color: var(--ink2);
+  border-radius: 999px; padding: 4px 12px; cursor: pointer;
+}
+.lp-choix button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.lp-btn:disabled { opacity: .4; cursor: default; }
+.lp button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.lp-num { font-variant-numeric: tabular-nums; }
+.lp svg { display: block; width: 100%; height: auto; }
+.lp svg text { font-family: inherit; }
+
+/* ---------- la scène ---------- */
+.lp-scene { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+.lp-horloge {
+  display: flex; align-items: baseline; gap: 4px 10px; flex-wrap: wrap; padding: 7px 12px;
+  border-bottom: 1px solid var(--border); background: var(--surface); font-size: 13px; color: var(--ink2);
+}
+.lp-horloge b { font-size: 17px; color: var(--ink); font-variant-numeric: tabular-nums; min-width: 6.5em; }
+.lp-h-lab::before { content: "⏱ "; }
+.lp-h-sous { color: var(--muted); }
+.lp-h-cond { margin-left: auto; color: var(--muted); }
+.lp-f-eau { fill: var(--lp-eau); }
+.lp-f-acide { fill: var(--lp-acide); }
+.lp-f-cristal { fill: var(--lp-cristal); stroke: var(--lp-cristal-trait); stroke-width: 1.5; }
+.lp-a-mg { fill: var(--lp-mg); }
+.lp-a-c { fill: var(--lp-c); }
+.lp-a-o { fill: var(--lp-o); }
+.lp-a-ow { fill: var(--lp-ow); }
+.lp-a-h { fill: var(--lp-h); stroke: var(--lp-hline); stroke-width: 1; }
+.lp-a-hp { fill: var(--lp-hplus); }
+.lp-a-cl { fill: var(--lp-cl); }
+.lp-signe { fill: var(--lp-blanc); font-size: 10px; font-weight: 700; }
+.lp-l-mo { stroke: var(--lp-lien); }
+.lp-l-mw { stroke: var(--lp-lien-eau); }
+.lp-l-co, .lp-l-c2 { stroke: var(--lp-c); }
+.lp-l-oh { stroke: var(--lp-hline); }
+.lp-halo { fill: none; stroke: var(--ink2); stroke-width: 1.4; stroke-dasharray: 4 4; }
+.lp-bulle { fill: var(--surface); fill-opacity: .35; stroke: var(--lp-ow); stroke-width: 2; }
+.lp-t-lab { fill: var(--ink); font-size: 15px; font-weight: 600; }
+.lp-t-jauge { fill: var(--ink2); font-size: 13px; }
+.lp-j-vide { fill: none; stroke: var(--muted); stroke-width: 1.4; stroke-dasharray: 2.5 2.5; }
+.lp-decor { opacity: .45; }
+
+.lp-pas { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.lp-points { display: flex; gap: 14px; padding: 0 6px; }
+.lp-points button {
+  position: relative; width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--baseline); background: none;
+  color: var(--ink2); font: 600 12px/1 inherit; font-family: inherit; cursor: pointer; padding: 0;
+}
+.lp-points button[aria-current="step"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+/* anneau de chargement autour du rond de l'étape en cours : --p de 0 à 1 (temps écoulé avant l'étape suivante) */
+.lp-points button[aria-current="step"]::before,
+.lp-points button[aria-current="step"]::after {
+  content: ""; position: absolute; inset: -6px; border-radius: 50%; pointer-events: none;
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2.5px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2.5px));
+}
+.lp-points button[aria-current="step"]::before { background: var(--grid); }
+.lp-points button[aria-current="step"]::after { background: conic-gradient(var(--accent) calc(var(--p, 0) * 1turn), transparent 0); }
+.lp-esp { flex: 1; }
+.lp-etape { display: grid; gap: 4px; min-height: 5.2em; }
+.lp-etape .lp-et-titre { font-weight: 600; }
+.lp-etape .lp-et-texte { color: var(--ink2); max-width: 75ch; }
+.lp-legende { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; color: var(--ink2); padding-top: 10px; border-top: 1px solid var(--grid); }
+.lp-legende span { display: inline-flex; align-items: center; gap: 6px; }
+.lp-legende svg { width: auto; height: 18px; display: inline; }
+
+/* ---------- énergie de liaison et cinétique ---------- */
+.lp-duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.lp-liaison { border: 1px solid var(--grid); border-radius: 10px; padding: 12px 14px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.lp-liaison svg { max-width: 240px; height: 64px; width: auto; }
+.lp-liaison ul { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; font-size: 14px; color: var(--ink2); }
+.lp-liaison h3 small { font-weight: 400; color: var(--muted); }
+.lp-graph { display: grid; gap: 10px; }
+.lp-graph-tete { display: flex; justify-content: space-between; align-items: baseline; gap: 8px 14px; flex-wrap: wrap; }
+.lp-rangs { display: grid; gap: 8px; }
+.lp-rang { display: grid; grid-template-columns: 150px minmax(0, 1fr) 128px; gap: 10px; align-items: center; font-size: 13.5px; }
+.lp-piste { position: relative; height: 16px; background: var(--grid); border-radius: 4px; }
+.lp-piste i { position: absolute; top: 0; bottom: 0; border-radius: 4px; transition: width .6s ease; }
+.lp-piste .lp-b-co { background: repeating-linear-gradient(135deg, var(--lp-c) 0 5px, transparent 5px 9px); border: 1.5px solid var(--lp-c); }
+.lp-piste .lp-b-mg { background: var(--lp-mg); left: 0; }
+.lp-axe { position: relative; height: 18px; font-size: 11.5px; color: var(--muted); }
+.lp-axe span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.lp-axe span:first-child { transform: none; }
+.lp-axe span:last-child { transform: translateX(-100%); }
+.lp-axe-unite { font-size: 11.5px; color: var(--muted); align-self: start; }
+.lp-explic { font-size: 13.5px; color: var(--ink2); max-width: 90ch; }
+.lp-temps { display: grid; gap: 4px; }
+.lp-temps .lp-t-titre { font-size: 13.5px; }
+.lp-fois { color: var(--muted); }
+.lp-t-piste { position: relative; height: 70px; }
+.lp-t-piste .lp-ligne { position: absolute; left: 0; right: 0; top: 34px; height: 2px; background: var(--grid); }
+.lp-t-piste .lp-ecart { position: absolute; top: 32px; height: 6px; border-radius: 3px; background: var(--baseline); opacity: .55; }
+.lp-t-piste .lp-plage { position: absolute; top: 29px; height: 12px; border-radius: 6px; opacity: .35; min-width: 8px; }
+.lp-t-piste .lp-pt { position: absolute; top: 28px; width: 14px; height: 14px; border-radius: 50%; transform: translateX(-50%); border: 2px solid var(--surface); }
+.lp-t-piste .lp-ca { background: var(--lp-ca); }
+.lp-t-piste .lp-mg { background: var(--lp-mg); }
+.lp-t-piste .lp-et { position: absolute; font-size: 12.5px; white-space: nowrap; color: var(--ink); }
+.lp-t-piste .lp-et.lp-haut { top: 4px; }
+.lp-t-piste .lp-et.lp-bas { top: 46px; }
+.lp-t-axe { position: relative; height: 22px; font-size: 11.5px; color: var(--muted); border-top: 1px solid var(--baseline); }
+.lp-t-axe span { position: absolute; top: 4px; padding-left: 3px; white-space: nowrap; }
+.lp-t-axe span::before { content: ""; position: absolute; left: 0; top: -4px; height: 14px; border-left: 1px solid var(--baseline); }
+.lp-sources summary { cursor: pointer; font-size: 13.5px; color: var(--ink2); }
+.lp-sources ol { margin: 8px 0 0; padding-left: 1.2em; display: grid; gap: 5px; font-size: 13px; color: var(--ink2); }
+
+@media (max-width: 620px) {
+  .lp-duo { grid-template-columns: minmax(0, 1fr); }
+  .lp-rang { grid-template-columns: minmax(0, 1fr) auto; }
+  .lp-rang .lp-piste { grid-column: 1 / -1; grid-row: 2; }
+  .lp-rang-axe > span:first-child { display: none; }
+  .lp-rang-axe .lp-axe-unite { grid-column: 1 / -1; grid-row: 2; justify-self: end; }
+  .lp-rang-axe .lp-axe { grid-column: 1 / -1; }
+  .lp-h-cond { margin-left: 0; flex-basis: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .lp-piste i { transition: none; } }
+.lp [hidden] { display: none !important; }
+
+/* ---------- moteur générique (09/10/2026, étape 1) : couleurs par élément, liaisons par nature, minuteur grisé ---------- */
+/* Couleurs = palette VESTA de la 3D (repli dans liaisons.js), adoucies ici pour les éléments courants ; thème sombre suivi. */
+.lp {
+  --lp-e-Mg: var(--lp-mg); --lp-e-C: var(--lp-c); --lp-e-O: var(--lp-o); --lp-e-Ca: var(--lp-ca); --lp-e-H: var(--lp-h);
+  --lp-e-Cl: var(--lp-cl);
+  --lp-e-Zr: #b8956a;   /* le vert vif du zirconium (palette VESTA) se confondait avec les H⁺ */
+}
+.lp-clair { stroke: var(--lp-hline); stroke-width: 1; }
+.lp-l-ion { stroke: var(--lp-lien); }
+.lp-l-eau { stroke: var(--lp-lien-eau); }
+.lp-l-cov { stroke: var(--lp-c); }
+.lp-j-o { fill: var(--lp-e-O); }
+.lp-j-ow { fill: var(--lp-ow); }
+.lp-h-grise b { color: var(--muted); font-weight: 500; font-size: 15px; }
+.lp-t-piste .lp-plage, .lp-t-piste .lp-pt { background: var(--muted); }
+@media (max-width: 620px) { .lp-t-axe .lp-t-sec { display: none; } }
+.lp-t-axe .lp-t-droite { transform: translateX(-100%); padding-left: 0; padding-right: 3px; }
+.lp-t-axe .lp-t-droite::before { left: auto; right: 0; }
+
+/* relief (10/10/2026) : ions derrière le plan du dessin (plus petits, pâles) et devant (contour tireté, presque transparents) */
+.lp-at.lp-arriere { opacity: .42; }
+.lp-f-dessus { fill: var(--lp-cristal); stroke: var(--lp-cristal-trait); stroke-width: 1.2; filter: brightness(1.06); }
+.lp-at.lp-avant { fill-opacity: .16; stroke: var(--lp-lien); stroke-width: 1.3; stroke-dasharray: 3 2.4; }
+.lp-l-prof { stroke: var(--lp-lien); opacity: .35; }
+.lp-couche-arriere { opacity: .38; }
+
+/* dissolution réductrice des oxydes de fer (11/10/2026) : sol engorgé (fond gris-bleu du gley), électron, bactérie */
+.lp { --lp-reduit: #e3e7ea; --lp-elec: #7d4fc4; --lp-bact: #d8cbe6; --lp-bact-trait: #8d73b3; }
+@media (prefers-color-scheme: dark) { .lp { --lp-reduit: #1a1f25; --lp-elec: #a57ee8; --lp-bact: #3a3048; --lp-bact-trait: #9c86c2; } }
+.lp-f-reduit { fill: var(--lp-reduit); }
+.lp-a-elec { fill: var(--lp-elec); }
+.lp-bact { fill: var(--lp-bact); stroke: var(--lp-bact-trait); stroke-width: 1.5; }
+.lp-bact-in { fill: var(--lp-bact-trait); opacity: .35; }
+.lp-bact-fl { fill: none; stroke: var(--lp-bact-trait); stroke-width: 1.4; }
+
+/* polyphénol (réducteur des oxydes de manganèse, 11/10/2026) */
+.lp { --lp-cycle: #6f8f3e; }
+@media (prefers-color-scheme: dark) { .lp { --lp-cycle: #9cc062; } }
+.lp-cycle { fill: none; stroke: var(--lp-cycle); stroke-width: 3; stroke-linejoin: round; }
+.lp-cycle-in { fill: none; stroke: var(--lp-cycle); stroke-width: 1.2; opacity: .6; }
+.lp-l-cyc { stroke: var(--lp-cycle); stroke-linecap: round; }

@@ -398,10 +398,12 @@
       losange: (x, y) => poly([[x, y - 5.2], [x + 4.6, y], [x, y + 5.2], [x - 4.6, y]], "", { class: "pq-g" }),
     };
     let glyphes = "", noms = "";
+    const rochesPx = {};
     for (const rc of ph.roches) {
       const ch = chemins[rc.chemin];
       let [x, y] = rc.p ? Pd(rc.p[0], rc.p[1]) : posU(ch, rochesU[rc.id]) || ch.px[0];
       if (rc.dp) { x += rc.dp[0]; y += rc.dp[1]; }
+      rochesPx[rc.id] = [x, y];
       const f = (FORMES[rc.forme] || FORMES.rond)(x, y).replace(' fill=""', "");
       // trait discret entre le chemin et une roche posée à côté (p)
       let trait = "";
@@ -418,6 +420,8 @@
     const LP = ph.lecturePos || [X0 + 7, Y0 + 13, "start"];
     s += txt(LP[0], LP[1], "", { cls: "pq-temp", a: LP[2] }) + txt(LP[0], LP[1] + 11, "", { petit: true, cls: "pq-reste", a: LP[2] });
     s += noms;
+    // bulle de survol (facultative, `ph.survol(rc)` → { lignes, marques [[x, y]…] en unités des axes }), au-dessus de tout
+    if (ph.survol) s += `<g class="pq-bulle" pointer-events="none"></g>`;
 
     return {
       H: HH, svg: s, debut: vde, fin: va, u: U, v: V, duree: ph.duree || 10,
@@ -431,8 +435,30 @@
         svg.querySelectorAll("[data-r]").forEach((e) => { groupes[e.dataset.r] = e; });
         svg.querySelectorAll("[data-nom]").forEach((e) => { etiquettes[e.dataset.nom] = e; });
         const chDe = {}; ph.roches.forEach((rc) => { chDe[rc.id] = rc.chemin; });
+        const bulle = $(".pq-bulle");
+        let bulleDe = null;
+        // la bulle n'est refaite que quand la roche survolée change (mesure du texte comprise)
+        function majBulle(id) {
+          if (!bulle || id === bulleDe) return;
+          bulleDe = id;
+          const rc = id && ph.roches.find((r) => r.id === id), info = rc && ph.survol(rc);
+          if (!info) { bulle.innerHTML = ""; bulleDe = null; return; }
+          let m = "";
+          for (const [x, y] of info.marques || []) { const [a, b] = Pd(x, y); m += line(a - 6, b, a + 6, b, "#1f2724", 1.8); }
+          const L = info.lignes;
+          bulle.innerHTML = m + `<rect class="pq-bulle-fond" rx="4"/>` + L.map((l, i) => txt(0, 0, l, { petit: true, cls: i ? "pq-bulle-t" : "pq-bulle-t pq-bulle-titre" })).join("");
+          const ts = [...bulle.querySelectorAll(".pq-bulle-t")];
+          const w = Math.max(...ts.map((t) => t.getComputedTextLength())) + 12, h = 11 * L.length + 7;
+          const [gx, gy] = rochesPx[id];
+          const bx = gx + 12 + w <= X1 ? gx + 12 : gx - 12 - w;
+          const by = clamp(gy - h / 2, Y0 + 2, Y1 - h - 2);
+          const fond = bulle.querySelector("rect");
+          fond.setAttribute("x", r1(bx)); fond.setAttribute("y", r1(by)); fond.setAttribute("width", r1(w)); fond.setAttribute("height", r1(h));
+          ts.forEach((t, i) => { t.setAttribute("x", r1(bx + 6)); t.setAttribute("y", r1(by + 11 + 11 * i)); });
+        }
         return {
           dessiner(v, ui) {
+            majBulle(ui.survol);
             const u = U(v), up = rochesU[ui.page], chP = chemins[chDe[ui.page]];
             for (const [k, ch] of Object.entries(chemins)) {
               const estP = ch === chP;
@@ -461,6 +487,7 @@
               let o = 0;
               if ((page && passe) || choix || rc.id === ui.survol) o = 1;
               else if (Math.abs(rochesU[rc.id] - recent) < 1e-9) o = age < 0.7 ? 0.85 : 0.85 * (1 - (age - 0.7) / 0.4);
+              if (bulleDe === rc.id) o = 0;     // la bulle porte déjà le nom
               const t = etiquettes[rc.id];
               t.setAttribute("opacity", r1(clamp(o) * 100) / 100);
               t.classList.toggle("pq-nom-page", page); t.classList.toggle("pq-nom-choix", choix);
@@ -497,7 +524,9 @@
     const roches = {}; ph.roches.forEach((rc) => { roches[rc.id] = rc; });
     el.innerHTML = `
       <div class="pq-scene" style="aspect-ratio:${W} / ${sc.H}"><svg viewBox="0 0 ${W} ${sc.H}" role="group" aria-label="${ph.titre}">${sc.svg}</svg></div>
-      <p class="pq-legende">${insecable(ph.mesure)}<br>${ph.legende}</p>
+      <details class="pq-note"><summary>Comment lire ce graphique</summary>
+        ${ph.commentLire ? `<p class="pq-legende">${insecable(ph.commentLire)}</p>` : ""}
+        <p class="pq-legende">${insecable(ph.mesure)}<br>${ph.legende}</p></details>
       <div class="pq-info"><span class="pq-pastille"></span><p class="pq-texte"></p><a class="pq-lien" hidden></a>
         <button type="button" class="fa-lecture pq-lecture"></button></div>`;
     const svg = el.querySelector("svg"), vue = sc.brancher(svg);

@@ -6,10 +6,14 @@ cd "${0:A:h}"
 LEGER="$HOME/Programmes/atlas-geologique/dist/Atlas géologique (léger)"
 [[ -f "$LEGER/index.html" ]] || { echo "Édition légère introuvable : $LEGER"; exit 1; }
 grep -q '"legere"' "$LEGER/edition.js" || { echo "edition.js n'est pas en édition légère : arrêt"; exit 1; }
+# Couche personnelle (lames minces sous licence ND) : jamais en ligne
+grep -q 'ATLAS_PERSO = true' "$LEGER/edition.js" && { echo "edition.js a ATLAS_PERSO = true : arrêt"; exit 1; }
+[[ -e "$LEGER/perso" ]] && { echo "Le dossier perso/ est dans l'édition légère : arrêt"; exit 1; }
 # Fichiers du site seulement : pas de lanceurs Mac/Windows, pas de LISEZ-MOI, pas de croquis
 rsync -a --delete \
   --exclude '*.app' --exclude 'Windows' --exclude '*.bat' --exclude 'LISEZ-MOI.txt' \
   --exclude 'croquis-*' --exclude '* 3' --exclude '.DS_Store' \
+  --exclude 'perso' --exclude 'sources' --exclude 'SOURCES.md' \
   "$LEGER/" atlas/
 git add -A
 if git diff --cached --quiet; then echo "Rien de nouveau à publier."; exit 0; fi

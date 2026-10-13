@@ -284,18 +284,26 @@
   const vErosion = (dmm) => { const d = dmm / 1000, h = 1; return 100 * Math.pow(h / d, 0.14) * Math.sqrt(17.6 * 1.65 * d + 6.05e-7 * (10 + h) / Math.pow(d, 0.72)); };
   const vChute = (dmm) => { const d = dmm / 1000, R = 1.65, g = 9.81, nu = 1e-6; return 100 * R * g * d * d / (18 * nu + Math.sqrt(0.75 * R * g * d * d * d)); };
   const vDepot = (d) => Math.min(vChute(d), vErosion(d) * 0.98);
-  const grain = (d) => ({ pts: [[d, 300, 300], [d, vDepot(d), vDepot(d)]] });
+  const grain = (d) => ({ d, pts: [[d, 1000, 1000], [d, vDepot(d), vDepot(d)]] });
+  // pour la bulle de survol : taille du grain et vitesses en unités parlantes (sous 0,1 mm/s : par heure)
+  const fr = (x) => Number(x.toPrecision(2)).toLocaleString("fr-FR");
+  const taille = (d) => d >= 10 ? `${fr(d / 10)} cm` : d >= 0.1 ? `${fr(d)} mm` : `${fr(d * 1000)} µm`;
+  const vitesse = (v) => v >= 100 ? `${fr(v / 100)} m/s` : v >= 1 ? `${fr(v)} cm/s` : v >= 0.01 ? `${fr(v * 10)} mm/s`
+    : v * 36 >= 1 ? `${fr(v * 36)} m par heure` : `${fr(v * 3600)} cm par heure`;
   PHS.courant = {
     scene: "diagramme",
     titre: "Un courant d'eau trie les grains : plusieurs roches possibles",
     intro: "Une rivière en crue emporte des grains de toutes tailles. Quand elle ralentit, elle lâche d'abord les plus gros, puis les sables, et ne dépose les limons et les argiles qu'en eau presque immobile. Chaque endroit reçoit donc des grains d'une taille, et donne une roche différente.",
     mesure: "Diagramme de Hjulström (1935) recalculé comme dans « Conditions de formation » : mise en mouvement d'un grain dans 1 m d'eau (Zhang 1961) ; il se dépose quand le courant tombe sous sa vitesse de chute (Ferguson et Church 2004).",
     legende: `<span class="pq-sym">●</span> le grain se dépose : la roche qu'il forme · en pointillé : une variante, expliquée dans le texte de la roche.`,
+    // le graphique se lit de haut en bas, pas de gauche à droite (12/10/2026 : « quand le courant diminue ça emporte les
+    // conglomérats ? ») ; l'axe monte à 10 m/s pour que la courbe d'érosion, en U, ne soit plus coupée en haut
+    commentLire: "Chaque grain se lit sur une verticale : on part du haut, où le courant est fort, et on descend à mesure qu'il ralentit. Au-dessus de la courbe du haut (érosion), le courant arrache le grain du fond ; entre les deux courbes (transport), il ne l'arrache plus mais le porte encore ; sous la courbe du bas (dépôt), le grain tombe et reste. Le point rouge suit le grain de cette roche. La courbe du haut ne raconte pas une histoire de gauche à droite : elle donne seulement le courant qu'il faut pour arracher chaque taille de grain. Il est le plus faible pour un sable fin (environ 30 cm/s) ; il en faut plus pour un galet, parce qu'il est lourd (1,5 m/s pour 3 cm), et aussi pour une argile, parce que ses grains collent entre eux (1,8 m/s).",
     axes: {
       x: { min: 0.001, max: 300, type: "log", ticks: [[0.001, "0,001"], [0.01, "0,01"], [0.1, "0,1"], [1, "1"], [10, "10"], [100, "100"]], titre: "taille du grain (mm, échelle logarithmique)" },
-      y: { min: 0.0001, max: 300, type: "log", ticks: [[0.001, "0,001"], [0.1, "0,1"], [10, "10"], [300, "300"]], titre: "vitesse du courant (cm/s)" },
+      y: { min: 0.0001, max: 1000, type: "log", ticks: [[0.001, "0,001"], [0.1, "0,1"], [10, "10"], [1000, "1 000"]], titre: "vitesse du courant (cm/s)" },
     },
-    v: { de: 300, a: 0.0002, log: true },
+    v: { de: 1000, a: 0.0002, log: true },
     duree: 11,
     fond: (g) => {
       const ds = g.serie((d) => d, 0.001, 300, 60, true);
@@ -305,7 +313,8 @@
       s += g.zone([...Ld, [300, 1e-6], [0.001, 1e-6]], COUL.b);
       s += g.courbe(Le, "#6f6a60", 1) + g.courbe(Ld, "#6f6a60", 1);
       for (const [a, n] of [[0.002, "argile"], [0.063, "limon"], [2, "sable"], [64, "gravier"]]) s += g.tirets([[a, 0.0001], [a, 300]], "#cfc6b5", 0.6);
-      s += lab(g, 0.0011, 150, "érosion") + lab(g, 0.0011, 0.3, "transport") + lab(g, 30, 0.01, "dépôt", { a: "middle" });
+      // chaque mot au milieu de sa zone, entre les verticales des grains (l'ancien « érosion » tombait sous la courbe)
+      s += lab(g, 9.5, 400, "érosion", { a: "middle" }) + lab(g, 0.055, 1.5, "transport", { a: "middle" }) + lab(g, 30, 0.01, "dépôt", { a: "middle" });
       for (const [x, n] of [[0.012, "limon"], [0.36, "sable"], [12, "gravier"], [150, "galets"]]) s += lab(g, x, 0.0001, n, { a: "middle", dy: -4 });
       return s;
     },
@@ -313,10 +322,16 @@
       galets: grain(30), alluv: grain(3), sableG: grain(0.8), sable: grain(0.3), gres: grain(0.15), silt: grain(0.02), vase: grain(0.008), argile: grain(0.002),
     },
     lire: (v) => [`courant : ${v >= 1 ? lisible(v) : nb(v, v >= 0.01 ? 2 : 4)} cm/s`, "il ralentit"],
+    // survol d'une roche (12/10/2026, sa demande) : les deux seuils de son grain, marqués sur sa verticale
+    survol: (rc) => {
+      const d = PHS.courant.chemins[rc.chemin].d;
+      return { lignes: [`${rc.court} · grains de ${taille(d)}`, `arraché au-dessus de ${vitesse(vErosion(d))}`, `déposé sous ${vitesse(vDepot(d))}`],
+        marques: [[d, vErosion(d)], [d, vDepot(d)]] };
+    },
     lecturePos: [300, 150, "start"],
     roches: [
       { id: "conglomerat", chemin: "galets", at: vDepot(30), court: "conglomérat", lab: [0, 12, "middle"],
-        texte: "Les galets ne se déposent que là où le courant est encore fort, plus d'un mètre par seconde : au pied des montagnes, dans les torrents et les cônes. Cimentés, ils donnent un conglomérat, comme le poudingue de Valensole." },
+        texte: "Les galets ne se déposent que là où le courant est encore fort, près d'un mètre par seconde : au pied des montagnes, dans les torrents et les cônes. Cimentés, ils donnent un conglomérat, comme le poudingue de Valensole." },
       { id: "alluvions", chemin: "alluv", at: vDepot(3), court: "alluvions", lab: [7, 3, "start"],
         texte: "Dans le lit d'une rivière, graviers et sables grossiers se déposent quand la crue retombe ; les limons se posent plus loin, dans la plaine inondée. Encore meubles, ce sont les alluvions, comme celles de la Loire." },
       { id: "arkose", chemin: "sableG", at: vDepot(0.8), variante: true, court: "arkose", lab: [0, 12, "middle"],

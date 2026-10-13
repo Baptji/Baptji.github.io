@@ -1,0 +1,77 @@
+/* Ce qui tient un grès : son ciment (12/10/2026) — gres-ciment.js */
+.gc-page { --gc-grain: #eadcbf; --gc-grain-bord: #b9a47c; --gc-vide: #a9cfe8; --gc-sel: #6f5f9e; --gc-trait: #3d3a36; --gc-trait2: rgba(61, 58, 54, 0.45);
+  --gc-t2: #6a645c; --gc-fiche: rgba(201, 158, 106, 0.16); --gc-phys: rgba(120, 116, 108, 0.32); --gc-on: rgba(42, 120, 214, 0.08); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .gc-page { --gc-trait: #e2dcd2; --gc-trait2: rgba(226, 220, 210, 0.45); --gc-t2: #b3aca2;
+    --gc-fiche: rgba(201, 158, 106, 0.14); --gc-phys: rgba(200, 196, 188, 0.28); --gc-on: rgba(57, 135, 229, 0.14); }
+}
+:root[data-theme="dark"] .gc-page { --gc-trait: #e2dcd2; --gc-trait2: rgba(226, 220, 210, 0.45); --gc-t2: #b3aca2;
+  --gc-fiche: rgba(201, 158, 106, 0.14); --gc-phys: rgba(200, 196, 188, 0.28); --gc-on: rgba(57, 135, 229, 0.14); }
+
+.gc-fil { cursor: pointer; text-decoration: underline; }
+.gc-ref { font: 600 10.5px/1 system-ui, sans-serif; vertical-align: 3px; margin-left: 2px; padding: 1px 4px; border-radius: 4px;
+  border: 1px solid var(--baseline); background: none; color: var(--ink2, var(--ink)); cursor: pointer; }
+.gc-ref:hover { border-color: var(--ink); }
+.gc-bilan { padding: 8px 12px; border-left: 3px solid #c99e6a; background: var(--gc-fiche); border-radius: 4px; }
+.gc-pastille { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; border: 1px solid var(--gc-trait2); }
+
+/* les cinq ciments */
+.gc-cartes { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+.gc-carte { display: flex; flex-direction: column; gap: 4px; text-align: left; padding: 8px; border: 1px solid var(--border);
+  border-radius: 10px; background: var(--surface); color: var(--ink); font: inherit; cursor: pointer; }
+.gc-carte:hover { border-color: var(--baseline); }
+.gc-carte.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; background: var(--gc-on); }
+.gc-dessin { width: 100%; height: auto; border-radius: 6px; display: block; }
+.gc-carte-nom { font-weight: 700; font-size: 15px; margin-top: 2px; }
+.gc-carte-min { font-size: 12px; color: var(--muted); }
+.gc-carte-txt { font-size: 13px; line-height: 1.35; }
+.gc-carte-ex { font-size: 12px; color: var(--muted); font-style: italic; }
+
+/* réglages + graphique */
+.gc-reglages { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 6px 0 10px; }
+.gc-reg-t { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+.gc-reg-d { display: block; font-size: 12px; color: var(--muted); margin: 5px 0 0; }
+.gc-eau input[type="range"] { width: 100%; accent-color: var(--accent); }
+.gc-cadre { overflow-x: auto; }
+.gc-svg { display: block; width: 100%; min-width: 600px; max-width: 980px; height: auto; }
+.gc-svg text { fill: var(--gc-trait); }
+.gc-t2 { font-size: 13.5px; fill: var(--gc-t2) !important; }
+.gc-nom { font-size: 16px; font-weight: 700; }
+.gc-val { font-size: 14px; font-weight: 600; }
+.gc-grille { stroke: var(--grid); stroke-width: 1; }
+.gc-fiche { fill: var(--gc-fiche); }
+.gc-phys { fill: var(--gc-phys); }
+.gc-ligne { cursor: pointer; outline: none; }
+.gc-ligne-fond { fill: transparent; }
+.gc-ligne:hover .gc-ligne-fond, .gc-ligne:focus-visible .gc-ligne-fond { fill: var(--gc-fiche); }
+.gc-ligne.on .gc-ligne-fond { fill: var(--gc-on); }
+
+/* détail du calcul */
+.gc-detail { margin-top: 10px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; }
+.gc-detail h3 { margin: 2px 0 8px; font-size: 15px; }
+.gc-etapes { margin: 0 0 8px; padding-left: 20px; }
+.gc-etapes li { margin: 0 0 6px; line-height: 1.45; }
+.gc-tient { font-size: 13.5px; margin: 8px 0; }
+.gc-mes-t { margin: 8px 0 2px; font-size: 13.5px; }
+.gc-mes { margin: 0; padding-left: 20px; font-size: 13.5px; }
+
+/* classement */
+.gc-classement { display: grid; gap: 6px; margin: 4px 0 10px; }
+.gc-cl { display: grid; grid-template-columns: 150px 1fr auto; gap: 10px; align-items: center; padding: 6px 10px;
+  border: 1px solid var(--border); border-radius: 8px; }
+.gc-cl-qui { font-size: 12px; color: var(--muted); }
+.gc-sources li { margin-bottom: 6px; font-size: 13px; }
+.gc-sources li.gc-vu { animation: gc-vu 1.6s ease-out; }
+@keyframes gc-vu { from { background: rgba(255, 200, 60, 0.45); } to { background: transparent; } }
+
+/* renvoi sur la fiche du grès */
+.gc-renvoi { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; padding: 8px 12px;
+  border: 1px dashed var(--baseline); border-radius: 8px; }
+.gc-renvoi p { margin: 0; }
+
+@media (max-width: 640px) {
+  .gc-reglages { grid-template-columns: 1fr; }
+  .gc-cartes { grid-template-columns: repeat(2, 1fr); }
+  .gc-cl { grid-template-columns: 1fr; gap: 2px; }
+  .gc-renvoi { flex-direction: column; align-items: flex-start; }
+}
