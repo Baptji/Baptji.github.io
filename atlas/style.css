@@ -79,6 +79,10 @@ a { color: var(--accent); }
 }
 .chip.on { background: var(--ink); color: var(--surface); border-color: var(--ink); }
 .chip .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+/* pastilles du haut : icônes dessinées des parties (13/10/2026, icones.js) ; même hauteur avec ou sans icône */
+#mainnav .chip { display: inline-flex; align-items: center; gap: 5px; min-height: 32px; }
+#mainnav .chip:has(.nav-ic) { padding: 2px 12px 2px 6px; }
+#mainnav .nav-ic { flex: none; }
 
 /* ---------- layout ---------- */
 .layout {
@@ -204,13 +208,6 @@ a { color: var(--accent); }
 }
 .map-fs-btn:hover { border-color: var(--accent); color: var(--accent); }
 #map.is-tall { height: 75vh; }
-.geol50-status { font-size: 13px; color: var(--accent); font-style: italic; }
-.geol50-legend { background: var(--surface); color: var(--ink); padding: 7px 10px; border-radius: 8px;
-  border: 1px solid var(--border); font-size: 12.5px; line-height: 1.35; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
-.geol50-legend .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px;
-  vertical-align: -1px; border: 1px solid rgba(255,255,255,.7); }
-.geol50-legend .sw.acc { opacity: .28; border-style: dashed; border-color: currentColor; }
-.geol50-legend small { color: var(--muted); }
 .map-fallback { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--muted); padding: 20px; text-align: center; }
 
 /* ---------- charts ---------- */
@@ -494,6 +491,10 @@ table.notation td:first-child { font-family: ui-monospace, "SF Mono", Menlo, mon
   width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center;
   justify-content: center; font-size: 26px; margin-bottom: 12px;
 }
+.hub-card .hub-ic-dessin { width: 60px; height: 60px; background: none; border-radius: 0; margin: -6px 0 8px -4px; }
+/* icônes dessinées des parties (13/10/2026, icones.js) : en haut à droite des pages de chaque partie */
+.hero-icone { float: right; margin: -4px -4px 6px 18px; }
+@media (max-width: 560px) { .hero-icone { width: 64px; height: 64px; margin-left: 10px; } }
 .hub-card h2 { margin: 0 0 6px; font-size: 20px; }
 .hub-card p { margin: 0 0 12px; color: var(--ink2); font-size: 14px; }
 .hub-card .hub-go { color: var(--accent); font-weight: 600; font-size: 14px; }

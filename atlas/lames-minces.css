@@ -1,0 +1,46 @@
+/* lames-minces.css — carte « Lames minces » et visionneuse (lames-minces.js, A.5) */
+.lames-minces .lx-grille { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 10px; }
+@media (max-width: 900px) { .lames-minces .lx-grille { grid-template-columns: repeat(3, 1fr); } }
+.lx-vig { position: relative; padding: 0; border: 0; border-radius: 8px; overflow: hidden; cursor: zoom-in;
+  aspect-ratio: 4 / 3; background: var(--grid); }
+.lx-vig img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lx-vig:hover img, .lx-vig:focus-visible img { filter: brightness(1.08); }
+.lx-vig:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.lx-lum { position: absolute; left: 5px; bottom: 5px; font-size: 11px; line-height: 1; padding: 3px 6px; border-radius: 4px;
+  background: rgba(0, 0, 0, .62); color: #fff; }
+.lx-credits { margin-top: 10px; font-size: 12.5px; color: var(--muted); }
+.lx-credits summary { cursor: pointer; }
+.lx-credits ol { margin: 6px 0 4px; padding-left: 22px; }
+.lx-credits li { margin: 2px 0; }
+.lx-credits a { color: inherit; }
+.lx-credits p { margin: 6px 0 0; }
+
+/* visionneuse */
+.lx-vue { position: fixed; inset: 0; z-index: 3000; display: none; }
+.lx-vue.on { display: flex; align-items: center; justify-content: center; }
+.lx-vue-fond { position: absolute; inset: 0; background: rgba(0, 0, 0, .84); }
+.lx-vue-cadre { position: relative; margin: 0; max-width: min(1200px, 94vw); display: flex; flex-direction: column; align-items: center; }
+.lx-vue-img { position: relative; display: flex; justify-content: center; }
+.lx-vue-img img { max-width: 100%; max-height: 74vh; min-width: min(600px, 90vw); object-fit: contain; border-radius: 6px; display: block; background: #111; }
+.lx-vue-attente { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); font-size: 12px; padding: 3px 8px;
+  border-radius: 4px; background: rgba(0, 0, 0, .6); color: #ddd; white-space: nowrap; }
+.lx-vue-cadre figcaption { margin-top: 10px; color: #e8e8e4; font-size: 13.5px; max-width: 900px; text-align: center; }
+.lx-vue-cadre figcaption p { margin: 4px 0; }
+.lx-vue-leg { font-weight: 600; }
+.lx-vue-meta { color: #b9b8b1; font-size: 12.5px; }
+.lx-vue-meta a { color: #b9d4f5; }
+.lx-puce { font: inherit; font-size: 12.5px; padding: 3px 9px; border-radius: 999px; cursor: pointer;
+  background: rgba(255, 255, 255, .1); color: #fff; border: 1px solid rgba(255, 255, 255, .25); }
+.lx-vue-x { position: absolute; top: -6px; right: -6px; transform: translate(50%, -50%); width: 32px; height: 32px; border-radius: 50%;
+  border: 0; background: #fff; color: #111; font-size: 15px; cursor: pointer; z-index: 2; }
+.lx-vue-nav { position: absolute; top: 37vh; transform: translateY(-50%); width: 40px; height: 56px; border: 0; border-radius: 8px;
+  background: rgba(0, 0, 0, .45); color: #fff; font-size: 30px; line-height: 1; cursor: pointer; z-index: 2; }
+.lx-prec { left: 6px; }
+.lx-suiv { right: 6px; }
+html.lx-bloque { overflow: hidden; }
+@media (max-width: 640px) {
+  .lames-minces .lx-grille { grid-template-columns: repeat(2, 1fr); }
+  .lx-vue-x { transform: none; top: 4px; right: 4px; }
+  .lx-vue-img img { max-height: 62vh; min-width: 0; }
+  .lx-vue-nav { top: 31vh; }
+}

@@ -210,6 +210,7 @@
     const corps = vue === "role" ? vueRole() : vueStrunz(vue === "sol" ? (ids) => ids.filter((id) => MIN_SOL_IDS.has(id)) : (ids) => ids);
     return `<div class="argv minv" data-minv>
     <div class="card hero">
+      ${icone(vue === "tous" ? "geode" : "cristaux", 96, "hero-icone")}
       <h1>${vue === "tous" ? "Les minéraux" : "Les minéraux du sol"}</h1>
       <p class="sub argv-intro">La <b>brique</b> des roches : une composition chimique et une structure cristalline précises
         (le quartz, <code>SiO₂</code> ; la calcite, <code>CaCO₃</code>). Le granite, lui, est un mur : quartz + feldspath + mica.</p>

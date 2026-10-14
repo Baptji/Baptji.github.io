@@ -1,11 +1,9 @@
-/* edition.js — quelle édition de l'atlas est installée ici.
+/* edition.js — réglage propre à cette installation de l'atlas.
 
-   "complete" : le dossier data/geol50/ est présent (≈ 3 Go, carte vectorisée 1/50 000
-                de la France entière, chargée département par département à la demande).
-   "legere"   : ce dossier n'est PAS livré (≈ 1 Mo au total). Tout le reste est identique ;
-                seule la couche vectorielle 1/50 000 des fiches roche est absente
-                (le fond géologique BRGM au 1/1 000 000, lui, vient du web et marche).
+   Il n'y a plus qu'UNE édition (13/10/2026) : l'ancienne édition « complète » (≈ 3 Go, avec la
+   carte vectorisée 1/50 000 data/geol50/) est abandonnée. Les cartes des fiches roche affichent
+   le fond géologique BRGM servi par le web.
 
-   Ce fichier est réécrit automatiquement par tools/build_distrib.py à la fabrication
-   des paquets ; dans le dossier de travail il vaut toujours "complete". */
-window.ATLAS_EDITION = "legere";
+   ATLAS_PERSO : couche PERSONNELLE (perso/ : lames minces, à usage privé). Vraie seulement dans le dossier de travail ; build_distrib.py l'écrit false
+   dans les paquets, et perso/ n'y est jamais copié (ni en ligne). */
+window.ATLAS_PERSO = false;

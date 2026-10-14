@@ -44,8 +44,7 @@ function bindTips(container) {
 
 // ---------------- état & routage ----------------
 const state = { query: "", oxEl: "fer", phehEl: "fe", phehPt: { ph: 6.5, eh: 0.4 }, phehLogA: -6 };
-let map = null, geolLayer = null, geol50Layer = null;
-const GEOL50_MINZOOM = 10;
+let map = null, geolLayer = null;
 
 function go(id) { location.hash = id ? "roche/" + id : ""; }
 window.addEventListener("hashchange", route);
@@ -709,8 +708,9 @@ function renderAmorphes() {
 
 // ---------------- ACCUEIL (hub des 3 parties) ----------------
 function renderHub() {
-  // 12/10/2026 : trois parties, Géologie · Minéralogie · Pédologie. Pas d'emoji devant les noms (sa demande) :
-  // le carré de couleur attend l'icône de chaque partie, à dessiner avec lui.
+  // 12/10/2026 : trois parties, Géologie · Minéralogie · Pédologie. Pas d'emoji devant les noms (sa demande).
+  // 13/10/2026 : icônes dessinées choisies par lui (icones.js) : volcans, pyrite, bloc de sol ; d'autres de ses
+  // choix ornent le haut des pages de chaque partie (ammonite, géode, groupe de cristaux).
   const nOx = OXYDES.reduce((s, f) => s + f.especes.length, 0);
   $("#main").innerHTML = `
   <div class="card hero hub-hero">
@@ -724,7 +724,7 @@ function renderHub() {
 
   <div class="hub-grid">
     <button class="hub-card" onclick="location.hash='roches'">
-      <div class="hub-ic" style="background:var(--cat-sedimentaire)" aria-hidden="true"></div>
+      <div class="hub-ic hub-ic-dessin" aria-hidden="true">${icone("volcans2", 60)}</div>
       <p class="hub-etape">1 · Les assemblages</p>
       <h2>Géologie</h2>
       <p>Les roches, rangées selon le lexique du BRGM : magmatiques, sédimentaires, métamorphiques, météoritiques.
@@ -732,7 +732,7 @@ function renderHub() {
       <span class="hub-go">${ROCHES.length} roches →</span>
     </button>
     <button class="hub-card" onclick="location.hash='mineraux'">
-      <div class="hub-ic" style="background:var(--cat-magmatique)" aria-hidden="true"></div>
+      <div class="hub-ic hub-ic-dessin" aria-hidden="true">${icone("pyrite", 60)}</div>
       <p class="hub-etape">2 · Leurs briques</p>
       <h2>Minéralogie</h2>
       <p>Les minéraux, rangés selon la classification de Strunz : silicates, oxydes, carbonates, sulfures…
@@ -740,7 +740,7 @@ function renderHub() {
       <span class="hub-go">${Object.keys(MINERAUX).length} fiches →</span>
     </button>
     <button class="hub-card" onclick="location.hash='pedologie'">
-      <div class="hub-ic" style="background:var(--prod-argile)" aria-hidden="true"></div>
+      <div class="hub-ic hub-ic-dessin" aria-hidden="true">${icone("sol", 60)}</div>
       <p class="hub-etape">3 · Ce qu'en fait l'altération</p>
       <h2>Pédologie</h2>
       <p>Les sols : les minéraux qu'on y trouve et leur rôle, les argiles, les oxydes et hydroxydes de fer,
@@ -748,22 +748,7 @@ function renderHub() {
       <span class="hub-go">${Object.keys(ESPECES).length} argiles · ${nOx} oxydes →</span>
     </button>
   </div>
-
-  <div class="card">
-    <h2>Pour aller plus loin : comment les parties s'enchaînent</h2>
-    <p>Un <b>minéral</b> est une substance de composition et de structure cristalline définies : le quartz (SiO₂), la
-    calcite (CaCO₃), l'orthose (KAlSi₃O₈). Une <b>roche</b> est un assemblage de minéraux : un granite associe quartz,
-    feldspaths et micas. La Minéralogie classe les substances par chimie et structure ; la Géologie classe les
-    assemblages par origine.</p>
-    <p>À la surface, les minéraux formés en profondeur ou en mer ne sont plus stables. L'eau chargée de CO₂ les attaque
-    à des vitesses très différentes : l'olivine et les plagioclases calciques s'altèrent vite, le quartz presque pas
-    (série de Goldich). L'hydrolyse des feldspaths et des micas libère des ions en solution et laisse des
-    <b>argiles</b> (kaolinite, smectites, illite) ; le fer libéré s'oxyde et précipite en <b>oxydes</b> (goethite,
-    hématite), qui colorent les sols en ocre et en rouge.</p>
-    <p>Les grains résistants, surtout le quartz, deviennent des sables ; argiles et oxydes forment la fraction fine.
-    Transportés, ces produits se déposent et donnent de nouvelles roches sédimentaires ; laissés en place, ils
-    constituent le matériau des sols, dont s'occupe la Pédologie.</p>
-  </div>`;
+`;
   document.title = "Atlas géologique";
 }
 
@@ -788,6 +773,7 @@ function renderPedologie() {
   $("#main").innerHTML = `
   <div class="card hero hub-hero">
     <div class="hub-bandeau" aria-hidden="true"><i style="background:var(--cat-magmatique)"></i><i style="background:var(--prod-argile)"></i><i style="background:var(--prod-oxydes)"></i></div>
+    ${icone("sol", 96, "hero-icone")}
     <p class="hub-surtitre">Pédologie</p>
     <h1>Les sols</h1>
     <p class="sub" style="font-size:15px;max-width:75ch">Un sol est la roche transformée par l'eau, l'air et les êtres vivants.
@@ -858,6 +844,7 @@ function renderRoches() {
 
   $("#main").innerHTML = `
   <div class="card hero">
+    ${icone("ammonite", 96, "hero-icone")}
     <h1>Les roches de France</h1>
     <p class="sub" style="font-size:15px;max-width:78ch">Une <b>roche</b> est un <b>assemblage de minéraux</b> — comme un mur
     fait de plusieurs briques. On les range par <b>origine</b> : sédimentaires (déposées grain par grain), magmatiques
@@ -1360,8 +1347,6 @@ function formationHTML(rock) {
     ${window.Textures ? Textures.varietes(rock) : ""}
   </div>` : ""}
 
-  ${window.LamesPerso ? LamesPerso.carte("roche", rock.id) : ""}
-
   <div class="card form-structure">
     ${structure}
   </div>`;
@@ -1516,6 +1501,8 @@ function renderRock(rock) {
 
   ${window.Pourquoi ? Pourquoi.carte(rock) : ""}
 
+  ${window.LamesMinces ? LamesMinces.carte("roche", rock.id) : ""}
+
   <details class="card sources-roche"><summary><h2 style="display:inline">Sources</h2></summary>
   ${window.Formation ? Formation.sources(rock) : ""}
   ${window.Pourquoi ? Pourquoi.sources(rock) : ""}
@@ -1524,6 +1511,7 @@ function renderRock(rock) {
   ${rock.pedologieAuto ? `<p class="page-source"><b>Côté sols</b> — Baize D. et Girard M.-C., dir. (2009), <i>Référentiel pédologique 2008</i>, AFES, Quæ (références du Référentiel, attribuées par grand type de matériau).</p>` : ""}
   <p class="page-source"><b>Photo de la roche</b> — <a href="${rock.wikipedia}" target="_blank" rel="noopener">Wikipédia</a> / Wikimedia Commons (licences libres, auteurs sur la page de l'image).</p>
   ${rocheBrgmHTML(rock).replace('class="sub"', 'class="page-source"')}
+  <p class="page-source"><b>Données et fonds</b> — Ordres de grandeur compilés de la littérature scientifique (dénudation karstique, isotopes cosmogéniques, bilans de bassins versants, profils d'altération), à utiliser pour comparer, pas comme constantes. Fond géologique : © BRGM (carte géologique de la France au 1/1 000 000, service WMS geoservices.brgm.fr). Carte : © OpenStreetMap. Extraits : Wikipédia (CC BY-SA). Échelle des temps : Commission internationale de stratigraphie (2023).</p>
   </details></div>`;
 
   ["rate-chart", "mp-chart"].forEach((id) => { const el = $("#" + id); if (el) bindTips(el); });
@@ -1575,6 +1563,8 @@ function renderRock(rock) {
 }
 
 // ---------------- carte ----------------
+// Plus utilisés par l'appli depuis le 13/10/2026 (édition unique, sans la carte vectorisée 1/50 000) :
+// gardés car tools/surfaces_roches.py les relit ici pour calculer roches-surfaces.js (« Roches par surface »).
 // Mots-clés de lithologie (cherchés dans le champ DESCR des formations BD Charm-50) par type de
 // roche. Une roche peut porter un champ `litho50` (tableau) pour surcharger ; à défaut, son nom.
 // La correspondance est faite sur un DÉBUT DE MOT normalisé : « granite » attrape granite/granites/
@@ -1635,26 +1625,6 @@ const LITHO50_KW = {
 // Mots qui signalent une lithologie ACCESSOIRE (« …, parfois gypse et cargneules »).
 const LITHO50_ACCESS = /(parfois|localement|eventuellement|rare|trace|accessoire|sporadique|lentille|intercalation|passee)/;
 
-// Renvoie une fonction descr -> 0 (rien) · 1 (mentionnée en accessoire) · 2 (lithologie dominante).
-// Le BRGM nomme la lithologie DOMINANTE en tête de description et les accessoires ensuite : un
-// mot-clé trouvé au-delà des ~60 premiers caractères, ou précédé d'un marqueur d'accessoire, ne
-// désigne donc pas la roche principale de la formation. (Les 60 caractères laissent passer les
-// préfixes de contexte du type « Massif granitique du Champ-du-Feu sud - Granodiorite à… ».)
-function litho50Matcher(rock) {
-  const kws = (rock.litho50 || LITHO50_KW[rock.id] || [rock.nom]).map(normalize);
-  const esc = kws.map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).filter(Boolean)
-    .sort((a, b) => b.length - a.length); // longest d'abord (alternance ordonnée)
-  if (!esc.length) return () => 0;
-  const re = new RegExp("\\b(" + esc.join("|") + ")"); // début de mot (préfixe) → gère les pluriels
-  return (descr) => {
-    const d = normalize(descr || "");
-    const m = re.exec(d);
-    if (!m) return 0;
-    const avant = d.slice(Math.max(0, m.index - 25), m.index);
-    return (m.index > 60 || LITHO50_ACCESS.test(avant)) ? 1 : 2;
-  };
-}
-
 function renderMap(rock) {
   const div = $("#map");
   if (typeof L === "undefined") {
@@ -1690,7 +1660,6 @@ function renderMap(rock) {
   });
   if ($("#geol-op")) $("#geol-op").addEventListener("input", (e) => geolLayer.setOpacity(e.target.value / 100));
 
-  wireGeol50(rock, color);
   wireMapFullscreen();
 }
 
@@ -1703,89 +1672,6 @@ function wireMapFullscreen() {
     btn.textContent = on ? "⤡ Réduire" : "⤢ Agrandir";
     if (map) setTimeout(() => map.invalidateSize(), 0);
   });
-}
-
-// ---------------- vecteur 1/50 000 (LOD, chargement à la demande) ----------------
-function wireGeol50(rock, color) {
-  if (typeof GEOL50 === "undefined") return;
-  const match = litho50Matcher(rock);
-  const status = $("#geol50-status");
-  const setStatus = (t) => { if (status) status.textContent = t; };
-
-  // Édition légère : la carte vectorisée 1/50 000 (3 Go) n'est pas livrée. Le fond
-  // géologique au 1/1 000 000 ci-dessus, lui, reste disponible.
-  if (GEOL50.edition === "legere") {
-    setStatus("Version allégée : la carte vectorisée 1/50 000 (3 Go) n'est pas incluse. "
-      + "Le fond géologique BRGM au 1/1 000 000 reste affiché.");
-    return;
-  }
-  const loaded = new Set();
-
-  const nomBas = rock.nom.toLowerCase();
-  const STYLES = {
-    2: { color: "#ffffff", weight: 0.7, fillColor: color, fillOpacity: 0.72 },
-    1: { color: color, weight: 0.7, dashArray: "3,2", fillColor: color, fillOpacity: 0.2 },
-    0: { color: "#8a8f98", weight: 0.35, fillColor: "#9aa0a8", fillOpacity: 0.05 },
-  };
-  geol50Layer = L.geoJSON(null, {
-    style: (f) => STYLES[match(f.properties.d)],
-    onEachFeature: (f, lyr) => {
-      const s = match(f.properties.d);
-      const tag = s === 2 ? `<br><span style="color:${color}">◆ formation à dominante « ${nomBas} »</span>`
-        : s === 1 ? `<br><span style="color:${color}">◇ ${nomBas} présent, mais en accessoire</span>` : "";
-      lyr.bindPopup(`<b>${f.properties.n || "—"}</b><br>${f.properties.d || "—"}` + tag);
-    },
-  });
-
-  // Petite légende sur la carte (affichée avec le vecteur 1/50 000).
-  const legend = L.control({ position: "bottomright" });
-  legend.onAdd = () => {
-    const div = L.DomUtil.create("div", "geol50-legend");
-    div.innerHTML = `<span class="sw" style="background:${color}"></span>à dominante « ${nomBas} »` +
-      `<br><span class="sw acc" style="background:${color}"></span>${nomBas} en accessoire` +
-      `<br><small>fond : BD Charm-50 (BRGM) — 1/50 000 vectorisé</small>`;
-    return div;
-  };
-  let legendOn = false;
-  const showLegend = (on) => {
-    if (on && !legendOn) { legend.addTo(map); legendOn = true; }
-    else if (!on && legendOn) { legend.remove(); legendOn = false; }
-  };
-
-  function update() {
-    if (!GEOL50.indexPret) { setStatus("Préparation de la carte vectorisée 1/50 000…"); return; }
-    if (map.getZoom() < GEOL50_MINZOOM) {
-      if (map.hasLayer(geol50Layer)) map.removeLayer(geol50Layer);
-      geol50Layer.clearLayers(); loaded.clear(); showLegend(false);
-      setStatus(`↔ Zoome (niveau ${GEOL50_MINZOOM}+) pour afficher la carte vectorisée 1/50 000 et surligner les « ${rock.nom.toLowerCase()} ».`);
-      return;
-    }
-    const avail = GEOL50.deptsForBounds(map.getBounds()).filter((d) => GEOL50.index[d]);
-    if (!avail.length) {
-      showLegend(false);
-      setStatus("Vecteur 1/50 000 non disponible pour cette zone (couverture : France métropolitaine).");
-      return;
-    }
-    if (!map.hasLayer(geol50Layer)) geol50Layer.addTo(map);
-    showLegend(true);
-    avail.forEach((d) => {
-      if (loaded.has(d)) return;
-      loaded.add(d);
-      const nom = GEOL50.index[d].nom;
-      setStatus(`Chargement du 1/50 000 — ${nom}…`);
-      GEOL50.load(d, (fc) => {
-        if (!fc) { loaded.delete(d); setStatus(`Échec du chargement (${nom}).`); return; }
-        geol50Layer.addData(fc);
-        let dom = 0, acc = 0;
-        fc.features.forEach((f) => { const s = match(f.properties.d); if (s === 2) dom++; else if (s === 1) acc++; });
-        setStatus(`1/50 000 — ${nom} : ${fc.features.length} formations · ${dom} à dominante « ${nomBas} »`
-          + (acc ? ` · ${acc} où elle n'est qu'accessoire` : ""));
-      });
-    });
-  }
-  map.on("zoomend moveend", update);
-  GEOL50.quandIndexPret(update);   // l'index départemental arrive de façon asynchrone
-  update();
 }
 
 // ---------------- Wikipédia ----------------
@@ -1882,7 +1768,13 @@ function chargerVignetteMineral(id, prefix) {
   const m = MINERAUX[id];
   // « Quartz », « Calcite »… sont des pages d'homonymie sur Wikipédia FR : repli sur « … (minéral) »
   const court = m.nom.split(" (")[0].split(" —")[0].trim();
-  loadWikiThumbs([{ id, nom: m.nom, wiki: m.wiki, wikiAlts: [court + " (minéral)"] }], prefix, m.oxydeDe ? "oxydes" : "mineraux");
+  return loadWikiThumbs([{ id, nom: m.nom, wiki: m.wiki, wikiAlts: [court + " (minéral)"] }], prefix, m.oxydeDe ? "oxydes" : "mineraux")
+    .then(() => {
+      // sans photo : la première lame mince où il est le sujet (A.5, 13/10/2026)
+      const slot = document.getElementById(prefix + id), l = window.LamesMinces && LamesMinces.premiere("mineral", id);
+      if (!slot || !l || slot.querySelector("img")) return;
+      slot.innerHTML = `<a href="${l.page}" target="_blank" rel="noopener"><img src="${l.vignette}" alt="${m.nom} en lame mince" loading="lazy"></a><div class="cap">En lame mince. ${l.credit}</div>`;
+    });
 }
 
 // page d'un minéral (#mineral/<id>) — GABARIT DE FICHE MINÉRAL (F.3, 22/09/2026)
@@ -1892,12 +1784,12 @@ function renderMineralPage(id) {
   $("#main").innerHTML = `<div class="page-min">
     <div class="card fiche-min">${ficheMineralHTML(id, true)}</div>
     ${structureCristalHTML(id, true)}
-    ${window.LamesPerso ? LamesPerso.carte("mineral", id) : ""}
     ${rochesCardHTML(id)}
     ${window.AlterationSchema ? AlterationSchema.carte(id) : ""}
     ${window.Liaisons ? Liaisons.cartes(id) : ""}
     ${window.OxTransfo ? OxTransfo.carteMineral(id) : ""}
     ${plusLoinMineralHTML(id)}
+    ${window.LamesMinces ? LamesMinces.carte("mineral", id) : ""}
     ${sourcesFicheHTML(id, placeMineral(id), true)}</div>`;
   chargerVignetteMineral(id, "minpimg-");
   Structure3D.brancher($("#main"));

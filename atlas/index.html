@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="oxydes-fer-chemins.css">
   <link rel="stylesheet" href="gres-ciment.css">
   <link rel="stylesheet" href="perso.css">
+  <link rel="stylesheet" href="lames-minces.css">
 </head>
 <body>
   <header class="topbar">
@@ -25,9 +26,9 @@
     <input id="search" type="search" placeholder="Chercher (granite, quartz, montmorillonite…)">
     <nav class="chips" id="mainnav">
       <button class="chip" data-section="accueil">Accueil</button>
-      <button class="chip" data-section="geologie">Géologie</button>
-      <button class="chip" data-section="mineralogie">Minéralogie</button>
-      <button class="chip" data-section="pedologie">Pédologie</button>
+      <button class="chip" data-section="geologie"><svg class="icone nav-ic" width="26" height="26" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><use href="#ic-ammonite"/></svg>Géologie</button>
+      <button class="chip" data-section="mineralogie"><svg class="icone nav-ic" width="26" height="26" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><use href="#ic-pyrite"/></svg>Minéralogie</button>
+      <button class="chip" data-section="pedologie"><svg class="icone nav-ic" width="26" height="26" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><use href="#ic-sol"/></svg>Pédologie</button>
     </nav>
   </header>
 
@@ -49,16 +50,13 @@
     Réutilisation libre pour l'enseignement, les exposés et les conférences, en citant l'Atlas géologique (B. Decobert).
     Toute utilisation commerciale (vente, publicité, publication payante) demande une autorisation.
     Les photos gardent la licence indiquée sous chacune d'elles.</p>
-    Données : ordres de grandeur compilés de la littérature scientifique (dénudation karstique, isotopes cosmogéniques,
-    bilans de bassins versants, profils d'altération) — à utiliser pour comparer, pas comme constantes.
-    Fond géologique : © BRGM (carte géologique de la France au 1/1 000 000, service WMS geoservices.brgm.fr).
-    Carte : © OpenStreetMap. Extraits : Wikipédia (CC BY-SA). Échelle des temps : Commission internationale de stratigraphie (2023).
   </footer>
 
   <div id="tooltip"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="edition.js"></script>
+  <script src="icones.js"></script>
   <script src="data.js"></script>
   <script src="meteorites.js"></script>
   <script src="echelle-temps.js"></script>
@@ -89,7 +87,6 @@
   <script src="organiques.js"></script>
   <script src="meteorites-mineraux.js"></script>
   <script src="mineraux-sol.js"></script>
-  <script src="geol50.js"></script>
   <script src="structures3d.js"></script>
   <script src="structures/index.js"></script>
   <script src="essai-unite.js"></script>
@@ -140,6 +137,8 @@
   <script src="argiles-charge.js"></script>
   <script src="liaisons.js"></script>
   <script src="perso.js"></script>
+  <script src="lames.js"></script>
+  <script src="lames-minces.js"></script>
   <script src="liaisons-donnees.js"></script>
   <script src="liaisons-carbonates.js"></script>
   <script src="liaisons-sels-solubles.js"></script>
