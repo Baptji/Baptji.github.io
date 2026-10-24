@@ -11,12 +11,12 @@
 // Les combinaisons se cherchent par descente coordonnée (une source à la fois) depuis plusieurs
 // départs ; les 3 propositions retenues diffèrent d'au moins 50 cm pour une source.
 
-import { etat, notifier } from './etat.js';
-import { calculer, estimation as estimationOndes } from './ondes.js';
-import { nouvelleEnceinte, copie, dansSolide, dansContour } from './modele.js';
-import { emprise, dansLaPiece, contourMurs } from './plan.js';
-import { amplitude } from './calcul.js';
-import { v2, aire } from './base.js';
+import { etat, notifier } from './etat.js?v=20261024205355';
+import { calculer, estimation as estimationOndes } from './ondes.js?v=20261024205355';
+import { nouvelleEnceinte, copie, dansSolide, dansContour } from './modele.js?v=20261024205355';
+import { emprise, dansLaPiece, contourMurs } from './plan.js?v=20261024205355';
+import { amplitude } from './calcul.js?v=20261024205355';
+import { v2, aire } from './base.js?v=20261024205355';
 
 const FBAS = 25, FHAUT = 200, ECART_MIN = 0.5;
 

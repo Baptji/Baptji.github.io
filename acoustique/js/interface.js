@@ -4,17 +4,17 @@
 import { etat, abonner, notifier, demarrer, modifier, reglage, formePlan, finirEditionPlan, retirerMur, ouvrirDansMur,
   ajouterEnceinte, ajouterBloc, supprimer, dupliquer, lancerCalcul, arreterCalcul, aJour, aRecalculer, estimation, ECHELLE_DB, deplacerObjet,
   entrees, gravesAutomatiques, nouveauProjet, ouvrirScene, reprendre, dimensionsRect, typePiece, tournerObjet,
-  commencerDessin, annulerDessin, terminerDessin, retirerPointDessin } from './etat.js';
-import { MATERIAUX, materiau, GENRES, genre, FILTRES, FORMES, FORMES_AJOUTABLES, borner, estOuvert } from './modele.js';
-import { FORMES_PLAN, coinsPlan, murDuPlan, origine, volumePlan, EPAISSEUR, idMur } from './plan.js';
-import { Bandes } from './rayons.js';
-import { fmaxOndes } from './calcul.js';
-import { cssMateriau, turbo, v2, aire } from './base.js';
-import { textePixel } from './police.js';
-import { chercherEcoute, chercherSalle, arreterRecherche, dureeEcoute, dureeSalle } from './placement.js';
-import { Vue3D } from './vue3d.js';
-import { Plan2D } from './plan2d.js';
-import { Courbe, FMIN, FMAX } from './courbe.js';
+  commencerDessin, annulerDessin, terminerDessin, retirerPointDessin } from './etat.js?v=20261024205355';
+import { MATERIAUX, materiau, GENRES, genre, FILTRES, FORMES, FORMES_AJOUTABLES, borner, estOuvert } from './modele.js?v=20261024205355';
+import { FORMES_PLAN, coinsPlan, murDuPlan, origine, volumePlan, EPAISSEUR, idMur } from './plan.js?v=20261024205355';
+import { Bandes } from './rayons.js?v=20261024205355';
+import { fmaxOndes } from './calcul.js?v=20261024205355';
+import { cssMateriau, turbo, v2, aire } from './base.js?v=20261024205355';
+import { textePixel } from './police.js?v=20261024205355';
+import { chercherEcoute, chercherSalle, arreterRecherche, dureeEcoute, dureeSalle } from './placement.js?v=20261024205355';
+import { Vue3D } from './vue3d.js?v=20261024205355';
+import { Plan2D } from './plan2d.js?v=20261024205355';
+import { Courbe, FMIN, FMAX } from './courbe.js?v=20261024205355';
 
 const $ = (sel, r = document) => r.querySelector(sel);
 const el = (tag, attrs = {}, ...enfants) => {
@@ -502,12 +502,6 @@ function majOutilsVue() {
       el('span', { class: 'etiquette-coupe' }, 'Tourner la coupe'),
       el('button', { type: 'button', title: 'Tourner la coupe d’un quart de tour vers la droite', onclick: () => tourner(1) }, '↻')));
   }
-  const a = etat.affichage;
-  $('#aide-vue').textContent = etat.dessin ? 'Dessin : clic = coin · ⇧ = mur droit · ⌥ = sans grille · ⌫ = retirer le dernier · Entrée ou point vert = fermer · Échap = annuler'
-    : a === 'troisD' ? 'Vue seulement · glisser : tourner · clic droit ou ⇧ : décaler · molette : zoom · clic : sélectionner (les réglages se font en Plan et en Coupe)'
-      : meuble ? 'Flèches vertes : étirer (en coupe, celle du dessus règle la hauteur) · glisser le meuble : le déplacer · ⌥ (plan) : l’orienter'
-        : a === 'coupe' ? 'Coupe : glisser un point blanc — pied du mur : déplace seulement le coin le plus proche · haut du mur : sa hauteur (mur nain ou plafond) · haut de la pente : son angle · ↺ ↻ : tourner'
-          : 'Glisser un point blanc : le déplacer seul · clic sur un + : nouveau point · double-clic sur un point : l’ôter · ⌥ : sans grille · glisser une source ou un objet : le déplacer · glisser la croix : le micro';
 }
 
 function exporterImage() {

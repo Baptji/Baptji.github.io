@@ -1,13 +1,13 @@
 // Carte 2D : plan à la hauteur d'écoute ou coupe passant par le micro ; murs, toit, volumes,
 // enceintes, micro, règles, cotes ; édition de la pièce dessinée. Traduction de Toile.swift.
 
-import { v2, turbo, divergente, cssMateriau, dansPolygone } from './base.js';
-import { polyedre, axe, estOuvert, dansContour, borner } from './modele.js';
-import { coinsPlan, murDuPlan, normalePlan, toit, origine, cotes, contacts, couper, idMur, EPAISSEUR, poigneesBloc, contourMurs } from './plan.js';
+import { v2, turbo, divergente, cssMateriau, dansPolygone } from './base.js?v=20261024205355';
+import { polyedre, axe, estOuvert, dansContour, borner } from './modele.js?v=20261024205355';
+import { coinsPlan, murDuPlan, normalePlan, toit, origine, cotes, contacts, couper, idMur, EPAISSEUR, poigneesBloc, contourMurs } from './plan.js?v=20261024205355';
 import { etat, abonner, modifier, versPlan, pointDessin, deplacerCoin, insererCoin, supprimerCoin, finirEditionPlan, deplacerObjet, tournerObjet, etirerBloc,
-  versEchelle, annulation, zeroDB, notifier } from './etat.js';
-import { flechePoignee } from './vue3d.js';
-import { valeurRaster } from './calcul.js';
+  versEchelle, annulation, zeroDB, notifier } from './etat.js?v=20261024205355';
+import { flechePoignee } from './vue3d.js?v=20261024205355';
+import { valeurRaster } from './calcul.js?v=20261024205355';
 
 export class Plan2D {
   /// vueFixe : 'plan' ou 'coupe' pour l'affichage « Plan + coupe » (sinon la vue suit le choix en haut).

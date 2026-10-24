@@ -5,11 +5,11 @@
 //  Vue seulement : glisser = tourner ; clic droit ou ⇧ glisser = décaler ; molette = zoom ;
 //  clic = sélectionner. Tout se règle dans les vues Plan et Coupe (2D).
 
-import { v2, v3, trianguler, turbo, divergente, teinteMateriau, dansPolygone } from './base.js';
-import { polyedre, axe, avant, nouveauBloc, cleRayons, cleGeometrie, axeCote, hautCote, estOuvert } from './modele.js';
-import { coinsPlan, murDuPlan, normalePlan, toit, origine, cotes, contacts, idRampant } from './plan.js';
-import { etat, abonner, versEchelle, annulation, zeroDB, reglage, notifier } from './etat.js';
-import { valeurRaster } from './calcul.js';
+import { v2, v3, trianguler, turbo, divergente, teinteMateriau, dansPolygone } from './base.js?v=20261024205355';
+import { polyedre, axe, avant, nouveauBloc, cleRayons, cleGeometrie, axeCote, hautCote, estOuvert } from './modele.js?v=20261024205355';
+import { coinsPlan, murDuPlan, normalePlan, toit, origine, cotes, contacts, idRampant } from './plan.js?v=20261024205355';
+import { etat, abonner, versEchelle, annulation, zeroDB, reglage, notifier } from './etat.js?v=20261024205355';
+import { valeurRaster } from './calcul.js?v=20261024205355';
 
 // MARK: Matrices (colonnes)
 

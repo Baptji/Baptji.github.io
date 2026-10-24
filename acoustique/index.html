@@ -6,7 +6,7 @@
 <title>Acoustique</title>
 <meta name="description" content="Des enceintes dans une pièce, en 3D : modes, interférences, court-circuit acoustique, pièce mansardée dessinée.">
 <link rel="icon" href="favicon.png">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=20261024205355">
 </head>
 <body>
 <div id="app">
@@ -22,7 +22,6 @@
           <div id="vue2x" class="vue deux" aria-label="Plan et coupe" hidden><div id="vue2x-plan" class="moitie"></div><div id="vue2x-coupe" class="moitie"></div></div>
           <div id="bandeau" class="bandeau" aria-live="polite"></div>
           <div id="outils-vue" class="outils-vue"></div>
-          <p id="aide-vue" class="aide-vue"></p>
         </div>
         <div id="legende" class="legende"><canvas></canvas></div>
       </div>
@@ -44,7 +43,7 @@
   <footer class="pied-page">Acoustique · <a href="../">Squid</a> · <a href="https://creativecommons.org/licenses/by-nc/4.0/deed.fr" rel="license">CC BY-NC 4.0</a></footer>
 </div>
 <script type="module">
-  import { lancer } from './js/interface.js';
+  import { lancer } from './js/interface.js?v=20261024205355';
   lancer();
 </script>
 </body>
