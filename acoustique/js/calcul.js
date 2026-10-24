@@ -73,8 +73,10 @@ export function rayonsPour(s, e) {
 
 // MARK: Carte
 
+/// Axe et sens de la coupe : orientation 0 = vue depuis le sud (x), 1 = l'est (y), 2 = le nord (−x), 3 = l'ouest (−y).
+const axeCoupe = (E) => (E.orientation || 0) % 2;
 export function taille(E, maxi) {
-  const lm = E.scene.longueur, hm = E.vue === 'plan' ? E.scene.largeur : E.scene.hauteur, r = hm / lm;
+  const lm = E.vue === 'plan' || axeCoupe(E) === 0 ? E.scene.longueur : E.scene.largeur, hm = E.vue === 'plan' ? E.scene.largeur : E.scene.hauteur, r = hm / lm;
   const l = r <= 1 ? maxi : Math.max(8, Math.floor(maxi / r)), h = r <= 1 ? Math.max(8, Math.floor(maxi * r)) : maxi;
   return [l, h, lm, hm];
 }
@@ -120,10 +122,11 @@ export function raster(E, champsR, maxi = 220, brut = false) {
     amps.set(e.id, toutes.map((f) => amplitude(e, f)));
   }
   const phaseurs = coherentSeul ? new Float32Array(l * h * 2) : null;
+  const ax = axeCoupe(E), retourne = (E.orientation || 0) >= 2;
   for (let j = 0; j < h; j++) {
     for (let i = 0; i < l; i++) {
-      const u = (i + 0.5) / l * s.longueur;
-      const p = E.vue === 'plan' ? [u, (j + 0.5) / h * s.largeur, E.z ?? s.ecoute] : [u, s.micro[1], (j + 0.5) / h * s.hauteur];
+      const u = (i + 0.5) / l * lm, w = retourne ? lm - u : u, zc = (j + 0.5) / h * s.hauteur;
+      const p = E.vue === 'plan' ? [u, (j + 0.5) / h * s.largeur, E.z ?? s.ecoute] : (ax === 0 ? [w, s.micro[1], zc] : [s.micro[0], w, zc]);
       let dedans = dansContour(s, p[0], p[1]) && !sol.some((v) => v.contient(p));
       const pw = [];
       if (avecOndes && dedans) {
@@ -173,7 +176,7 @@ export async function rasterVolume(E, champsR, annule) {
   const nz = Math.min(Math.max(Math.round(s.hauteur / dx), 6), 32);
   let nx = 0, ny = 0, db = null, ph = null;
   for (let k = 0; k < nz; k++) {
-    await new Promise((ok) => setTimeout(ok, 0));
+    if (k % 6 === 0) await new Promise((ok) => setTimeout(ok, 0));
     if (annule()) return null;
     const r = raster(Object.assign({}, E, { vue: 'plan', z: (k + 0.5) / nz * s.hauteur }), champsR, 48, true);
     if (!db) { nx = r.l; ny = r.h; db = new Float32Array(nx * ny * nz); ph = r.phaseurs ? new Float32Array(nx * ny * nz * 2) : null; }

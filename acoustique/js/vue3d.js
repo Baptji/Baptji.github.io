@@ -449,6 +449,31 @@ export class Vue3D {
     return this.texVolume;
   }
 
+  /// Six à huit couches du volume, chacune en texture (échelle relative, hachures sous −12 dB).
+  tranches(v, phase) {
+    const n = Math.min(8, Math.max(4, Math.round(etat.scene.hauteur / 0.35))), pas = v.nz / n;
+    const cle = `${etat.version}|${n}`;
+    if (phase == null && this.cleTranches === cle) return this.texTranches;
+    const r = [], nxy = v.nx * v.ny, co = Math.cos(phase || 0), si = Math.sin(phase || 0);
+    for (let t = 0; t < n; t++) {
+      const k = Math.min(v.nz - 1, Math.floor((t + 0.5) * pas)), base = k * nxy;
+      const tex = this.texture(`tranche${t}`, v.nx, v.ny, (px) => {
+        for (let i = 0; i < nxy; i++) {
+          const d = v.db[base + i];
+          if (isNaN(d)) continue;
+          let col;
+          if (phase != null && v.phaseurs) col = divergente(v.phaseurs[2 * (base + i)] * co - v.phaseurs[2 * (base + i) + 1] * si);
+          else if (annulation(d, v)) col = (i % v.nx + Math.floor(i / v.nx)) % 4 < 2 ? [15, 15, 25] : turbo(0);
+          else col = turbo(versEchelle(d, v));
+          px[4 * i] = col[0]; px[4 * i + 1] = col[1]; px[4 * i + 2] = col[2]; px[4 * i + 3] = 130;
+        }
+      });
+      r.push({ tex, z: (k + 0.5) / v.nz * etat.scene.hauteur });
+    }
+    if (phase == null) { this.cleTranches = cle; this.texTranches = r; }
+    return r;
+  }
+
   volume(v, vp, phase) {
     const gl = this.gl, p = this.progV, s = etat.scene;
     gl.useProgram(p);
@@ -521,7 +546,16 @@ export class Vue3D {
     }
     const anime = etat.animer && etat.raster && etat.raster.phaseurs ? (performance.now() / 1000 % 1.6) / 1.6 * 2 * Math.PI : null;
     const L = s.longueur, W = s.largeur, z = s.ecoute;
-    if (etat.volume3D && etat.volume && !etat.enCours) {
+    if (etat.volume3D && etat.tranches3D && etat.volume && !etat.enCours) {
+      // Tranches : la carte des niveaux à plusieurs hauteurs, empilées (la plus lointaine d'abord).
+      this.lot(piece.concat(objets, g.opaques), gl.TRIANGLES);
+      this.lot(ar, gl.LINES);
+      gl.depthMask(false);
+      const phase = etat.animer && etat.volume.phaseurs ? (performance.now() / 1000 % 1.6) / 1.6 * 2 * Math.PI : null;
+      const tr = this.tranches(etat.volume, phase);
+      const ordre = tr.slice().sort((a, b) => (oeil[2] > a.z ? a.z - b.z : b.z - a.z));
+      for (const t of ordre) this.quad(t.tex, [0, 0, t.z], [L, 0, t.z], [L, W, t.z], [0, W, t.z], vp);
+    } else if (etat.volume3D && etat.volume && !etat.enCours) {
       // Volume : la pièce, puis l'onde qui la remplit, puis les meubles et les enceintes par-dessus.
       this.lot(piece, gl.TRIANGLES);
       this.volume(etat.volume, vp, etat.animer && etat.volume.phaseurs ? (performance.now() / 1000 % 1.6) / 1.6 * 2 * Math.PI : null);
@@ -622,6 +656,10 @@ export class Vue3D {
     const rel = v != null ? v - zeroDB(etat.raster) : null;
     pastille(rel != null ? `${rel >= 0 ? '+' : '−'}${Math.abs(rel).toFixed(1)} dB` : 'micro', R.projeter([s.micro[0], s.micro[1], s.ecoute + 0.22]), 'rgba(255,255,255,0.88)', '#000', true);
     this.dessinerMarquesPlacement(ctx);
+    // Tranches : hauteur de chaque couche, au coin de la pièce.
+    if (etat.affichage === 'troisD' && etat.volume3D && etat.tranches3D && this.texTranches) {
+      for (const t of this.texTranches) pastille(`${t.z.toFixed(2)} m`, R.projeter([0, 0, t.z]), 'rgba(0,0,0,0.55)', '#fff', false);
+    }
   }
 
   /// Places proposées par la recherche de la meilleure position (numérotées).

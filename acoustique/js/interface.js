@@ -3,7 +3,8 @@
 
 import { etat, abonner, notifier, demarrer, modifier, reglage, formePlan, finirEditionPlan, retirerMur, ouvrirDansMur,
   ajouterEnceinte, ajouterBloc, supprimer, dupliquer, lancerCalcul, arreterCalcul, aJour, aRecalculer, estimation, ECHELLE_DB, deplacerObjet,
-  entrees, gravesAutomatiques, nouveauProjet, ouvrirScene, reprendre, dimensionsRect, typePiece, tournerObjet } from './etat.js';
+  entrees, gravesAutomatiques, nouveauProjet, ouvrirScene, reprendre, dimensionsRect, typePiece, tournerObjet,
+  commencerDessin, annulerDessin, terminerDessin, retirerPointDessin } from './etat.js';
 import { MATERIAUX, materiau, GENRES, genre, FILTRES, FORMES, FORMES_AJOUTABLES, borner, estOuvert } from './modele.js';
 import { FORMES_PLAN, coinsPlan, murDuPlan, origine, volumePlan, EPAISSEUR, idMur } from './plan.js';
 import { Bandes } from './rayons.js';
@@ -153,7 +154,8 @@ function construireBarre() {
       el('div', {}, lier(el('div', { class: 'titre' }), () => etat.scene.nom),
         el('div', { class: 'statut' }, el('span', { class: 'voyant' }), lier(el('span', { class: 'texte-statut' }), () => statut()[0])))),
     segments([['troisD', '3D'], ['plan', 'Plan'], ['coupe', 'Coupe'], ['deux', 'Plan + coupe']], () => etat.affichage, (v) => { reglage('affichage', v); montrerVue(); }),
-    si(segments([[false, 'Nappe'], [true, 'Volume']], () => etat.volume3D, (v) => reglage('volume3D', v)), () => etat.affichage === 'troisD'),
+    si(segments([['nappe', 'Nappe'], ['tranches', 'Tranches'], ['volume', 'Volume']], () => (etat.volume3D ? (etat.tranches3D ? 'tranches' : 'volume') : 'nappe'),
+      (v) => { etat.tranches3D = v === 'tranches'; reglage('volume3D', v !== 'nappe'); notifier(); }), () => etat.affichage === 'troisD'),
     segments([['frequence', 'Son pur'], ['bande', "1/3 d'octave"], ['global', 'Bruit rose']], () => etat.mode, (v) => reglage('mode', v), 'modes'),
     el('div', { class: 'espace' }),
     calcul,
@@ -208,7 +210,7 @@ function construireSousBarre() {
     el('span', { class: 'groupe-sb' },
       case_('Animer', () => etat.animer, (v) => reglage('animer', v), { title: "Montrer la pression qui oscille (son pur, graves calculés)" }),
       si(case_('Pondération A', () => etat.ponderationA, (v) => reglage('ponderationA', v)), () => etat.mode === 'global')),
-    si(el('span', { class: 'groupe-sb' }, el('span', { class: 'doux' }, 'Densité'), densite), () => etat.affichage === 'troisD' && etat.volume3D),
+    si(el('span', { class: 'groupe-sb' }, el('span', { class: 'doux' }, 'Densité'), densite), () => etat.affichage === 'troisD' && etat.volume3D && !etat.tranches3D),
   );
   for (const o of b.querySelectorAll('output')) o.value = '';
 }
@@ -288,6 +290,11 @@ function cartePiece() {
   } else {
     contenu.push(
       el('div', { class: 'formes' }, FORMES_PLAN.map((f) => el('button', { type: 'button', onclick: () => formePlan(f.id) }, NOMS_FORMES[f.id] || f.nom))),
+      etat.dessin ? el('div', { class: 'boutons' },
+        el('button', { type: 'button', class: 'principal', disabled: etat.dessin.points.length < 3, onclick: terminerDessin }, 'Fermer la pièce'),
+        el('button', { type: 'button', disabled: !etat.dessin.points.length, onclick: retirerPointDessin }, 'Retirer le dernier point'),
+        el('button', { type: 'button', onclick: annulerDessin }, 'Annuler'))
+        : el('button', { type: 'button', class: 'large', onclick: commencerDessin, title: 'Cliquer les coins de la pièce un par un sur le plan' }, '✎ Dessiner à la main'),
       el('div', { class: 'ligne' }, el('span', { class: 'etiquette' }, 'Grille'),
         segments([[0.1, '10 cm'], [0.25, '25 cm'], [0.5, '50 cm'], [1, '1 m']], () => etat.scene.plan && etat.scene.plan.pas, (x) => modifier((sc) => { sc.plan.pas = x; }), 'petit')),
       hauteur);
@@ -297,7 +304,7 @@ function cartePiece() {
     return `${ai.toFixed(1)} m² au sol · ${(v ?? ai * sc.hauteur).toFixed(1)} m³`;
   }));
   return carte('Pièce', rect ? 'Glissez un mur dans la vue pour le pousser.'
-    : 'Choisissez une forme, puis « Modifier la forme » : glisser un coin, cliquer un « + » pour en ajouter, double-clic pour en ôter. Cliquez un mur pour lui donner un rampant.', ...contenu);
+    : 'Choisissez une forme, ou « Dessiner à la main » : cliquez les coins un par un sur le plan (⇧ pour un mur droit, ⌥ sans grille), puis le point vert pour fermer. Ensuite « Modifier la forme » : glisser un coin, cliquer un « + » pour en ajouter, double-clic pour en ôter. Cliquez un mur pour lui donner un rampant.', ...contenu);
 }
 
 function carteSelection() {
@@ -467,21 +474,32 @@ let cleOutils = '';
 function majOutilsVue() {
   const o = $('#outils-vue'), perso = etat.scene.plan && etat.scene.typePiece === 'perso';
   const meuble = etat.scene.blocs.some((b) => b.id === etat.selection && b.forme === 'boite' && b.duPlan == null && !b.dansParoi);
-  const k = `${perso}|${etat.affichage}|${etat.editionPlan}|${meuble}`;
+  const k = `${perso}|${etat.affichage}|${etat.editionPlan}|${meuble}|${!!etat.dessin}|${etat.coupeOrientation}`;
   if (k === cleOutils) return;
   cleOutils = k;
   o.innerHTML = '';
-  if (perso && (etat.affichage === 'plan' || etat.affichage === 'deux')) {
+  if (etat.dessin) {
+    o.append(el('button', { type: 'button', class: 'actif', onclick: terminerDessin }, 'Fermer la pièce'), el('button', { type: 'button', onclick: annulerDessin }, 'Annuler le dessin'));
+  } else if (perso && (etat.affichage === 'plan' || etat.affichage === 'deux')) {
+    o.append(el('button', { type: 'button', onclick: commencerDessin }, '✎ Dessiner'));
     o.append(el('button', { type: 'button', class: etat.editionPlan ? 'actif' : '', 'aria-pressed': etat.editionPlan ? 'true' : 'false',
       onclick: () => { etat.editionPlan = !etat.editionPlan; notifier(); } }, etat.editionPlan ? 'Terminer la forme' : 'Modifier la forme'));
   }
   if (etat.affichage === 'troisD') o.append(el('button', { type: 'button', onclick: () => vue3d && vue3d.recadrer() }, 'Recadrer'));
+  if (etat.affichage === 'coupe' || etat.affichage === 'deux') {
+    const tourner = (d) => reglage('coupeOrientation', (etat.coupeOrientation + d + 4) % 4);
+    o.append(el('span', { class: 'groupe-boutons' },
+      el('button', { type: 'button', title: 'Tourner la coupe d’un quart de tour', onclick: () => tourner(-1) }, '↺'),
+      el('span', { class: 'etiquette-coupe' }, `Coupe vue depuis ${['le sud', 'l’est', 'le nord', 'l’ouest'][etat.coupeOrientation]}`),
+      el('button', { type: 'button', title: 'Tourner la coupe d’un quart de tour', onclick: () => tourner(1) }, '↻')));
+  }
   const edition = etat.editionPlan && perso;
   const a = etat.affichage;
-  $('#aide-vue').textContent = a === 'troisD' ? 'Vue seulement · glisser : tourner · clic droit ou ⇧ : décaler · molette : zoom · clic : sélectionner (les réglages se font en Plan et en Coupe)'
+  $('#aide-vue').textContent = etat.dessin ? 'Dessin : clic = coin · ⇧ = mur droit · ⌥ = sans grille · ⌫ = retirer le dernier · Entrée ou point vert = fermer · Échap = annuler'
+    : a === 'troisD' ? 'Vue seulement · glisser : tourner · clic droit ou ⇧ : décaler · molette : zoom · clic : sélectionner (les réglages se font en Plan et en Coupe)'
     : edition && a !== 'coupe' ? 'Plan : glisser un coin · clic sur un + : nouveau coin · double-clic sur un coin : l’ôter · glisser un mur : le pousser · ⌥ : sans grille'
       : meuble ? 'Flèches vertes : étirer (en coupe, celle du dessus règle la hauteur) · glisser le meuble : le déplacer · ⌥ (plan) : l’orienter'
-        : a === 'coupe' ? 'Coupe (vue de côté) : glisser une source ou un objet le monte ou le descend · cliquer ailleurs : micro et hauteur d’écoute'
+        : a === 'coupe' ? 'Coupe : flèches = plafond, murs, haut du mur nain · glisser une source, un objet ou le micro le déplace · ↺ ↻ : tourner la coupe'
           : 'Glisser une source ou un objet : le déplacer (⌥ : l’orienter) · cliquer ailleurs : placer le micro';
 }
 
@@ -510,7 +528,7 @@ let cleStructure = '';
 function structure() {
   const s = etat.scene, b = s.blocs.find((x) => x.id === etat.selection), e = s.enceintes.find((x) => x.id === etat.selection), m = murDuPlan(s, etat.selection);
   return [etat.selection, s.typePiece, s.plan ? s.plan.coins.length : 0, b ? `${b.forme}${b.dansParoi}${b.nom}` : '', e ? `${e.genre}${e.filtre}${e.nom}` : '',
-    m != null ? s.plan.murs[m].rampant : '', etat.webgpu, etat.placement ? etat.placement.version : 0, !!etat.recherche, etat.enCours].join('|');
+    m != null ? s.plan.murs[m].rampant : '', etat.webgpu, etat.dessin ? `d${Math.min(etat.dessin.points.length, 3)}` : '', !!(etat.dessin && etat.dessin.points.length), etat.placement ? etat.placement.version : 0, !!etat.recherche, etat.enCours].join('|');
 }
 let cleListe = '';
 function cleDeListe() {
@@ -531,7 +549,9 @@ export function lancer() {
   for (const b of document.querySelectorAll('#choix-courbe button')) b.addEventListener('click', () => { reglage('courbeGraves', b.dataset.v === 'graves'); });
   new ResizeObserver(dessinerLegende).observe($('#legende'));
   montrerVue();
+  let affichageMontre = etat.affichage;
   abonner(() => {
+    if (etat.affichage !== affichageMontre) { affichageMontre = etat.affichage; montrerVue(); }
     const k = structure();
     if (k !== cleStructure) { cleStructure = k; construireInspecteur(); majOutilsVue(); }
     const kl = cleDeListe();
@@ -547,6 +567,13 @@ export function lancer() {
   notifier();
   window.addEventListener('keydown', (ev) => {
     if (ev.target.closest('input, select, textarea')) return;
+    if (etat.dessin) {
+      if (ev.key === 'Enter') terminerDessin();
+      else if (ev.key === 'Escape') annulerDessin();
+      else if (ev.key === 'Backspace' || ev.key === 'Delete') retirerPointDessin();
+      else return;
+      ev.preventDefault(); return;
+    }
     if ((ev.key === 'Backspace' || ev.key === 'Delete') && etat.selection) { supprimer(etat.selection); ev.preventDefault(); }
     if (ev.key === 'Escape') { etat.selection = null; notifier(); }
   });

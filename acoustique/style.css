@@ -195,3 +195,6 @@ button.calcul-en-cours { color: #b25000; border-color: var(--orange); }
 .barre .identite > div { min-width: 0; overflow: hidden; }
 .barre .statut { overflow: hidden; text-overflow: ellipsis; }
 .barre .statut .texte-statut { overflow: hidden; text-overflow: ellipsis; }
+.outils-vue .groupe-boutons { display: inline-flex; align-items: center; gap: 4px; background: rgba(246, 246, 244, 0.9); border-radius: 6px; padding: 0 2px; color: #1d1d1f; }
+.outils-vue .groupe-boutons button { border: 0; background: transparent; font-size: 15px; padding: 2px 8px; }
+.outils-vue .etiquette-coupe { font-size: 11.5px; white-space: nowrap; }

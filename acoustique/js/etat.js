@@ -3,7 +3,7 @@
 
 import { copie, nouvelleEnceinte, nouveauBloc, nouvelleScene, borner, cleEspace, cleGeometrie, genre, FORMES, FORMES_AJOUTABLES, materiau } from './modele.js';
 import { appliquerPlan, dessinerPlan as dessinerPlanScene, retirerPlan as retirerPlanScene, FORMES_PLAN, murDuPlan, normalePlan, coinsPlan,
-  aimanter, EPAISSEUR, toit, idMur, aimanterObjet, emprise, dansLaPiece, rectangle } from './plan.js';
+  aimanter, EPAISSEUR, toit, idMur, aimanterObjet, emprise, dansLaPiece, rectangle, nouveauPlan } from './plan.js';
 import { PREREGLAGES } from './modeles.js';
 import { grillePour, calculer, estimation as estimationOndes, moteurOndes } from './ondes.js';
 import { raster, rasterVolume, courbe, courbesSources, rayonsPour, rayonsDeja, sources, fmaxOndes } from './calcul.js';
@@ -14,9 +14,9 @@ const CLE_STOCKAGE = 'acoustique-scene', CLE_PRECEDENT = 'acoustique-precedent';
 export const etat = {
   scene: null,
   // Graves toujours en finesse « normal » ; calcul seulement sur demande (sauf « Auto » coché).
-  qualite: 'normal', mode: 'frequence', frequence: 63, affichage: 'troisD', volume3D: false, ponderationA: false,
+  qualite: 'normal', mode: 'frequence', frequence: 63, affichage: 'troisD', volume3D: false, tranches3D: false, ponderationA: false,
   solo: null, animer: false, selection: null, editionPlan: false,
-  gravesAuto: false, courbeGraves: true, coinActif: null, reprise: null, densite: 1,
+  gravesAuto: false, courbeGraves: true, coinActif: null, reprise: null, densite: 1, dessin: null, coupeOrientation: 0,
   champs: new Map(), raster: null, rasterCoupe: null, volume: null, placement: null, recherche: null, courbe: [], courbesSources: [], version: 0,
   enCours: false, progression: 0, etape: '', apercu: null, message: null, webgpu: null,
   cadrage: 0, recadrage: { n: 0, dx: 0, dy: 0 },
@@ -109,7 +109,8 @@ export function modifier(mutation, options = {}) {
 export function reglage(cle, valeur) {
   if (etat[cle] === valeur) return;
   etat[cle] = valeur;
-  if (['qualite', 'mode', 'frequence', 'affichage', 'volume3D', 'ponderationA', 'solo'].includes(cle)) recalculerCarte();
+  if (cle === 'frequence') recalculerCarte({ rapide: true });
+  else if (['qualite', 'mode', 'affichage', 'volume3D', 'ponderationA', 'solo', 'coupeOrientation'].includes(cle)) recalculerCarte();
   if (cle === 'qualite' || cle === 'gravesAuto') planifierGraves();
   notifier();
 }
@@ -197,13 +198,15 @@ export function arreterCalcul() { calculAuto = false; clearTimeout(minuterieGrav
 
 export function entrees(vue) {
   return { scene: etat.scene, champs: champsAJour(), mode: etat.mode, frequence: etat.frequence,
-    vue: vue || (etat.affichage === 'coupe' ? 'coupe' : 'plan'), ponderationA: etat.ponderationA, solo: etat.solo };
+    vue: vue || (etat.affichage === 'coupe' ? 'coupe' : 'plan'), ponderationA: etat.ponderationA, solo: etat.solo, orientation: etat.coupeOrientation };
 }
 
 let jeton = 0, minuterieCarte = null;
-export function recalculerCarte() {
+/// rapide : changement de fréquence seul (curseur) — tout de suite, sans refaire la courbe au micro,
+/// qui ne dépend pas de la fréquence choisie.
+export function recalculerCarte(options = {}) {
   clearTimeout(minuterieCarte);
-  const mon = ++jeton;
+  const mon = ++jeton, rapide = !!options.rapide;
   minuterieCarte = setTimeout(async () => {
     const E = entrees();
     const src = sources(E);
@@ -222,8 +225,10 @@ export function recalculerCarte() {
     etat.raster = r;
     // Plan + coupe côte à côte : la coupe aussi, sur le même 0 dB.
     if (etat.affichage === 'deux') { const rc = raster(entrees('coupe'), champsR); rc.ref = r.ref; etat.rasterCoupe = rc; } else etat.rasterCoupe = null;
-    etat.courbe = courbe(E, p, champsR);
-    etat.courbesSources = courbesSources(E, p);
+    if (!rapide || !etat.courbe.length) {
+      etat.courbe = courbe(E, p, champsR);
+      etat.courbesSources = courbesSources(E, p);
+    }
     etat.version++;
     notifier();
     // Volume entier (vue 3D « Volume ») : couche par couche, sans figer la page.
@@ -235,7 +240,7 @@ export function recalculerCarte() {
       etat.version++;
       notifier();
     } else etat.volume = null;
-  }, 120);
+  }, rapide ? 0 : 120);
 }
 
 function bornesRaster(r) {
@@ -266,17 +271,83 @@ export function formePlan(id) {
     p.pas = s.plan ? s.plan.pas : p.pas;
     s.plan = p; s.hauteur = h;
     appliquerPlan(s, true);
-    const q = coinsPlan(s);
-    const c = [q.reduce((a, x) => a + x[0], 0) / q.length, q.reduce((a, x) => a + x[1], 0) / q.length];
-    const dedans = (x, y) => s.contour && (function () { let d = false; const k = s.contour; for (let i = 0, j = k.length - 1; i < k.length; j = i++) { if ((k[i][1] > y) !== (k[j][1] > y) && x < (k[j][0] - k[i][0]) * (y - k[i][1]) / (k[j][1] - k[i][1]) + k[i][0]) d = !d; } return d; })();
-    if (s.enceintes.length && (!s.enceintes.every((e) => dedans(e.x, e.y)) || !dedans(s.micro[0], s.micro[1]))) {
-      s.enceintes[0].x = c[0] - 1; s.enceintes[0].y = c[1]; s.enceintes[0].azimut = 0; s.micro = [c[0] + 0.8, c[1]];
-      s.enceintes.forEach((e, i) => { if (i > 0 && !dedans(e.x, e.y)) { e.x = c[0] - 1; e.y = c[1] + 0.6 * i; } });
-    }
-    s.blocs = s.blocs.filter((b) => b.forme === 'ouverture' || dedans(b.x, b.y));
+    recaser(s);
     s.typePiece = 'perso';
   }, { recadrer: true });
   etat.selection = null; etat.message = null; etat.editionPlan = true; etat.cadrage++;
+  notifier();
+}
+
+/// Après un changement de forme : sources et micro ramenés dans la pièce, meubles restés dehors retirés.
+function recaser(s) {
+  const q = coinsPlan(s);
+  const c = [q.reduce((a, x) => a + x[0], 0) / q.length, q.reduce((a, x) => a + x[1], 0) / q.length];
+  const dedans = (x, y) => s.contour && (function () { let d = false; const k = s.contour; for (let i = 0, j = k.length - 1; i < k.length; j = i++) { if ((k[i][1] > y) !== (k[j][1] > y) && x < (k[j][0] - k[i][0]) * (y - k[i][1]) / (k[j][1] - k[i][1]) + k[i][0]) d = !d; } return d; })();
+  // Point intérieur sûr : le centre s'il est dedans (pas pour un L), sinon le milieu d'un triangle de coins.
+  let m = c;
+  if (!dedans(m[0], m[1])) for (let i = 0; i < q.length && !dedans(m[0], m[1]); i++) { const a = q[i], b = q[(i + 1) % q.length], d = q[(i + 2) % q.length]; m = [(a[0] + b[0] + d[0]) / 3, (a[1] + b[1] + d[1]) / 3]; }
+  if (s.enceintes.length && (!s.enceintes.every((e) => dedans(e.x, e.y)) || !dedans(s.micro[0], s.micro[1]))) {
+    s.enceintes.forEach((e, i) => { if (!dedans(e.x, e.y)) { e.x = m[0] - 0.5; e.y = m[1] + 0.4 * i; e.azimut = 0; } });
+    if (!dedans(s.micro[0], s.micro[1])) s.micro = [m[0] + 0.5, m[1]];
+  }
+  s.blocs = s.blocs.filter((b) => b.forme === 'ouverture' || dedans(b.x, b.y));
+}
+
+// MARK: Pièce dessinée à la main (clic par clic sur le plan)
+
+/// Polygone sans murs qui se croisent.
+function simple(q) {
+  const o = (a, b, c) => (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+  const n = q.length;
+  for (let i = 0; i < n; i++) for (let j = i + 2; j < n; j++) {
+    if (i === 0 && j === n - 1) continue;
+    const a = q[i], b = q[(i + 1) % n], c = q[j], d = q[(j + 1) % n];
+    if (o(a, b, c) * o(a, b, d) < 0 && o(c, d, a) * o(c, d, b) < 0) return false;
+  }
+  return true;
+}
+
+export function commencerDessin() {
+  etat.dessin = { points: [] };
+  etat.selection = null; etat.editionPlan = false; etat.message = null;
+  if (etat.affichage !== 'plan' && etat.affichage !== 'deux') reglage('affichage', 'plan');
+  notifier();
+}
+export function annulerDessin() { etat.dessin = null; notifier(); }
+/// Ajoute un coin (repère du plan) ; renvoie vrai si la forme vient d'être fermée.
+export function pointDessin(q) {
+  const d = etat.dessin;
+  if (!d) return false;
+  const pts = d.points, dernier = pts[pts.length - 1];
+  if (dernier && Math.abs(dernier[0] - q[0]) < 1e-6 && Math.abs(dernier[1] - q[1]) < 1e-6) return false;
+  if (pts.length >= 3 && Math.abs(pts[0][0] - q[0]) < 1e-6 && Math.abs(pts[0][1] - q[1]) < 1e-6) { terminerDessin(); return true; }
+  pts.push(q);
+  notifier();
+  return false;
+}
+export function retirerPointDessin() { if (etat.dessin) { etat.dessin.points.pop(); notifier(); } }
+/// Ferme la forme : elle devient la pièce (murs en plâtre, hauteur gardée).
+export function terminerDessin() {
+  const d = etat.dessin;
+  if (!d) return;
+  if (d.points.length < 3) { etat.message = 'Il faut au moins trois points pour fermer la pièce.'; notifier(); return; }
+  const pts = d.points.map((c) => c.slice());
+  if (!simple(pts)) { etat.message = 'Les murs se croisent : retirez le dernier point (⌫) ou recommencez.'; notifier(); return; }
+  etat.dessin = null;
+  modifier((s) => {
+    const mat = s.plan && s.plan.murs[0] ? s.plan.murs[0].materiau : 'platre';
+    const p = nouveauPlan(pts);
+    for (const m of p.murs) m.materiau = mat;
+    p.decalage = s.plan ? s.plan.decalage.slice() : [0, 0];
+    p.pas = s.plan ? s.plan.pas : 0.1;
+    s.blocs = s.blocs.filter((b) => b.duPlan == null);
+    for (const b of s.blocs) b.ancrage = null;
+    s.plan = p;
+    appliquerPlan(s, true);
+    recaser(s);
+    s.typePiece = 'perso';
+  }, { recadrer: true });
+  etat.selection = null; etat.editionPlan = true; etat.cadrage++;
   notifier();
 }
 
