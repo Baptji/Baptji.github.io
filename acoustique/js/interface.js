@@ -4,17 +4,17 @@
 import { etat, abonner, notifier, demarrer, modifier, reglage, formePlan, finirEditionPlan, retirerMur, ouvrirDansMur,
   ajouterEnceinte, ajouterBloc, supprimer, dupliquer, lancerCalcul, arreterCalcul, aJour, aRecalculer, estimation, ECHELLE_DB, deplacerObjet,
   entrees, gravesAutomatiques, nouveauProjet, ouvrirScene, reprendre, dimensionsRect, typePiece, tournerObjet,
-  commencerDessin, annulerDessin, terminerDessin, retirerPointDessin } from './etat.js?v=20261024205355';
-import { MATERIAUX, materiau, GENRES, genre, FILTRES, FORMES, FORMES_AJOUTABLES, borner, estOuvert } from './modele.js?v=20261024205355';
-import { FORMES_PLAN, coinsPlan, murDuPlan, origine, volumePlan, EPAISSEUR, idMur } from './plan.js?v=20261024205355';
-import { Bandes } from './rayons.js?v=20261024205355';
-import { fmaxOndes } from './calcul.js?v=20261024205355';
-import { cssMateriau, turbo, v2, aire } from './base.js?v=20261024205355';
-import { textePixel } from './police.js?v=20261024205355';
-import { chercherEcoute, chercherSalle, arreterRecherche, dureeEcoute, dureeSalle } from './placement.js?v=20261024205355';
-import { Vue3D } from './vue3d.js?v=20261024205355';
-import { Plan2D } from './plan2d.js?v=20261024205355';
-import { Courbe, FMIN, FMAX } from './courbe.js?v=20261024205355';
+  commencerDessin, annulerDessin, terminerDessin, retirerPointDessin } from './etat.js?v=20261024211500';
+import { MATERIAUX, materiau, GENRES, genre, FILTRES, FORMES, FORMES_AJOUTABLES, borner, estOuvert } from './modele.js?v=20261024211500';
+import { FORMES_PLAN, coinsPlan, murDuPlan, origine, volumePlan, EPAISSEUR, idMur } from './plan.js?v=20261024211500';
+import { Bandes } from './rayons.js?v=20261024211500';
+import { fmaxOndes } from './calcul.js?v=20261024211500';
+import { cssMateriau, turbo, v2, aire } from './base.js?v=20261024211500';
+import { textePixel } from './police.js?v=20261024211500';
+import { chercherEcoute, chercherSalle, arreterRecherche, dureeEcoute, dureeSalle } from './placement.js?v=20261024211500';
+import { Vue3D } from './vue3d.js?v=20261024211500';
+import { Plan2D } from './plan2d.js?v=20261024211500';
+import { Courbe, FMIN, FMAX } from './courbe.js?v=20261024211500';
 
 const $ = (sel, r = document) => r.querySelector(sel);
 const el = (tag, attrs = {}, ...enfants) => {

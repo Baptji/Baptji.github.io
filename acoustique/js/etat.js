@@ -1,13 +1,13 @@
 // État de l'application : la scène, les réglages d'affichage, les calculs en cours.
 // Traduction d'Etat.swift. Les vues s'abonnent et se redessinent à chaque changement.
 
-import { copie, nouvelleEnceinte, nouveauBloc, nouvelleScene, borner, cleEspace, cleGeometrie, genre, FORMES, FORMES_AJOUTABLES, materiau } from './modele.js?v=20261024205355';
+import { copie, nouvelleEnceinte, nouveauBloc, nouvelleScene, borner, cleEspace, cleGeometrie, genre, FORMES, FORMES_AJOUTABLES, materiau } from './modele.js?v=20261024211500';
 import { appliquerPlan, dessinerPlan as dessinerPlanScene, retirerPlan as retirerPlanScene, FORMES_PLAN, murDuPlan, normalePlan, coinsPlan,
-  aimanter, EPAISSEUR, toit, idMur, aimanterObjet, emprise, dansLaPiece, rectangle, nouveauPlan } from './plan.js?v=20261024205355';
-import { PREREGLAGES } from './modeles.js?v=20261024205355';
-import { grillePour, calculer, estimation as estimationOndes, moteurOndes } from './ondes.js?v=20261024205355';
-import { raster, rasterVolume, courbe, courbesSources, rayonsPour, rayonsDeja, sources, fmaxOndes } from './calcul.js?v=20261024205355';
-import { v2 } from './base.js?v=20261024205355';
+  aimanter, EPAISSEUR, toit, idMur, aimanterObjet, emprise, dansLaPiece, rectangle, nouveauPlan } from './plan.js?v=20261024211500';
+import { PREREGLAGES } from './modeles.js?v=20261024211500';
+import { grillePour, calculer, estimation as estimationOndes, moteurOndes } from './ondes.js?v=20261024211500';
+import { raster, rasterVolume, courbe, courbesSources, rayonsPour, rayonsDeja, sources, fmaxOndes } from './calcul.js?v=20261024211500';
+import { v2 } from './base.js?v=20261024211500';
 
 const CLE_STOCKAGE = 'acoustique-scene', CLE_PRECEDENT = 'acoustique-precedent';
 
@@ -370,6 +370,37 @@ export function deplacerCoin(i, p, libre = false) {
     s.plan.coins[i] = q;
     s.typePiece = 'perso';
   });
+}
+
+// MARK: Coupe dessinée (profil libre par axe)
+
+/// Coupe : déplace un seul point du profil a. Monté au-dessus du plafond, il le relève.
+export function deplacerPointProfil(a, i, p, libre = false) {
+  const pl = etat.scene.plan, pr = pl && pl.profils && pl.profils[a];
+  if (!pr || !pr.points[i]) return;
+  const [lo, hi] = pr.cadre;
+  let u = p[0] - pl.decalage[a], z = p[1];
+  u = libre ? Math.round(u * 100) / 100 : aimanter(pl, u);
+  z = libre ? Math.round(z * 100) / 100 : Math.round(z * 20) / 20;
+  u = Math.min(Math.max(u, lo), hi); z = Math.min(Math.max(z, 0), 8);
+  if (pr.points[i][0] === u && pr.points[i][1] === z) return;
+  modifier((s) => {
+    const q = s.plan.profils[a];
+    if (z > s.hauteur) { q.cadre[2] = z; s.hauteur = z; borner(s); }
+    q.points[i] = [u, z];
+  });
+}
+export function insererPointProfil(a, i, p) {
+  const pl = etat.scene.plan, pr = pl && pl.profils && pl.profils[a];
+  if (!pr) return null;
+  const q = [Math.round((p[0] - pl.decalage[a]) * 100) / 100, Math.round(p[1] * 100) / 100];
+  modifier((s) => { s.plan.profils[a].points.splice(i + 1, 0, q); });
+  return i + 1;
+}
+export function supprimerPointProfil(a, i) {
+  const pl = etat.scene.plan, pr = pl && pl.profils && pl.profils[a];
+  if (!pr || pr.points.length <= 3) return;
+  modifier((s) => { s.plan.profils[a].points.splice(i, 1); });
 }
 
 export function insererCoin(i, p) {

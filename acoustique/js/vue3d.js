@@ -5,11 +5,11 @@
 //  Vue seulement : glisser = tourner ; clic droit ou ⇧ glisser = décaler ; molette = zoom ;
 //  clic = sélectionner. Tout se règle dans les vues Plan et Coupe (2D).
 
-import { v2, v3, trianguler, turbo, divergente, teinteMateriau, dansPolygone } from './base.js?v=20261024205355';
-import { polyedre, axe, avant, nouveauBloc, cleRayons, cleGeometrie, axeCote, hautCote, estOuvert } from './modele.js?v=20261024205355';
-import { coinsPlan, murDuPlan, normalePlan, toit, origine, cotes, contacts, idRampant } from './plan.js?v=20261024205355';
-import { etat, abonner, versEchelle, annulation, zeroDB, reglage, notifier } from './etat.js?v=20261024205355';
-import { valeurRaster } from './calcul.js?v=20261024205355';
+import { v2, v3, trianguler, turbo, divergente, teinteMateriau, dansPolygone } from './base.js?v=20261024211500';
+import { polyedre, axe, avant, nouveauBloc, cleRayons, cleGeometrie, axeCote, hautCote, estOuvert } from './modele.js?v=20261024211500';
+import { coinsPlan, murDuPlan, normalePlan, toit, origine, cotes, contacts, idRampant } from './plan.js?v=20261024211500';
+import { etat, abonner, versEchelle, annulation, zeroDB, reglage, notifier } from './etat.js?v=20261024211500';
+import { valeurRaster } from './calcul.js?v=20261024211500';
 
 // MARK: Matrices (colonnes)
 
@@ -288,7 +288,7 @@ export class Vue3D {
     const murSel = murDuPlan(s, etat.selection);
     // Volumes (sauf murs et rampants de la pièce dessinée, dessinés à part).
     for (const b of s.blocs) {
-      if (b.duPlan != null && (b.forme === 'toit' || b.forme === 'paroi')) continue;
+      if (typeof b.duPlan === 'number' && (b.forme === 'toit' || b.forme === 'paroi')) continue;
       const sel = etat.selection === b.id;
       const p = polyedre(b);
       if (b.forme === 'ouverture') {
@@ -746,7 +746,7 @@ export class Vue3D {
       }
     }
     for (const b of s.blocs) {
-      if (b.duPlan != null && b.forme === 'toit') continue;
+      if ((b.duPlan != null && b.forme === 'toit') || b.duPlan === 'profil') continue;
       if ((b.dansParoi || b.duPlan != null) && b.forme !== 'toit') {
         const av = avant(b);
         if (av[0] * (oeil[0] - b.x) + av[1] * (oeil[1] - b.y) < 0) continue;

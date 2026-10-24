@@ -2,8 +2,8 @@
 // dérivent murs, pentes affichées et volumes solides ; fenêtres ancrées ; cotes et aimant.
 // Traduction de l'app Mac (Plan.swift, Toit.swift).
 
-import { v2, aire, trianguler, dansPolygone } from './base.js?v=20261024205355';
-import { nouveauBloc, borner, polyedre, axe, solides } from './modele.js?v=20261024205355';
+import { v2, aire, trianguler, dansPolygone } from './base.js?v=20261024211500';
+import { nouveauBloc, borner, polyedre, axe, solides } from './modele.js?v=20261024211500';
 
 export const EPAISSEUR = 0.14;
 
@@ -46,7 +46,60 @@ export function coinsPlan(s) {
 export function murDuPlan(s, id) {
   if (!s.plan || !id) return null;
   const b = s.blocs.find((x) => x.id === id);
-  return b && b.duPlan != null ? b.duPlan : null;
+  return b && typeof b.duPlan === 'number' ? b.duPlan : null;
+}
+
+// MARK: Coupe dessinée
+
+/// Encombrement du plan (coordonnées du plan) : [mini, maxi].
+function cadrePlan(p) {
+  return [p.coins.reduce((m, x) => v2.min(m, x), [Infinity, Infinity]), p.coins.reduce((m, x) => v2.max(m, x), [-Infinity, -Infinity])];
+}
+
+/// Deux profils de coupe libres, un par axe (0 : le long de x, 1 : le long de y), en points (u, z)
+/// des coordonnées du plan. Ce qui sort d'un profil est plein sur toute la profondeur de la pièce.
+/// Les points posés sur un bord (côté, sol, plafond) suivent ce bord quand la pièce change.
+export function recalerProfils(s) {
+  const p = s.plan, H = s.hauteur, [lo, hi] = cadrePlan(p);
+  if (!p.profils) p.profils = [null, null];
+  for (const a of [0, 1]) {
+    const pr = p.profils[a];
+    if (!pr || !pr.points || pr.points.length < 3) {
+      p.profils[a] = { points: [[lo[a], 0], [hi[a], 0], [hi[a], H], [lo[a], H]], cadre: [lo[a], hi[a], H] };
+      continue;
+    }
+    const [l0, h0, H0] = pr.cadre;
+    pr.points = pr.points.map(([u, z]) => {
+      const u1 = Math.abs(u - l0) < 1e-4 ? lo[a] : Math.abs(u - h0) < 1e-4 ? hi[a] : u, z1 = Math.abs(z - H0) < 1e-4 ? H : z;
+      return [Math.min(Math.max(u1, lo[a]), hi[a]), Math.min(Math.max(z1, 0), H)];
+    });
+    pr.cadre = [lo[a], hi[a], H];
+  }
+}
+
+/// Partie pleine d'un profil : le rectangle [lo, hi] × [0, H] moins le polygone, en trapèzes convexes.
+export function piecesProfil(pts, lo, hi, H) {
+  const us = [...new Set([lo, hi, ...pts.map((q) => Math.min(Math.max(q[0], lo), hi))])].sort((a, b) => a - b), r = [];
+  for (let j = 0; j + 1 < us.length; j++) {
+    const u0 = us[j], u1 = us[j + 1], um = (u0 + u1) / 2;
+    if (u1 - u0 < 1e-4) continue;
+    const L = [{ z0: 0, z1: 0, zm: 0 }];
+    const f = [];
+    pts.forEach((a, i) => {
+      const b = pts[(i + 1) % pts.length];
+      if (Math.abs(a[0] - b[0]) < 1e-9 || Math.min(a[0], b[0]) > u0 + 1e-9 || Math.max(a[0], b[0]) < u1 - 1e-9) return;
+      const z = (u) => a[1] + (b[1] - a[1]) * (u - a[0]) / (b[0] - a[0]);
+      f.push({ z0: z(u0), z1: z(u1), zm: z(um) });
+    });
+    L.push(...f.sort((a, b) => a.zm - b.zm), { z0: H, z1: H, zm: H });
+    for (let k = 0; k + 1 < L.length; k += 2) {
+      const A = L[k], B = L[k + 1];
+      if (B.zm - A.zm < 1e-4) continue;
+      const q = [[u0, A.z0], [u1, A.z1], [u1, B.z1], [u0, B.z0]].filter((x, i, t) => v2.dist(x, t[(i + 1) % t.length]) > 1e-6);
+      if (q.length >= 3) r.push(q);
+    }
+  }
+  return r;
 }
 
 /// Normale intérieure du mur i.
@@ -319,6 +372,18 @@ export function appliquerPlan(s, recadrer = true) {
           hauteur: H, azimut: az, materiau: s.faces[5], profil: bande.map((x) => x.slice()), pente: [r.g[0], r.g[1], r.c, H], duPlan: i }));
       });
     }
+  }
+  // Coupes dessinées : ce qui sort de chaque profil est plein sur toute la profondeur.
+  recalerProfils(s);
+  const [lo, hi] = cadrePlan(p), o = p.decalage, matProfil = p.murs[0] ? p.murs[0].materiau : 'platre';
+  for (const a of [0, 1]) {
+    const b2 = 1 - a;
+    piecesProfil(p.profils[a].points, lo[a], hi[a], H).forEach((piece, k) => {
+      const us = piece.map((x) => x[0] + o[a]), cu = (Math.min(...us) + Math.max(...us)) / 2, cv = (lo[b2] + hi[b2]) / 2 + o[b2];
+      gen.push(nouveauBloc({ id: `profil-${a}-${k}`, nom: 'Coupe', forme: 'paroi', x: a === 0 ? cu : cv, y: a === 0 ? cv : cu, z: H / 2,
+        longueur: Math.max(...us) - Math.min(...us), profondeur: hi[b2] - lo[b2], hauteur: H, azimut: a === 0 ? -90 : 0, materiau: matProfil,
+        profil: piece.map((x) => [x[0] + o[a] - cu, x[1] - H / 2]), duPlan: 'profil' }));
+    });
   }
   s.blocs = gen.concat(s.blocs);
   // Fenêtres et portes : ancrées à leur mur, dans son épaisseur et sa hauteur réelle.

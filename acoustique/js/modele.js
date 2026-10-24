@@ -1,7 +1,7 @@
 // Modèle : matériaux, enceintes, volumes, scène, modèles de départ. Traduction de l'app Mac
 // (Modele.swift, Volumes.swift). Les objets sont de simples données (JSON) ; les fonctions les lisent.
 
-import { Polyedre, dansPolygone, v3 } from './base.js?v=20261024205355';
+import { Polyedre, dansPolygone, v3 } from './base.js?v=20261024211500';
 
 // MARK: Faces de la boîte de calcul (ordre fixe : ouest, est, sud, nord, sol, plafond)
 

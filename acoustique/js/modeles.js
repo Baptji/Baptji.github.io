@@ -1,7 +1,7 @@
 // Modèles de départ (les mêmes que l'app Mac).
 
-import { nouvelleScene, nouvelleEnceinte, nouveauBloc } from './modele.js?v=20261024205355';
-import { FORMES_PLAN, appliquerPlan } from './plan.js?v=20261024205355';
+import { nouvelleScene, nouvelleEnceinte, nouveauBloc } from './modele.js?v=20261024211500';
+import { FORMES_PLAN, appliquerPlan } from './plan.js?v=20261024211500';
 
 export const PREREGLAGES = [
   { id: 'mansarde', nom: 'Chambre mansardée', scene() {

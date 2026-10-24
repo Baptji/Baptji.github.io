@@ -1,6 +1,6 @@
 // Travailleur (Web Worker) : lance une part des rayons d'une enceinte, ou termine le champ.
 
-import { lancerPartie, terminer, NOMBRE_DE_RAYONS } from './rayons.js?v=20261024205355';
+import { lancerPartie, terminer, NOMBRE_DE_RAYONS } from './rayons.js?v=20261024211500';
 
 self.onmessage = (ev) => {
   const m = ev.data;
