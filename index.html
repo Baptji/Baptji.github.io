@@ -52,6 +52,7 @@ h1, h2 { margin: 0; line-height: 1.1; text-wrap: balance; }
 .points button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .fenetre video { transition: none; } }
 
+.bientot { flex: none; padding: 9px 18px; border-radius: 10px; border: 1px solid var(--border); color: var(--muted); font-weight: 600; }
 .note { grid-column: 2; margin: 0; color: var(--muted); font-size: .8rem; line-height: 1.45; }
 @media (max-width: 520px) { .note { grid-column: 1 / -1; } }
 
@@ -95,7 +96,7 @@ footer a { color: inherit; }
         <h2 id="acoustique">Acoustique</h2>
         <p>Des enceintes dans une pièce, en 3D : modes, interférences, court-circuit acoustique.</p>
       </div>
-      <a class="ouvrir" href="acoustique/Acoustique.dmg" download>Télécharger pour Mac</a>
+      <span class="bientot">Bientôt en ligne</span>
     </div>
 
     <div class="defile">
@@ -110,8 +111,7 @@ footer a { color: inherit; }
         <button type="button" aria-label="Tour de la pièce"></button>
       </div>
     </div>
-    <p class="note">Mac à puce Apple, macOS 14 ou plus récent · 2,5 Mo. L'app n'est pas encore notarisée par Apple :
-      à la première ouverture, Réglages Système › Confidentialité et sécurité › « Ouvrir quand même ».</p>
+    <p class="note">Version à ouvrir dans le navigateur, comme l'Atlas : en préparation.</p>
   </section>
 
   <footer>
