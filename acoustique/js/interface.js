@@ -506,9 +506,8 @@ function majOutilsVue() {
   $('#aide-vue').textContent = etat.dessin ? 'Dessin : clic = coin · ⇧ = mur droit · ⌥ = sans grille · ⌫ = retirer le dernier · Entrée ou point vert = fermer · Échap = annuler'
     : a === 'troisD' ? 'Vue seulement · glisser : tourner · clic droit ou ⇧ : décaler · molette : zoom · clic : sélectionner (les réglages se font en Plan et en Coupe)'
       : meuble ? 'Flèches vertes : étirer (en coupe, celle du dessus règle la hauteur) · glisser le meuble : le déplacer · ⌥ (plan) : l’orienter'
-        : a === 'coupe' ? 'Coupe : glisser un point blanc — pied du mur : le déplacer · haut du mur : sa hauteur (mur nain ou plafond) · haut de la pente : son angle · ↺ ↻ : tourner'
-          : perso ? 'Glisser un point blanc : déplacer le coin · clic sur un + : nouveau coin · double-clic sur un coin : l’ôter · ⌥ : sans grille · glisser une source ou un objet : le déplacer'
-            : 'Glisser un coin blanc : agrandir la pièce · glisser une source ou un objet : le déplacer (⌥ : l’orienter) · glisser la croix : le micro';
+        : a === 'coupe' ? 'Coupe : glisser un point blanc — pied du mur : déplace seulement le coin le plus proche · haut du mur : sa hauteur (mur nain ou plafond) · haut de la pente : son angle · ↺ ↻ : tourner'
+          : 'Glisser un point blanc : le déplacer seul · clic sur un + : nouveau point · double-clic sur un point : l’ôter · ⌥ : sans grille · glisser une source ou un objet : le déplacer · glisser la croix : le micro';
 }
 
 function exporterImage() {

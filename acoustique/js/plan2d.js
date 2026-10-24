@@ -4,7 +4,7 @@
 import { v2, turbo, divergente, cssMateriau, dansPolygone } from './base.js';
 import { polyedre, axe, estOuvert, dansContour, borner } from './modele.js';
 import { coinsPlan, murDuPlan, normalePlan, toit, origine, cotes, contacts, couper, idMur, EPAISSEUR, poigneesBloc, contourMurs } from './plan.js';
-import { etat, abonner, modifier, versPlan, pointDessin, deplacerCoin, insererCoin, supprimerCoin, pousserMur, finirEditionPlan, deplacerObjet, tournerObjet, etirerBloc,
+import { etat, abonner, modifier, versPlan, pointDessin, deplacerCoin, insererCoin, supprimerCoin, finirEditionPlan, deplacerObjet, tournerObjet, etirerBloc,
   versEchelle, annulation, zeroDB, notifier } from './etat.js';
 import { flechePoignee } from './vue3d.js';
 import { valeurRaster } from './calcul.js';
@@ -353,10 +353,10 @@ export class Plan2D {
         const dv = [nIn[0] * 0.22 * k, -nIn[1] * 0.22 * k];
         this.cote([a[0] + dv[0], a[1] + dv[1]], [b[0] + dv[0], b[1] + dv[1]], `${v2.dist(qm[i], qm[(i + 1) % n]).toFixed(2)} m`, ms === i ? '#fb8c00' : '#fff');
       }
-      if (this.edition && this.perso) {
+      if (this.edition) {
         const m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
-        ctx.beginPath(); ctx.arc(m[0], m[1], 5, 0, 2 * Math.PI); ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 1; ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(m[0] - 3, m[1]); ctx.lineTo(m[0] + 3, m[1]); ctx.moveTo(m[0], m[1] - 3); ctx.lineTo(m[0], m[1] + 3); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.2; ctx.stroke();
+        ctx.beginPath(); ctx.arc(m[0], m[1], 7, 0, 2 * Math.PI); ctx.fillStyle = 'rgba(0,0,0,0.75)'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.2; ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(m[0] - 4, m[1]); ctx.lineTo(m[0] + 4, m[1]); ctx.moveTo(m[0], m[1] - 4); ctx.lineTo(m[0], m[1] + 4); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.6; ctx.stroke();
       }
     }
     if (!this.edition) return;
@@ -429,6 +429,17 @@ export class Plan2D {
     }
     return null;
   }
+  /// Coupe : le coin du mur i qui bouge quand on tire son point — le plus proche du plan de coupe,
+  /// et à égalité celui du côté d'où l'on regarde. Seul ce point bouge, jamais le mur entier.
+  coinDuMur(i) {
+    const s = this.scene, q = coinsPlan(s), n = q.length, ax = this.axe, fixe = s.micro[1 - ax], o = etat.coupeOrientation;
+    const [a, b] = [i, (i + 1) % n];
+    const da = Math.abs(q[a][1 - ax] - fixe), db = Math.abs(q[b][1 - ax] - fixe);
+    if (Math.abs(da - db) > 0.05) return da < db ? a : b;
+    const devant = (x) => (o === 0 ? -x[1] : o === 1 ? x[0] : o === 2 ? x[1] : -x[0]);
+    return devant(q[a]) >= devant(q[b]) ? a : b;
+  }
+
   /// Coupe : un clic sur un mur le choisit (sans le déplacer).
   viserCoupeLignes(p, c) {
     if (!this.scene.plan || this.vue !== 'coupe') return null;
@@ -594,11 +605,11 @@ export class Plan2D {
     q.forEach((x, i) => { const d = v2.dist(x, p); if (d < 10 && (!best || d < best[1])) best = [i, d]; });
     if (best) {
       const i = best[0];
-      if (this.perso && this.dernierCoin && this.dernierCoin[0] === i && performance.now() - this.dernierCoin[1] < 400) { this.dernierCoin = null; supprimerCoin(i); finirEditionPlan(); return { type: 'rien' }; }
+      if (this.dernierCoin && this.dernierCoin[0] === i && performance.now() - this.dernierCoin[1] < 400) { this.dernierCoin = null; supprimerCoin(i); finirEditionPlan(); return { type: 'rien' }; }
       this.dernierCoin = [i, performance.now()];
       return { type: 'coin', i };
     }
-    for (let i = 0; i < q.length && this.perso; i++) {
+    for (let i = 0; i < q.length; i++) {
       const m = v2.mul(v2.add(q[i], q[(i + 1) % q.length]), 0.5);
       if (v2.dist(m, p) < 8) { const w = this.versMonde(m, c), k = insererCoin(i, w); if (k != null) return { type: 'coin', i: k }; }
     }
@@ -649,7 +660,7 @@ export class Plan2D {
         }
       }
       if (!cible) cible = this.viserMur(p, c) || this.viserCoupeLignes(p, c);
-      if (cible && cible.type === 'sommet') Object.assign(cible, { u0: this.versMonde(p, c)[0], coins: s.plan.coins.map((x) => x.slice()) });
+      if (cible && cible.type === 'sommet') Object.assign(cible, { u0: this.versMonde(p, c)[0], coins: coinsPlan(s).map((x) => x.slice()), coin: this.coinDuMur(cible.i) });
       if (cible && cible.i != null && (cible.type === 'sommet' || cible.type === 'rien')) { etat.selection = idMur(cible.i); notifier(); }
       if (!cible && this.vue === 'plan') {
         const b = [...s.blocs].reverse().find((x) => x.duPlan != null && dansPolygone(p[0], p[1], this.enveloppe(x, c)));
@@ -725,7 +736,9 @@ export class Plan2D {
         const m = s.plan.murs[C.i];
         if (!m) break;
         if (C.verrou === 'h' && C.role !== 'jonction') {
-          pousserMur(C.i, C.coins, (this.deHor(u) - this.deHor(C.u0)) / C.k, ev.altKey); C.pousse = true;
+          const ax = this.axe, q = C.coins[C.coin].slice();
+          q[ax] += this.deHor(u) - this.deHor(C.u0);
+          deplacerCoin(C.coin, q, ev.altKey); C.pousse = true;
         } else if (C.verrou === 'h') {
           const av = Math.max(Math.abs(u - C.u) * Math.abs(C.k), 0.02);
           const deg = Math.min(Math.max(Math.round(Math.atan2(s.hauteur - m.pied, av) * 180 / Math.PI), 5), 85);

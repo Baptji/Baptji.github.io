@@ -366,26 +366,22 @@ export function deplacerCoin(i, p, libre = false) {
   const q = versPlan(p, libre), pl = etat.scene.plan;
   if (!q || !pl || !pl.coins[i] || (pl.coins[i][0] === q[0] && pl.coins[i][1] === q[1])) return;
   modifier((s) => {
-    const c = s.plan.coins, ancien = c[i].slice();
-    c[i] = q;
-    // Pièce rectangulaire : les deux coins voisins suivent, elle reste un rectangle.
-    if (s.typePiece !== 'perso' && c.length === 4) for (const j of [(i + 3) % 4, (i + 1) % 4]) {
-      if (Math.abs(c[j][0] - ancien[0]) < 1e-6) c[j][0] = q[0];
-      if (Math.abs(c[j][1] - ancien[1]) < 1e-6) c[j][1] = q[1];
-    }
+    // Seul ce point bouge : la pièce devient « personnalisée ».
+    s.plan.coins[i] = q;
+    s.typePiece = 'perso';
   });
 }
 
 export function insererCoin(i, p) {
   const q = versPlan(p, true);
   if (!q) return null;
-  modifier((s) => { s.plan.coins.splice(i + 1, 0, q); s.plan.murs.splice(i + 1, 0, Object.assign({}, s.plan.murs[i])); for (const b of s.blocs) b.ancrage = null; });
+  modifier((s) => { s.plan.coins.splice(i + 1, 0, q); s.plan.murs.splice(i + 1, 0, Object.assign({}, s.plan.murs[i])); for (const b of s.blocs) b.ancrage = null; s.typePiece = 'perso'; });
   return i + 1;
 }
 
 export function supprimerCoin(i) {
   if (!etat.scene.plan || etat.scene.plan.coins.length <= 3) return;
-  modifier((s) => { s.plan.coins.splice(i, 1); s.plan.murs.splice(i, 1); for (const b of s.blocs) b.ancrage = null; });
+  modifier((s) => { s.plan.coins.splice(i, 1); s.plan.murs.splice(i, 1); for (const b of s.blocs) b.ancrage = null; s.typePiece = 'perso'; });
   etat.selection = null;
 }
 
