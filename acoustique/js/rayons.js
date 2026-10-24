@@ -2,8 +2,8 @@
 // réflexions spéculaires ou diffuses, absorption de l'air ; son direct exact avec l'ombre des volumes.
 // Traduction de l'app Mac (Rayons.swift). Tourne dans des travailleurs (Web Workers).
 
-import { v3 } from './base.js?v=20261024211500';
-import { alpha, diffusion, estOuvert, solides as solidesScene, ouvertures as ouverturesScene, passage, polyedre, axe, volume } from './modele.js?v=20261024211500';
+import { v3 } from './base.js?v=20261024222224';
+import { alpha, diffusion, estOuvert, solides as solidesScene, ouvertures as ouverturesScene, passage, polyedre, axe, volume } from './modele.js?v=20261024222224';
 
 export const Bandes = {
   /// Centres des tiers d'octave normalisés, 20 Hz → 16 kHz.

@@ -5,11 +5,11 @@
 //  Vue seulement : glisser = tourner ; clic droit ou ⇧ glisser = décaler ; molette = zoom ;
 //  clic = sélectionner. Tout se règle dans les vues Plan et Coupe (2D).
 
-import { v2, v3, trianguler, turbo, divergente, teinteMateriau, dansPolygone } from './base.js?v=20261024211500';
-import { polyedre, axe, avant, nouveauBloc, cleRayons, cleGeometrie, axeCote, hautCote, estOuvert } from './modele.js?v=20261024211500';
-import { coinsPlan, murDuPlan, normalePlan, toit, origine, cotes, contacts, idRampant } from './plan.js?v=20261024211500';
-import { etat, abonner, versEchelle, annulation, zeroDB, reglage, notifier } from './etat.js?v=20261024211500';
-import { valeurRaster } from './calcul.js?v=20261024211500';
+import { v2, v3, trianguler, turbo, divergente, teinteMateriau, dansPolygone } from './base.js?v=20261024222224';
+import { polyedre, axe, avant, nouveauBloc, cleRayons, cleGeometrie, axeCote, hautCote, estOuvert } from './modele.js?v=20261024222224';
+import { coinsPlan, murDuPlan, normalePlan, toit, origine, cotes, contacts, idRampant } from './plan.js?v=20261024222224';
+import { etat, abonner, versEchelle, annulation, zeroDB, reglage, notifier } from './etat.js?v=20261024222224';
+import { valeurRaster } from './calcul.js?v=20261024222224';
 
 // MARK: Matrices (colonnes)
 
@@ -271,14 +271,48 @@ export class Vue3D {
     const scan = s.contour != null;
     const t0 = s.plan ? toit(s) : null;
     const facesToit = t0 ? t0.faces() : [];
+    // Coupes dessinées : leurs volumes pleins sont ôtés des surfaces de la pièce (murs, sol, plafond,
+    // pentes) ; d'eux-mêmes, on ne voit que les faces tournées vers l'air.
+    const creux = s.blocs.filter((b) => b.duPlan === 'profil').map(polyedre);
+    const demi = (pts, n, c) => {   // garde n · p ≤ c
+      const r = [];
+      for (let i = 0; i < pts.length; i++) {
+        const a = pts[i], b = pts[(i + 1) % pts.length], fa = v3.dot(n, a) - c, fb = v3.dot(n, b) - c;
+        if (fa <= 0) r.push(a);
+        if ((fa < 0 && fb > 0) || (fa > 0 && fb < 0)) r.push(v3.add(a, v3.mul(v3.sub(b, a), fa / (fa - fb))));
+      }
+      return r;
+    };
+    const aireP = (q) => { let n = [0, 0, 0]; for (let i = 0; i < q.length; i++) n = v3.add(n, v3.cross(q[i], q[(i + 1) % q.length])); return v3.len(n) / 2; };
+    const sansCreux = (pts, sauf = null) => {
+      let morceaux = [pts];
+      for (const P of creux) {
+        if (P === sauf) continue;
+        const suite = [];
+        for (const m of morceaux) {
+          if (m.every((q) => q[0] < P.bmin[0] - 1e-4) || m.every((q) => q[0] > P.bmax[0] + 1e-4) || m.every((q) => q[1] < P.bmin[1] - 1e-4)
+            || m.every((q) => q[1] > P.bmax[1] + 1e-4) || m.every((q) => q[2] < P.bmin[2] - 1e-4) || m.every((q) => q[2] > P.bmax[2] + 1e-4)) { suite.push(m); continue; }
+          let reste = m;
+          for (const pl of P.plans) {
+            if (reste.length < 3) break;
+            const dehors = demi(reste, v3.mul(pl.n, -1), -(pl.d + 1e-4));
+            if (dehors.length >= 3 && aireP(dehors) > 1e-6) suite.push(dehors);
+            reste = demi(reste, pl.n, pl.d + 1e-4);
+          }
+        }
+        morceaux = suite;
+      }
+      return morceaux;
+    };
+    const remplir = (t, q, n, col, envers = false) => { for (let i = 1; i < q.length - 1; i++) (envers ? tri(t, q[0], q[i + 1], q[i], n, col) : tri(t, q[0], q[i], q[i + 1], n, col)); };
     facesBoite.forEach(([q, n], c) => {
       const t = murs[c];
       if (c === 4 && s.contour) {
         const col = coul(s.faces[4]).map((v, i) => (i < 3 ? v * 0.8 : v));
-        for (const [a, b, d] of trianguler(s.contour)) tri(t, [a[0], a[1], 0.002], [b[0], b[1], 0.002], [d[0], d[1], 0.002], [0, 0, 1], col);
+        for (const [a, b, d] of trianguler(s.contour)) for (const q of sansCreux([[a[0], a[1], 0.002], [b[0], b[1], 0.002], [d[0], d[1], 0.002]])) remplir(t, q, [0, 0, 1], col);
       } else if (c === 5 && s.plan && !estOuvert(s.faces[5])) {
         const col = coul(s.faces[5]);
-        for (const f of facesToit) if (f.mur == null) for (let i = 1; i < f.points.length - 1; i++) tri(t, f.points[0], f.points[i + 1], f.points[i], [0, 0, -1], col);
+        for (const f of facesToit) if (f.mur == null) for (const q of sansCreux(f.points)) remplir(t, q, [0, 0, -1], col, true);
       } else if (!estOuvert(s.faces[c]) && !scan) {
         const col = coul(s.faces[c]).map((v, i) => (i < 3 && c === 4 ? v * 0.8 : v));
         tri(t, coins[q[0]], coins[q[1]], coins[q[2]], n, col); tri(t, coins[q[0]], coins[q[2]], coins[q[3]], n, col);
@@ -288,7 +322,7 @@ export class Vue3D {
     const murSel = murDuPlan(s, etat.selection);
     // Volumes (sauf murs et rampants de la pièce dessinée, dessinés à part).
     for (const b of s.blocs) {
-      if (typeof b.duPlan === 'number' && (b.forme === 'toit' || b.forme === 'paroi')) continue;
+      if ((typeof b.duPlan === 'number' && (b.forme === 'toit' || b.forme === 'paroi')) || b.duPlan === 'profil') continue;
       const sel = etat.selection === b.id;
       const p = polyedre(b);
       if (b.forme === 'ouverture') {
@@ -324,9 +358,10 @@ export class Vue3D {
           const s0 = Math.max(a[0], 0), s1 = Math.min(b[0], w.longueur);
           if (s1 - s0 <= 1e-6) continue;
           const zh = (u) => a[1] + (b[1] - a[1]) * (u - a[0]) / Math.max(b[0] - a[0], 1e-12);
-          const p0 = pt(s0, 0), p1 = pt(s1, 0), p2 = pt(s1, zh(s1)), p3 = pt(s0, zh(s0));
-          tri(t, p0, p1, p2, nIn, col); tri(t, p0, p2, p3, nIn, col);
-          trait(ar, p3, p2, ac); trait(ar, p0, p3, ac); trait(ar, p1, p2, ac);
+          const p0 = pt(s0, 0), p1 = pt(s1, 0), p2 = pt(s1, zh(s1)), p3 = pt(s0, zh(s0)), quad = [p0, p1, p2, p3];
+          const morceaux = sansCreux(quad);
+          for (const q of morceaux) remplir(t, q, nIn, col);
+          if (morceaux.length === 1 && Math.abs(aireP(morceaux[0]) - aireP(quad)) < 1e-6) { trait(ar, p3, p2, ac); trait(ar, p0, p3, ac); trait(ar, p1, p2, ac); }
         }
         faces.push({ n: nIn, p: [w.a[0], w.a[1], 0], mur: null, t, ar, paroi: [nIn, [w.a[0], w.a[1], 0]] });
       }
@@ -340,13 +375,26 @@ export class Vue3D {
         let nb = v3.norm(v3.cross(v3.sub(f.points[2], f.points[0]), v3.sub(f.points[1], f.points[0])));
         if (nb[2] > 0) nb = v3.mul(nb, -1);
         const dessous = [], dessus = [];
-        for (let i = 1; i < f.points.length - 1; i++) {
-          tri(dessous, f.points[0], f.points[i + 1], f.points[i], nb, col);
-          tri(dessus, f.points[0], f.points[i], f.points[i + 1], v3.mul(nb, -1), col.map((v, k) => (k < 3 ? v * 0.85 : v)));
+        for (const q of sansCreux(f.points)) {
+          remplir(dessous, q, nb, col, true);
+          remplir(dessus, q, v3.mul(nb, -1), col.map((v, k) => (k < 3 ? v * 0.85 : v)));
         }
         const paroi = [[r.n[0], r.n[1], 0], [r.a[0], r.a[1], r.pied]];
         faces.push({ n: nb, p: f.points[0], mur: null, t: dessous, ar: [], paroi });
         faces.push({ n: v3.mul(nb, -1), p: f.points[0], mur: null, t: dessus, ar: [], paroi });
+      }
+      // Coupes dessinées : faces des volumes pleins tournées vers l'air, vues de l'intérieur (comme les murs).
+      const air = (p) => p[2] > 1e-3 && p[2] < H - 1e-3 && (!s.contour || dansPolygone(p[0], p[1], s.contour)) && !creux.some((P) => P.contient(p, -1e-4));
+      const colP = coul(s.plan.murs[0] ? s.plan.murs[0].materiau : 'platre');
+      for (const P of creux) {
+        P.facettes.forEach((f, k) => {
+          const pts = f.map((i) => P.sommets[i]), n = P.plans[k].n;
+          const c = pts.reduce((m, q) => v3.add(m, v3.mul(q, 1 / pts.length)), [0, 0, 0]);
+          if (!air(v3.add(c, v3.mul(n, 0.02)))) return;
+          const dedans = [];
+          for (const q of sansCreux(pts, P)) remplir(dedans, q, n, colP);
+          faces.push({ n, p: pts[0], mur: null, t: dedans, ar: [] });
+        });
       }
       // Retombées (marches verticales du toit au droit d'un coin rentrant).
       for (const q of t0.retombees()) {

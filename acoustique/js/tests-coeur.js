@@ -1,12 +1,12 @@
 // Vérifications du cœur de calcul (sans affichage), reprises de l'autotest de l'app Mac.
 // S'exécutent dans le navigateur (tests.html) ou dans un moteur JavaScript seul.
 
-import { aire } from './base.js?v=20261024211500';
-import { nouvelleScene, nouvelleEnceinte, nouveauBloc, dansSolide, dansContour, polyedre } from './modele.js?v=20261024211500';
-import { FORMES_PLAN, appliquerPlan, toit, volumePlan, coinsPlan, EPAISSEUR, aimanterObjet, contacts, nouveauPlan, dessinerPlan, dansLaPiece } from './plan.js?v=20261024211500';
-import { PREREGLAGES } from './modeles.js?v=20261024211500';
-import { lancerPartie, terminer, energie, direct, directivite, Bandes, NOMBRE_DE_RAYONS } from './rayons.js?v=20261024211500';
-import { filtre, amplitude } from './calcul.js?v=20261024211500';
+import { aire } from './base.js?v=20261024222224';
+import { nouvelleScene, nouvelleEnceinte, nouveauBloc, dansSolide, dansContour, polyedre } from './modele.js?v=20261024222224';
+import { FORMES_PLAN, appliquerPlan, toit, volumePlan, coinsPlan, EPAISSEUR, aimanterObjet, contacts, nouveauPlan, dessinerPlan, dansLaPiece } from './plan.js?v=20261024222224';
+import { PREREGLAGES } from './modeles.js?v=20261024222224';
+import { lancerPartie, terminer, energie, direct, directivite, Bandes, NOMBRE_DE_RAYONS } from './rayons.js?v=20261024222224';
+import { filtre, amplitude } from './calcul.js?v=20261024222224';
 
 const db = (x) => 20 * Math.log10(Math.max(x, 1e-12));
 const rayons = (s, e) => terminer([lancerPartie(s, e, 0, NOMBRE_DE_RAYONS)], s);

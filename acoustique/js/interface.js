@@ -4,17 +4,17 @@
 import { etat, abonner, notifier, demarrer, modifier, reglage, formePlan, finirEditionPlan, retirerMur, ouvrirDansMur,
   ajouterEnceinte, ajouterBloc, supprimer, dupliquer, lancerCalcul, arreterCalcul, aJour, aRecalculer, estimation, ECHELLE_DB, deplacerObjet,
   entrees, gravesAutomatiques, nouveauProjet, ouvrirScene, reprendre, dimensionsRect, typePiece, tournerObjet,
-  commencerDessin, annulerDessin, terminerDessin, retirerPointDessin } from './etat.js?v=20261024211500';
-import { MATERIAUX, materiau, GENRES, genre, FILTRES, FORMES, FORMES_AJOUTABLES, borner, estOuvert } from './modele.js?v=20261024211500';
-import { FORMES_PLAN, coinsPlan, murDuPlan, origine, volumePlan, EPAISSEUR, idMur } from './plan.js?v=20261024211500';
-import { Bandes } from './rayons.js?v=20261024211500';
-import { fmaxOndes } from './calcul.js?v=20261024211500';
-import { cssMateriau, turbo, v2, aire } from './base.js?v=20261024211500';
-import { textePixel } from './police.js?v=20261024211500';
-import { chercherEcoute, chercherSalle, arreterRecherche, dureeEcoute, dureeSalle } from './placement.js?v=20261024211500';
-import { Vue3D } from './vue3d.js?v=20261024211500';
-import { Plan2D } from './plan2d.js?v=20261024211500';
-import { Courbe, FMIN, FMAX } from './courbe.js?v=20261024211500';
+  commencerDessin, annulerDessin, terminerDessin, retirerPointDessin } from './etat.js?v=20261024222224';
+import { MATERIAUX, materiau, GENRES, genre, FILTRES, FORMES, FORMES_AJOUTABLES, borner, estOuvert } from './modele.js?v=20261024222224';
+import { FORMES_PLAN, coinsPlan, murDuPlan, origine, volumePlan, EPAISSEUR, idMur } from './plan.js?v=20261024222224';
+import { Bandes } from './rayons.js?v=20261024222224';
+import { fmaxOndes } from './calcul.js?v=20261024222224';
+import { cssMateriau, turbo, v2, aire } from './base.js?v=20261024222224';
+import { textePixel } from './police.js?v=20261024222224';
+import { chercherEcoute, chercherSalle, arreterRecherche, dureeEcoute, dureeSalle } from './placement.js?v=20261024222224';
+import { Vue3D } from './vue3d.js?v=20261024222224';
+import { Plan2D } from './plan2d.js?v=20261024222224';
+import { Courbe, FMIN, FMAX } from './courbe.js?v=20261024222224';
 
 const $ = (sel, r = document) => r.querySelector(sel);
 const el = (tag, attrs = {}, ...enfants) => {
@@ -303,8 +303,8 @@ function cartePiece() {
     const sc = etat.scene, ai = sc.plan ? Math.abs(aire(sc.plan.coins)) : sc.longueur * sc.largeur, v = sc.plan ? volumePlan(sc) : null;
     return `${ai.toFixed(1)} m² au sol · ${(v ?? ai * sc.hauteur).toFixed(1)} m³`;
   }));
-  return carte('Pièce', rect ? 'Glissez un coin blanc dans le plan pour agrandir la pièce (elle reste rectangulaire).'
-    : 'Choisissez une forme, ou « Dessiner à la main » : cliquez les coins un par un sur le plan (⇧ pour un mur droit, ⌥ sans grille), puis le point vert pour fermer. Ensuite, dans le plan : glisser un coin, cliquer un « + » pour en ajouter, double-clic pour en ôter ; dans la coupe : glisser les points (hauteurs, pente). Cliquez un mur pour lui donner un rampant.', ...contenu);
+  return carte('Pièce', rect ? 'Plan et coupe : glisser un point blanc le déplace seul (la pièce devient alors personnalisée), un « + » ajoute un point, un double-clic en ôte un. Dans la coupe, ce qui est retiré est plein sur toute la profondeur.'
+    : 'Choisissez une forme, ou « Dessiner à la main » : cliquez les coins un par un sur le plan (⇧ pour un mur droit, ⌥ sans grille), puis le point vert pour fermer. Ensuite, dans le plan : glisser un coin, cliquer un « + » pour en ajouter, double-clic pour en ôter ; dans la coupe, de même (ce qui est retiré est plein sur toute la profondeur). Cliquez un mur pour lui donner un rampant.', ...contenu);
 }
 
 function carteSelection() {

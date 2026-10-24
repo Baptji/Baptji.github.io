@@ -3,8 +3,8 @@
 // impulsion large bande, transformée de Fourier accumulée sur un réseau 3D (1/24 d'octave),
 // parois à impédance réelle tirée de α, faces ouvertes en couche absorbante (PML).
 
-import { celerite, rhoAir, cxAdd, cxMul, cxPhase, cxScal, cxDiv } from './base.js?v=20261024211500';
-import { MATERIAUX, materiau, alphaOndes, estOuvert, axeCote, hautCote, aireCote, volume, polyedre, passage, axe, dansContour } from './modele.js?v=20261024211500';
+import { celerite, rhoAir, cxAdd, cxMul, cxPhase, cxScal, cxDiv } from './base.js?v=20261024222224';
+import { MATERIAUX, materiau, alphaOndes, estOuvert, axeCote, hautCote, aireCote, volume, polyedre, passage, axe, dansContour } from './modele.js?v=20261024222224';
 
 export const QUALITES = {
   brouillon: { nom: 'Brouillon', budget: 600000, fmaxPlafond: 500, dureeMax: 1.0 },

@@ -2,8 +2,8 @@
 // dérivent murs, pentes affichées et volumes solides ; fenêtres ancrées ; cotes et aimant.
 // Traduction de l'app Mac (Plan.swift, Toit.swift).
 
-import { v2, aire, trianguler, dansPolygone } from './base.js?v=20261024211500';
-import { nouveauBloc, borner, polyedre, axe, solides } from './modele.js?v=20261024211500';
+import { v2, aire, trianguler, dansPolygone } from './base.js?v=20261024222224';
+import { nouveauBloc, borner, polyedre, axe, solides } from './modele.js?v=20261024222224';
 
 export const EPAISSEUR = 0.14;
 
@@ -432,7 +432,7 @@ export function appliquerPlan(s, recadrer = true) {
 /// Volume d'air de la pièce dessinée (échantillons de 10 cm).
 export function volumePlan(s) {
   if (!s.plan || !s.contour) return null;
-  const pas = 0.1, pans = s.blocs.filter((b) => b.duPlan != null && b.forme === 'toit').map(polyedre);
+  const pas = 0.1, pans = s.blocs.filter((b) => (b.duPlan != null && b.forme === 'toit') || b.duPlan === 'profil').map(polyedre);
   let v = 0;
   for (let x = pas / 2; x < s.longueur; x += pas) for (let y = pas / 2; y < s.largeur; y += pas) {
     if (!dansPolygone(x, y, s.contour)) continue;
