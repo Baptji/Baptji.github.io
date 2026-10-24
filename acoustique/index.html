@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acoustique</title>
+<meta name="description" content="Des enceintes dans une pièce, en 3D : modes, interférences, court-circuit acoustique, pièce mansardée dessinée.">
+<link rel="icon" href="favicon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header id="barre" class="barre"></header>
+  <main class="corps">
+    <aside id="liste" class="liste" aria-label="Éléments de la scène"></aside>
+    <section class="centre" aria-label="Vue et réponse au micro">
+      <div id="sous-barre" class="sous-barre"></div>
+      <div class="vue-et-legende">
+        <div class="vues">
+          <div id="vue3d" class="vue" aria-label="Vue 3D"></div>
+          <div id="vue2d" class="vue" aria-label="Plan ou coupe" hidden></div>
+          <div id="bandeau" class="bandeau" aria-live="polite"></div>
+          <div id="outils-vue" class="outils-vue"></div>
+          <p id="aide-vue" class="aide-vue"></p>
+        </div>
+        <div id="legende" class="legende"><canvas></canvas></div>
+      </div>
+      <div class="zone-courbe">
+        <div class="entete-courbe">
+          <strong>Réponse au micro</strong>
+          <span id="micro-coord" class="doux chiffres"></span>
+          <span class="espace"></span>
+          <div id="choix-courbe" class="segmente" role="group" aria-label="Étendue de la courbe">
+            <button type="button" data-v="graves" class="actif">Graves</button>
+            <button type="button" data-v="tout">Tout le spectre</button>
+          </div>
+        </div>
+        <div id="courbe" class="courbe"></div>
+      </div>
+    </section>
+    <aside id="inspecteur" class="inspecteur" aria-label="Réglages"></aside>
+  </main>
+  <footer class="pied-page">Acoustique · <a href="../">Squid</a> · <a href="https://creativecommons.org/licenses/by-nc/4.0/deed.fr" rel="license">CC BY-NC 4.0</a></footer>
+</div>
+<script type="module">
+  import { lancer } from './js/interface.js';
+  lancer();
+</script>
+</body>
+</html>

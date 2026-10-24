@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acoustique — vérifications</title>
+<style>
+  body { font: 13px/1.5 ui-monospace, Menlo, monospace; margin: 20px; background: #fafaf8; color: #1d1d1f; }
+  .ok { color: #1b7d33; } .echec { color: #c2001b; font-weight: 700; } h1 { font: 600 16px -apple-system, sans-serif; }
+</style>
+</head>
+<body>
+<h1>Acoustique — vérifications</h1>
+<div id="sortie"></div>
+<script type="module">
+  import { testsCoeur } from './js/tests-coeur.js';
+  import { nouvelleScene, nouvelleEnceinte } from './js/modele.js';
+  import { dessinerPlan, appliquerPlan, EPAISSEUR } from './js/plan.js';
+  import { calculer, moteurOndes } from './js/ondes.js';
+  import { celerite } from './js/base.js';
+
+  const sortie = document.getElementById('sortie');
+  let echecs = 0;
+  const verifier = (nom, ok, detail = '') => {
+    if (!ok) echecs++;
+    sortie.insertAdjacentHTML('beforeend', `<div class="${ok ? 'ok' : 'echec'}">${ok ? 'ok   ' : 'ÉCHEC'} ${nom}${detail ? ' — ' + detail : ''}</div>`);
+  };
+  const db = (x) => 20 * Math.log10(Math.max(x, 1e-12));
+  const mod = (z) => Math.hypot(z.re, z.im);
+
+  (async () => {
+    const t0 = performance.now();
+    testsCoeur(verifier, new URLSearchParams(location.search).has('rayons'));
+    const M = await moteurOndes();
+    verifier('WebGPU disponible', !!M);
+    if (M) {
+      // Champ libre : |H| = 1/r.
+      const libre = nouvelleScene({ longueur: 3, largeur: 3, hauteur: 3, faces: Array(6).fill('ouvert'), ecoute: 1.5, micro: [1.5, 1.5] });
+      const omni = nouvelleEnceinte('omni', 1.5, 1.5, 1.5);
+      const c = await calculer(libre, omni, 'brouillon', 't');
+      for (const [r, attendu] of [[1, 1], [0.5, 2]]) {
+        const w = c.poids([1.5 + r, 1.5, 1.5]);
+        const ec = [40, 80, 160, 315].filter((f) => f <= c.fmax).map((f) => db(mod(c.valeur(w, c.indice(f)))) - db(attendu));
+        verifier(`champ libre à ${r} m = ${Math.round(db(attendu))} dB`, Math.max(...ec.map(Math.abs)) < 1.5, ec.map((x) => x.toFixed(2)).join(' '));
+      }
+      // Boîte rigide : premier mode axial à c/2L.
+      const boite = nouvelleScene({ longueur: 3.43, largeur: 1.2, hauteur: 1.0, faces: Array(6).fill('rigide'), ecoute: 0.7, micro: [3.1, 0.9] });
+      const cb = await calculer(boite, nouvelleEnceinte('omni', 0.3, 0.3, 0.3), 'brouillon', 't');
+      const wb = cb.poids([3.1, 0.9, 0.7]);
+      const f1 = celerite / (2 * cb.grille.ni[0] * cb.grille.dx);
+      const cand = cb.freqs.map((f, i) => i).filter((i) => cb.freqs[i] > 0.8 * f1 && cb.freqs[i] < 1.2 * f1);
+      const pic = cand.reduce((a, i) => (mod(cb.valeur(wb, i)) > mod(cb.valeur(wb, a)) ? i : a), cand[0]);
+      verifier('mode axial de la boîte rigide', Math.abs(cb.freqs[pic] - f1) / f1 < 0.04, `pic ${cb.freqs[pic].toFixed(1)} Hz, théorie ${f1.toFixed(1)} Hz`);
+      // Court-circuit acoustique.
+      const anecho = nouvelleScene({ longueur: 4, largeur: 4, hauteur: 3, faces: Array(6).fill('ouvert'), ecoute: 1.5, micro: [2.5, 2] });
+      const nu = nouvelleEnceinte('nu', 1.5, 2, 1.5); nu.baffle = 0.15;
+      const cn = await calculer(anecho, nu, 'brouillon', 't'), co = await calculer(anecho, nouvelleEnceinte('omni', 1.5, 2, 1.5), 'brouillon', 't');
+      const wn = cn.poids([2.5, 2, 1.5]), wo = co.poids([2.5, 2, 1.5]);
+      const bas = db(mod(cn.valeur(wn, cn.indice(50)))) - db(mod(co.valeur(wo, co.indice(50))));
+      verifier('court-circuit : graves effondrés', bas < -7, `${bas.toFixed(1)} dB à 50 Hz`);
+      // Rectangle dessiné à murs rigides : même mode.
+      const rig = nouvelleScene({ longueur: 3.43, largeur: 1.2, hauteur: 1.0, faces: Array(6).fill('rigide'), ecoute: 0.7, micro: [3.1, 0.9] });
+      dessinerPlan(rig);
+      for (const m of rig.plan.murs) m.materiau = 'rigide';
+      appliquerPlan(rig);
+      const eM = EPAISSEUR;
+      const cr = await calculer(rig, nouvelleEnceinte('omni', 0.3 + eM, 0.3 + eM, 0.3), 'brouillon', 't');
+      const wr = cr.poids([3.1 + eM, 0.9 + eM, 0.7]), fr = celerite / (2 * 3.43);
+      const cr2 = cr.freqs.map((f, i) => i).filter((i) => cr.freqs[i] > 0.8 * fr && cr.freqs[i] < 1.2 * fr);
+      const pr = cr2.reduce((a, i) => (mod(cr.valeur(wr, i)) > mod(cr.valeur(wr, a)) ? i : a), cr2[0]);
+      verifier('ondes : mode axial du rectangle dessiné', Math.abs(cr.freqs[pr] - fr) / fr < 0.06, `pic ${cr.freqs[pr].toFixed(1)} Hz, théorie ${fr.toFixed(1)} Hz`);
+    }
+    sortie.insertAdjacentHTML('beforeend', `<p><strong>${echecs ? `❌ ${echecs} échec(s)` : '✅ tout est bon'}</strong> (${((performance.now() - t0) / 1000).toFixed(1)} s)</p>`);
+    document.title = echecs ? 'ÉCHEC' : 'OK';
+  })();
+</script>
+</body>
+</html>
