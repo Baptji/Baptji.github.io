@@ -1,17 +1,14 @@
-// Interface (présentation de Fiches sondages) : barre d'outils, liste des éléments à gauche,
-// cartes à droite (pièce, sélection, graves, affichage), légende, bandeaux.
+// Interface : barre du haut (vues, calcul des graves, fichier), réglages d'affichage au-dessus de la vue,
+// liste des éléments à gauche (sources, murs, objets), à droite la pièce et l'élément sélectionné.
 
-import { etat, abonner, notifier, demarrer, modifier, reglage, appliquerModele, formePlan, dessinerPlan, retirerPlan, finirEditionPlan,
-  insererCoin, retirerMur, ouvrirDansMur, ajouterEnceinte, ajouterBloc, supprimer, dupliquer, materiauEnLot, lancerCalcul, arreterCalcul,
-  aJour, aRecalculer, estimation, hautEchelle, entrees, gravesAutomatiques } from './etat.js';
-import { MATERIAUX, materiau, GENRES, genre, FILTRES, FORMES, FORMES_AJOUTABLES, NOMS_COTES, borner, estOuvert } from './modele.js';
+import { etat, abonner, notifier, demarrer, modifier, reglage, formePlan, finirEditionPlan, retirerMur, ouvrirDansMur,
+  ajouterEnceinte, ajouterBloc, supprimer, dupliquer, lancerCalcul, arreterCalcul, aJour, aRecalculer, estimation, hautEchelle,
+  entrees, gravesAutomatiques, nouveauProjet, ouvrirScene, reprendre, dimensionsRect, typePiece, tournerObjet } from './etat.js';
+import { MATERIAUX, materiau, GENRES, genre, FILTRES, FORMES, FORMES_AJOUTABLES, borner, estOuvert } from './modele.js';
 import { FORMES_PLAN, coinsPlan, murDuPlan, origine, volumePlan, EPAISSEUR, idMur } from './plan.js';
-import { PREREGLAGES } from './modeles.js';
-import { QUALITES } from './ondes.js';
 import { Bandes } from './rayons.js';
 import { fmaxOndes } from './calcul.js';
 import { cssMateriau, turbo, v2, aire } from './base.js';
-import { textePixel } from './police.js';
 import { Vue3D } from './vue3d.js';
 import { Plan2D } from './plan2d.js';
 import { Courbe, FMIN, FMAX } from './courbe.js';
@@ -44,12 +41,25 @@ function rafraichirLiaisons() {
   }
 }
 
-function nombre(titre, lire, ecrire, o = {}) {
-  const { unite = 'm', mini = -1e9, maxi = 1e9, pas = 0.05, dec = 2 } = o;
+function champNombre(titre, lire, ecrire, o = {}) {
+  const { mini = -1e9, maxi = 1e9, pas = 0.05, dec = 2, fin } = o;
   const i = el('input', { type: 'number', step: pas, min: mini, max: maxi, 'data-dec': dec, 'aria-label': titre });
-  i.value = (+lire()).toFixed(dec).replace(/\.?0+$/, '') || '0';
-  i.addEventListener('change', () => { const v = parseFloat(i.value.replace(',', '.')); if (isFinite(v)) ecrire(Math.min(Math.max(v, mini), maxi)); });
-  return el('label', { class: 'ligne' }, el('span', { class: 'etiquette' }, titre), el('span', { class: 'champ' }, lier(i, lire), el('span', { class: 'unite' }, unite)));
+  i.value = String(+(+lire()).toFixed(dec));
+  i.addEventListener('change', () => { const v = parseFloat(i.value.replace(',', '.')); if (isFinite(v)) { ecrire(Math.min(Math.max(v, mini), maxi)); if (fin) fin(); } });
+  return lier(i, lire);
+}
+function nombre(titre, lire, ecrire, o = {}) {
+  return el('label', { class: 'ligne' }, el('span', { class: 'etiquette' }, titre),
+    el('span', { class: 'champ' }, champNombre(titre, lire, ecrire, o), el('span', { class: 'unite' }, o.unite ?? 'm')));
+}
+/// Curseur + valeur à la façon du site de référence (la valeur reste modifiable au clavier).
+function curseur(titre, lire, ecrire, o = {}) {
+  const { mini, maxi, pas = 0.05, fin } = o;
+  const r = el('input', { type: 'range', min: mini, max: maxi, step: pas, 'aria-label': titre });
+  r.value = lire();
+  r.addEventListener('input', () => ecrire(+r.value));
+  if (fin) r.addEventListener('change', fin);
+  return el('div', { class: 'curseur' }, nombre(titre, lire, ecrire, o), lier(r, lire));
 }
 function choix(titre, options, lire, ecrire) {
   const s = el('select', { 'aria-label': titre });
@@ -58,11 +68,11 @@ function choix(titre, options, lire, ecrire) {
   s.addEventListener('change', () => ecrire(s.value));
   return el('label', { class: 'ligne' }, el('span', { class: 'etiquette' }, titre), lier(s, lire));
 }
-function case_(titre, lire, ecrire) {
+function case_(titre, lire, ecrire, attrs = {}) {
   const i = el('input', { type: 'checkbox' });
   i.checked = !!lire();
   i.addEventListener('change', () => ecrire(i.checked));
-  return el('label', { class: 'case' }, lier(i, lire), el('span', {}, titre));
+  return el('label', Object.assign({ class: 'case' }, attrs), lier(i, lire), el('span', {}, titre));
 }
 function segments(options, lire, ecrire, classe = '') {
   const d = el('div', { class: `segmente ${classe}`, role: 'group' });
@@ -87,8 +97,9 @@ function menu(titre, options, agir) {
   s.addEventListener('change', () => { const v = s.value; s.value = ''; if (v) agir(v); });
   return s;
 }
+/// Élément montré seulement quand visible() est vrai.
+function si(e, visible) { liaisons.push({ e, lire: () => { e.hidden = !visible(); return ''; } }); e.hidden = !visible(); return e; }
 const MATS = () => MATERIAUX.filter((m) => m.id !== 'ouvert').map((m) => [m.id, m.nom]);
-const MATS_TOUS = () => MATERIAUX.map((m) => [m.id, m.nom]);
 
 function aide(titre, texte) {
   const b = el('button', { type: 'button', class: 'aide', 'aria-label': `Aide : ${titre}` }, '?');
@@ -96,36 +107,70 @@ function aide(titre, texte) {
   return el('span', { class: 'aide-boite' }, b, bulle);
 }
 function carte(titre, aideTexte, ...contenu) {
-  return el('section', { class: 'carte' }, el('div', { class: 'carte-titre' }, textePixel(titre.toUpperCase(), 1.5), aideTexte ? aide(titre, aideTexte) : null), ...contenu);
+  return el('section', { class: 'carte' }, el('div', { class: 'carte-titre' }, el('span', {}, titre), aideTexte ? aide(titre, aideTexte) : null), ...contenu);
 }
 
-// MARK: Barre d'outils
+// MARK: Barre du haut
 
 function statut() {
   if (etat.webgpu === false) return ['Aigus seulement (navigateur sans WebGPU)', 'orange'];
   if (etat.enCours) return [`Graves : calcul ${Math.round(etat.progression * 100)} %`, 'orange'];
-  const n = aRecalculer().length;
-  if (n) return [gravesAutomatiques() ? 'Graves : calcul dans un instant' : 'Graves à calculer', 'orange'];
+  if (aRecalculer().length) return [gravesAutomatiques() ? 'Graves : calcul dans un instant' : 'Graves à calculer', 'orange'];
   return [`Graves à jour · ondes ≤ ${Math.round(estimation().fmax)} Hz`, 'vert'];
+}
+
+const duree = (s) => (s < 60 ? `${Math.max(1, Math.round(s))} s` : `${Math.round(s / 60)} min`);
+function remplirCalcul(z) {
+  const n = aRecalculer().length;
+  const cle = etat.webgpu === false ? 'x' : etat.enCours ? `c${Math.round(etat.progression * 100)}` : `${n}|${etat.webgpu}|${Math.round(estimation().secondes)}`;
+  if (z.dataset.e === cle) return;
+  z.dataset.e = cle;
+  z.innerHTML = '';
+  if (etat.webgpu === false) z.append(el('button', { type: 'button', disabled: true, title: "Ce navigateur n'a pas WebGPU : essayez Chrome, Edge ou Safari récents." }, 'Graves indisponibles'));
+  else if (etat.enCours) z.append(el('button', { type: 'button', class: 'calcul-en-cours', onclick: arreterCalcul, title: 'Arrêter le calcul' }, `Arrêter · ${Math.round(etat.progression * 100)} %`));
+  else if (n && etat.webgpu) z.append(el('button', { type: 'button', class: 'principal', onclick: () => lancerCalcul(false), title: `Ondes jusqu'à ${Math.round(estimation().fmax)} Hz` }, `Calculer les graves · ≈ ${duree(estimation().secondes * n)}`));
+  else z.append(el('button', { type: 'button', disabled: true }, etat.webgpu == null ? 'Graves…' : 'Graves à jour'));
 }
 
 function construireBarre() {
   const b = $('#barre');
   b.innerHTML = '';
+  const fichier = el('input', { type: 'file', accept: '.json,application/json', hidden: true });
+  fichier.addEventListener('change', async () => {
+    const f = fichier.files[0]; if (!f) return;
+    try { const sc = JSON.parse(await f.text()); if (!sc.enceintes) throw new Error(); ouvrirScene(sc); }
+    catch { etat.message = 'Fichier illisible : il faut une scène enregistrée par Acoustique.'; notifier(); }
+    fichier.value = '';
+  });
+  const calcul = el('div', { class: 'zone-calcul' });
+  liaisons.push({ e: calcul, lire: () => { remplirCalcul(calcul); return ''; } });
+  calcul.value = '';
+  remplirCalcul(calcul);
   b.append(
-    el('div', { class: 'identite' }, el('img', { src: 'icone.png', alt: '', width: 30, height: 30 }),
+    el('div', { class: 'identite' }, el('img', { src: 'icone.png', alt: '', width: 28, height: 28 }),
       el('div', {}, lier(el('div', { class: 'titre' }), () => etat.scene.nom),
         el('div', { class: 'statut' }, el('span', { class: 'voyant' }), lier(el('span', { class: 'texte-statut' }), () => statut()[0])))),
-    el('div', { class: 'separateur' }),
     segments([['troisD', '3D'], ['plan', 'Plan'], ['coupe', 'Coupe']], () => etat.affichage, (v) => { reglage('affichage', v); montrerVue(); }),
-    segments([['frequence', 'Son pur'], ['bande', "Tiers d'octave"], ['global', 'Bruit rose global']], () => etat.mode, (v) => reglage('mode', v), 'modes'),
+    si(segments([[false, 'Nappe'], [true, 'Volume']], () => etat.volume3D, (v) => reglage('volume3D', v)), () => etat.affichage === 'troisD'),
+    segments([['frequence', 'Son pur'], ['bande', "Tiers d'octave"], ['global', 'Bruit rose']], () => etat.mode, (v) => reglage('mode', v), 'modes'),
     el('div', { class: 'espace' }),
-    el('button', { type: 'button', class: 'principal', onclick: exporterImage, title: 'Enregistrer la vue en image PNG' }, 'Exporter l’image'),
+    calcul,
+    case_('Auto', () => etat.gravesAuto, (v) => reglage('gravesAuto', v), { title: 'Recalculer les graves seul après chaque retouche (si le calcul dure moins de 40 s)' }),
+    el('div', { class: 'separateur' }),
+    el('button', { type: 'button', onclick: () => fichier.click(), title: 'Ouvrir une scène enregistrée (.json)' }, 'Ouvrir'),
+    el('button', { type: 'button', onclick: enregistrerScene, title: 'Enregistrer la scène (.json)' }, 'Enregistrer'),
+    el('button', { type: 'button', onclick: demanderNouveau, title: 'Repartir d’une pièce vide' }, 'Nouveau projet'),
+    el('button', { type: 'button', onclick: exporterImage, title: 'Enregistrer la vue en image PNG' }, 'Exporter l’image'),
+    fichier,
   );
   for (const n of b.querySelectorAll('.titre, .texte-statut')) n.textContent = '';
 }
 
-// MARK: Sous-barre (fréquence, hauteur d'écoute)
+function demanderNouveau() {
+  if (window.confirm('Créer un nouveau projet ? La scène actuelle sera remplacée (pensez à l’enregistrer avant si besoin).')) nouveauProjet();
+}
+
+// MARK: Sous-barre (fréquence, hauteur d'écoute, affichage)
 
 const versLog = (f) => Math.log(f / FMIN) / Math.log(FMAX / FMIN);
 const depuisLog = (t) => { const f = FMIN * Math.pow(FMAX / FMIN, t); return f < 100 ? Math.round(f * 10) / 10 : Math.round(f); };
@@ -150,117 +195,110 @@ function construireSousBarre() {
   ecoute.addEventListener('input', () => modifier((s) => { s.ecoute = +ecoute.value; borner(s); }));
   liaisons.push({ e: freq, lire: () => { freq.disabled = etat.mode === 'global'; return versLog(etat.frequence); } });
   liaisons.push({ e: ecoute, lire: () => { ecoute.max = Math.max(etat.scene.hauteur - 0.05, 0.1); return etat.scene.ecoute; } });
-  b.append(el('span', { class: 'doux' }, 'Fréquence'), freq, lier(el('output', { class: 'valeur' }), texteFrequence),
-    lier(el('output', { class: 'regime' }), regime), el('span', { class: 'separateur' }),
-    el('span', { class: 'doux' }, 'Écoute à'), ecoute, lier(el('output', { class: 'valeur' }), () => `${etat.scene.ecoute.toFixed(2)} m`));
+  const plage = el('select', { 'aria-label': "Étendue de l'échelle", title: "Écart en décibels entre le haut et le bas de l'échelle des couleurs" });
+  for (const v of [10, 20, 30, 40, 60]) plage.append(el('option', { value: v }, `${v} dB`));
+  plage.value = etat.plage;
+  plage.addEventListener('change', () => reglage('plage', +plage.value));
+  const densite = el('input', { type: 'range', min: -1.5, max: 1.5, step: 0.05, 'aria-label': 'Densité du volume', title: 'Rendre le volume plus transparent ou plus opaque' });
+  densite.addEventListener('input', () => reglage('densite', Math.pow(3, +densite.value)));
+  lier(densite, () => Math.log(etat.densite) / Math.log(3));
+  b.append(
+    el('span', { class: 'groupe-sb' }, el('span', { class: 'doux' }, 'Fréquence'), freq, lier(el('output', { class: 'valeur' }), texteFrequence), lier(el('output', { class: 'regime' }), regime)),
+    el('span', { class: 'separateur' }),
+    el('span', { class: 'groupe-sb ecoute' }, el('span', { class: 'doux' }, 'Écoute à'), ecoute, lier(el('output', { class: 'valeur' }), () => `${etat.scene.ecoute.toFixed(2)} m`)),
+    el('span', { class: 'separateur' }),
+    el('span', { class: 'groupe-sb' }, el('span', { class: 'doux' }, 'Échelle'), lier(plage, () => etat.plage),
+      case_('Figée', () => etat.echelleFixe, (v) => reglage('echelleFixe', v), { title: 'Garder le même haut d’échelle pour comparer des fréquences ou des réglages' }),
+      case_('Animer', () => etat.animer, (v) => reglage('animer', v), { title: "Montrer la pression qui oscille (son pur, graves calculés)" }),
+      si(case_('Pondération A', () => etat.ponderationA, (v) => reglage('ponderationA', v)), () => etat.mode === 'global')),
+    si(el('span', { class: 'groupe-sb' }, el('span', { class: 'doux' }, 'Densité'), densite), () => etat.affichage === 'troisD' && etat.volume3D),
+  );
   for (const o of b.querySelectorAll('output')) o.value = '';
 }
 
 // MARK: Liste des éléments (à gauche)
 
-let recherche = '';
 function construireListe() {
   const L = $('#liste'), s = etat.scene;
-  const garde = (nom) => !recherche || nom.toLowerCase().includes(recherche.toLowerCase());
-  const murs = s.plan ? s.plan.murs : [], volumes = s.blocs.filter((b) => b.duPlan == null);
+  const murs = s.plan ? s.plan.murs : [], objets = s.blocs.filter((b) => b.duPlan == null);
   L.innerHTML = '';
-  const ajouter = menu('+', [{ groupe: 'Enceinte', options: GENRES.map((g) => [`e:${g.id}`, g.nom]) }, { groupe: 'Volume', options: FORMES_AJOUTABLES.map((f) => [`b:${f}`, FORMES[f].nom]) }],
+  const ajouter = menu('+', [{ groupe: 'Source', options: GENRES.map((g) => [`e:${g.id}`, g.nom]) }, { groupe: 'Objet', options: FORMES_AJOUTABLES.map((f) => [`b:${f}`, FORMES[f].nom]) }],
     (v) => (v.startsWith('e:') ? ajouterEnceinte(v.slice(2)) : ajouterBloc(v.slice(2))));
-  ajouter.classList.add('plus'); ajouter.title = 'Ajouter une enceinte ou un volume';
-  const champ = el('input', { type: 'search', placeholder: 'Rechercher', value: recherche, 'aria-label': 'Rechercher un élément' });
-  champ.addEventListener('input', () => { recherche = champ.value; construireListe(); $('#liste input[type=search]').focus(); });
+  ajouter.classList.add('plus'); ajouter.title = 'Ajouter une source ou un objet';
+  const choisir = (id, sel) => { etat.selection = sel ? null : id; notifier(); };
   const ligne = (sel, couleur, titre, detail, action) => el('div', { class: `element${sel ? ' choisi' : ''}`, tabindex: 0, onclick: action, onkeydown: (ev) => { if (ev.key === 'Enter') action(); } },
     el('span', { class: 'pastille', style: `background:${cssMateriau(couleur)}` }), el('div', {}, el('div', { class: 'nom' }, titre), el('div', { class: 'detail' }, detail)));
   const corps = el('div', { class: 'elements' });
-  corps.append(el('div', { class: 'groupe' }, textePixel('ENCEINTES', 1.5)));
-  for (const e of s.enceintes.filter((x) => garde(x.nom))) {
+  corps.append(el('div', { class: 'groupe' }, 'Sources'));
+  for (const e of s.enceintes) {
     const sel = etat.selection === e.id;
-    const coche = el('input', { type: 'checkbox', 'aria-label': `${e.nom} joue`, onclick: (ev) => ev.stopPropagation() });
+    const coche = el('input', { type: 'checkbox', 'aria-label': `${e.nom} joue`, title: 'Joue', onclick: (ev) => ev.stopPropagation() });
     coche.checked = e.active;
     coche.addEventListener('change', () => modifier((sc) => { sc.enceintes.find((x) => x.id === e.id).active = coche.checked; }));
     const filtre = e.filtre === 'aucun' ? '' : ` · ${e.filtre === 'passeBas' ? '≤' : '≥'}${Math.round(e.coupure)} Hz`;
-    corps.append(el('div', { class: `element enceinte${sel ? ' choisi' : ''}`, tabindex: 0, onclick: () => { etat.selection = sel ? null : e.id; notifier(); } },
+    corps.append(el('div', { class: `element enceinte${sel ? ' choisi' : ''}`, tabindex: 0, onclick: () => choisir(e.id, sel) },
       coche, el('div', {}, el('div', { class: 'nom' }, e.nom), el('div', { class: 'detail' }, `${genre(e.genre).court} · ${Math.round(e.niveau)} dB${filtre}`)),
       e.active ? el('span', { class: `voyant ${aJour(e) ? 'vert' : 'orange'}`, title: aJour(e) ? 'Graves à jour' : 'Graves à calculer' }) : null,
-      el('button', { type: 'button', class: `seule${etat.solo === e.id ? ' actif' : ''}`, title: "N'afficher que cette enceinte",
+      el('button', { type: 'button', class: `seule${etat.solo === e.id ? ' actif' : ''}`, title: "N'écouter que cette source",
         onclick: (ev) => { ev.stopPropagation(); reglage('solo', etat.solo === e.id ? null : e.id); construireListe(); } }, 'seule')));
   }
   if (murs.length) {
-    corps.append(el('div', { class: 'groupe' }, textePixel('MURS', 1.5)));
+    corps.append(el('div', { class: 'groupe' }, 'Murs'));
     const q = coinsPlan(s), ms = murDuPlan(s, etat.selection);
     murs.forEach((m, i) => {
-      if (!garde(`Mur ${i + 1}`)) return;
       const l = q.length > 2 ? v2.dist(q[i], q[(i + 1) % q.length]) : 0;
       corps.append(ligne(ms === i, m.materiau, `Mur ${i + 1} · ${l.toFixed(2)} m`,
-        m.rampant ? `rampant · mur nain ${m.pied.toFixed(2)} m · ${Math.round(m.pente)}°` : materiau(m.materiau).nom,
+        m.rampant ? `rampant · ${Math.round(m.pente)}°` : materiau(m.materiau).nom,
         () => { etat.selection = ms === i ? null : idMur(i); notifier(); }));
     });
   }
-  if (volumes.length) {
-    corps.append(el('div', { class: 'groupe' }, textePixel('VOLUMES', 1.5)));
-    for (const b of volumes.filter((x) => garde(x.nom))) {
-      corps.append(ligne(etat.selection === b.id, b.forme === 'ouverture' ? 'ouvert' : b.materiau, b.nom, `${FORMES[b.forme].court} · ${materiau(b.materiau).nom}`,
-        () => { etat.selection = etat.selection === b.id ? null : b.id; notifier(); }));
+  if (objets.length) {
+    corps.append(el('div', { class: 'groupe' }, 'Objets'));
+    for (const b of objets) {
+      corps.append(ligne(etat.selection === b.id, b.forme === 'ouverture' ? 'ouvert' : b.materiau, b.nom, b.forme === 'ouverture' ? 'Ouverture' : materiau(b.materiau).nom,
+        () => choisir(b.id, etat.selection === b.id)));
     }
   }
-  L.append(el('div', { class: 'liste-titre' }, textePixel('ÉLÉMENTS', 2), el('span', { class: 'compte' }, String(s.enceintes.length + murs.length + volumes.length)), ajouter),
-    champ, corps, el('p', { class: 'pied' }, 'Cocher : enceinte qui joue. Cliquer : la régler à droite.'));
+  L.append(el('div', { class: 'liste-titre' }, el('span', {}, 'Éléments'), el('span', { class: 'compte' }, String(s.enceintes.length + murs.length + objets.length)), ajouter), corps);
 }
 
-// MARK: Inspecteur (à droite)
+// MARK: Panneau de droite : la pièce, puis l'élément choisi
 
-const relatif = (lire, o) => () => lire() - o();
 function construireInspecteur() {
   liaisons = liaisons.filter((l) => l.e.isConnected && !$('#inspecteur').contains(l.e));
-  const I = $('#inspecteur'), s = etat.scene;
+  const I = $('#inspecteur');
   I.innerHTML = '';
-  I.append(cartePiece(), carteSelection(),
-    carte('Graves (ondes)', "Sous la limite : équation des ondes en 3D sur la carte graphique (WebGPU) : modes de la pièce, interférences, court-circuit acoustique. Au-dessus : rayons (réflexions, absorption, directivité). En automatique, le calcul repart seul après chaque retouche s'il dure moins de 40 s.", ...carteCalcul()),
-    carte('Affichage', "Étendue : nombre de décibels entre le haut et le bas de l'échelle des couleurs. Échelle figée : garde le même haut pour comparer des fréquences ou des réglages.",
-      nombre('Étendue', () => etat.plage, (v) => reglage('plage', v), { unite: 'dB', mini: 10, maxi: 80, pas: 5, dec: 0 }),
-      case_('Échelle figée', () => etat.echelleFixe, (v) => reglage('echelleFixe', v)),
-      case_("Animer l'onde", () => etat.animer, (v) => reglage('animer', v)),
-      etat.affichage === 'troisD' ? case_('Coupe verticale en 3D', () => etat.coupe3D, (v) => reglage('coupe3D', v)) : null,
-      etat.mode === 'global' ? case_('Pondération A', () => etat.ponderationA, (v) => reglage('ponderationA', v)) : null));
-  void s;
+  I.append(cartePiece(), carteSelection());
 }
 
+const NOMS_FORMES = { rectangle: 'Rectangle', enL: 'En L', enT: 'En T', trapeze: 'Trapèze', mansarde: 'Mansarde', combles: 'Combles' };
+const encombrement = () => {
+  const q = etat.scene.plan ? etat.scene.plan.coins : [[0, 0], [etat.scene.longueur, etat.scene.largeur]];
+  return [Math.max(...q.map((c) => c[0])) - Math.min(...q.map((c) => c[0])), Math.max(...q.map((c) => c[1])) - Math.min(...q.map((c) => c[1]))];
+};
+
 function cartePiece() {
-  const s = etat.scene, pl = s.plan;
-  const fichier = el('input', { type: 'file', accept: '.json,application/json', hidden: true });
-  fichier.addEventListener('change', async () => {
-    const f = fichier.files[0]; if (!f) return;
-    try { const sc = JSON.parse(await f.text()); if (!sc.enceintes) throw new Error(); etat.scene = sc; etat.selection = null; etat.cadrage++; modifier(() => {}, { recadrer: !!sc.plan }); }
-    catch { etat.message = 'Fichier illisible : il faut une scène enregistrée par Acoustique.'; notifier(); }
-  });
-  const haut = el('div', { class: 'boutons' },
-    menu('Modèle', PREREGLAGES.map((p) => [p.id, p.nom]), appliquerModele),
-    menu(pl ? 'Forme' : 'Dessiner', (pl || s.contour ? [] : [['boite', 'Partir de cette boîte']]).concat(FORMES_PLAN.map((f) => [f.id, f.nom]), pl ? [['retirer', 'Revenir à une boîte']] : []),
-      (v) => (v === 'boite' ? dessinerPlan() : v === 'retirer' ? retirerPlan() : formePlan(v))),
-    el('button', { type: 'button', onclick: () => fichier.click(), title: 'Ouvrir une scène enregistrée (.json)' }, 'Ouvrir'),
-    el('button', { type: 'button', onclick: enregistrerScene, title: 'Enregistrer la scène (.json)' }, 'Enregistrer'), fichier);
-  const nom = el('input', { type: 'text', class: 'nom-scene', 'aria-label': 'Nom de la scène' });
-  nom.value = s.nom;
-  nom.addEventListener('change', () => modifier((sc) => { sc.nom = nom.value; }));
-  const contenu = [haut, lier(nom, () => etat.scene.nom)];
-  if (pl) {
-    const ai = Math.abs(aire(pl.coins)), v = volumePlan(s);
+  const s = etat.scene, rect = s.typePiece !== 'perso';
+  const hauteur = curseur('Hauteur sous plafond', () => etat.scene.hauteur, (x) => modifier((sc) => { sc.hauteur = x; borner(sc); }), { mini: 1.8, maxi: 8, pas: 0.05 });
+  const contenu = [segments([['rect', 'Rectangulaire'], ['perso', 'Personnalisée']], () => etat.scene.typePiece || 'rect', typePiece, 'large')];
+  if (rect) {
     contenu.push(
-      el('div', { class: 'ligne colonne' }, el('span', { class: 'etiquette' }, 'Grille'),
-        segments([[0.05, '5 cm'], [0.1, '10 cm'], [0.25, '25 cm'], [0.5, '50 cm'], [1, '1 m']], () => etat.scene.plan && etat.scene.plan.pas, (x) => modifier((sc) => { sc.plan.pas = x; }), 'petit')),
-      nombre('Hauteur sous plafond', () => etat.scene.hauteur, (x) => modifier((sc) => { sc.hauteur = x; borner(sc); }), { mini: 1, maxi: 40, pas: 0.05 }),
-      choix('Sol', MATS(), () => etat.scene.faces[4], (x) => modifier((sc) => { sc.faces[4] = x; })),
-      choix('Plafond', MATS_TOUS(), () => etat.scene.faces[5], (x) => modifier((sc) => { sc.faces[5] = x; })),
-      menu('Tous les murs en…', MATS(), (x) => materiauEnLot(x, true)),
-      el('p', { class: 'note' }, `${pl.coins.length} coins · ${ai.toFixed(1)} m² au sol · ${(v ?? ai * s.hauteur).toFixed(1)} m³ d'air`));
+      curseur('Longueur', () => encombrement()[0], (x) => dimensionsRect(x, encombrement()[1]), { mini: 1.5, maxi: 25, pas: 0.05, fin: finirEditionPlan }),
+      curseur('Largeur', () => encombrement()[1], (x) => dimensionsRect(encombrement()[0], x), { mini: 1.5, maxi: 25, pas: 0.05, fin: finirEditionPlan }),
+      hauteur);
   } else {
     contenu.push(
-      nombre('Longueur (x)', () => etat.scene.longueur, (x) => modifier((sc) => { sc.longueur = x; borner(sc); }), { mini: 1, maxi: 120, pas: 0.1 }),
-      nombre('Largeur (y)', () => etat.scene.largeur, (x) => modifier((sc) => { sc.largeur = x; borner(sc); }), { mini: 1, maxi: 120, pas: 0.1 }),
-      nombre('Hauteur (z)', () => etat.scene.hauteur, (x) => modifier((sc) => { sc.hauteur = x; borner(sc); }), { mini: 1, maxi: 40, pas: 0.1 }),
-      ...NOMS_COTES.map((n, c) => choix(n, MATS_TOUS(), () => etat.scene.faces[c], (x) => modifier((sc) => { sc.faces[c] = x; }))));
+      el('div', { class: 'formes' }, FORMES_PLAN.map((f) => el('button', { type: 'button', onclick: () => formePlan(f.id) }, NOMS_FORMES[f.id] || f.nom))),
+      el('div', { class: 'ligne' }, el('span', { class: 'etiquette' }, 'Grille'),
+        segments([[0.1, '10 cm'], [0.25, '25 cm'], [0.5, '50 cm'], [1, '1 m']], () => etat.scene.plan && etat.scene.plan.pas, (x) => modifier((sc) => { sc.plan.pas = x; }), 'petit')),
+      hauteur);
   }
-  return carte('Pièce', "Partez d'un modèle, ou dessinez la forme : contour au sol sur la grille, hauteur sous plafond, et un rampant au choix sur chaque mur. « Modifier la forme » (en haut de la vue) fait apparaître les coins et les « + ». Enregistrer garde la scène dans un fichier ; elle est aussi gardée dans ce navigateur.", ...contenu);
+  contenu.push(lier(el('p', { class: 'note' }), () => {
+    const sc = etat.scene, ai = sc.plan ? Math.abs(aire(sc.plan.coins)) : sc.longueur * sc.largeur, v = sc.plan ? volumePlan(sc) : null;
+    return `${ai.toFixed(1)} m² au sol · ${(v ?? ai * sc.hauteur).toFixed(1)} m³`;
+  }));
+  return carte('Pièce', rect ? 'Glissez un mur dans la vue pour le pousser.'
+    : 'Choisissez une forme, puis « Modifier la forme » : glisser un coin, cliquer un « + » pour en ajouter, double-clic pour en ôter. Cliquez un mur pour lui donner un rampant.', ...contenu);
 }
 
 function carteSelection() {
@@ -270,118 +308,72 @@ function carteSelection() {
   if (b) return carteBloc(b);
   const e = s.enceintes.find((x) => x.id === id);
   if (e) return carteEnceinte(e);
-  return carte('Sélection', null, el('p', { class: 'note' }, 'Cliquer un mur, un meuble ou une enceinte, ici à gauche ou dans la vue, pour le régler.'));
+  return el('p', { class: 'note invite' }, 'Cliquez une source, un mur ou un objet pour le régler.');
 }
 
 function carteMur(i) {
-  const s = etat.scene, q = coinsPlan(s), n = q.length, m = s.plan.murs[i], H = s.hauteur;
-  const avancee = (H - m.pied) / Math.tan(Math.min(Math.max(m.pente, 5), 85) * Math.PI / 180);
+  const s = etat.scene, n = coinsPlan(s).length, m = s.plan.murs[i], H = s.hauteur, perso = s.typePiece === 'perso';
   const ecrireMur = (cle) => (v) => modifier((sc) => { sc.plan.murs[i][cle] = v; });
-  return carte(`Mur ${i + 1}`, "Un mur à rampant porte un pan de toit qui part du haut de son mur nain ; deux murs opposés font une mansarde, quatre des combles. Glisser le mur dans la vue le pousse ; glisser son rampant en 3D monte ou descend le mur nain.",
-    nombre('Longueur', () => { const qq = coinsPlan(etat.scene); return qq.length > 2 ? v2.dist(qq[i], qq[(i + 1) % qq.length]) : 0; }, (v) => {
+  return carte(`Mur ${i + 1}`, 'Un rampant est un pan de toit qui part du haut du mur nain. Deux murs opposés à rampant font une mansarde.',
+    perso ? nombre('Longueur', () => { const qq = coinsPlan(etat.scene); return qq.length > 2 ? v2.dist(qq[i], qq[(i + 1) % qq.length]) : 0; }, (v) => {
       modifier((sc) => {
         const p = sc.plan, a = p.coins[i], b = p.coins[(i + 1) % n], l = v2.dist(a, b);
         if (l > 1e-6) p.coins[(i + 1) % n] = [a[0] + (b[0] - a[0]) / l * v, a[1] + (b[1] - a[1]) / l * v].map((x) => Math.round(x * 1000) / 1000);
       });
       finirEditionPlan();
-    }, { mini: 0.1, maxi: 120, pas: s.plan.pas }),
+    }, { mini: 0.1, maxi: 120, pas: s.plan.pas }) : null,
     choix('Matériau', MATS(), () => (etat.scene.plan.murs[i] || {}).materiau, ecrireMur('materiau')),
-    case_('Rampant au-dessus de ce mur', () => (etat.scene.plan.murs[i] || {}).rampant, ecrireMur('rampant')),
+    case_('Rampant', () => (etat.scene.plan.murs[i] || {}).rampant, ecrireMur('rampant')),
     m.rampant ? nombre('Mur nain', () => (etat.scene.plan.murs[i] || {}).pied, ecrireMur('pied'), { mini: 0, maxi: Math.max(H - 0.1, 0.1), pas: 0.05 }) : null,
     m.rampant ? nombre('Pente', () => (etat.scene.plan.murs[i] || {}).pente, ecrireMur('pente'), { unite: '°', mini: 5, maxi: 85, pas: 1, dec: 0 }) : null,
-    m.rampant ? el('p', { class: 'note' }, `Le rampant rejoint le plafond plat (${H.toFixed(2)} m) à ${avancee.toFixed(2)} m du mur.`) : null,
-    el('div', { class: 'boutons' }, el('button', { type: 'button', onclick: () => ouvrirDansMur(i, false) }, 'Fenêtre dans ce mur'), el('button', { type: 'button', onclick: () => ouvrirDansMur(i, true) }, 'Porte')),
-    el('div', { class: 'boutons' }, el('button', { type: 'button', onclick: () => insererCoin(i, v2.mul(v2.add(q[i], q[(i + 1) % n]), 0.5)) }, 'Couper en deux'),
-      el('button', { type: 'button', class: 'danger', disabled: n <= 3, onclick: () => retirerMur(i) }, 'Retirer ce mur')));
+    el('div', { class: 'boutons' }, el('button', { type: 'button', onclick: () => ouvrirDansMur(i, false) }, '+ Fenêtre'), el('button', { type: 'button', onclick: () => ouvrirDansMur(i, true) }, '+ Porte'),
+      perso ? el('button', { type: 'button', class: 'danger', disabled: n <= 3, onclick: () => retirerMur(i) }, 'Retirer') : null));
 }
 
 function carteBloc(b) {
-  const id = b.id, o = () => origine(etat.scene), get = () => etat.scene.blocs.find((x) => x.id === id) || b;
+  const id = b.id, get = () => etat.scene.blocs.find((x) => x.id === id) || b;
   const ecrire = (cle) => (v) => modifier((sc) => { const x = sc.blocs.find((y) => y.id === id); if (x) x[cle] = v; });
-  const f = b.forme;
-  return carte(b.nom, "Glisser dans la vue pour le déplacer (il se colle aux murs à moins de 6 cm), ⌘ pour la hauteur, ⌥ pour l'orienter. Les cotes orange donnent sa distance à chaque mur.",
-    texte('Nom', () => get().nom, ecrire('nom')),
-    choix('Forme', Object.entries(FORMES).filter(([k]) => k !== 'toit').map(([k, v]) => [k, v.nom]), () => get().forme, ecrire('forme')),
-    f !== 'ouverture' ? choix('Matériau', MATS(), () => get().materiau, ecrire('materiau')) : null,
-    nombre('Centre x', relatif(() => get().x, () => o()[0]), (v) => ecrire('x')(v + o()[0]), { mini: -5, maxi: 200 }),
-    nombre('Centre y', relatif(() => get().y, () => o()[1]), (v) => ecrire('y')(v + o()[1]), { mini: -5, maxi: 200 }),
-    nombre('Centre z', () => get().z, ecrire('z'), { mini: -5, maxi: 100 }),
-    nombre(f === 'cylindre' ? 'Diamètre' : 'Largeur (de face)', () => get().longueur, ecrire('longueur'), { mini: 0.02, maxi: 200 }),
-    f !== 'cylindre' ? nombre(f === 'pan' ? 'Avancée du rampant' : 'Profondeur', () => get().profondeur, ecrire('profondeur'), { mini: 0.02, maxi: 200 }) : null,
-    nombre(f === 'pan' ? 'Hauteur du rampant' : 'Hauteur', () => get().hauteur, ecrire('hauteur'), { mini: 0.02, maxi: 100 }),
-    f !== 'cylindre' ? nombre('Orientation', () => get().azimut, ecrire('azimut'), { unite: '°', mini: -180, maxi: 180, pas: 5, dec: 0 }) : null,
-    b.dansParoi && (f === 'boite' || f === 'ouverture') ? case_('Ouverte (le son passe)', () => get().forme === 'ouverture', (v) => modifier((sc) => {
+  const f = b.forme, ouv = f === 'ouverture', paroi = !!b.dansParoi;
+  const tourner = (d) => tournerObjet(id, ((get().azimut + d + 540) % 360) - 180);
+  return carte(b.nom, paroi ? null : (f === 'boite' ? 'Glissez-le pour le déplacer. Les flèches vertes l’étirent : celles des côtés pour la largeur ou la longueur, celle du centre (en 3D) pour la hauteur.' : 'Glissez-le pour le déplacer.'),
+    !ouv ? choix('Matériau', MATS(), () => get().materiau, ecrire('materiau')) : null,
+    nombre(f === 'cylindre' ? 'Diamètre' : 'Largeur', () => get().longueur, ecrire('longueur'), { mini: 0.05, maxi: 50 }),
+    f !== 'cylindre' && !paroi ? nombre(f === 'pan' ? 'Avancée' : 'Profondeur', () => get().profondeur, ecrire('profondeur'), { mini: 0.05, maxi: 50 }) : null,
+    nombre('Hauteur', () => get().hauteur, (v) => modifier((sc) => {
+      const x = sc.blocs.find((y) => y.id === id); if (!x) return;
+      if (!paroi && f !== 'pan') x.z = x.z - x.hauteur / 2 + v / 2;
+      x.hauteur = v;
+    }), { mini: 0.05, maxi: 20 }),
+    paroi ? case_('Ouverte (le son passe)', () => get().forme === 'ouverture', (v) => modifier((sc) => {
       const x = sc.blocs.find((y) => y.id === id); x.forme = v ? 'ouverture' : 'boite'; x.materiau = v ? 'ouvert' : (x.nom.startsWith('Fenêtre') ? 'vitre' : 'bois');
     })) : null,
-    el('div', { class: 'boutons' }, el('button', { type: 'button', onclick: () => dupliquer(id) }, 'Dupliquer'), el('button', { type: 'button', class: 'danger', onclick: () => supprimer(id) }, 'Supprimer')));
-}
-
-function texte(titre, lire, ecrire) {
-  const i = el('input', { type: 'text', 'aria-label': titre });
-  i.value = lire();
-  i.addEventListener('change', () => ecrire(i.value));
-  return el('label', { class: 'ligne' }, el('span', { class: 'etiquette' }, titre), lier(i, lire));
+    el('div', { class: 'boutons' },
+      !paroi && f !== 'cylindre' ? el('button', { type: 'button', onclick: () => tourner(90), title: 'Tourner d’un quart de tour' }, '↻ 90°') : null,
+      el('button', { type: 'button', onclick: () => dupliquer(id) }, 'Dupliquer'), el('button', { type: 'button', class: 'danger', onclick: () => supprimer(id) }, 'Supprimer')));
 }
 
 const AIDES_GENRE = {
-  enceinte: 'Position = centre de la face avant ; la caisse s’étend derrière. Le niveau, le délai, la polarité et le filtre se règlent sans recalcul.',
-  caisson: 'Caisson : filtré en passe-bas. Deux caissons décalés d’un quart d’onde (délai + polarité) font un réseau cardioïde.',
-  nu: 'Haut-parleur sans caisse : l’avant et l’arrière rayonnent en opposition de phase et s’annulent dans les graves (court-circuit acoustique). Agrandir l’écran repousse la coupure vers le bas.',
+  enceinte: 'Glissez-la dans la vue (⌥ pour l’orienter). Niveau, délai, polarité et filtre se changent sans recalcul.',
+  caisson: 'Caisson filtré en passe-bas. Deux caissons décalés d’un quart d’onde (délai + polarité) font un réseau cardioïde.',
+  nu: 'Haut-parleur sans caisse : l’avant et l’arrière s’annulent dans les graves (court-circuit acoustique). Un écran plus grand repousse la coupure vers le bas.',
   omni: 'Source idéale qui rayonne également dans toutes les directions.',
 };
 
 function carteEnceinte(e) {
-  const id = e.id, o = () => origine(etat.scene), get = () => etat.scene.enceintes.find((x) => x.id === id) || e;
+  const id = e.id, get = () => etat.scene.enceintes.find((x) => x.id === id) || e;
   const ecrire = (cle) => (v) => modifier((sc) => { const x = sc.enceintes.find((y) => y.id === id); if (x) { x[cle] = v; borner(sc); } });
   const g = e.genre;
   return carte(e.nom, AIDES_GENRE[g],
-    texte('Nom', () => get().nom, ecrire('nom')),
-    choix('Type', GENRES.map((x) => [x.id, x.nom]), () => get().genre, ecrire('genre')),
-    nombre('Position x', relatif(() => get().x, () => o()[0]), (v) => ecrire('x')(v + o()[0]), { mini: -5, maxi: 200 }),
-    nombre('Position y', relatif(() => get().y, () => o()[1]), (v) => ecrire('y')(v + o()[1]), { mini: -5, maxi: 200 }),
-    nombre('Hauteur z', () => get().z, ecrire('z'), { mini: 0, maxi: 100 }),
-    g !== 'omni' ? nombre('Orientation', () => get().azimut, ecrire('azimut'), { unite: '°', mini: -180, maxi: 180, pas: 5, dec: 0 }) : null,
+    choix('Type', GENRES.map((x) => [x.id, x.court]), () => get().genre, ecrire('genre')),
     nombre('Niveau à 1 m', () => get().niveau, ecrire('niveau'), { unite: 'dB', mini: 40, maxi: 140, pas: 1, dec: 1 }),
     nombre('Délai', () => get().delai, ecrire('delai'), { unite: 'ms', mini: 0, maxi: 500, pas: 0.5, dec: 2 }),
     case_('Polarité inversée', () => get().inverse, ecrire('inverse')),
     choix('Filtre', FILTRES.map((x) => [x.id, x.nom]), () => get().filtre, ecrire('filtre')),
     e.filtre !== 'aucun' ? nombre('Coupure', () => get().coupure, ecrire('coupure'), { unite: 'Hz', mini: 20, maxi: 5000, pas: 5, dec: 0 }) : null,
-    g === 'enceinte' || g === 'caisson' ? [
-      nombre('Largeur caisse', () => get().largeur, ecrire('largeur'), { mini: 0.05, maxi: 2, pas: 0.01 }),
-      nombre('Hauteur caisse', () => get().hauteur, ecrire('hauteur'), { mini: 0.05, maxi: 2, pas: 0.01 }),
-      nombre('Profondeur caisse', () => get().profondeur, ecrire('profondeur'), { mini: 0.05, maxi: 2, pas: 0.01 })] : null,
+    nombre('Hauteur', () => get().z, ecrire('z'), { mini: 0, maxi: 100 }),
+    g !== 'omni' ? nombre('Orientation', () => get().azimut, (v) => tournerObjet(id, v), { unite: '°', mini: -180, maxi: 180, pas: 5, dec: 0 }) : null,
     g === 'nu' ? nombre("Côté de l'écran", () => get().baffle, ecrire('baffle'), { mini: 0, maxi: 3, pas: 0.05 }) : null,
     el('div', { class: 'boutons' }, el('button', { type: 'button', onclick: () => dupliquer(id) }, 'Dupliquer'), el('button', { type: 'button', class: 'danger', onclick: () => supprimer(id) }, 'Supprimer')));
-}
-
-function carteCalcul() {
-  const r = [segments(Object.entries(QUALITES).map(([k, v]) => [k, v.nom]), () => etat.qualite, (v) => reglage('qualite', v))];
-  if (etat.webgpu === false) {
-    r.push(el('p', { class: 'note alerte' }, "Ce navigateur n'a pas WebGPU : les graves (modes, interférences) ne peuvent pas être calculés ici. Les aigus le sont. Essayez Chrome, Edge ou Safari récents."));
-    return r;
-  }
-  r.push(case_('Recalcul automatique', () => etat.gravesAuto, (v) => reglage('gravesAuto', v)));
-  const zone = el('div', { class: 'zone-calcul' });
-  liaisons.push({ e: zone, lire: () => { remplirZoneCalcul(zone); return ''; } });
-  zone.value = '';
-  remplirZoneCalcul(zone);
-  r.push(zone);
-  return r;
-}
-function remplirZoneCalcul(z) {
-  const etatZone = etat.enCours ? `c${Math.round(etat.progression * 100)}` : `${aRecalculer().length}|${etat.qualite}`;
-  if (z.dataset.e === etatZone) return;
-  z.dataset.e = etatZone;
-  z.innerHTML = '';
-  if (etat.enCours) {
-    z.append(el('progress', { max: 1, value: etat.progression }), el('p', { class: 'note' }, etat.etape),
-      el('button', { type: 'button', onclick: arreterCalcul }, 'Arrêter'));
-  } else {
-    const n = aRecalculer().length, est = estimation();
-    const duree = (s) => (s < 60 ? `${Math.max(1, Math.round(s))} s` : `${Math.round(s / 60)} min`);
-    if (n) z.append(el('button', { type: 'button', class: 'principal large', onclick: () => lancerCalcul(false) }, `Calculer jusqu'à ${Math.round(est.fmax)} Hz (≈ ${duree(est.secondes * n)})`));
-    else z.append(el('p', { class: 'note' }, `À jour jusqu'à ${Math.round(est.fmax)} Hz`));
-  }
 }
 
 // MARK: Légende et bandeaux
@@ -394,16 +386,17 @@ function dessinerLegende() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, r.width, r.height);
   const doux = getComputedStyle(document.documentElement).getPropertyValue('--texte-doux').trim();
-  ctx.font = '10px -apple-system, system-ui, sans-serif'; ctx.fillStyle = doux;
+  ctx.font = '10px "JetBrains Mono", "SF Mono", Menlo, monospace'; ctx.fillStyle = doux;
   const y0 = 34, h = r.height - 70;
-  if (etat.animer && etat.raster && etat.raster.phaseurs) {
+  const phaseurs = etat.volume3D && etat.affichage === 'troisD' ? etat.volume && etat.volume.phaseurs : etat.raster && etat.raster.phaseurs;
+  if (etat.animer && phaseurs) {
     const g = ctx.createLinearGradient(0, y0, 0, y0 + h);
     g.addColorStop(0, 'rgb(204,51,38)'); g.addColorStop(0.5, 'rgb(247,245,240)'); g.addColorStop(1, 'rgb(41,84,184)');
     ctx.fillStyle = g; ctx.fillRect(8, y0, 14, h);
     ctx.fillStyle = doux; ctx.fillText('+', 10, y0 - 8); ctx.fillText('−', 10, y0 + h + 12);
     return;
   }
-  ctx.fillText('dB SPL', 6, y0 - 12);
+  ctx.fillText('dB SPL', 4, y0 - 12);
   for (let k = 0; k < 64; k++) { const c = turbo(1 - k / 63); ctx.fillStyle = `rgb(${c})`; ctx.fillRect(8, y0 + h * k / 64, 14, h / 64 + 1); }
   const haut = hautEchelle(), plage = etat.plage, pas = plage > 40 ? 10 : plage > 16 ? 5 : 2;
   ctx.fillStyle = doux; ctx.textBaseline = 'middle';
@@ -413,11 +406,18 @@ function dessinerLegende() {
 function bandeau() {
   const b = $('#bandeau');
   b.innerHTML = '';
+  if (etat.reprise) {
+    b.append(el('div', { class: 'reprise' }, el('span', {}, `Reprendre « ${etat.reprise} » ?`),
+      el('button', { type: 'button', class: 'principal', onclick: reprendre }, 'Reprendre'),
+      el('button', { type: 'button', 'aria-label': 'Fermer', onclick: () => { etat.reprise = null; notifier(); } }, '×')));
+  }
   if (etat.message) b.append(el('div', { class: 'message', onclick: () => { etat.message = null; notifier(); } }, etat.message));
   if (etat.enCours) {
     b.append(el('div', { class: 'calcul' }, el('strong', {}, `Calcul des graves en cours… ${Math.round(etat.progression * 100)} %`),
-      el('span', {}, "On voit l'impulsion partir de l'enceinte et rebondir sur les murs ; la carte revient à la fin."),
+      el('span', {}, "On voit l'impulsion partir de la source et rebondir sur les murs ; la carte revient à la fin."),
       el('progress', { max: 1, value: etat.progression })));
+  } else if (etat.affichage === 'troisD' && etat.volume3D && !etat.volume) {
+    b.append(el('div', { class: 'calcul' }, el('span', {}, 'Remplissage du volume…')));
   }
 }
 
@@ -433,21 +433,25 @@ function montrerVue() {
 }
 let cleOutils = '';
 function majOutilsVue() {
-  const o = $('#outils-vue');
-  const k = `${!!etat.scene.plan}|${etat.affichage}|${etat.editionPlan}`;
+  const o = $('#outils-vue'), perso = etat.scene.plan && etat.scene.typePiece === 'perso';
+  const meuble = etat.scene.blocs.some((b) => b.id === etat.selection && b.forme === 'boite' && b.duPlan == null && !b.dansParoi);
+  const k = `${perso}|${etat.affichage}|${etat.editionPlan}|${meuble}`;
   if (k === cleOutils) return;
   cleOutils = k;
   o.innerHTML = '';
-  if (etat.scene.plan && etat.affichage !== 'coupe') {
+  if (perso && etat.affichage !== 'coupe') {
     o.append(el('button', { type: 'button', class: etat.editionPlan ? 'actif' : '', 'aria-pressed': etat.editionPlan ? 'true' : 'false',
-      onclick: () => { etat.editionPlan = !etat.editionPlan; notifier(); } }, 'Modifier la forme'));
+      onclick: () => { etat.editionPlan = !etat.editionPlan; notifier(); } }, etat.editionPlan ? 'Terminer la forme' : 'Modifier la forme'));
   }
   if (etat.affichage === 'troisD') o.append(el('button', { type: 'button', onclick: () => vue3d && vue3d.recadrer() }, 'Recadrer'));
+  const edition = etat.editionPlan && perso;
   $('#aide-vue').textContent = etat.affichage === 'troisD'
-    ? (etat.editionPlan && etat.scene.plan ? 'Forme : glisser un poteau = déplacer le coin · clic sur un + = nouveau coin · double-clic sur un poteau = l’ôter · ⌥ = sans grille'
-      : 'Glisser : tourner · clic droit ou ⇧ : décaler · molette : zoom · glisser un objet : le déplacer (⌘ hauteur, ⌥ orienter) · clic sur la carte : micro')
-    : (etat.editionPlan && etat.scene.plan && etat.affichage === 'plan' ? 'Glisser un coin · clic sur un + : nouveau coin · double-clic sur un coin : l’ôter · glisser un mur : le pousser · ⌥ : sans grille'
-      : 'Glisser une enceinte ou un meuble : le déplacer (⌥ : l’orienter) · cliquer ailleurs : placer le micro');
+    ? (edition ? 'Forme : glisser un poteau = déplacer le coin · clic sur un + = nouveau coin · double-clic sur un poteau = l’ôter · ⌥ = sans grille'
+      : meuble ? 'Flèches vertes : étirer (côtés) ou changer la hauteur (centre) · glisser le meuble : le déplacer · ⌥ : l’orienter'
+        : 'Glisser : tourner · clic droit ou ⇧ : décaler · molette : zoom · glisser un objet : le déplacer (⌘ hauteur, ⌥ orienter) · clic au sol : micro')
+    : (edition && etat.affichage === 'plan' ? 'Glisser un coin · clic sur un + : nouveau coin · double-clic sur un coin : l’ôter · glisser un mur : le pousser · ⌥ : sans grille'
+      : meuble && etat.affichage === 'plan' ? 'Flèches vertes : étirer · glisser le meuble : le déplacer · ⌥ : l’orienter'
+        : 'Glisser une source ou un objet : le déplacer (⌥ : l’orienter) · cliquer ailleurs : placer le micro');
 }
 
 function exporterImage() {
@@ -470,8 +474,8 @@ function enregistrerScene() {
 let cleStructure = '';
 function structure() {
   const s = etat.scene, b = s.blocs.find((x) => x.id === etat.selection), e = s.enceintes.find((x) => x.id === etat.selection), m = murDuPlan(s, etat.selection);
-  return [etat.selection, !!s.plan, s.plan ? s.plan.coins.length : 0, b ? `${b.forme}${b.dansParoi}` : '', e ? `${e.genre}${e.filtre}` : '',
-    m != null ? s.plan.murs[m].rampant : '', etat.affichage, etat.mode, etat.webgpu, etat.scene.contour ? 1 : 0].join('|');
+  return [etat.selection, s.typePiece, s.plan ? s.plan.coins.length : 0, b ? `${b.forme}${b.dansParoi}${b.nom}` : '', e ? `${e.genre}${e.filtre}${e.nom}` : '',
+    m != null ? s.plan.murs[m].rampant : '', etat.webgpu].join('|');
 }
 let cleListe = '';
 function cleDeListe() {

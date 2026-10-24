@@ -90,7 +90,7 @@ function morceauTiers(b, fO, poids) {
 
 /// Carte des niveaux (plan à la hauteur d'écoute, ou coupe passant par le micro).
 /// champsR : Map id → champ réfléchi (rayons). Renvoie { l, h, largeurM, hauteurM, db, phaseurs, ondes, vue }.
-export function raster(E, champsR, maxi = 220) {
+export function raster(E, champsR, maxi = 220, brut = false) {
   const [l, h, lm, hm] = taille(E, maxi);
   const s = E.scene, src = sources(E), fO = fmaxOndes(E);
   const db = new Float32Array(l * h).fill(-Infinity);
@@ -123,7 +123,7 @@ export function raster(E, champsR, maxi = 220) {
   for (let j = 0; j < h; j++) {
     for (let i = 0; i < l; i++) {
       const u = (i + 0.5) / l * s.longueur;
-      const p = E.vue === 'plan' ? [u, (j + 0.5) / h * s.largeur, s.ecoute] : [u, s.micro[1], (j + 0.5) / h * s.hauteur];
+      const p = E.vue === 'plan' ? [u, (j + 0.5) / h * s.largeur, E.z ?? s.ecoute] : [u, s.micro[1], (j + 0.5) / h * s.hauteur];
       let dedans = dansContour(s, p[0], p[1]) && !sol.some((v) => v.contient(p));
       const pw = [];
       if (avecOndes && dedans) {
@@ -155,7 +155,7 @@ export function raster(E, champsR, maxi = 220) {
       db[j * l + i] = !dedans ? NaN : (en > 0 ? 10 * Math.log10(en) : -Infinity);
     }
   }
-  if (phaseurs) {
+  if (phaseurs && !brut) {
     // Échelle au 95ᵉ centile : le champ proche de l'enceinte n'écrase pas le reste.
     const modules = [];
     for (let k = 0; k < l * h; k++) if (!isNaN(db[k])) modules.push(Math.hypot(phaseurs[2 * k], phaseurs[2 * k + 1]));
@@ -164,6 +164,30 @@ export function raster(E, champsR, maxi = 220) {
     if (mx > 0) for (let k = 0; k < phaseurs.length; k++) phaseurs[k] = Math.min(Math.max(phaseurs[k] / mx, -1.5), 1.5);
   }
   return { l, h, largeurM: lm, hauteurM: hm, db, phaseurs, ondes: avecOndes, vue: E.vue };
+}
+
+/// Tout le volume de la pièce, couche horizontale par couche (cellules à peu près cubiques).
+/// Renvoie { nx, ny, nz, db, phaseurs } ou null si annule() devient vrai en route.
+export async function rasterVolume(E, champsR, annule) {
+  const s = E.scene, dx = Math.max(s.longueur, s.largeur, s.hauteur) / 48;
+  const nz = Math.min(Math.max(Math.round(s.hauteur / dx), 6), 32);
+  let nx = 0, ny = 0, db = null, ph = null;
+  for (let k = 0; k < nz; k++) {
+    await new Promise((ok) => setTimeout(ok, 0));
+    if (annule()) return null;
+    const r = raster(Object.assign({}, E, { vue: 'plan', z: (k + 0.5) / nz * s.hauteur }), champsR, 48, true);
+    if (!db) { nx = r.l; ny = r.h; db = new Float32Array(nx * ny * nz); ph = r.phaseurs ? new Float32Array(nx * ny * nz * 2) : null; }
+    db.set(r.db, k * nx * ny);
+    if (ph && r.phaseurs) ph.set(r.phaseurs, k * nx * ny * 2);
+  }
+  if (ph) {
+    const modules = [];
+    for (let k = 0; k < db.length; k++) if (!isNaN(db[k])) modules.push(Math.hypot(ph[2 * k], ph[2 * k + 1]));
+    modules.sort((a, b) => a - b);
+    const mx = modules.length ? modules[Math.min(modules.length - 1, Math.floor(modules.length * 0.95))] : 0;
+    if (mx > 0) for (let k = 0; k < ph.length; k++) ph[k] = Math.min(Math.max(ph[k] / mx, -1.5), 1.5);
+  }
+  return { nx, ny, nz, db, phaseurs: ph };
 }
 
 /// Minimum et haut d'échelle (98ᵉ centile : le pic collé à l'enceinte n'écrase pas tout).

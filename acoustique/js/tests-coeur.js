@@ -3,7 +3,7 @@
 
 import { aire } from './base.js';
 import { nouvelleScene, nouvelleEnceinte, nouveauBloc, dansSolide, dansContour, polyedre } from './modele.js';
-import { FORMES_PLAN, appliquerPlan, toit, volumePlan, coinsPlan, EPAISSEUR, aimanterObjet, contacts, nouveauPlan, dessinerPlan } from './plan.js';
+import { FORMES_PLAN, appliquerPlan, toit, volumePlan, coinsPlan, EPAISSEUR, aimanterObjet, contacts, nouveauPlan, dessinerPlan, dansLaPiece } from './plan.js';
 import { PREREGLAGES } from './modeles.js';
 import { lancerPartie, terminer, energie, direct, directivite, Bandes, NOMBRE_DE_RAYONS } from './rayons.js';
 import { filtre, amplitude } from './calcul.js';
@@ -95,6 +95,11 @@ export function testsCoeur(verifier, avecRayons = true) {
   const o5 = nouvelleEnceinte('omni', 5, 5, 5);
   const ec = [1, 2, 4].map((r) => 10 * Math.log10(direct([], o5, [5 + r, 5, 5], directivite(o5, 1000), 0) * r * r));
   verifier('son direct : 1/r²', ec.every((x) => Math.abs(x) < 0.01));
+  // Meuble tenu dans la pièce en L : dedans, au mur (touche), en travers du coin rentrant (refusé).
+  const q = coinsPlan(enL), o = q.reduce((m, c) => [Math.min(m[0], c[0]), Math.min(m[1], c[1])], [Infinity, Infinity]);
+  const boite = (x0, y0, x1, y1) => [[o[0] + x0, o[1] + y0], [o[0] + x1, o[1] + y0], [o[0] + x1, o[1] + y1], [o[0] + x0, o[1] + y1]];
+  verifier('meuble dans la pièce : dedans, collé au mur, à cheval sur le coin rentrant',
+    dansLaPiece(enL, boite(1, 1, 2, 2)) && dansLaPiece(enL, boite(0, 0, 1, 1)) && !dansLaPiece(enL, boite(2, 2.5, 3, 3.5)) && !dansLaPiece(enL, boite(-0.1, 1, 1, 2)));
   if (!avecRayons) return;
   const sol = Object.assign(JSON.parse(JSON.stringify(vide)), {});
   sol.faces[4] = 'rigide';

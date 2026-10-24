@@ -1,22 +1,23 @@
 // État de l'application : la scène, les réglages d'affichage, les calculs en cours.
 // Traduction d'Etat.swift. Les vues s'abonnent et se redessinent à chaque changement.
 
-import { copie, nouvelleEnceinte, nouveauBloc, borner, cleEspace, cleGeometrie, genre, FORMES, FORMES_AJOUTABLES, materiau } from './modele.js';
+import { copie, nouvelleEnceinte, nouveauBloc, nouvelleScene, borner, cleEspace, cleGeometrie, genre, FORMES, FORMES_AJOUTABLES, materiau } from './modele.js';
 import { appliquerPlan, dessinerPlan as dessinerPlanScene, retirerPlan as retirerPlanScene, FORMES_PLAN, murDuPlan, normalePlan, coinsPlan,
-  aimanter, EPAISSEUR, toit, idMur, aimanterObjet } from './plan.js';
+  aimanter, EPAISSEUR, toit, idMur, aimanterObjet, emprise, dansLaPiece, rectangle } from './plan.js';
 import { PREREGLAGES } from './modeles.js';
 import { grillePour, calculer, estimation as estimationOndes, moteurOndes } from './ondes.js';
-import { raster, courbe, courbesSources, rayonsPour, rayonsDeja, sources, fmaxOndes } from './calcul.js';
+import { raster, rasterVolume, courbe, courbesSources, rayonsPour, rayonsDeja, sources, fmaxOndes } from './calcul.js';
 import { v2 } from './base.js';
 
-const CLE_STOCKAGE = 'acoustique-scene';
+const CLE_STOCKAGE = 'acoustique-scene', CLE_PRECEDENT = 'acoustique-precedent';
 
 export const etat = {
   scene: null,
-  qualite: 'normal', mode: 'frequence', frequence: 63, affichage: 'troisD', coupe3D: false, ponderationA: false,
+  // Graves toujours en finesse « normal » ; calcul seulement sur demande (sauf « Auto » coché).
+  qualite: 'normal', mode: 'frequence', frequence: 63, affichage: 'troisD', volume3D: false, ponderationA: false,
   solo: null, animer: false, plage: 30, echelleFixe: false, hautFixe: 100, selection: null, editionPlan: false,
-  gravesAuto: true, courbeGraves: true, coinActif: null,
-  champs: new Map(), raster: null, rasterCoupe: null, courbe: [], courbesSources: [], version: 0,
+  gravesAuto: false, courbeGraves: true, coinActif: null, reprise: null, densite: 1,
+  champs: new Map(), raster: null, volume: null, courbe: [], courbesSources: [], version: 0,
   enCours: false, progression: 0, etape: '', apercu: null, message: null, webgpu: null,
   cadrage: 0, recadrage: { n: 0, dx: 0, dy: 0 },
 };
@@ -34,11 +35,34 @@ export function notifier() {
 
 // MARK: Scène
 
+/// Projet vierge : pièce rectangulaire de 5 × 4 m, une source et le micro.
+export function projetVierge() {
+  const e = nouvelleEnceinte('enceinte', 1.0, 2.0, 1.0, 'Source 1');
+  e.niveau = 90;
+  const s = nouvelleScene({ nom: 'Nouveau projet', longueur: 5, largeur: 4, hauteur: 2.5, enceintes: [e], ecoute: 1.2, micro: [3.5, 2.0] });
+  s.plan = rectangle(5, 4);
+  s.plan.pas = 0.1;
+  s.typePiece = 'rect';
+  appliquerPlan(s);
+  return s;
+}
+
+/// Une pièce est toujours dessinée (boîte des anciens fichiers → rectangle).
+function preparer(s) {
+  if (!s.plan && !s.contour) dessinerPlanScene(s);
+  if (s.plan) appliquerPlan(s, false);
+  if (!s.typePiece) s.typePiece = s.plan && s.plan.coins.length === 4 && !s.plan.murs.some((m) => m.rampant)
+    && s.plan.coins.every((c, i, q) => { const d = q[(i + 1) % 4]; return Math.abs(c[0] - d[0]) < 1e-6 || Math.abs(c[1] - d[1]) < 1e-6; }) ? 'rect' : 'perso';
+  return s;
+}
+
 export function demarrer() {
-  let s = null;
-  try { const t = localStorage.getItem(CLE_STOCKAGE); if (t) s = JSON.parse(t); } catch { s = null; }
-  etat.scene = s && s.enceintes ? s : PREREGLAGES[0].scene();
-  if (etat.scene.plan) appliquerPlan(etat.scene, false);
+  // On part toujours d'un projet vierge ; le précédent reste proposé dans un bandeau.
+  try {
+    const t = localStorage.getItem(CLE_STOCKAGE);
+    if (t) { const p = JSON.parse(t); if (p && p.enceintes) { localStorage.setItem(CLE_PRECEDENT, t); etat.reprise = p.nom || 'Projet précédent'; } }
+  } catch { /* stockage interdit */ }
+  etat.scene = projetVierge();
   moteurOndes().then((m) => { etat.webgpu = !!m; notifier(); planifierGraves(); });
   recalculerCarte();
   notifier();
@@ -48,6 +72,28 @@ let minuterieEnregistrer = null;
 function enregistrerPlusTard() {
   clearTimeout(minuterieEnregistrer);
   minuterieEnregistrer = setTimeout(() => { try { localStorage.setItem(CLE_STOCKAGE, JSON.stringify(etat.scene)); } catch { /* plein ou interdit */ } }, 600);
+}
+
+export function nouveauProjet() {
+  arreterCalcul();
+  etat.scene = projetVierge();
+  etat.champs.clear();
+  etat.selection = null; etat.solo = null; etat.editionPlan = false; etat.message = null; etat.cadrage++;
+  enregistrerPlusTard(); recalculerCarte(); notifier();
+}
+
+export function ouvrirScene(sc) {
+  arreterCalcul();
+  etat.scene = preparer(sc);
+  etat.selection = null; etat.solo = null; etat.editionPlan = false; etat.reprise = null; etat.cadrage++;
+  enregistrerPlusTard(); recalculerCarte(); planifierGraves(); notifier();
+}
+
+export function reprendre() {
+  let p = null;
+  try { p = JSON.parse(localStorage.getItem(CLE_PRECEDENT)); } catch { p = null; }
+  etat.reprise = null;
+  if (p && p.enceintes) ouvrirScene(p); else notifier();
 }
 
 /// Modifie la scène : la pièce dessinée suit (murs, rampants, ouvertures), puis carte et graves.
@@ -63,7 +109,7 @@ export function modifier(mutation, options = {}) {
 export function reglage(cle, valeur) {
   if (etat[cle] === valeur) return;
   etat[cle] = valeur;
-  if (['qualite', 'mode', 'frequence', 'affichage', 'coupe3D', 'ponderationA', 'solo'].includes(cle)) recalculerCarte();
+  if (['qualite', 'mode', 'frequence', 'affichage', 'volume3D', 'ponderationA', 'solo'].includes(cle)) recalculerCarte();
   if (cle === 'qualite' || cle === 'gravesAuto') planifierGraves();
   if (cle === 'echelleFixe' && valeur && etat.raster) etat.hautFixe = hautEchelle();
   notifier();
@@ -162,13 +208,20 @@ export function recalculerCarte() {
     }
     const r = raster(E, champsR);
     r.bornes = bornesRaster(r);
-    const rc = etat.affichage === 'troisD' && etat.coupe3D ? (() => { const x = raster(entrees('coupe'), champsR); x.bornes = bornesRaster(x); return x; })() : null;
     const p = pointMicro();
-    etat.raster = r; etat.rasterCoupe = rc;
+    etat.raster = r;
     etat.courbe = courbe(E, p, champsR);
     etat.courbesSources = courbesSources(E, p);
     etat.version++;
     notifier();
+    // Volume entier (vue 3D « Volume ») : couche par couche, sans figer la page.
+    if (etat.affichage === 'troisD' && etat.volume3D) {
+      const v = await rasterVolume(E, champsR, () => mon !== jeton);
+      if (!v || mon !== jeton) return;
+      etat.volume = v;
+      etat.version++;
+      notifier();
+    } else etat.volume = null;
   }, 120);
 }
 
@@ -185,7 +238,7 @@ export { rayonsDeja };
 
 export function appliquerModele(id) {
   const p = PREREGLAGES.find((x) => x.id === id);
-  etat.scene = p.scene();
+  etat.scene = preparer(p.scene());
   etat.selection = null; etat.solo = null; etat.editionPlan = false; etat.cadrage++;
   enregistrerPlusTard(); recalculerCarte(); planifierGraves(); notifier();
 }
@@ -208,7 +261,7 @@ export function formePlan(id) {
       s.enceintes.forEach((e, i) => { if (i > 0 && !dedans(e.x, e.y)) { e.x = c[0] - 1; e.y = c[1] + 0.6 * i; } });
     }
     s.blocs = s.blocs.filter((b) => b.forme === 'ouverture' || dedans(b.x, b.y));
-    s.nom = `Pièce ${f.nom.toLowerCase()}`;
+    s.typePiece = 'perso';
   }, { recadrer: true });
   etat.selection = null; etat.message = null; etat.editionPlan = true; etat.cadrage++;
   notifier();
@@ -352,18 +405,115 @@ export function materiauEnLot(id, parois) {
   });
 }
 
-/// Déplacement d'un objet à la souris : aimant contre les murs.
+/// Objets tenus dans la pièce : meubles, volumes posés et enceintes (pas les fenêtres ni les portes).
+const tenu = (s, id) => { const b = s.blocs.find((v) => v.id === id); return b ? b.duPlan == null && !b.dansParoi && b.forme !== 'ouverture' : s.enceintes.some((e) => e.id === id); };
+const dedans = (s, id) => dansLaPiece(s, emprise(s, id) || []);
+
+/// Plus grande part t ∈ [0, 1] du geste qui garde l'objet dans la pièce (poser(t) applique le geste).
+function jusquAuMur(s, id, poser) {
+  poser(1);
+  if (dedans(s, id)) return 1;
+  let a = 0, b = 1;
+  for (let k = 0; k < 14; k++) { const m = (a + b) / 2; poser(m); if (dedans(s, id)) a = m; else b = m; }
+  poser(a);
+  return a;
+}
+
+/// Déplacement d'un objet à la souris : aimant contre les murs ; dès qu'un coin touche un mur, il s'arrête
+/// (et glisse le long du mur pour le reste du geste).
 export function deplacerObjet(id, x, y, z, aimant = true) {
   modifier((s) => {
     const b = s.blocs.find((v) => v.id === id), e = s.enceintes.find((v) => v.id === id);
     const o = b || e;
     if (!o) return;
-    if (x != null) o.x = x;
-    if (y != null) o.y = y;
+    const garde = tenu(s, id) && dedans(s, id), x0 = o.x, y0 = o.y;
+    const x1 = x != null ? x : o.x, y1 = y != null ? y : o.y;
     if (z != null) o.z = z;
-    if (aimant) aimanterObjet(s, id);
+    if (garde) {
+      const t = jusquAuMur(s, id, (t) => { o.x = x0 + (x1 - x0) * t; o.y = y0 + (y1 - y0) * t; });
+      if (t < 1) {
+        const xa = o.x, ya = o.y;
+        jusquAuMur(s, id, (u) => { o.x = xa + (x1 - xa) * u; });
+        jusquAuMur(s, id, (u) => { o.y = ya + (y1 - ya) * u; });
+      }
+    } else { o.x = x1; o.y = y1; }
+    if (aimant) {
+      const xa = o.x, ya = o.y;
+      aimanterObjet(s, id);
+      if (garde && !dedans(s, id)) { o.x = xa; o.y = ya; }
+    }
     if (e) borner(s);
   });
+}
+
+/// Orientation d'un objet, refusée si elle le ferait sortir de la pièce.
+export function tournerObjet(id, azimut) {
+  const s = etat.scene, o = s.enceintes.find((x) => x.id === id) || s.blocs.find((x) => x.id === id);
+  if (!o || o.azimut === azimut) return;
+  const garde = tenu(s, id) && dedans(s, id), az0 = o.azimut;
+  o.azimut = azimut;
+  const ok = !garde || dedans(s, id);
+  o.azimut = az0;
+  if (ok) modifier((sc) => { const x = sc.enceintes.find((v) => v.id === id) || sc.blocs.find((v) => v.id === id); x.azimut = azimut; });
+}
+
+/// Étire un meuble par une poignée : 'avant'/'arriere' (profondeur), 'gauche'/'droite' (largeur), le côté
+/// opposé ne bouge pas ; 'haut' change la hauteur, le dessous reste posé. depart = le meuble au début du geste.
+export function etirerBloc(id, poignee, depart, delta) {
+  modifier((s) => {
+    const b = s.blocs.find((v) => v.id === id);
+    if (!b) return;
+    const garde = dedans(s, id);
+    const a = depart.azimut * Math.PI / 180, av = [Math.cos(a), Math.sin(a)], co = [-Math.sin(a), Math.cos(a)];
+    const poser = (t) => {
+      const d = delta * t;
+      Object.assign(b, { x: depart.x, y: depart.y, z: depart.z, longueur: depart.longueur, profondeur: depart.profondeur, hauteur: depart.hauteur });
+      if (poignee === 'haut') {
+        const h = Math.min(Math.max(depart.hauteur + d, 0.05), s.hauteur - (depart.z - depart.hauteur / 2));
+        b.hauteur = h; b.z = depart.z - depart.hauteur / 2 + h / 2;
+        return;
+      }
+      const prof = poignee === 'avant' || poignee === 'arriere', sg = poignee === 'avant' || poignee === 'gauche' ? 1 : -1;
+      const d0 = prof ? depart.profondeur : depart.longueur, n = Math.max(d0 + d, 0.05), dir = prof ? av : co;
+      if (prof) b.profondeur = n; else b.longueur = n;
+      b.x = depart.x + dir[0] * sg * (n - d0) / 2; b.y = depart.y + dir[1] * sg * (n - d0) / 2;
+    };
+    if (garde && poignee !== 'haut') jusquAuMur(s, id, poser); else poser(1);
+    const exact = Object.assign({}, b);
+    for (const k of ['x', 'y', 'z', 'longueur', 'profondeur', 'hauteur']) b[k] = Math.round(b[k] * 1000) / 1000;
+    if (garde && !dedans(s, id)) Object.assign(b, exact);   // l'arrondi ne doit pas faire passer le mur
+  });
+}
+
+/// Pièce rectangulaire : longueur et largeur (le coin bas-gauche reste en place).
+export function dimensionsRect(l, w) {
+  modifier((s) => {
+    const o = s.plan.coins.reduce((m, c) => [Math.min(m[0], c[0]), Math.min(m[1], c[1])], [Infinity, Infinity]);
+    s.plan.coins = [[o[0], o[1]], [o[0] + l, o[1]], [o[0] + l, o[1] + w], [o[0], o[1] + w]];
+  });
+}
+
+/// Rectangulaire ↔ personnalisée (revenir au rectangle prend l'encombrement de la forme).
+export function typePiece(t) {
+  const s = etat.scene;
+  if (s.typePiece === t || !s.plan) return;
+  if (t === 'rect') {
+    modifier((sc) => {
+      const q = sc.plan.coins, lo = q.reduce((m, c) => [Math.min(m[0], c[0]), Math.min(m[1], c[1])], [Infinity, Infinity]),
+        hi = q.reduce((m, c) => [Math.max(m[0], c[0]), Math.max(m[1], c[1])], [-Infinity, -Infinity]);
+      const mat = sc.plan.murs[0] ? sc.plan.murs[0].materiau : 'platre';
+      const p = rectangle(hi[0] - lo[0], hi[1] - lo[1]);
+      p.coins = p.coins.map((c) => [c[0] + lo[0], c[1] + lo[1]]);
+      for (const m of p.murs) m.materiau = mat;
+      p.pas = sc.plan.pas; p.decalage = sc.plan.decalage.slice();
+      sc.blocs = sc.blocs.filter((b) => b.duPlan == null);
+      for (const b of sc.blocs) b.ancrage = null;
+      sc.plan = p; sc.typePiece = 'rect';
+    }, { recadrer: true });
+    etat.editionPlan = false;
+  } else { modifier((sc) => { sc.typePiece = 'perso'; }); etat.editionPlan = true; }
+  etat.selection = null; etat.cadrage++;
+  notifier();
 }
 
 export { murDuPlan, coinsPlan, normalePlan, toit, idMur, FORMES_AJOUTABLES, materiau };

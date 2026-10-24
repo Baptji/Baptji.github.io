@@ -9,8 +9,9 @@
 
 import { v2, v3, trianguler, turbo, divergente, teinteMateriau, dansPolygone } from './base.js';
 import { polyedre, axe, avant, nouveauBloc, cleRayons, cleGeometrie, axeCote, hautCote, estOuvert } from './modele.js';
-import { coinsPlan, murDuPlan, normalePlan, toit, origine, cotes, contacts, idRampant } from './plan.js';
-import { etat, abonner, modifier, deplacerCoin, insererCoin, supprimerCoin, pousserMur, finirEditionPlan, deplacerObjet, hautEchelle, reglage, notifier } from './etat.js';
+import { coinsPlan, murDuPlan, normalePlan, toit, origine, cotes, contacts, idRampant, poigneesBloc } from './plan.js';
+import { etat, abonner, modifier, deplacerCoin, insererCoin, supprimerCoin, pousserMur, finirEditionPlan, deplacerObjet, tournerObjet, etirerBloc,
+  hautEchelle, reglage, notifier } from './etat.js';
 import { valeurRaster } from './calcul.js';
 
 // MARK: Matrices (colonnes)
@@ -116,6 +117,61 @@ in vec2 vt;
 uniform sampler2D tex;
 out vec4 sortie;
 void main() { vec4 c = texture(tex, vt); if (c.a < 0.05) discard; sortie = c; }`;
+// Volume : un triangle plein écran ; chaque pixel lance un rayon dans la boîte de la pièce et cumule
+// les cellules traversées (texture 3D : niveau, partie réelle, partie imaginaire, cellule d'air).
+const VSV = `#version 300 es
+in vec2 p;
+out vec2 ndc;
+void main() { gl_Position = vec4(p, 0.0, 1.0); ndc = p; }`;
+const FSV = `#version 300 es
+precision highp float;
+precision highp sampler3D;
+in vec2 ndc;
+uniform sampler3D vol;
+uniform mat4 inv;
+uniform vec3 oeil, bmax;
+uniform float cphase, sphase, onde, densite;
+out vec4 sortie;
+vec3 turbo(float x) {
+  x = clamp(x, 0.0, 1.0);
+  float r = 0.13572138 + x * (4.61539260 + x * (-42.66032258 + x * (132.13108234 + x * (-152.94239396 + x * 59.28637943))));
+  float g = 0.09140261 + x * (2.19418839 + x * (4.84296658 + x * (-14.18503333 + x * (4.27729857 + x * 2.82956604))));
+  float b = 0.10667330 + x * (12.64194608 + x * (-60.58204836 + x * (110.36276771 + x * (-89.90310912 + x * 27.34824973))));
+  return clamp(vec3(r, g, b), 0.0, 1.0);
+}
+vec3 divergente(float v) {
+  float t = min(abs(v), 1.0);
+  vec3 a = v < 0.0 ? vec3(0.16, 0.33, 0.72) : vec3(0.80, 0.20, 0.15);
+  return mix(vec3(0.97, 0.96, 0.94), a, t);
+}
+void main() {
+  vec4 a = inv * vec4(ndc, -1.0, 1.0), b = inv * vec4(ndc, 1.0, 1.0);
+  vec3 d = normalize(b.xyz / b.w - a.xyz / a.w);
+  vec3 iv = 1.0 / d, t0 = (vec3(0.0) - oeil) * iv, t1 = (bmax - oeil) * iv;
+  vec3 tn3 = min(t0, t1), tf3 = max(t0, t1);
+  float tn = max(max(max(tn3.x, tn3.y), tn3.z), 0.0), tf = min(min(tf3.x, tf3.y), tf3.z);
+  if (tf <= tn) discard;
+  const int N = 140;
+  float pas = (tf - tn) / float(N), echelle = 9.0 / length(bmax);
+  vec4 acc = vec4(0.0);
+  for (int i = 0; i < N; i++) {
+    vec3 q = oeil + d * (tn + (float(i) + 0.5) * pas);
+    vec4 s = texture(vol, q / bmax);
+    if (s.a < 0.5) continue;
+    vec3 c; float dens;
+    if (onde > 0.5) {
+      float v = ((s.g * 2.0 - 1.0) * cphase - (s.b * 2.0 - 1.0) * sphase) * 1.5;
+      c = divergente(v); dens = 1.6 * min(v * v, 1.0);
+    } else {
+      c = turbo(s.r); dens = 0.03 + 1.1 * s.r * s.r * s.r * s.r;
+    }
+    float al = 1.0 - exp(-dens * densite * pas * echelle);
+    acc.rgb += (1.0 - acc.a) * al * c; acc.a += (1.0 - acc.a) * al;
+    if (acc.a > 0.97) break;
+  }
+  if (acc.a < 0.003) discard;
+  sortie = vec4(acc.rgb / acc.a, acc.a);
+}`;
 
 const N = 11;   // flottants par sommet : position, normale + éclairé, couleur
 
@@ -132,6 +188,10 @@ export class Vue3D {
     if (!gl) { conteneur.insertAdjacentHTML('beforeend', '<p class="sans-3d">La vue 3D demande WebGL 2.</p>'); return; }
     this.prog = this.programme(VS, FS);
     this.progT = this.programme(VST, FST);
+    this.progV = this.programme(VSV, FSV);
+    this.tamponV = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.tamponV);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
     this.tampon = gl.createBuffer();
     this.tamponT = gl.createBuffer();
     this.textures = {};
@@ -145,7 +205,7 @@ export class Vue3D {
     this.souris();
     abonner(() => { this.besoin = true; });
     const boucle = () => {
-      const anime = (etat.animer && etat.raster && etat.raster.phaseurs) || etat.enCours;
+      const anime = (etat.animer && ((etat.raster && etat.raster.phaseurs) || (etat.volume3D && etat.volume && etat.volume.phaseurs))) || etat.enCours;
       if (this.besoin || anime) { this.besoin = false; this.dessiner(); }
       requestAnimationFrame(boucle);
     };
@@ -173,7 +233,7 @@ export class Vue3D {
   /// Construit les morceaux de la scène (refait seulement quand elle change).
   construire() {
     const s = etat.scene;
-    const cle = `${cleRayons(s)}|${s.enceintes.map((e) => cleGeometrie(e) + (e.active ? 'a' : 'i')).join()}|${etat.selection}|${s.micro}|${s.ecoute}|${etat.editionPlan}|${etat.coupe3D}`;
+    const cle = `${cleRayons(s)}|${s.enceintes.map((e) => cleGeometrie(e) + (e.active ? 'a' : 'i')).join()}|${etat.selection}|${s.micro}|${s.ecoute}|${etat.editionPlan}`;
     if (cle === this.cleGeo) return;
     this.cleGeo = cle;
     const L = s.longueur, W = s.largeur, H = s.hauteur;
@@ -226,7 +286,7 @@ export class Vue3D {
         for (let c = 0; c < 6; c++) { const a = axeCote(c), v = hautCote(c) ? [L, W, H][a] : 0; if (f.every((i) => Math.abs(p.sommets[i][a] - v) < 0.02)) mur = c; }
         const ar = [], ac = sel ? [1, 0.6, 0.1, 1] : [0, 0, 0, 0.35];
         for (let j = 0; j < f.length; j++) trait(ar, p.sommets[f[j]], p.sommets[f[(j + 1) % f.length]], ac);
-        faces.push({ n: p.plans[k].n, p: p.sommets[f[0]], mur, t, ar, paroi: b.dansParoi ? [avant(b), [b.x, b.y, b.z]] : null });
+        faces.push({ n: p.plans[k].n, p: p.sommets[f[0]], mur, t, ar, paroi: b.dansParoi ? [avant(b), [b.x, b.y, b.z]] : null, objet: true });
       });
     }
     if (t0) {
@@ -349,7 +409,6 @@ export class Vue3D {
     const m = [s.micro[0], s.micro[1], s.ecoute];
     trait(traits, [m[0], m[1], 0], m, [1, 1, 1, 0.8]);
     poly(polyedre(nouveauBloc({ forme: 'cylindre', x: m[0], y: m[1], z: m[2] + 0.06, longueur: 0.06, profondeur: 0.06, hauteur: 0.12 })), [0.95, 0.95, 0.95, 1], null, opaques);
-    if (etat.coupe3D) trait(traits, [0, m[1], s.ecoute], [L, m[1], s.ecoute], [1, 1, 1, 0.6]);
     this.geo = { opaques, translucides, traits, faces, murs, ouvParoi };
   }
 
@@ -387,6 +446,50 @@ export class Vue3D {
     });
   }
 
+  /// Texture 3D du volume (refaite quand le calcul, l'échelle ou l'étendue change).
+  textureVolume(v) {
+    const gl = this.gl, haut = hautEchelle(), plage = etat.plage, cle = `${etat.version}|${haut}|${plage}`;
+    if (this.cleVolume === cle && this.texVolume) return this.texVolume;
+    this.cleVolume = cle;
+    if (!this.texVolume) this.texVolume = gl.createTexture();
+    const n = v.nx * v.ny * v.nz, px = new Uint8Array(n * 4), ph = v.phaseurs;
+    const oct = (x) => Math.round(Math.min(Math.max(x / 1.5 * 0.5 + 0.5, 0), 1) * 255);
+    for (let k = 0; k < n; k++) {
+      const d = v.db[k];
+      if (isNaN(d)) continue;
+      px[4 * k] = isFinite(d) ? Math.round(Math.min(Math.max((d - (haut - plage)) / plage, 0), 1) * 255) : 0;
+      if (ph) { px[4 * k + 1] = oct(ph[2 * k]); px[4 * k + 2] = oct(ph[2 * k + 1]); }
+      px[4 * k + 3] = 255;
+    }
+    gl.bindTexture(gl.TEXTURE_3D, this.texVolume);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA8, v.nx, v.ny, v.nz, 0, gl.RGBA, gl.UNSIGNED_BYTE, px);
+    for (const [k, x] of [[gl.TEXTURE_MIN_FILTER, gl.LINEAR], [gl.TEXTURE_MAG_FILTER, gl.LINEAR], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE]])
+      gl.texParameteri(gl.TEXTURE_3D, k, x);
+    return this.texVolume;
+  }
+
+  volume(v, vp, phase) {
+    const gl = this.gl, p = this.progV, s = etat.scene;
+    gl.useProgram(p);
+    gl.disable(gl.DEPTH_TEST);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.tamponV);
+    const lp = gl.getAttribLocation(p, 'p');
+    gl.enableVertexAttribArray(lp); gl.vertexAttribPointer(lp, 2, gl.FLOAT, false, 8, 0);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_3D, this.textureVolume(v));
+    gl.uniform1i(gl.getUniformLocation(p, 'vol'), 0);
+    gl.uniformMatrix4fv(gl.getUniformLocation(p, 'inv'), false, inverser(vp));
+    gl.uniform3fv(gl.getUniformLocation(p, 'oeil'), this.regard.oeil);
+    gl.uniform3fv(gl.getUniformLocation(p, 'bmax'), [s.longueur, s.largeur, s.hauteur]);
+    gl.uniform1f(gl.getUniformLocation(p, 'onde'), phase != null && v.phaseurs ? 1 : 0);
+    gl.uniform1f(gl.getUniformLocation(p, 'densite'), etat.densite);
+    gl.uniform1f(gl.getUniformLocation(p, 'cphase'), Math.cos(phase || 0));
+    gl.uniform1f(gl.getUniformLocation(p, 'sphase'), Math.sin(phase || 0));
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.disableVertexAttribArray(lp);
+    gl.enable(gl.DEPTH_TEST);
+  }
+
   textureApercu(a) {
     const s = etat.scene;
     let m = 1e-12;
@@ -418,7 +521,7 @@ export class Vue3D {
     this.construire();
     const g = this.geo, oeil = this.regard.oeil, vp = this.regard.matrice;
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
-    gl.clearColor(0.17, 0.18, 0.2, 1);
+    gl.clearColor(0.039, 0.059, 0.039, 1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -428,33 +531,39 @@ export class Vue3D {
     gl.uniform3fv(gl.getUniformLocation(this.prog, 'lumiere'), lum);
     const dims = [s.longueur, s.largeur, s.hauteur];
     const cache = [0, 1, 2, 3, 4, 5].map((c) => (hautCote(c) ? oeil[axeCote(c)] > dims[axeCote(c)] : oeil[axeCote(c)] < 0));
-    const opaque = [];
-    g.murs.forEach((t, c) => { if (!cache[c]) opaque.push(...t); });
-    const vol = [], ar = [];
+    const piece = [], objets = [], ar = [];
+    g.murs.forEach((t, c) => { if (!cache[c]) piece.push(...t); });
     for (const f of g.faces) {
       if (f.mur != null && cache[f.mur]) continue;
       if (f.paroi && v3.dot(f.paroi[0], v3.sub(oeil, f.paroi[1])) < 0) continue;
       if (v3.dot(f.n, v3.sub(oeil, f.p)) < 0) continue;
-      vol.push(...f.t); ar.push(...f.ar);
+      (f.objet ? objets : piece).push(...f.t); ar.push(...f.ar);
     }
-    this.lot(opaque.concat(vol, g.opaques), gl.TRIANGLES);
-    this.lot(ar, gl.LINES);
-    // Cartes (translucides, sans écrire la profondeur).
-    gl.depthMask(false);
     const anime = etat.animer && etat.raster && etat.raster.phaseurs ? (performance.now() / 1000 % 1.6) / 1.6 * 2 * Math.PI : null;
-    let tex = null, texC = null;
-    if (etat.enCours && etat.apercu) tex = this.textureApercu(etat.apercu);
-    else if (etat.raster && etat.raster.vue === 'plan') {
-      if (anime != null || this.versionTex !== etat.version) {
-        this.texPlan = this.textureRaster('plan', etat.raster, anime);
-        this.texCoupe = etat.coupe3D && etat.rasterCoupe ? this.textureRaster('coupe', etat.rasterCoupe, anime) : null;
-        this.versionTex = anime != null ? -1 : etat.version;
+    const L = s.longueur, W = s.largeur, z = s.ecoute;
+    if (etat.volume3D && etat.volume && !etat.enCours) {
+      // Volume : la pièce, puis l'onde qui la remplit, puis les meubles et les enceintes par-dessus.
+      this.lot(piece, gl.TRIANGLES);
+      this.volume(etat.volume, vp, etat.animer && etat.volume.phaseurs ? (performance.now() / 1000 % 1.6) / 1.6 * 2 * Math.PI : null);
+      this.lot(objets.concat(g.opaques), gl.TRIANGLES);
+      this.lot(ar, gl.LINES);
+      gl.depthMask(false);
+    } else {
+      this.lot(piece.concat(objets, g.opaques), gl.TRIANGLES);
+      this.lot(ar, gl.LINES);
+      // Nappe à la hauteur d'écoute (translucide, sans écrire la profondeur).
+      gl.depthMask(false);
+      let tex = null;
+      if (etat.enCours && etat.apercu) tex = this.textureApercu(etat.apercu);
+      else if (etat.raster && etat.raster.vue === 'plan' && !etat.volume3D) {
+        if (anime != null || this.versionTex !== etat.version) {
+          this.texPlan = this.textureRaster('plan', etat.raster, anime);
+          this.versionTex = anime != null ? -1 : etat.version;
+        }
+        tex = this.texPlan;
       }
-      tex = this.texPlan; texC = this.texCoupe;
+      if (tex) this.quad(tex, [0, 0, z], [L, 0, z], [L, W, z], [0, W, z], vp);
     }
-    const L = s.longueur, W = s.largeur, H = s.hauteur, z = s.ecoute;
-    if (tex) this.quad(tex, [0, 0, z], [L, 0, z], [L, W, z], [0, W, z], vp);
-    if (texC && etat.coupe3D && !etat.enCours) { const y = s.micro[1]; this.quad(texC, [0, y, 0], [L, y, 0], [L, y, H], [0, y, H], vp); }
     gl.useProgram(this.prog);
     const ouv = [], ouvA = [];
     for (const o of g.ouvParoi) if (v3.dot(o.av, v3.sub(oeil, o.c)) >= 0) { ouv.push(...o.t); ouvA.push(...o.ar); }
@@ -496,11 +605,11 @@ export class Vue3D {
     const ctx = this.calque.getContext('2d'), dpr = window.devicePixelRatio || 1, s = etat.scene, R = this.regard;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, R.taille[0], R.taille[1]);
-    ctx.font = '11px -apple-system, system-ui, sans-serif';
+    ctx.font = '11px "JetBrains Mono", "SF Mono", Menlo, monospace';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     const pastille = (texte, p, fond, encre, gras) => {
       if (!p) return;
-      ctx.font = `${gras ? '600 ' : ''}11px -apple-system, system-ui, sans-serif`;
+      ctx.font = `${gras ? '600 ' : ''}11px "JetBrains Mono", "SF Mono", Menlo, monospace`;
       const w = ctx.measureText(texte).width + 8;
       ctx.fillStyle = fond; ctx.beginPath(); ctx.roundRect(p[0] - w / 2, p[1] - 8, w, 16, 3); ctx.fill();
       ctx.fillStyle = encre; ctx.fillText(texte, p[0], p[1] + 0.5);
@@ -531,6 +640,29 @@ export class Vue3D {
     }
     const v = etat.raster ? valeurRaster(etat.raster, s.micro[0], s.micro[1]) : null;
     pastille(v != null ? `${v.toFixed(1)} dB` : 'micro', R.projeter([s.micro[0], s.micro[1], s.ecoute + 0.22]), 'rgba(255,255,255,0.88)', '#000', true);
+    this.dessinerPoignees(ctx);
+  }
+
+  /// Poignées du meuble sélectionné : une flèche au milieu de chaque côté (étirer), une au centre (hauteur).
+  dessinerPoignees(ctx) {
+    const s = etat.scene, R = this.regard, actif = this.prise && this.prise.type === 'etirer' ? this.prise.nom : this.survolPoignee;
+    for (const q of poigneesBloc(s, etat.selection)) {
+      const p = R.projeter(q.p);
+      if (!p) continue;
+      const bout = q.n ? R.projeter([q.p[0] + q.n[0] * 0.3, q.p[1] + q.n[1] * 0.3, q.p[2]]) : R.projeter([q.p[0], q.p[1], q.p[2] + 0.3]);
+      flechePoignee(ctx, p, bout, q.nom === actif, !q.n);
+    }
+  }
+
+  /// Poignée sous le pointeur (nom) ou null.
+  viserPoigneeBloc(pt) {
+    const R = this.regard;
+    let best = null;
+    for (const q of poigneesBloc(etat.scene, etat.selection)) {
+      const p = R.projeter(q.p);
+      if (p) { const d = v2.dist(p, pt); if (d < 11 && (!best || d < best[1])) best = [q, d]; }
+    }
+    return best ? best[0] : null;
   }
 
   // MARK: Souris
@@ -612,6 +744,12 @@ export class Vue3D {
       this.depart = pt; this.dernier = pt; this.bouge = false;
       if (ev.button === 2 || ev.shiftKey) { this.prise = { type: 'decalage' }; return; }
       const s = etat.scene;
+      const pb = this.viserPoigneeBloc(pt);
+      if (pb) {
+        const b = s.blocs.find((x) => x.id === etat.selection);
+        this.prise = { type: 'etirer', nom: pb.nom, n: pb.n, z: pb.p[2], depart: this.surPlan(pt, pb.p[2]), bloc: Object.assign({}, b) };
+        return;
+      }
       const { coin, milieu } = this.viserPoignee(pt);
       if (coin != null) {
         if (ev.detail >= 2) { supprimerCoin(coin); this.prise = null; finirEditionPlan(); return; }
@@ -645,7 +783,11 @@ export class Vue3D {
       } else this.prise = { type: 'orbite' };
     });
     c.addEventListener('pointermove', (ev) => {
-      if (!this.prise) return;
+      if (!this.prise) {
+        const q = this.viserPoigneeBloc(this.point(ev)), nom = q ? q.nom : null;
+        if (nom !== this.survolPoignee) { this.survolPoignee = nom; c.style.cursor = q ? (q.n ? 'ew-resize' : 'ns-resize') : ''; this.besoin = true; }
+        return;
+      }
       const pt = this.point(ev), dx = pt[0] - this.dernier[0], dy = pt[1] - this.dernier[1];
       this.dernier = pt;
       if (Math.hypot(pt[0] - this.depart[0], pt[1] - this.depart[1]) > 3) this.bouge = true;
@@ -667,6 +809,13 @@ export class Vue3D {
           if (s.plan.murs[P.i].pied !== h) modifier((sc) => { sc.plan.murs[P.i].pied = h; });
           break;
         }
+        case 'etirer': {
+          let d;
+          if (!P.n) d = -(pt[1] - this.depart[1]) * R.distance * 0.6 / Math.max(R.taille[1], 1);
+          else { const q = this.surPlan(pt, P.z); if (!q || !P.depart) break; d = (q[0] - P.depart[0]) * P.n[0] + (q[1] - P.depart[1]) * P.n[1]; }
+          etirerBloc(P.bloc.id, P.nom, P.bloc, Math.round(d * 100) / 100);
+          break;
+        }
         case 'objet': {
           let p = P.origine.slice();
           if (P.mode === 1) p[2] = P.origine[2] - (pt[1] - this.depart[1]) * R.distance * 1.2 / Math.max(R.taille[1], 1);
@@ -674,8 +823,7 @@ export class Vue3D {
           p = p.map((v) => Math.round(v * 100) / 100);
           if (P.id === 'micro') { modifier((sc) => { sc.micro = [p[0], p[1]]; if (P.mode === 1) sc.ecoute = p[2]; }); break; }
           if (P.mode === 2) {
-            const rot = Math.round((P.az + (pt[0] - this.depart[0]) * 0.5) / 5) * 5;
-            modifier((sc) => { const o = sc.enceintes.find((x) => x.id === P.id) || sc.blocs.find((x) => x.id === P.id); if (o) o.azimut = rot; });
+            tournerObjet(P.id, Math.round((P.az + (pt[0] - this.depart[0]) * 0.5) / 5) * 5);
             break;
           }
           const o = s.enceintes.find((x) => x.id === P.id) || s.blocs.find((x) => x.id === P.id);
@@ -717,6 +865,30 @@ export class Vue3D {
   }
 
   recadrer() { this.regard.cadrer(etat.scene, true); this.besoin = true; }
+}
+
+/// Flèche de poignée (calque 2D) : pastille + flèche double dans le sens de l'étirement.
+export function flechePoignee(ctx, p, bout, actif, vertical) {
+  const vif = '#33ff33', fond = '#0a0f0a';
+  let u = bout ? [bout[0] - p[0], bout[1] - p[1]] : [0, -1];
+  const l = Math.hypot(u[0], u[1]) || 1;
+  u = [u[0] / l, u[1] / l];
+  const k = 15, w = [-u[1], u[0]];
+  ctx.save();
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const fleche = (sg) => {
+    const t = [p[0] + u[0] * k * sg, p[1] + u[1] * k * sg];
+    ctx.moveTo(p[0] + u[0] * 7 * sg, p[1] + u[1] * 7 * sg); ctx.lineTo(...t);
+    ctx.moveTo(t[0] - u[0] * 5 * sg + w[0] * 4, t[1] - u[1] * 5 * sg + w[1] * 4); ctx.lineTo(...t); ctx.lineTo(t[0] - u[0] * 5 * sg - w[0] * 4, t[1] - u[1] * 5 * sg - w[1] * 4);
+  };
+  ctx.beginPath(); fleche(1); fleche(-1);
+  ctx.strokeStyle = 'rgba(0,0,0,0.75)'; ctx.lineWidth = 5; ctx.stroke();
+  ctx.strokeStyle = actif ? '#fff' : vif; ctx.lineWidth = 2; ctx.stroke();
+  ctx.beginPath();
+  if (vertical) ctx.rect(p[0] - 6, p[1] - 6, 12, 12); else ctx.arc(p[0], p[1], 6.5, 0, 2 * Math.PI);
+  ctx.fillStyle = actif ? vif : fond; ctx.fill();
+  ctx.strokeStyle = vif; ctx.lineWidth = 2; ctx.stroke();
+  ctx.restore();
 }
 
 export { reglage };

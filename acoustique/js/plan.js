@@ -486,6 +486,49 @@ export function aimanterObjet(s, id, prise = 0.06) {
   if (e) { e.x += d[0]; e.y += d[1]; }
 }
 
+/// Poignées d'étirement du meuble sélectionné : milieu de chaque côté du dessus (n = normale sortante),
+/// et le centre du dessus pour la hauteur. Seulement pour un bloc posé (pas une fenêtre ni un mur).
+export function poigneesBloc(s, id) {
+  const b = s.blocs.find((x) => x.id === id);
+  if (!b || b.duPlan != null || b.dansParoi || b.forme !== 'boite') return [];
+  const a = b.azimut * Math.PI / 180, av = [Math.cos(a), Math.sin(a)], co = [-Math.sin(a), Math.cos(a)], z = b.z + b.hauteur / 2;
+  const pt = (d, k) => [b.x + d[0] * k, b.y + d[1] * k, z];
+  return [
+    { nom: 'avant', p: pt(av, b.profondeur / 2), n: av },
+    { nom: 'arriere', p: pt(av, -b.profondeur / 2), n: [-av[0], -av[1]] },
+    { nom: 'gauche', p: pt(co, b.longueur / 2), n: co },
+    { nom: 'droite', p: pt(co, -b.longueur / 2), n: [-co[0], -co[1]] },
+    { nom: 'haut', p: [b.x, b.y, z], n: null },
+  ];
+}
+
+/// Enveloppe convexe (chaîne monotone).
+function enveloppe(pts) {
+  const p = pts.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const x = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const bas = [], haut = [];
+  for (const q of p) { while (bas.length >= 2 && x(bas[bas.length - 2], bas[bas.length - 1], q) <= 1e-12) bas.pop(); bas.push(q); }
+  for (const q of p.reverse()) { while (haut.length >= 2 && x(haut[haut.length - 2], haut[haut.length - 1], q) <= 1e-12) haut.pop(); haut.push(q); }
+  return bas.slice(0, -1).concat(haut.slice(0, -1));
+}
+
+/// L'emprise tient-elle dans la pièce ? (coins dedans, aucun mur traversé ; toucher un mur est permis)
+export function dansLaPiece(s, pts) {
+  const murs = contourMurs(s);
+  if (pts.length < 3 || murs.length < 3) return true;
+  pts = enveloppe(pts);
+  const c = [pts.reduce((a, p) => a + p[0], 0) / pts.length, pts.reduce((a, p) => a + p[1], 0) / pts.length];
+  const q = pts.map((p) => { const d = v2.sub(c, p), l = v2.len(d); return l > 0.002 ? v2.add(p, v2.mul(d, 0.0015 / l)) : p; });
+  if (!q.every((p) => dansPolygone(p[0], p[1], murs))) return false;
+  const coupe = (a, b, p, r) => {
+    const o = (u, v, w) => (v[0] - u[0]) * (w[1] - u[1]) - (v[1] - u[1]) * (w[0] - u[0]);
+    return o(a, b, p) * o(a, b, r) < 0 && o(p, r, a) * o(p, r, b) < 0;
+  };
+  for (let i = 0; i < q.length; i++) for (let j = 0; j < murs.length; j++)
+    if (coupe(q[i], q[(i + 1) % q.length], murs[j], murs[(j + 1) % murs.length])) return false;
+  return true;
+}
+
 /// Côtés de l'objet collés à un mur : le tronçon de mur touché.
 export function contacts(s, id) {
   const pts = emprise(s, id);
