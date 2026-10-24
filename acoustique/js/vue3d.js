@@ -2,16 +2,13 @@
 // le toit exact, les volumes, les enceintes, le micro, la carte des niveaux à la hauteur d'écoute,
 // les cotes. Traduction de Vue3D.swift.
 //
-//  • glisser dans le vide : tourner ; clic droit ou ⇧ glisser : décaler ; molette : zoom ;
-//  • glisser un objet : le déplacer (il se colle aux murs) ; ⌘ : en hauteur ; ⌥ : l'orienter ;
-//  • pièce dessinée : glisser un mur le pousse, un rampant monte ou descend son mur nain ;
-//    en édition, glisser un poteau déplace le coin, cliquer un « + » ajoute un coin.
+//  Vue seulement : glisser = tourner ; clic droit ou ⇧ glisser = décaler ; molette = zoom ;
+//  clic = sélectionner. Tout se règle dans les vues Plan et Coupe (2D).
 
 import { v2, v3, trianguler, turbo, divergente, teinteMateriau, dansPolygone } from './base.js';
 import { polyedre, axe, avant, nouveauBloc, cleRayons, cleGeometrie, axeCote, hautCote, estOuvert } from './modele.js';
-import { coinsPlan, murDuPlan, normalePlan, toit, origine, cotes, contacts, idRampant, poigneesBloc } from './plan.js';
-import { etat, abonner, modifier, deplacerCoin, insererCoin, supprimerCoin, pousserMur, finirEditionPlan, deplacerObjet, tournerObjet, etirerBloc,
-  hautEchelle, reglage, notifier } from './etat.js';
+import { coinsPlan, murDuPlan, normalePlan, toit, origine, cotes, contacts, idRampant } from './plan.js';
+import { etat, abonner, versEchelle, annulation, zeroDB, reglage, notifier } from './etat.js';
 import { valeurRaster } from './calcul.js';
 
 // MARK: Matrices (colonnes)
@@ -162,7 +159,7 @@ void main() {
       float v = ((s.g * 2.0 - 1.0) * cphase - (s.b * 2.0 - 1.0) * sphase) * 1.5;
       c = divergente(v); dens = 1.6 * min(v * v, 1.0);
     } else {
-      c = turbo(s.r); dens = 0.03 + 1.1 * s.r * s.r * s.r * s.r;
+      c = turbo(s.r); float e = abs(s.r - 0.5) * 2.0; dens = 0.02 + 1.5 * e * e * e;
     }
     float al = 1.0 - exp(-dens * densite * pas * echelle);
     acc.rgb += (1.0 - acc.a) * al * c; acc.a += (1.0 - acc.a) * al;
@@ -232,7 +229,7 @@ export class Vue3D {
   /// Construit les morceaux de la scène (refait seulement quand elle change).
   construire() {
     const s = etat.scene;
-    const cle = `${cleRayons(s)}|${s.enceintes.map((e) => cleGeometrie(e) + (e.active ? 'a' : 'i')).join()}|${etat.selection}|${s.micro}|${s.ecoute}|${etat.editionPlan}`;
+    const cle = `${cleRayons(s)}|${s.enceintes.map((e) => cleGeometrie(e) + (e.active ? 'a' : 'i')).join()}|${etat.selection}|${s.micro}|${s.ecoute}`;
     if (cle === this.cleGeo) return;
     this.cleGeo = cle;
     const L = s.longueur, W = s.largeur, H = s.hauteur;
@@ -368,21 +365,6 @@ export class Vue3D {
       for (let t = 0; o[0] + t <= hi[0] + 1e-6; t += 0.5) { const l = t % 1 < 1e-6 ? 0.18 : 0.08; trait(traits, [o[0] + t, yr, 0.005], [o[0] + t, yr - l, 0.005], col); }
       for (let t = 0; o[1] + t <= hi[1] + 1e-6; t += 0.5) { const l = t % 1 < 1e-6 ? 0.18 : 0.08; trait(traits, [xr, o[1] + t, 0.005], [xr - l, o[1] + t, 0.005], col); }
     }
-    // Pièce dessinée en édition : grille au sol, poteaux des coins, « + » des milieux.
-    if (etat.editionPlan && s.plan) {
-      const pl = s.plan, q = coinsPlan(s);
-      let pas = Math.max(pl.pas, 0.25);
-      while (Math.max(L, W) / pas > 60) pas *= 2;
-      for (let x = pl.decalage[0] + Math.floor((-1 - pl.decalage[0]) / pas) * pas; x <= L + 1; x += pas) trait(traits, [x, -1, 0.004], [x, W + 1, 0.004], [1, 1, 1, 0.12]);
-      for (let y = pl.decalage[1] + Math.floor((-1 - pl.decalage[1]) / pas) * pas; y <= W + 1; y += pas) trait(traits, [-1, y, 0.004], [L + 1, y, 0.004], [1, 1, 1, 0.12]);
-      q.forEach((c, i) => {
-        const voisins = [pl.murs[i], pl.murs[(i + q.length - 1) % q.length]].filter((m) => m.rampant && m.pied < H);
-        const hp = Math.max(voisins.length ? Math.min(...voisins.map((m) => m.pied)) : H, 0.15);
-        poly(polyedre(nouveauBloc({ x: c[0], y: c[1], z: hp / 2, longueur: 0.08, profondeur: 0.08, hauteur: hp })), [1, 0.62, 0.15, 1], null, opaques);
-        const m = v2.mul(v2.add(c, q[(i + 1) % q.length]), 0.5);
-        poly(polyedre(nouveauBloc({ forme: 'cylindre', x: m[0], y: m[1], z: 0.04, longueur: 0.18, profondeur: 0.18, hauteur: 0.08 })), [0.95, 0.95, 0.95, 1], null, opaques);
-      });
-    }
     // Enceintes.
     for (const e of s.enceintes) {
       const sel = etat.selection === e.id;
@@ -430,7 +412,6 @@ export class Vue3D {
   }
 
   textureRaster(nom, r, phase) {
-    const haut = hautEchelle(), plage = etat.plage;
     return this.texture(nom, r.l, r.h, (px) => {
       const c = Math.cos(phase || 0), sn = Math.sin(phase || 0);
       for (let k = 0; k < r.l * r.h; k++) {
@@ -438,8 +419,8 @@ export class Vue3D {
         if (isNaN(v)) continue;
         let col;
         if (phase != null && r.phaseurs) col = divergente(r.phaseurs[2 * k] * c - r.phaseurs[2 * k + 1] * sn);
-        else if (!isFinite(v)) col = [20, 20, 40];
-        else col = turbo((v - (haut - plage)) / plage);
+        else if (annulation(v, r)) col = (k % r.l + Math.floor(k / r.l)) % 6 < 2 ? [15, 15, 25] : turbo(0);
+        else col = turbo(versEchelle(v, r));
         px[4 * k] = col[0]; px[4 * k + 1] = col[1]; px[4 * k + 2] = col[2]; px[4 * k + 3] = 235;
       }
     });
@@ -447,7 +428,7 @@ export class Vue3D {
 
   /// Texture 3D du volume (refaite quand le calcul, l'échelle ou l'étendue change).
   textureVolume(v) {
-    const gl = this.gl, haut = hautEchelle(), plage = etat.plage, cle = `${etat.version}|${haut}|${plage}`;
+    const gl = this.gl, cle = `${etat.version}`;
     if (this.cleVolume === cle && this.texVolume) return this.texVolume;
     this.cleVolume = cle;
     if (!this.texVolume) this.texVolume = gl.createTexture();
@@ -456,7 +437,7 @@ export class Vue3D {
     for (let k = 0; k < n; k++) {
       const d = v.db[k];
       if (isNaN(d)) continue;
-      px[4 * k] = isFinite(d) ? Math.round(Math.min(Math.max((d - (haut - plage)) / plage, 0), 1) * 255) : 0;
+      px[4 * k] = isFinite(d) ? Math.round(Math.min(Math.max(versEchelle(d, v), 0), 1) * 255) : 0;
       if (ph) { px[4 * k + 1] = oct(ph[2 * k]); px[4 * k + 2] = oct(ph[2 * k + 1]); }
       px[4 * k + 3] = 255;
     }
@@ -638,30 +619,22 @@ export class Vue3D {
       pastille(`x ${(c[0] - o[0]).toFixed(2)} · y ${(c[1] - o[1]).toFixed(2)} m`, R.projeter([c[0], c[1], s.hauteur + 0.15]), '#fb8c00', '#000', true);
     }
     const v = etat.raster ? valeurRaster(etat.raster, s.micro[0], s.micro[1]) : null;
-    pastille(v != null ? `${v.toFixed(1)} dB` : 'micro', R.projeter([s.micro[0], s.micro[1], s.ecoute + 0.22]), 'rgba(255,255,255,0.88)', '#000', true);
-    this.dessinerPoignees(ctx);
+    const rel = v != null ? v - zeroDB(etat.raster) : null;
+    pastille(rel != null ? `${rel >= 0 ? '+' : '−'}${Math.abs(rel).toFixed(1)} dB` : 'micro', R.projeter([s.micro[0], s.micro[1], s.ecoute + 0.22]), 'rgba(255,255,255,0.88)', '#000', true);
+    this.dessinerMarquesPlacement(ctx);
   }
 
-  /// Poignées du meuble sélectionné : une flèche au milieu de chaque côté (étirer), une au centre (hauteur).
-  dessinerPoignees(ctx) {
-    const s = etat.scene, R = this.regard, actif = this.prise && this.prise.type === 'etirer' ? this.prise.nom : this.survolPoignee;
-    for (const q of poigneesBloc(s, etat.selection)) {
-      const p = R.projeter(q.p);
-      if (!p) continue;
-      const bout = q.n ? R.projeter([q.p[0] + q.n[0] * 0.3, q.p[1] + q.n[1] * 0.3, q.p[2]]) : R.projeter([q.p[0], q.p[1], q.p[2] + 0.3]);
-      flechePoignee(ctx, p, bout, q.nom === actif, !q.n);
-    }
-  }
-
-  /// Poignée sous le pointeur (nom) ou null.
-  viserPoigneeBloc(pt) {
-    const R = this.regard;
-    let best = null;
-    for (const q of poigneesBloc(etat.scene, etat.selection)) {
-      const p = R.projeter(q.p);
-      if (p) { const d = v2.dist(p, pt); if (d < 11 && (!best || d < best[1])) best = [q, d]; }
-    }
-    return best ? best[0] : null;
+  /// Places proposées par la recherche de la meilleure position (numérotées).
+  dessinerMarquesPlacement(ctx) {
+    const P = etat.placement;
+    if (!P) return;
+    P.resultats.slice(0, 3).forEach((r, k) => {
+      const p = this.regard.projeter([r.x, r.y, r.z]);
+      if (!p) return;
+      ctx.beginPath(); ctx.arc(p[0], p[1], 9, 0, 2 * Math.PI); ctx.fillStyle = k === 0 ? '#34c759' : 'rgba(52,199,89,0.75)'; ctx.fill();
+      ctx.lineWidth = 2; ctx.strokeStyle = '#fff'; ctx.stroke();
+      ctx.fillStyle = '#000'; ctx.font = '600 11px -apple-system, system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(k + 1), p[0], p[1] + 0.5);
+    });
   }
 
   // MARK: Souris
@@ -718,22 +691,8 @@ export class Vue3D {
     return best;
   }
 
-  /// Poignée de la pièce dessinée sous le pointeur : coin (poteau) ou milieu d'un mur.
-  viserPoignee(pt) {
-    const s = etat.scene;
-    if (!etat.editionPlan || !s.plan) return {};
-    const q = coinsPlan(s), R = this.regard;
-    const dist = (p, a, b) => { const d = v2.sub(b, a), l2 = v2.dot(d, d); const t = l2 > 0 ? Math.min(Math.max(v2.dot(v2.sub(p, a), d) / l2, 0), 1) : 0; return v2.dist(p, v2.add(a, v2.mul(d, t))); };
-    let best = null;
-    q.forEach((c, i) => { const a = R.projeter([c[0], c[1], 0]), b = R.projeter([c[0], c[1], s.hauteur]); if (!a || !b) return; const dd = dist(pt, a, b); if (dd < 8 && (!best || dd < best[1])) best = [i, dd]; });
-    if (best) return { coin: best[0] };
-    for (let i = 0; i < q.length; i++) {
-      const m = v2.mul(v2.add(q[i], q[(i + 1) % q.length]), 0.5), p = R.projeter([m[0], m[1], 0.04]);
-      if (p && v2.dist(p, pt) < 10) return { milieu: i };
-    }
-    return {};
-  }
-
+  /// La 3D n'est qu'une vue : tourner, décaler, zoomer ; un simple clic sélectionne un élément
+  /// (il se règle dans les vues Plan et Coupe, ou dans le panneau).
   souris() {
     const c = this.calque;
     c.addEventListener('contextmenu', (ev) => ev.preventDefault());
@@ -741,111 +700,25 @@ export class Vue3D {
       c.setPointerCapture(ev.pointerId);
       const pt = this.point(ev);
       this.depart = pt; this.dernier = pt; this.bouge = false;
-      if (ev.button === 2 || ev.shiftKey) { this.prise = { type: 'decalage' }; return; }
-      const s = etat.scene;
-      const pb = this.viserPoigneeBloc(pt);
-      if (pb) {
-        const b = s.blocs.find((x) => x.id === etat.selection);
-        this.prise = { type: 'etirer', nom: pb.nom, n: pb.n, z: pb.p[2], depart: this.surPlan(pt, pb.p[2]), bloc: Object.assign({}, b) };
-        return;
-      }
-      const { coin, milieu } = this.viserPoignee(pt);
-      if (coin != null) {
-        if (ev.detail >= 2) { supprimerCoin(coin); this.prise = null; finirEditionPlan(); return; }
-        this.prise = { type: 'coin', i: coin }; etat.coinActif = coin; notifier(); return;
-      }
-      if (milieu != null) {
-        const q = coinsPlan(s), k = insererCoin(milieu, v2.mul(v2.add(q[milieu], q[(milieu + 1) % q.length]), 0.5));
-        if (k != null) { this.prise = { type: 'coin', i: k }; etat.coinActif = k; notifier(); return; }
-      }
-      const v = this.viser(pt);
-      if (v && v[0] !== 'micro') {
-        const i = murDuPlan(s, v[0]);
-        if (i != null) {
-          etat.selection = v[0]; notifier();
-          const { o, d } = this.regard.rayon(pt), p = v3.add(o, v3.mul(d, v[1]));
-          if ((s.blocs.find((b) => b.id === v[0]) || {}).forme === 'toit') this.prise = { type: 'pied', i, origine: s.plan.murs[i].pied };
-          else this.prise = { type: 'mur', i, z: p[2], depart: p, coins: s.plan.coins.map((x) => x.slice()) };
-          return;
-        }
-      }
-      if (v) {
-        const mode = ev.metaKey || ev.ctrlKey ? 1 : (ev.altKey ? 2 : 0);
-        let ctr;
-        if (v[0] === 'micro') ctr = [s.micro[0], s.micro[1], s.ecoute];
-        else {
-          etat.selection = v[0]; notifier();
-          const e = s.enceintes.find((x) => x.id === v[0]), b = s.blocs.find((x) => x.id === v[0]);
-          ctr = e ? [e.x, e.y, e.z] : [b.x, b.y, b.z];
-        }
-        this.prise = { type: 'objet', id: v[0], plan: ctr[2], depart: this.surPlan(pt, ctr[2]) || ctr, origine: ctr, mode, az: (s.enceintes.find((x) => x.id === v[0]) || s.blocs.find((x) => x.id === v[0]) || {}).azimut };
-      } else this.prise = { type: 'orbite' };
+      this.prise = { type: ev.button === 2 || ev.shiftKey ? 'decalage' : 'orbite' };
     });
     c.addEventListener('pointermove', (ev) => {
-      if (!this.prise) {
-        const q = this.viserPoigneeBloc(this.point(ev)), nom = q ? q.nom : null;
-        if (nom !== this.survolPoignee) { this.survolPoignee = nom; c.style.cursor = q ? (q.n ? 'ew-resize' : 'ns-resize') : ''; this.besoin = true; }
-        return;
-      }
+      if (!this.prise) return;
       const pt = this.point(ev), dx = pt[0] - this.dernier[0], dy = pt[1] - this.dernier[1];
       this.dernier = pt;
       if (Math.hypot(pt[0] - this.depart[0], pt[1] - this.depart[1]) > 3) this.bouge = true;
-      const P = this.prise, R = this.regard, s = etat.scene;
-      switch (P.type) {
-        case 'orbite': R.azimut -= dx * 0.008; R.elevation = Math.min(Math.max(R.elevation + dy * 0.008, -0.15), 1.55); break;
-        case 'decalage': this.decaler(dx, dy); break;
-        case 'coin': { const q = this.surPlan(pt, 0); if (q) deplacerCoin(P.i, [q[0], q[1]], ev.altKey); break; }
-        case 'mur': {
-          if (!this.bouge) break;
-          const q = this.surPlan(pt, P.z), nIn = normalePlan(s, P.i);
-          if (q && nIn) pousserMur(P.i, P.coins, -((q[0] - P.depart[0]) * nIn[0] + (q[1] - P.depart[1]) * nIn[1]), ev.altKey);
-          break;
-        }
-        case 'pied': {
-          if (!this.bouge) break;
-          const k = R.distance * 1.2 / Math.max(R.taille[1], 1);
-          const h = Math.min(Math.max(Math.round((P.origine - (pt[1] - this.depart[1]) * k) * 20) / 20, 0), s.hauteur - 0.1);
-          if (s.plan.murs[P.i].pied !== h) modifier((sc) => { sc.plan.murs[P.i].pied = h; });
-          break;
-        }
-        case 'etirer': {
-          let d;
-          if (!P.n) d = -(pt[1] - this.depart[1]) * R.distance * 0.6 / Math.max(R.taille[1], 1);
-          else { const q = this.surPlan(pt, P.z); if (!q || !P.depart) break; d = (q[0] - P.depart[0]) * P.n[0] + (q[1] - P.depart[1]) * P.n[1]; }
-          etirerBloc(P.bloc.id, P.nom, P.bloc, Math.round(d * 100) / 100);
-          break;
-        }
-        case 'objet': {
-          let p = P.origine.slice();
-          if (P.mode === 1) p[2] = P.origine[2] - (pt[1] - this.depart[1]) * R.distance * 1.2 / Math.max(R.taille[1], 1);
-          else if (P.mode === 0) { const q = this.surPlan(pt, P.plan); if (q) { p[0] = P.origine[0] + q[0] - P.depart[0]; p[1] = P.origine[1] + q[1] - P.depart[1]; } }
-          p = p.map((v) => Math.round(v * 100) / 100);
-          if (P.id === 'micro') { modifier((sc) => { sc.micro = [p[0], p[1]]; if (P.mode === 1) sc.ecoute = p[2]; }); break; }
-          if (P.mode === 2) {
-            tournerObjet(P.id, Math.round((P.az + (pt[0] - this.depart[0]) * 0.5) / 5) * 5);
-            break;
-          }
-          const o = s.enceintes.find((x) => x.id === P.id) || s.blocs.find((x) => x.id === P.id);
-          const bas = o.hauteur / 2;
-          const z = Math.max(p[2] - bas < 0.05 ? bas : p[2], s.blocs.includes(o) ? bas : 0);
-          deplacerObjet(P.id, p[0], p[1], z, P.mode === 0);
-          break;
-        }
-        default: break;
-      }
+      const R = this.regard;
+      if (this.prise.type === 'orbite') { R.azimut -= dx * 0.008; R.elevation = Math.min(Math.max(R.elevation + dy * 0.008, -0.15), 1.55); }
+      else this.decaler(dx, dy);
       this.besoin = true;
     });
     c.addEventListener('pointerup', (ev) => {
       const P = this.prise;
       this.prise = null;
-      if (etat.coinActif != null) { etat.coinActif = null; notifier(); }
-      if (!P) return;
-      if (P.type === 'coin' || P.type === 'mur') { finirEditionPlan(); return; }
-      if (!this.bouge && P.type === 'orbite') {
-        // Simple clic dans le vide : micro sur la carte d'écoute, sinon désélection.
-        const s = etat.scene, q = this.surPlan(this.point(ev), s.ecoute);
-        if (q && q[0] >= 0 && q[1] >= 0 && q[0] <= s.longueur && q[1] <= s.largeur) modifier((sc) => { sc.micro = [Math.round(q[0] * 20) / 20, Math.round(q[1] * 20) / 20]; });
-        else { etat.selection = null; notifier(); }
+      if (P && !this.bouge && P.type === 'orbite') {
+        const v = this.viser(this.point(ev));
+        etat.selection = v && v[0] !== 'micro' ? v[0] : null;
+        notifier();
       }
       this.besoin = true;
     });

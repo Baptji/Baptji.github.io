@@ -15,9 +15,9 @@ export const etat = {
   scene: null,
   // Graves toujours en finesse « normal » ; calcul seulement sur demande (sauf « Auto » coché).
   qualite: 'normal', mode: 'frequence', frequence: 63, affichage: 'troisD', volume3D: false, ponderationA: false,
-  solo: null, animer: false, plage: 30, echelleFixe: false, hautFixe: 100, selection: null, editionPlan: false,
+  solo: null, animer: false, selection: null, editionPlan: false,
   gravesAuto: false, courbeGraves: true, coinActif: null, reprise: null, densite: 1,
-  champs: new Map(), raster: null, volume: null, courbe: [], courbesSources: [], version: 0,
+  champs: new Map(), raster: null, rasterCoupe: null, volume: null, placement: null, recherche: null, courbe: [], courbesSources: [], version: 0,
   enCours: false, progression: 0, etape: '', apercu: null, message: null, webgpu: null,
   cadrage: 0, recadrage: { n: 0, dx: 0, dy: 0 },
 };
@@ -78,14 +78,14 @@ export function nouveauProjet() {
   arreterCalcul();
   etat.scene = projetVierge();
   etat.champs.clear();
-  etat.selection = null; etat.solo = null; etat.editionPlan = false; etat.message = null; etat.cadrage++;
+  etat.selection = null; etat.solo = null; etat.editionPlan = false; etat.message = null; etat.placement = null; etat.cadrage++;
   enregistrerPlusTard(); recalculerCarte(); notifier();
 }
 
 export function ouvrirScene(sc) {
   arreterCalcul();
   etat.scene = preparer(sc);
-  etat.selection = null; etat.solo = null; etat.editionPlan = false; etat.reprise = null; etat.cadrage++;
+  etat.selection = null; etat.solo = null; etat.editionPlan = false; etat.reprise = null; etat.placement = null; etat.cadrage++;
   enregistrerPlusTard(); recalculerCarte(); planifierGraves(); notifier();
 }
 
@@ -111,16 +111,25 @@ export function reglage(cle, valeur) {
   etat[cle] = valeur;
   if (['qualite', 'mode', 'frequence', 'affichage', 'volume3D', 'ponderationA', 'solo'].includes(cle)) recalculerCarte();
   if (cle === 'qualite' || cle === 'gravesAuto') planifierGraves();
-  if (cle === 'echelleFixe' && valeur && etat.raster) etat.hautFixe = hautEchelle();
   notifier();
 }
 
-export function hautEchelle() {
-  if (etat.echelleFixe) return etat.hautFixe;
-  const r = etat.raster;
-  if (!r || !r.bornes) return 100;
-  return isFinite(r.bornes[1]) ? Math.ceil(r.bornes[1]) : 100;
+// MARK: Échelle relative : 0 dB = niveau moyen de la pièce à cette fréquence
+
+/// ±12 dB : au-dessus, couplage trop fort (mode qui gonfle) ; en dessous de −12 dB, annulation.
+export const ECHELLE_DB = 12;
+/// 0 dB comme le calculateur de modes de Vesa Laasanen (gain « Auto ») : moyenne arithmétique des dB
+/// de toutes les cases de la carte (cases d'air seulement).
+export function reference(db) {
+  let n = 0, m = 0;
+  for (const x of db) if (isFinite(x)) { m += x; n++; }
+  return n ? m / n : 0;
 }
+export const zeroDB = (r) => (r && isFinite(r.ref) ? r.ref : 0);
+/// Niveau → 0…1 sur l'échelle −12…+12 dB autour du niveau moyen.
+export const versEchelle = (v, r) => (v - zeroDB(r) + ECHELLE_DB) / (2 * ECHELLE_DB);
+/// Annulation : plus de 12 dB sous le niveau moyen (court-circuit acoustique, interférence destructive).
+export const annulation = (v, r) => !isFinite(v) || v - zeroDB(r) < -ECHELLE_DB;
 
 // MARK: Calcul ondulatoire
 
@@ -144,7 +153,7 @@ export function planifierGraves() {
   clearTimeout(minuterieGraves);
   if (etat.enCours && !aRecalculer().every((e) => clesEnCours.has(cle(e)))) { calculAuto = true; annuler = true; }
   minuterieGraves = setTimeout(async function essai() {
-    if (etat.enCours) { minuterieGraves = setTimeout(essai, 200); return; }
+    if (etat.enCours || etat.recherche) { minuterieGraves = setTimeout(essai, 200); return; }
     if (!aRecalculer().length) return;
     if (estimation().secondes * aRecalculer().length > 40) return;
     lancerCalcul(true);
@@ -152,7 +161,7 @@ export function planifierGraves() {
 }
 
 export async function lancerCalcul(auto = false) {
-  if (etat.enCours) return;
+  if (etat.enCours || etat.recherche) return;
   const liste = aRecalculer();
   if (!liste.length) { if (!auto) { etat.message = 'Tout est déjà à jour.'; notifier(); } return; }
   if (!etat.webgpu) { etat.message = "Ce navigateur n'a pas WebGPU : seuls les aigus (rayons) sont calculés."; notifier(); return; }
@@ -208,8 +217,11 @@ export function recalculerCarte() {
     }
     const r = raster(E, champsR);
     r.bornes = bornesRaster(r);
+    r.ref = reference(r.db);
     const p = pointMicro();
     etat.raster = r;
+    // Plan + coupe côte à côte : la coupe aussi, sur le même 0 dB.
+    if (etat.affichage === 'deux') { const rc = raster(entrees('coupe'), champsR); rc.ref = r.ref; etat.rasterCoupe = rc; } else etat.rasterCoupe = null;
     etat.courbe = courbe(E, p, champsR);
     etat.courbesSources = courbesSources(E, p);
     etat.version++;
@@ -218,6 +230,7 @@ export function recalculerCarte() {
     if (etat.affichage === 'troisD' && etat.volume3D) {
       const v = await rasterVolume(E, champsR, () => mon !== jeton);
       if (!v || mon !== jeton) return;
+      v.ref = reference(v.db);
       etat.volume = v;
       etat.version++;
       notifier();
@@ -380,6 +393,7 @@ export function supprimer(id) {
   }
   modifier((s) => { s.blocs = s.blocs.filter((b) => b.id !== id); s.enceintes = s.enceintes.filter((e) => e.id !== id); });
   etat.champs.delete(id);
+  if (etat.placement && etat.placement.id === id) etat.placement = null;
   if (etat.solo === id) etat.solo = null;
   if (etat.selection === id) etat.selection = null;
   notifier();

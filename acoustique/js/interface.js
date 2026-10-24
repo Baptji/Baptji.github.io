@@ -2,7 +2,7 @@
 // liste des éléments à gauche (sources, murs, objets), à droite la pièce et l'élément sélectionné.
 
 import { etat, abonner, notifier, demarrer, modifier, reglage, formePlan, finirEditionPlan, retirerMur, ouvrirDansMur,
-  ajouterEnceinte, ajouterBloc, supprimer, dupliquer, lancerCalcul, arreterCalcul, aJour, aRecalculer, estimation, hautEchelle,
+  ajouterEnceinte, ajouterBloc, supprimer, dupliquer, lancerCalcul, arreterCalcul, aJour, aRecalculer, estimation, ECHELLE_DB, deplacerObjet,
   entrees, gravesAutomatiques, nouveauProjet, ouvrirScene, reprendre, dimensionsRect, typePiece, tournerObjet } from './etat.js';
 import { MATERIAUX, materiau, GENRES, genre, FILTRES, FORMES, FORMES_AJOUTABLES, borner, estOuvert } from './modele.js';
 import { FORMES_PLAN, coinsPlan, murDuPlan, origine, volumePlan, EPAISSEUR, idMur } from './plan.js';
@@ -10,6 +10,7 @@ import { Bandes } from './rayons.js';
 import { fmaxOndes } from './calcul.js';
 import { cssMateriau, turbo, v2, aire } from './base.js';
 import { textePixel } from './police.js';
+import { chercherEcoute, chercherSalle, arreterRecherche, dureeEcoute, dureeSalle } from './placement.js';
 import { Vue3D } from './vue3d.js';
 import { Plan2D } from './plan2d.js';
 import { Courbe, FMIN, FMAX } from './courbe.js';
@@ -151,7 +152,7 @@ function construireBarre() {
     el('div', { class: 'identite' }, el('img', { src: 'icone.png', alt: '', width: 28, height: 28 }),
       el('div', {}, lier(el('div', { class: 'titre' }), () => etat.scene.nom),
         el('div', { class: 'statut' }, el('span', { class: 'voyant' }), lier(el('span', { class: 'texte-statut' }), () => statut()[0])))),
-    segments([['troisD', '3D'], ['plan', 'Plan'], ['coupe', 'Coupe']], () => etat.affichage, (v) => { reglage('affichage', v); montrerVue(); }),
+    segments([['troisD', '3D'], ['plan', 'Plan'], ['coupe', 'Coupe'], ['deux', 'Plan + coupe']], () => etat.affichage, (v) => { reglage('affichage', v); montrerVue(); }),
     si(segments([[false, 'Nappe'], [true, 'Volume']], () => etat.volume3D, (v) => reglage('volume3D', v)), () => etat.affichage === 'troisD'),
     segments([['frequence', 'Son pur'], ['bande', "Tiers d'octave"], ['global', 'Bruit rose']], () => etat.mode, (v) => reglage('mode', v), 'modes'),
     el('div', { class: 'espace' }),
@@ -196,10 +197,6 @@ function construireSousBarre() {
   ecoute.addEventListener('input', () => modifier((s) => { s.ecoute = +ecoute.value; borner(s); }));
   liaisons.push({ e: freq, lire: () => { freq.disabled = etat.mode === 'global'; return versLog(etat.frequence); } });
   liaisons.push({ e: ecoute, lire: () => { ecoute.max = Math.max(etat.scene.hauteur - 0.05, 0.1); return etat.scene.ecoute; } });
-  const plage = el('select', { 'aria-label': "Étendue de l'échelle", title: "Écart en décibels entre le haut et le bas de l'échelle des couleurs" });
-  for (const v of [10, 20, 30, 40, 60]) plage.append(el('option', { value: v }, `${v} dB`));
-  plage.value = etat.plage;
-  plage.addEventListener('change', () => reglage('plage', +plage.value));
   const densite = el('input', { type: 'range', min: -1.5, max: 1.5, step: 0.05, 'aria-label': 'Densité du volume', title: 'Rendre le volume plus transparent ou plus opaque' });
   densite.addEventListener('input', () => reglage('densite', Math.pow(3, +densite.value)));
   lier(densite, () => Math.log(etat.densite) / Math.log(3));
@@ -208,8 +205,7 @@ function construireSousBarre() {
     el('span', { class: 'separateur' }),
     el('span', { class: 'groupe-sb ecoute' }, el('span', { class: 'doux' }, 'Écoute à'), ecoute, lier(el('output', { class: 'valeur' }), () => `${etat.scene.ecoute.toFixed(2)} m`)),
     el('span', { class: 'separateur' }),
-    el('span', { class: 'groupe-sb' }, el('span', { class: 'doux' }, 'Échelle'), lier(plage, () => etat.plage),
-      case_('Figée', () => etat.echelleFixe, (v) => reglage('echelleFixe', v), { title: 'Garder le même haut d’échelle pour comparer des fréquences ou des réglages' }),
+    el('span', { class: 'groupe-sb' },
       case_('Animer', () => etat.animer, (v) => reglage('animer', v), { title: "Montrer la pression qui oscille (son pur, graves calculés)" }),
       si(case_('Pondération A', () => etat.ponderationA, (v) => reglage('ponderationA', v)), () => etat.mode === 'global')),
     si(el('span', { class: 'groupe-sb' }, el('span', { class: 'doux' }, 'Densité'), densite), () => etat.affichage === 'troisD' && etat.volume3D),
@@ -270,6 +266,8 @@ function construireInspecteur() {
   const I = $('#inspecteur');
   I.innerHTML = '';
   I.append(cartePiece(), carteSelection());
+  const cp = cartePlacement();
+  if (cp) I.append(cp);
 }
 
 const NOMS_FORMES = { rectangle: 'Rectangle', enL: 'En L', enT: 'En T', trapeze: 'Trapèze', mansarde: 'Mansarde', combles: 'Combles' };
@@ -374,7 +372,27 @@ function carteEnceinte(e) {
     nombre('Hauteur', () => get().z, ecrire('z'), { mini: 0, maxi: 100 }),
     g !== 'omni' ? nombre('Orientation', () => get().azimut, (v) => tournerObjet(id, v), { unite: '°', mini: -180, maxi: 180, pas: 5, dec: 0 }) : null,
     g === 'nu' ? nombre("Côté de l'écran", () => get().baffle, ecrire('baffle'), { mini: 0, maxi: 3, pas: 0.05 }) : null,
-    el('div', { class: 'boutons' }, el('button', { type: 'button', onclick: () => dupliquer(id) }, 'Dupliquer'), el('button', { type: 'button', class: 'danger', onclick: () => supprimer(id) }, 'Supprimer')));
+    el('div', { class: 'boutons' }, el('button', { type: 'button', onclick: () => dupliquer(id) }, 'Dupliquer'), el('button', { type: 'button', class: 'danger', onclick: () => supprimer(id) }, 'Supprimer')),
+    el('div', { class: 'ligne' }, el('span', { class: 'etiquette' }, 'Meilleure place'), aide('Meilleure place', "Essaie la source à de nombreux endroits de la pièce et garde ceux où la réponse dans les graves (25–200 Hz) est la plus régulière, c'est-à-dire la plus fiable. « Point d'écoute » : au micro (un seul calcul, par réciprocité). « Toute la pièce » : en moyenne sur une grille de points d'écoute (un calcul par emplacement).")),
+    etat.webgpu === false ? el('p', { class: 'note alerte' }, 'Demande WebGPU (Chrome, Edge ou Safari récents).') : el('div', { class: 'boutons' },
+      el('button', { type: 'button', disabled: !!(etat.enCours || etat.recherche), onclick: () => chercherEcoute(id) }, `Point d'écoute · ≈ ${duree(dureeEcoute())}`),
+      el('button', { type: 'button', disabled: !!(etat.enCours || etat.recherche), onclick: () => chercherSalle(id) }, `Toute la pièce · ≈ ${duree(dureeSalle())}`)));
+}
+
+/// Résultats de « Meilleure place » : trois emplacements, et la place actuelle pour comparer.
+function cartePlacement() {
+  const P = etat.placement;
+  if (!P) return null;
+  const o = origine(etat.scene), salle = P.mode === 'salle';
+  const note = (r) => (salle ? `pièce ±${r.salle.toFixed(1)} dB${r.ecoute != null ? ` · écoute ±${r.ecoute.toFixed(1)}` : ''}` : `±${r.ecoute.toFixed(1)} dB`);
+  return carte(`Meilleure place · ${P.nom}`, "± = écart type de la réponse dans les graves autour de sa moyenne : plus il est petit, plus la réponse est régulière. Les cercles verts numérotés marquent les places dans les vues.",
+    el('p', { class: 'note' }, salle ? 'Pour toute la pièce (moyenne sur une grille de points d’écoute).' : 'Pour le point d’écoute (micro).'),
+    el('div', { class: 'places' }, P.resultats.map((r, k) => el('div', { class: 'place' },
+      el('span', { class: `rang${k ? ' autre' : ''}` }, String(k + 1)),
+      el('div', {}, el('div', { class: 'chiffres' }, `x ${(r.x - o[0]).toFixed(2)} · y ${(r.y - o[1]).toFixed(2)} m`), el('div', { class: 'note' }, note(r))),
+      el('button', { type: 'button', onclick: () => deplacerObjet(P.id, r.x, r.y, null, false) }, 'Placer')))),
+    P.actuelle && (P.actuelle.ecoute != null || P.actuelle.salle != null) ? el('p', { class: 'note' }, `Place de départ : ${note(Object.assign({ ecoute: P.actuelle.ecoute ?? 0, salle: P.actuelle.salle ?? 0 }, P.actuelle))}`) : null,
+    el('button', { type: 'button', onclick: () => { etat.placement = null; notifier(); } }, 'Effacer les propositions'));
 }
 
 // MARK: Légende et bandeaux
@@ -390,6 +408,7 @@ function dessinerLegende() {
   ctx.font = '10px -apple-system, system-ui, sans-serif'; ctx.fillStyle = doux;
   const y0 = 34, h = r.height - 70;
   const phaseurs = etat.volume3D && etat.affichage === 'troisD' ? etat.volume && etat.volume.phaseurs : etat.raster && etat.raster.phaseurs;
+  ctx.textBaseline = 'alphabetic';
   if (etat.animer && phaseurs) {
     const g = ctx.createLinearGradient(0, y0, 0, y0 + h);
     g.addColorStop(0, 'rgb(204,51,38)'); g.addColorStop(0.5, 'rgb(247,245,240)'); g.addColorStop(1, 'rgb(41,84,184)');
@@ -397,11 +416,19 @@ function dessinerLegende() {
     ctx.fillStyle = doux; ctx.fillText('+', 10, y0 - 8); ctx.fillText('−', 10, y0 + h + 12);
     return;
   }
-  ctx.fillText('dB SPL', 4, y0 - 12);
-  for (let k = 0; k < 64; k++) { const c = turbo(1 - k / 63); ctx.fillStyle = `rgb(${c})`; ctx.fillRect(8, y0 + h * k / 64, 14, h / 64 + 1); }
-  const haut = hautEchelle(), plage = etat.plage, pas = plage > 40 ? 10 : plage > 16 ? 5 : 2;
+  // Échelle relative : 0 dB = niveau moyen de la pièce à cette fréquence.
+  ctx.fillText('dB', 8, y0 - 22); ctx.fillText('/ moy.', 4, y0 - 11);
+  const hb = h - 26;
+  for (let k = 0; k < 64; k++) { const c = turbo(1 - k / 63); ctx.fillStyle = `rgb(${c})`; ctx.fillRect(8, y0 + hb * k / 64, 14, hb / 64 + 1); }
   ctx.fillStyle = doux; ctx.textBaseline = 'middle';
-  for (let v = Math.floor(haut / pas) * pas; v >= haut - plage; v -= pas) ctx.fillText(String(v), 26, y0 + h * (haut - v) / plage);
+  for (let v = ECHELLE_DB; v >= -ECHELLE_DB; v -= 6) ctx.fillText(v > 0 ? `+${v}` : v < 0 ? `−${-v}` : '0', 26, y0 + hb * (ECHELLE_DB - v) / (2 * ECHELLE_DB));
+  // Hachures : annulation (plus de 12 dB sous la moyenne).
+  const yh = y0 + hb + 8;
+  ctx.fillStyle = 'rgb(0,0,80)'; ctx.fillRect(8, yh, 14, 14);
+  ctx.save(); ctx.beginPath(); ctx.rect(8, yh, 14, 14); ctx.clip(); ctx.strokeStyle = 'rgb(15,15,25)'; ctx.lineWidth = 2;
+  for (let d = -14; d < 28; d += 5) { ctx.beginPath(); ctx.moveTo(8 + d, yh + 14); ctx.lineTo(8 + d + 14, yh); ctx.stroke(); }
+  ctx.restore();
+  ctx.fillStyle = doux; ctx.fillText('<−12', 24, yh + 7);
 }
 
 function bandeau() {
@@ -413,7 +440,10 @@ function bandeau() {
       el('button', { type: 'button', 'aria-label': 'Fermer', onclick: () => { etat.reprise = null; notifier(); } }, '×')));
   }
   if (etat.message) b.append(el('div', { class: 'message', onclick: () => { etat.message = null; notifier(); } }, etat.message));
-  if (etat.enCours) {
+  if (etat.recherche) {
+    b.append(el('div', { class: 'calcul' }, el('strong', {}, `${etat.recherche.etape}… ${Math.round(etat.recherche.progression * 100)} %`),
+      el('progress', { max: 1, value: etat.recherche.progression }), el('button', { type: 'button', onclick: arreterRecherche }, 'Arrêter')));
+  } else if (etat.enCours) {
     b.append(el('div', { class: 'calcul' }, el('strong', {}, `Calcul des graves en cours… ${Math.round(etat.progression * 100)} %`),
       el('span', {}, "On voit l'impulsion partir de la source et rebondir sur les murs ; la carte revient à la fin."),
       el('progress', { max: 1, value: etat.progression })));
@@ -424,12 +454,13 @@ function bandeau() {
 
 // MARK: Vues
 
-let vue3d = null, vue2d = null, courbe = null;
+let vue3d = null, vue2d = null, vuePlan = null, vueCoupe = null, courbe = null;
 function montrerVue() {
-  const trois = etat.affichage === 'troisD';
-  $('#vue3d').hidden = !trois; $('#vue2d').hidden = trois;
-  if (trois && vue3d) vue3d.redimensionner();
-  if (!trois && vue2d) vue2d.redimensionner();
+  const a = etat.affichage;
+  $('#vue3d').hidden = a !== 'troisD'; $('#vue2d').hidden = a !== 'plan' && a !== 'coupe'; $('#vue2x').hidden = a !== 'deux';
+  if (a === 'troisD' && vue3d) vue3d.redimensionner();
+  else if (a === 'deux') { vuePlan.redimensionner(); vueCoupe.redimensionner(); }
+  else if (vue2d) vue2d.redimensionner();
   majOutilsVue();
 }
 let cleOutils = '';
@@ -440,19 +471,18 @@ function majOutilsVue() {
   if (k === cleOutils) return;
   cleOutils = k;
   o.innerHTML = '';
-  if (perso && etat.affichage !== 'coupe') {
+  if (perso && (etat.affichage === 'plan' || etat.affichage === 'deux')) {
     o.append(el('button', { type: 'button', class: etat.editionPlan ? 'actif' : '', 'aria-pressed': etat.editionPlan ? 'true' : 'false',
       onclick: () => { etat.editionPlan = !etat.editionPlan; notifier(); } }, etat.editionPlan ? 'Terminer la forme' : 'Modifier la forme'));
   }
   if (etat.affichage === 'troisD') o.append(el('button', { type: 'button', onclick: () => vue3d && vue3d.recadrer() }, 'Recadrer'));
   const edition = etat.editionPlan && perso;
-  $('#aide-vue').textContent = etat.affichage === 'troisD'
-    ? (edition ? 'Forme : glisser un poteau = déplacer le coin · clic sur un + = nouveau coin · double-clic sur un poteau = l’ôter · ⌥ = sans grille'
-      : meuble ? 'Flèches vertes : étirer (côtés) ou changer la hauteur (centre) · glisser le meuble : le déplacer · ⌥ : l’orienter'
-        : 'Glisser : tourner · clic droit ou ⇧ : décaler · molette : zoom · glisser un objet : le déplacer (⌘ hauteur, ⌥ orienter) · clic au sol : micro')
-    : (edition && etat.affichage === 'plan' ? 'Glisser un coin · clic sur un + : nouveau coin · double-clic sur un coin : l’ôter · glisser un mur : le pousser · ⌥ : sans grille'
-      : meuble && etat.affichage === 'plan' ? 'Flèches vertes : étirer · glisser le meuble : le déplacer · ⌥ : l’orienter'
-        : 'Glisser une source ou un objet : le déplacer (⌥ : l’orienter) · cliquer ailleurs : placer le micro');
+  const a = etat.affichage;
+  $('#aide-vue').textContent = a === 'troisD' ? 'Vue seulement · glisser : tourner · clic droit ou ⇧ : décaler · molette : zoom · clic : sélectionner (les réglages se font en Plan et en Coupe)'
+    : edition && a !== 'coupe' ? 'Plan : glisser un coin · clic sur un + : nouveau coin · double-clic sur un coin : l’ôter · glisser un mur : le pousser · ⌥ : sans grille'
+      : meuble ? 'Flèches vertes : étirer (en coupe, celle du dessus règle la hauteur) · glisser le meuble : le déplacer · ⌥ (plan) : l’orienter'
+        : a === 'coupe' ? 'Coupe (vue de côté) : glisser une source ou un objet le monte ou le descend · cliquer ailleurs : micro et hauteur d’écoute'
+          : 'Glisser une source ou un objet : le déplacer (⌥ : l’orienter) · cliquer ailleurs : placer le micro';
 }
 
 function exporterImage() {
@@ -462,6 +492,10 @@ function exporterImage() {
     src = document.createElement('canvas');
     src.width = vue3d.canvas.width; src.height = vue3d.canvas.height;
     const c = src.getContext('2d'); c.drawImage(vue3d.canvas, 0, 0); c.drawImage(vue3d.calque, 0, 0);
+  } else if (etat.affichage === 'deux') {
+    src = document.createElement('canvas');
+    src.width = vuePlan.canvas.width + vueCoupe.canvas.width; src.height = Math.max(vuePlan.canvas.height, vueCoupe.canvas.height);
+    const c = src.getContext('2d'); c.drawImage(vuePlan.canvas, 0, 0); c.drawImage(vueCoupe.canvas, vuePlan.canvas.width, 0);
   } else src = vue2d.canvas;
   src.toBlob((b) => { const a = el('a', { href: URL.createObjectURL(b), download: `${etat.scene.nom}.png` }); a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); });
 }
@@ -476,7 +510,7 @@ let cleStructure = '';
 function structure() {
   const s = etat.scene, b = s.blocs.find((x) => x.id === etat.selection), e = s.enceintes.find((x) => x.id === etat.selection), m = murDuPlan(s, etat.selection);
   return [etat.selection, s.typePiece, s.plan ? s.plan.coins.length : 0, b ? `${b.forme}${b.dansParoi}${b.nom}` : '', e ? `${e.genre}${e.filtre}${e.nom}` : '',
-    m != null ? s.plan.murs[m].rampant : '', etat.webgpu].join('|');
+    m != null ? s.plan.murs[m].rampant : '', etat.webgpu, etat.placement ? etat.placement.version : 0, !!etat.recherche, etat.enCours].join('|');
 }
 let cleListe = '';
 function cleDeListe() {
@@ -491,6 +525,8 @@ export function lancer() {
   construireSousBarre();
   vue3d = new Vue3D($('#vue3d'));
   vue2d = new Plan2D($('#vue2d'));
+  vuePlan = new Plan2D($('#vue2x-plan'), 'plan');
+  vueCoupe = new Plan2D($('#vue2x-coupe'), 'coupe');
   courbe = new Courbe($('#courbe'));
   for (const b of document.querySelectorAll('#choix-courbe button')) b.addEventListener('click', () => { reglage('courbeGraves', b.dataset.v === 'graves'); });
   new ResizeObserver(dessinerLegende).observe($('#legende'));

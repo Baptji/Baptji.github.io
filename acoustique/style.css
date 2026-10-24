@@ -173,3 +173,12 @@ button.calcul-en-cours { color: #b25000; border-color: var(--orange); }
 .sous-barre .regime { width: 150px; }
 .bandeau { top: 46px; }
 .bandeau .reprise { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.vue.deux { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: var(--bord); }
+.vue.deux .moitie { position: relative; background: var(--fond-vue); min-width: 0; }
+@media (max-width: 980px) { .vue.deux { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; } }
+.places { display: flex; flex-direction: column; gap: 4px; }
+.place { display: flex; align-items: center; gap: 8px; }
+.place .rang { width: 18px; height: 18px; border-radius: 50%; background: #34c759; color: #000; font-weight: 700; font-size: 11px; display: grid; place-items: center; flex: none; }
+.place .rang.autre { background: rgba(52,199,89,0.6); }
+.place > div { flex: 1; min-width: 0; }
+.place .chiffres { font-size: 11px; }

@@ -5,13 +5,15 @@ import { v2, turbo, divergente, cssMateriau, dansPolygone } from './base.js';
 import { polyedre, axe, estOuvert, dansContour } from './modele.js';
 import { coinsPlan, murDuPlan, normalePlan, toit, origine, cotes, contacts, couper, idMur, EPAISSEUR, poigneesBloc } from './plan.js';
 import { etat, abonner, modifier, deplacerCoin, insererCoin, supprimerCoin, pousserMur, finirEditionPlan, deplacerObjet, tournerObjet, etirerBloc,
-  hautEchelle, notifier } from './etat.js';
+  versEchelle, annulation, zeroDB, notifier } from './etat.js';
 import { flechePoignee } from './vue3d.js';
 import { valeurRaster } from './calcul.js';
 
 export class Plan2D {
-  constructor(conteneur) {
+  /// vueFixe : 'plan' ou 'coupe' pour l'affichage « Plan + coupe » (sinon la vue suit le choix en haut).
+  constructor(conteneur, vueFixe = null) {
     this.conteneur = conteneur;
+    this.vueFixe = vueFixe;
     this.canvas = document.createElement('canvas');
     conteneur.append(this.canvas);
     this.ctx = this.canvas.getContext('2d');
@@ -36,7 +38,12 @@ export class Plan2D {
     this.besoin = true;
   }
 
-  get vue() { return etat.affichage === 'coupe' ? 'coupe' : 'plan'; }
+  get vue() { return this.vueFixe || (etat.affichage === 'coupe' ? 'coupe' : 'plan'); }
+  /// Carte des niveaux de cette vue (la coupe a la sienne en « Plan + coupe »).
+  get carte() {
+    if (this.vue === 'coupe' && etat.rasterCoupe) return etat.rasterCoupe;
+    return etat.raster && etat.raster.vue === this.vue ? etat.raster : null;
+  }
   get scene() { return etat.scene; }
   get hauteurMonde() { return this.vue === 'plan' ? this.scene.largeur : this.scene.hauteur; }
   get edition() { return etat.editionPlan && this.scene.plan && this.vue === 'plan'; }
@@ -91,6 +98,7 @@ export class Plan2D {
     if (s.plan && this.vue === 'plan') this.poignees(c);
     if (this.vue === 'plan') this.cotesSelection(c);
     for (const e of s.enceintes) this.dessinerEnceinte(e, c);
+    this.dessinerPlacement(c);
     this.dessinerPoignees(c);
     // Micro.
     const m = this.versVue(...(this.vue === 'plan' ? [s.micro[0], s.micro[1]] : [s.micro[0], s.ecoute]), c);
@@ -104,7 +112,7 @@ export class Plan2D {
   }
 
   fond(c) {
-    const ctx = this.ctx, r = etat.raster, s = this.scene;
+    const ctx = this.ctx, r = this.carte, s = this.scene;
     let l, h, remplir;
     if (etat.enCours && etat.apercu && this.vue === 'plan') {
       const a = etat.apercu;
@@ -121,18 +129,18 @@ export class Plan2D {
           px[j] = col[0]; px[j + 1] = col[1]; px[j + 2] = col[2]; px[j + 3] = 255;
         }
       };
-    } else if (r && r.vue === this.vue) {
+    } else if (r) {
       l = r.l; h = r.h;
       const anime = etat.animer && r.phaseurs ? (performance.now() / 1000 % 1.6) / 1.6 * 2 * Math.PI : null;
-      const haut = hautEchelle(), plage = etat.plage, co = Math.cos(anime || 0), si = Math.sin(anime || 0);
+      const co = Math.cos(anime || 0), si = Math.sin(anime || 0);
       remplir = (px) => {
         for (let k = 0; k < l * h; k++) {
           const v = r.db[k], j = ((h - 1 - Math.floor(k / l)) * l + (k % l)) * 4;
           let col;
           if (isNaN(v)) col = [60, 60, 64];
           else if (anime != null) col = divergente(r.phaseurs[2 * k] * co - r.phaseurs[2 * k + 1] * si);
-          else if (!isFinite(v)) col = [20, 20, 40];
-          else col = turbo((v - (haut - plage)) / plage);
+          else if (annulation(v, r)) col = (k % l + Math.floor(k / l)) % 6 < 2 ? [15, 15, 25] : turbo(0);   // hachures
+          else col = turbo(versEchelle(v, r));
           px[j] = col[0]; px[j + 1] = col[1]; px[j + 2] = col[2]; px[j + 3] = 255;
         }
       };
@@ -302,14 +310,32 @@ export class Plan2D {
     });
   }
 
-  /// Poignées d'étirement du meuble sélectionné (plan seulement ; la hauteur se règle en 3D).
+  /// Poignées d'étirement du meuble sélectionné. Plan : les quatre côtés (largeur, profondeur).
+  /// Coupe : le dessus (hauteur) et les côtés tournés vers la gauche ou la droite.
   poigneesMeuble(c) {
-    if (this.vue !== 'plan') return [];
-    return poigneesBloc(this.scene, etat.selection).filter((q) => q.n).map((q) => Object.assign({ v: this.versVue(q.p[0], q.p[1], c) }, q));
+    const s = this.scene, b = s.blocs.find((x) => x.id === etat.selection);
+    const liste = poigneesBloc(s, etat.selection);
+    if (this.vue === 'plan') return liste.filter((q) => q.n).map((q) => Object.assign({ v: this.versVue(q.p[0], q.p[1], c),
+      bout: this.versVue(q.p[0] + q.n[0] * 0.3, q.p[1] + q.n[1] * 0.3, c) }, q));
+    return liste.filter((q) => !q.n || Math.abs(q.n[0]) > 0.7).map((q) => (q.n
+      ? Object.assign({ v: this.versVue(q.p[0], b.z, c), bout: this.versVue(q.p[0] + Math.sign(q.n[0]) * 0.3, b.z, c) }, q)
+      : Object.assign({ v: this.versVue(q.p[0], q.p[2], c), bout: this.versVue(q.p[0], q.p[2] + 0.3, c), vertical: true }, q)));
   }
   dessinerPoignees(c) {
     const actif = this.cible && this.cible.type === 'etirer' ? this.cible.nom : this.survolPoignee;
-    for (const q of this.poigneesMeuble(c)) flechePoignee(this.ctx, q.v, this.versVue(q.p[0] + q.n[0] * 0.3, q.p[1] + q.n[1] * 0.3, c), q.nom === actif, false);
+    for (const q of this.poigneesMeuble(c)) flechePoignee(this.ctx, q.v, q.bout, q.nom === actif, !!q.vertical);
+  }
+
+  /// Places proposées par « Meilleure place » (numérotées, la 1ʳᵉ en plein).
+  dessinerPlacement(c) {
+    const P = etat.placement, ctx = this.ctx;
+    if (!P) return;
+    P.resultats.slice(0, 3).forEach((r, k) => {
+      const p = this.vue === 'plan' ? this.versVue(r.x, r.y, c) : this.versVue(r.x, r.z, c);
+      ctx.beginPath(); ctx.arc(p[0], p[1], 9, 0, 2 * Math.PI); ctx.fillStyle = k === 0 ? '#34c759' : 'rgba(52,199,89,0.7)'; ctx.fill();
+      ctx.lineWidth = 2; ctx.strokeStyle = '#fff'; ctx.stroke();
+      ctx.fillStyle = '#000'; ctx.font = '600 11px -apple-system, system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(k + 1), p[0], p[1] + 0.5);
+    });
   }
 
   /// Distances de l'objet sélectionné aux murs, et trait vert là où il touche un mur.
@@ -352,8 +378,8 @@ export class Plan2D {
     const ctx = this.ctx, s = this.scene, [u, v] = this.versMonde(this.survol, c), o = origine(s);
     if (u < 0 || v < 0 || u > s.longueur || v > this.hauteurMonde) return;
     let t = this.vue === 'plan' ? `x ${(u - o[0]).toFixed(2)}  y ${(v - o[1]).toFixed(2)} m` : `x ${(u - o[0]).toFixed(2)}  h ${v.toFixed(2)} m`;
-    const val = etat.raster && etat.raster.vue === this.vue ? valeurRaster(etat.raster, u, v) : null;
-    if (val != null) t = `${val.toFixed(1)} dB   ` + t;
+    const r = this.carte, val = r ? valeurRaster(r, u, v) : null;
+    if (val != null) { const d = val - zeroDB(r); t = `${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(1)} dB${d < -12 ? ' (annulation)' : d > 6 ? ' (couplage fort)' : ''}   ` + t; }
     ctx.font = '11px -apple-system, system-ui, sans-serif';
     const w = ctx.measureText(t).width + 12, p = [this.survol[0] + 14, this.survol[1] + 10];
     ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.beginPath(); ctx.roundRect(p[0], p[1], w, 20, 5); ctx.fill();
@@ -402,7 +428,7 @@ export class Plan2D {
       this.depart = p;
       const pq = this.poigneesMeuble(c).find((q) => v2.dist(q.v, p) < 11);
       if (pq) {
-        this.cible = { type: 'etirer', nom: pq.nom, n: pq.n, depart: this.versMonde(p, c), bloc: Object.assign({}, s.blocs.find((x) => x.id === etat.selection)) };
+        this.cible = { type: 'etirer', nom: pq.nom, n: pq.n, vue: this.vue, depart: this.versMonde(p, c), bloc: Object.assign({}, s.blocs.find((x) => x.id === etat.selection)) };
         return;
       }
       let cible = this.viserPlan(p, c);
@@ -421,7 +447,7 @@ export class Plan2D {
         }
       }
       if (!cible) cible = this.viserMur(p, c);
-      if (!cible) {
+      if (!cible && this.vue === 'plan') {
         const b = [...s.blocs].reverse().find((x) => x.duPlan != null && dansPolygone(p[0], p[1], this.enveloppe(x, c)));
         if (b) { etat.selection = b.id; notifier(); cible = { type: 'rien' }; }
       }
@@ -433,7 +459,7 @@ export class Plan2D {
       this.survol = p; this.besoin = true;
       if (!this.cible || !ev.buttons) {
         const q = this.poigneesMeuble(this.cadre()).find((x) => v2.dist(x.v, p) < 11), nom = q ? q.nom : null;
-        if (nom !== this.survolPoignee) { this.survolPoignee = nom; cv.style.cursor = q ? 'ew-resize' : ''; }
+        if (nom !== this.survolPoignee) { this.survolPoignee = nom; cv.style.cursor = q ? (q.vertical ? 'ns-resize' : 'ew-resize') : ''; }
       }
       if (this.cible && ev.buttons) this.glisser(p, ev);
     });
@@ -448,7 +474,8 @@ export class Plan2D {
     const c = this.cadre(), [u, v] = this.versMonde(p, c), s = this.scene, C = this.cible;
     switch (C.type) {
       case 'etirer': {
-        const d = (u - C.depart[0]) * C.n[0] + (v - C.depart[1]) * C.n[1];
+        const d = C.vue === 'plan' ? (u - C.depart[0]) * C.n[0] + (v - C.depart[1]) * C.n[1]
+          : C.n ? (u - C.depart[0]) / C.n[0] : v - C.depart[1];
         etirerBloc(C.bloc.id, C.nom, C.bloc, Math.round(d * 100) / 100);
         break;
       }
@@ -466,7 +493,7 @@ export class Plan2D {
         const nu = Math.round((C.origine[0] + u - C.depart[0]) * 100) / 100, nv = Math.round((C.origine[1] + v - C.depart[1]) * 100) / 100;
         if (this.vue === 'plan' && ev.altKey) tournerObjet(C.id, Math.round(Math.atan2(v - b.y, u - b.x) * 180 / Math.PI / 5) * 5);
         else if (this.vue === 'plan') deplacerObjet(C.id, nu, nv, null, true);
-        else deplacerObjet(C.id, nu, null, Math.max(nv, b.hauteur / 2), false);
+        else deplacerObjet(C.id, nu, null, Math.min(Math.max(nv, b.hauteur / 2), Math.max(s.hauteur - b.hauteur / 2, b.hauteur / 2)), false);
         break;
       }
       case 'micro':

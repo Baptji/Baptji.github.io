@@ -1,5 +1,7 @@
 // Réponse en fréquence au micro : par défaut les graves (20–300 Hz), chaque enceinte et leur
 // somme ; « Tout le spectre » ajoute le niveau moyen des rayons. Un clic choisit la fréquence.
+// En dB relatifs : 0 dB = niveau moyen de la somme sur la bande affichée (une réponse plate
+// suivrait le 0) ; au-delà de ±12 dB, couplage trop fort ou annulation.
 
 import { etat, abonner, reglage, gravesAutomatiques } from './etat.js';
 import { fmaxOndes } from './calcul.js';
@@ -47,9 +49,13 @@ export class Courbe {
     const dans = (q) => q.f >= fa * 0.98 && q.f <= fb * 1.02;
     const visibles = etat.courbe.filter((q) => dans(q) && (!etat.courbeGraves || q.ondes));
     const sources = etat.courbesSources.map((c) => [c, c.points.filter(dans)]);
-    const toutes = visibles.map((q) => q.db).concat(sources.flatMap((s) => s[1].map((q) => q.db)));
-    const hi = Math.ceil((toutes.length ? Math.max(...toutes) : 100) / 5) * 5 + 5, lo = hi - (etat.courbeGraves ? 45 : 55);
-    const y = (v) => R.y + R.h - (Math.min(Math.max(v, lo), hi) - lo) / (hi - lo) * R.h;
+    // Référence : moyenne (en énergie) de la somme sur la bande affichée.
+    const ref = visibles.length ? 10 * Math.log10(visibles.reduce((a, q) => a + Math.pow(10, q.db / 10), 0) / visibles.length) : 0;
+    const hi = 18, lo = -24;
+    const y = (v) => R.y + R.h - (Math.min(Math.max(v - ref, lo), hi) - lo) / (hi - lo) * R.h;
+    // Bandes hors de ±12 dB.
+    ctx.fillStyle = 'rgba(229,57,53,0.08)'; ctx.fillRect(R.x, R.y, R.w, y(ref + 12) - R.y);
+    ctx.fillStyle = 'rgba(41,84,184,0.10)'; ctx.fillRect(R.x, y(ref - 12), R.w, R.y + R.h - y(ref - 12));
     ctx.font = '10px -apple-system, system-ui, sans-serif';
     const fo = fmaxOndes(entrees());
     if (!etat.courbeGraves && fo > 0 && fo < fb) {
@@ -65,16 +71,18 @@ export class Courbe {
     }
     ctx.textAlign = 'right'; ctx.fillText('Hz', R.x - 8, R.y + R.h + 4);
     ctx.textBaseline = 'middle';
-    for (let v = lo; v <= hi; v += 5) {
-      ctx.strokeStyle = `rgba(128,128,128,${v % 10 === 0 ? 0.3 : 0.12})`; ctx.beginPath(); ctx.moveTo(R.x, y(v)); ctx.lineTo(R.x + R.w, y(v)); ctx.stroke();
-      if (v % 10 === 0) { ctx.fillStyle = doux; ctx.fillText(`${v} dB`, R.x - 5, y(v)); }
+    for (let v = lo; v <= hi; v += 6) {
+      ctx.strokeStyle = `rgba(128,128,128,${v === 0 ? 0.7 : Math.abs(v) === 12 ? 0.45 : 0.15})`; ctx.lineWidth = v === 0 ? 1 : 0.5;
+      ctx.beginPath(); ctx.moveTo(R.x, y(ref + v)); ctx.lineTo(R.x + R.w, y(ref + v)); ctx.stroke();
+      if (v % 12 === 0) { ctx.fillStyle = doux; ctx.fillText(v > 0 ? `+${v} dB` : v < 0 ? `−${-v} dB` : '0 dB', R.x - 5, y(ref + v)); }
     }
+    ctx.lineWidth = 0.5;
     const trace = (pts, teinte, ep) => {
       if (pts.length < 2) return;
       ctx.beginPath();
       let dedans = false;
       for (const q of pts) {
-        if (q.db < lo) { dedans = false; continue; }
+        if (q.db - ref < lo) { dedans = false; continue; }
         if (dedans) ctx.lineTo(x(q.f), y(q.db)); else ctx.moveTo(x(q.f), y(q.db));
         dedans = true;
       }
