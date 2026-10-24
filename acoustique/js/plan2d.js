@@ -255,6 +255,31 @@ export class Plan2D {
     ctx.fillText(b.nom, poly.reduce((a, p) => a + p[0], 0) / poly.length, h[1] + 9);
   }
 
+  /// La source est-elle sous le pointeur ? (dans son dessin, avec quelques pixels de marge, ou près de son centre)
+  surEnceinte(e, p, c) {
+    const a = axe(e), b = [-a[1], a[0]], o = [e.x, e.y, e.z], centre = this.proj(o, c);
+    if (v2.dist(centre, p) < 14) return true;
+    const pres = (q, marge) => {
+      if (dansPolygone(p[0], p[1], q)) return true;
+      return q.some((x, i) => { const y = q[(i + 1) % q.length], d = v2.sub(y, x), l2 = v2.dot(d, d);
+        const t = l2 > 0 ? Math.min(Math.max(v2.dot(v2.sub(p, x), d) / l2, 0), 1) : 0; return v2.dist(p, v2.add(x, v2.mul(d, t))) < marge; });
+    };
+    if (e.genre === 'enceinte' || e.genre === 'caisson') {
+      const w = e.largeur / 2, d = e.profondeur;
+      if (this.vue === 'plan') return pres([[1, 0], [-1, 0], [-1, 1], [1, 1]].map(([sb, sa]) => this.proj([o[0] + sb * b[0] * w - sa * a[0] * d, o[1] + sb * b[1] * w - sa * a[1] * d, 0], c)), 5);
+      const xs = [[1, 0], [-1, 0], [-1, 1], [1, 1]].map(([sb, sa]) => this.hor([o[0] + sb * b[0] * w - sa * a[0] * d, o[1] + sb * b[1] * w - sa * a[1] * d]));
+      const p0 = this.versVue(Math.min(...xs), e.z + e.hauteur / 2, c), p1 = this.versVue(Math.max(...xs), e.z - e.hauteur / 2, c);
+      return pres([p0, [p1[0], p0[1]], p1, [p0[0], p1[1]]], 5);
+    }
+    if (e.genre === 'nu') {
+      const w = e.baffle / 2;
+      const q = this.vue === 'plan' ? [this.proj([o[0] + b[0] * w, o[1] + b[1] * w, 0], c), this.proj([o[0] - b[0] * w, o[1] - b[1] * w, 0], c)]
+        : [this.versVue(this.hor(o), e.z - w, c), this.versVue(this.hor(o), e.z + w, c)];
+      return pres(q, 8);
+    }
+    return false;
+  }
+
   dessinerEnceinte(e, c) {
     const ctx = this.ctx, sel = etat.selection === e.id;
     const teinte = !e.active ? '#999' : (sel ? '#fb8c00' : '#fff');
@@ -606,12 +631,14 @@ export class Plan2D {
         return;
       }
       const pm = this.versVue(...(this.vue === 'plan' ? [s.micro[0], s.micro[1]] : [this.hor(s.micro), s.ecoute]), c);
-      let cible = v2.dist(pm, p) < 13 ? { type: 'micro' } : (this.viserPlan(p, c) || this.viserCoupeSommets(p, c));
+      let cible = v2.dist(pm, p) < 13 ? { type: 'micro', depart: this.versMonde(p, c), origine: this.vue === 'plan' ? s.micro.slice() : [this.hor(s.micro), s.ecoute] } : null;
+      // Une source se saisit partout sur son dessin (avant les points de la pièce) ; elle suit la souris
+      // sans sauter (décalage gardé), et un simple clic ne la déplace pas.
       if (!cible) {
-        let best = null;
-        for (const e of s.enceintes) { const d = v2.dist(this.versVue(...this.coord(e), c), p); if (d < 16 && (!best || d < best[1])) best = [e.id, d]; }
-        if (best) { cible = { type: 'enceinte', id: best[0] }; etat.selection = best[0]; notifier(); }
+        const e = [...s.enceintes].sort((x, y) => (x.id === etat.selection) - (y.id === etat.selection)).reverse().find((x) => this.surEnceinte(x, p, c));
+        if (e) { cible = { type: 'enceinte', id: e.id, depart: this.versMonde(p, c), origine: this.coord(e) }; if (etat.selection !== e.id) { etat.selection = e.id; notifier(); } }
       }
+      if (!cible) cible = this.viserPlan(p, c) || this.viserCoupeSommets(p, c);
       if (!cible) {
         const dans = (pt, poly) => dansPolygone(pt[0], pt[1], poly);
         const b = [...s.blocs].reverse().find((x) => x.duPlan == null && dans(p, this.enveloppe(x, c)));
@@ -654,7 +681,13 @@ export class Plan2D {
   }
 
   glisser(p, ev) {
-    const c = this.cadre(), [u, v] = this.versMonde(p, c), s = this.scene, C = this.cible;
+    const c = this.cadre(), s = this.scene, C = this.cible;
+    const brut = this.versMonde(p, c);
+    let [u, v] = brut;
+    if (C.type === 'enceinte' || C.type === 'micro') {
+      if (!C.parti) { if (Math.hypot(p[0] - this.depart[0], p[1] - this.depart[1]) < 3) return; C.parti = true; }
+      u = C.origine[0] + u - C.depart[0]; v = C.origine[1] + v - C.depart[1];
+    }
     switch (C.type) {
       case 'etirer': {
         const d = C.vue === 'plan' ? (u - C.depart[0]) * C.n[0] + (v - C.depart[1]) * C.n[1]
@@ -665,7 +698,7 @@ export class Plan2D {
       case 'enceinte': {
         const e = s.enceintes.find((x) => x.id === C.id);
         if (!e) return;
-        if (this.vue === 'plan' && ev.altKey) tournerObjet(C.id, Math.round(Math.atan2(v - e.y, u - e.x) * 180 / Math.PI));
+        if (this.vue === 'plan' && ev.altKey) tournerObjet(C.id, Math.round(Math.atan2(brut[1] - e.y, brut[0] - e.x) * 180 / Math.PI));
         else if (this.vue === 'plan') deplacerObjet(C.id, Math.round(u * 100) / 100, Math.round(v * 100) / 100, null, true);
         else { const w = Math.round(this.deHor(u) * 100) / 100; deplacerObjet(C.id, this.axe === 0 ? w : null, this.axe === 1 ? w : null, Math.round(v * 100) / 100, false); }
         break;
