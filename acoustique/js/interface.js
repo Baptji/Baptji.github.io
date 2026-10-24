@@ -480,7 +480,7 @@ function majOutilsVue() {
   o.innerHTML = '';
   if (etat.dessin) {
     o.append(el('button', { type: 'button', class: 'actif', onclick: terminerDessin }, 'Fermer la pièce'), el('button', { type: 'button', onclick: annulerDessin }, 'Annuler le dessin'));
-  } else if (perso && (etat.affichage === 'plan' || etat.affichage === 'deux')) {
+  } else if (perso && etat.affichage !== 'troisD') {
     o.append(el('button', { type: 'button', onclick: commencerDessin }, '✎ Dessiner'));
     o.append(el('button', { type: 'button', class: etat.editionPlan ? 'actif' : '', 'aria-pressed': etat.editionPlan ? 'true' : 'false',
       onclick: () => { etat.editionPlan = !etat.editionPlan; notifier(); } }, etat.editionPlan ? 'Terminer la forme' : 'Modifier la forme'));
@@ -489,9 +489,9 @@ function majOutilsVue() {
   if (etat.affichage === 'coupe' || etat.affichage === 'deux') {
     const tourner = (d) => reglage('coupeOrientation', (etat.coupeOrientation + d + 4) % 4);
     o.append(el('span', { class: 'groupe-boutons' },
-      el('button', { type: 'button', title: 'Tourner la coupe d’un quart de tour', onclick: () => tourner(-1) }, '↺'),
-      el('span', { class: 'etiquette-coupe' }, `Coupe vue depuis ${['le sud', 'l’est', 'le nord', 'l’ouest'][etat.coupeOrientation]}`),
-      el('button', { type: 'button', title: 'Tourner la coupe d’un quart de tour', onclick: () => tourner(1) }, '↻')));
+      el('button', { type: 'button', title: 'Tourner la coupe d’un quart de tour vers la gauche', onclick: () => tourner(-1) }, '↺'),
+      el('span', { class: 'etiquette-coupe' }, 'Tourner la coupe'),
+      el('button', { type: 'button', title: 'Tourner la coupe d’un quart de tour vers la droite', onclick: () => tourner(1) }, '↻')));
   }
   const edition = etat.editionPlan && perso;
   const a = etat.affichage;
@@ -499,7 +499,8 @@ function majOutilsVue() {
     : a === 'troisD' ? 'Vue seulement · glisser : tourner · clic droit ou ⇧ : décaler · molette : zoom · clic : sélectionner (les réglages se font en Plan et en Coupe)'
     : edition && a !== 'coupe' ? 'Plan : glisser un coin · clic sur un + : nouveau coin · double-clic sur un coin : l’ôter · glisser un mur : le pousser · ⌥ : sans grille'
       : meuble ? 'Flèches vertes : étirer (en coupe, celle du dessus règle la hauteur) · glisser le meuble : le déplacer · ⌥ (plan) : l’orienter'
-        : a === 'coupe' ? 'Coupe : flèches = plafond, murs, haut du mur nain · glisser une source, un objet ou le micro le déplace · ↺ ↻ : tourner la coupe'
+        : a === 'coupe' ? (edition ? 'Coupe : glisser un coin (pied du mur = le pousser, haut du mur nain = sa hauteur, haut de la pente = l’angle) · glisser un mur ou le plafond'
+          : 'Coupe : glisser un mur le pousse, le plafond le monte · glisser une source, un objet ou le micro · ↺ ↻ : tourner la coupe (flèches orange sur le plan)')
           : 'Glisser une source ou un objet : le déplacer (⌥ : l’orienter) · cliquer ailleurs : placer le micro';
 }
 
