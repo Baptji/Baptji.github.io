@@ -133,11 +133,10 @@ uniform vec3 oeil, bmax;
 uniform float cphase, sphase, onde, densite;
 out vec4 sortie;
 vec3 turbo(float x) {
-  x = clamp(x, 0.0, 1.0);
-  float r = 0.13572138 + x * (4.61539260 + x * (-42.66032258 + x * (132.13108234 + x * (-152.94239396 + x * 59.28637943))));
-  float g = 0.09140261 + x * (2.19418839 + x * (4.84296658 + x * (-14.18503333 + x * (4.27729857 + x * 2.82956604))));
-  float b = 0.10667330 + x * (12.64194608 + x * (-60.58204836 + x * (110.36276771 + x * (-89.90310912 + x * 27.34824973))));
-  return clamp(vec3(r, g, b), 0.0, 1.0);
+  x = clamp(x, 0.0, 1.0) * 4.0;
+  vec3 p0 = vec3(0.0, 0.0, 80.0), p1 = vec3(0.0, 180.0, 255.0), p2 = vec3(0.0, 255.0, 0.0), p3 = vec3(255.0, 255.0, 0.0), p4 = vec3(255.0, 0.0, 0.0);
+  vec3 c = x < 1.0 ? mix(p0, p1, x) : x < 2.0 ? mix(p1, p2, x - 1.0) : x < 3.0 ? mix(p2, p3, x - 2.0) : mix(p3, p4, x - 3.0);
+  return c / 255.0;
 }
 vec3 divergente(float v) {
   float t = min(abs(v), 1.0);
@@ -521,7 +520,7 @@ export class Vue3D {
     this.construire();
     const g = this.geo, oeil = this.regard.oeil, vp = this.regard.matrice;
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
-    gl.clearColor(0.039, 0.059, 0.039, 1);
+    gl.clearColor(0.17, 0.18, 0.2, 1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -605,11 +604,11 @@ export class Vue3D {
     const ctx = this.calque.getContext('2d'), dpr = window.devicePixelRatio || 1, s = etat.scene, R = this.regard;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, R.taille[0], R.taille[1]);
-    ctx.font = '11px "JetBrains Mono", "SF Mono", Menlo, monospace';
+    ctx.font = '11px -apple-system, system-ui, sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     const pastille = (texte, p, fond, encre, gras) => {
       if (!p) return;
-      ctx.font = `${gras ? '600 ' : ''}11px "JetBrains Mono", "SF Mono", Menlo, monospace`;
+      ctx.font = `${gras ? '600 ' : ''}11px -apple-system, system-ui, sans-serif`;
       const w = ctx.measureText(texte).width + 8;
       ctx.fillStyle = fond; ctx.beginPath(); ctx.roundRect(p[0] - w / 2, p[1] - 8, w, 16, 3); ctx.fill();
       ctx.fillStyle = encre; ctx.fillText(texte, p[0], p[1] + 0.5);

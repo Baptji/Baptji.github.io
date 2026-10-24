@@ -50,7 +50,7 @@ export class Courbe {
     const toutes = visibles.map((q) => q.db).concat(sources.flatMap((s) => s[1].map((q) => q.db)));
     const hi = Math.ceil((toutes.length ? Math.max(...toutes) : 100) / 5) * 5 + 5, lo = hi - (etat.courbeGraves ? 45 : 55);
     const y = (v) => R.y + R.h - (Math.min(Math.max(v, lo), hi) - lo) / (hi - lo) * R.h;
-    ctx.font = '10px "JetBrains Mono", "SF Mono", Menlo, monospace';
+    ctx.font = '10px -apple-system, system-ui, sans-serif';
     const fo = fmaxOndes(entrees());
     if (!etat.courbeGraves && fo > 0 && fo < fb) {
       const x0 = x(Math.max(fo, fa));
@@ -97,7 +97,7 @@ export class Courbe {
       const t = etat.enCours ? `Calcul des graves… ${Math.round(etat.progression * 100)} %`
         : (etat.webgpu === false ? 'Graves indisponibles : ce navigateur n’a pas WebGPU (Chrome, Edge ou Safari récents)'
           : (gravesAutomatiques() ? 'Calcul des graves dans un instant…' : 'Graves à calculer : bouton « Calculer les graves » en haut'));
-      ctx.fillStyle = doux; ctx.font = '13px "JetBrains Mono", "SF Mono", Menlo, monospace'; ctx.textAlign = 'center'; ctx.fillText(t, R.x + R.w / 2, R.y + R.h / 2);
+      ctx.fillStyle = doux; ctx.font = '13px -apple-system, system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(t, R.x + R.w / 2, R.y + R.h / 2);
     }
     if (etat.mode !== 'global' && etat.frequence >= fa && etat.frequence <= fb) {
       ctx.strokeStyle = 'rgba(229,57,53,0.8)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x(etat.frequence), R.y); ctx.lineTo(x(etat.frequence), R.y + R.h); ctx.stroke();

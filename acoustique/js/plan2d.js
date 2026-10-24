@@ -98,7 +98,7 @@ export class Plan2D {
     ctx.lineWidth = 2; ctx.strokeStyle = '#fff'; ctx.stroke();
     ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(m[0] - 11, m[1]); ctx.lineTo(m[0] + 11, m[1]); ctx.moveTo(m[0], m[1] - 11); ctx.lineTo(m[0], m[1] + 11); ctx.stroke();
     this.regles(c);
-    ctx.font = '11px "JetBrains Mono", "SF Mono", Menlo, monospace'; ctx.fillStyle = 'rgba(30,30,30,0.75)'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.font = '11px -apple-system, system-ui, sans-serif'; ctx.fillStyle = 'rgba(30,30,30,0.75)'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
     ctx.fillText(this.vue === 'plan' ? `Plan à ${s.ecoute.toFixed(2)} m du sol` : `Coupe à y = ${(s.micro[1] - origine(s)[1]).toFixed(2)} m`, c.x, c.y - 12);
     if (this.survol) this.bulle(c);
   }
@@ -204,7 +204,7 @@ export class Plan2D {
       ctx.strokeStyle = sel ? '#fb8c00' : 'rgba(255,255,255,0.8)'; ctx.lineWidth = sel ? 2 : 1; ctx.stroke();
     }
     const h = poly.reduce((m, p) => (p[1] < m[1] ? p : m));
-    ctx.font = '10px "JetBrains Mono", "SF Mono", Menlo, monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '10px -apple-system, system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillStyle = sel ? '#fb8c00' : 'rgba(255,255,255,0.9)';
     ctx.fillText(b.nom, poly.reduce((a, p) => a + p[0], 0) / poly.length, h[1] + 9);
   }
@@ -242,7 +242,7 @@ export class Plan2D {
       ctx.beginPath(); ctx.moveTo(...centre); ctx.lineTo(...bout); ctx.strokeStyle = teinte; ctx.lineWidth = 1.5; ctx.stroke();
       ctx.beginPath(); ctx.arc(bout[0], bout[1], 2.5, 0, 2 * Math.PI); ctx.fillStyle = teinte; ctx.fill();
     }
-    ctx.font = `${sel ? '600 ' : ''}10px "JetBrains Mono", "SF Mono", Menlo, monospace`; ctx.textAlign = 'center'; ctx.fillStyle = teinte;
+    ctx.font = `${sel ? '600 ' : ''}10px -apple-system, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.fillStyle = teinte;
     ctx.fillText(e.nom, centre[0], centre[1] + 18);
   }
 
@@ -259,7 +259,7 @@ export class Plan2D {
     if (ang > Math.PI / 2) ang -= Math.PI; else if (ang < -Math.PI / 2) ang += Math.PI;
     ctx.save();
     ctx.translate((a[0] + b[0]) / 2, (a[1] + b[1]) / 2); ctx.rotate(ang);
-    ctx.font = '600 10px "JetBrains Mono", "SF Mono", Menlo, monospace';
+    ctx.font = '600 10px -apple-system, system-ui, sans-serif';
     const w = ctx.measureText(texte).width;
     if (w + 6 < l) {
       ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.beginPath(); ctx.roundRect(-w / 2 - 3, -7, w + 6, 14, 3); ctx.fill();
@@ -294,7 +294,7 @@ export class Plan2D {
       ctx.beginPath(); ctx.arc(p[0], p[1], 6, 0, 2 * Math.PI); ctx.fillStyle = actif ? '#fb8c00' : '#fff'; ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.lineWidth = 1.5; ctx.stroke();
       if (actif) {
         const o = origine(s), w = v2.sub(qm[i], o), t = `x ${w[0].toFixed(2)} · y ${w[1].toFixed(2)} m`;
-        ctx.font = '600 11px "JetBrains Mono", "SF Mono", Menlo, monospace';
+        ctx.font = '600 11px -apple-system, system-ui, sans-serif';
         const tw = ctx.measureText(t).width;
         ctx.fillStyle = '#fb8c00'; ctx.beginPath(); ctx.roundRect(p[0] + 8, p[1] - 25, tw + 8, 18, 4); ctx.fill();
         ctx.fillStyle = '#000'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(t, p[0] + 12, p[1] - 16);
@@ -330,7 +330,7 @@ export class Plan2D {
     let grand = 1; while (grand * k < 38) grand *= 2;
     const u0 = o[0], v0 = this.vue === 'plan' ? o[1] : 0, yb = c.y + c.h + 10, xg = c.x - 24;
     ctx.beginPath(); ctx.strokeStyle = 'rgba(30,30,30,0.7)'; ctx.fillStyle = 'rgba(30,30,30,0.75)'; ctx.lineWidth = 1;
-    ctx.font = '10px "JetBrains Mono", "SF Mono", Menlo, monospace';
+    ctx.font = '10px -apple-system, system-ui, sans-serif';
     ctx.moveTo(c.x, yb); ctx.lineTo(c.x + c.w, yb);
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     for (let t = Math.ceil(-u0 / fin) * fin; u0 + t <= s.longueur + 1e-9; t += fin) {
@@ -354,7 +354,7 @@ export class Plan2D {
     let t = this.vue === 'plan' ? `x ${(u - o[0]).toFixed(2)}  y ${(v - o[1]).toFixed(2)} m` : `x ${(u - o[0]).toFixed(2)}  h ${v.toFixed(2)} m`;
     const val = etat.raster && etat.raster.vue === this.vue ? valeurRaster(etat.raster, u, v) : null;
     if (val != null) t = `${val.toFixed(1)} dB   ` + t;
-    ctx.font = '11px "JetBrains Mono", "SF Mono", Menlo, monospace';
+    ctx.font = '11px -apple-system, system-ui, sans-serif';
     const w = ctx.measureText(t).width + 12, p = [this.survol[0] + 14, this.survol[1] + 10];
     ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.beginPath(); ctx.roundRect(p[0], p[1], w, 20, 5); ctx.fill();
     ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(t, p[0] + 6, p[1] + 10.5);

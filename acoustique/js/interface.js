@@ -9,6 +9,7 @@ import { FORMES_PLAN, coinsPlan, murDuPlan, origine, volumePlan, EPAISSEUR, idMu
 import { Bandes } from './rayons.js';
 import { fmaxOndes } from './calcul.js';
 import { cssMateriau, turbo, v2, aire } from './base.js';
+import { textePixel } from './police.js';
 import { Vue3D } from './vue3d.js';
 import { Plan2D } from './plan2d.js';
 import { Courbe, FMIN, FMAX } from './courbe.js';
@@ -107,7 +108,7 @@ function aide(titre, texte) {
   return el('span', { class: 'aide-boite' }, b, bulle);
 }
 function carte(titre, aideTexte, ...contenu) {
-  return el('section', { class: 'carte' }, el('div', { class: 'carte-titre' }, el('span', {}, titre), aideTexte ? aide(titre, aideTexte) : null), ...contenu);
+  return el('section', { class: 'carte' }, el('div', { class: 'carte-titre' }, el('span', {}, textePixel(titre.toUpperCase(), 1.5)), aideTexte ? aide(titre, aideTexte) : null), ...contenu);
 }
 
 // MARK: Barre du haut
@@ -229,7 +230,7 @@ function construireListe() {
   const ligne = (sel, couleur, titre, detail, action) => el('div', { class: `element${sel ? ' choisi' : ''}`, tabindex: 0, onclick: action, onkeydown: (ev) => { if (ev.key === 'Enter') action(); } },
     el('span', { class: 'pastille', style: `background:${cssMateriau(couleur)}` }), el('div', {}, el('div', { class: 'nom' }, titre), el('div', { class: 'detail' }, detail)));
   const corps = el('div', { class: 'elements' });
-  corps.append(el('div', { class: 'groupe' }, 'Sources'));
+  corps.append(el('div', { class: 'groupe' }, textePixel('SOURCES', 1.5)));
   for (const e of s.enceintes) {
     const sel = etat.selection === e.id;
     const coche = el('input', { type: 'checkbox', 'aria-label': `${e.nom} joue`, title: 'Joue', onclick: (ev) => ev.stopPropagation() });
@@ -243,7 +244,7 @@ function construireListe() {
         onclick: (ev) => { ev.stopPropagation(); reglage('solo', etat.solo === e.id ? null : e.id); construireListe(); } }, 'seule')));
   }
   if (murs.length) {
-    corps.append(el('div', { class: 'groupe' }, 'Murs'));
+    corps.append(el('div', { class: 'groupe' }, textePixel('MURS', 1.5)));
     const q = coinsPlan(s), ms = murDuPlan(s, etat.selection);
     murs.forEach((m, i) => {
       const l = q.length > 2 ? v2.dist(q[i], q[(i + 1) % q.length]) : 0;
@@ -253,13 +254,13 @@ function construireListe() {
     });
   }
   if (objets.length) {
-    corps.append(el('div', { class: 'groupe' }, 'Objets'));
+    corps.append(el('div', { class: 'groupe' }, textePixel('OBJETS', 1.5)));
     for (const b of objets) {
       corps.append(ligne(etat.selection === b.id, b.forme === 'ouverture' ? 'ouvert' : b.materiau, b.nom, b.forme === 'ouverture' ? 'Ouverture' : materiau(b.materiau).nom,
         () => choisir(b.id, etat.selection === b.id)));
     }
   }
-  L.append(el('div', { class: 'liste-titre' }, el('span', {}, 'Éléments'), el('span', { class: 'compte' }, String(s.enceintes.length + murs.length + objets.length)), ajouter), corps);
+  L.append(el('div', { class: 'liste-titre' }, textePixel('ÉLÉMENTS', 2), el('span', { class: 'compte' }, String(s.enceintes.length + murs.length + objets.length)), ajouter), corps);
 }
 
 // MARK: Panneau de droite : la pièce, puis l'élément choisi
@@ -386,7 +387,7 @@ function dessinerLegende() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, r.width, r.height);
   const doux = getComputedStyle(document.documentElement).getPropertyValue('--texte-doux').trim();
-  ctx.font = '10px "JetBrains Mono", "SF Mono", Menlo, monospace'; ctx.fillStyle = doux;
+  ctx.font = '10px -apple-system, system-ui, sans-serif'; ctx.fillStyle = doux;
   const y0 = 34, h = r.height - 70;
   const phaseurs = etat.volume3D && etat.affichage === 'troisD' ? etat.volume && etat.volume.phaseurs : etat.raster && etat.raster.phaseurs;
   if (etat.animer && phaseurs) {

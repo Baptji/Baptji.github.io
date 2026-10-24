@@ -171,14 +171,12 @@ export class Polyedre {
 
 // MARK: Couleurs
 
-/// Palette « turbo » (Google, approximation polynomiale) : bleu froid → rouge chaud. Composantes 0…255.
+/// Échelle des niveaux du calculateur de modes de Vesa Laasanen : bleu foncé → cyan → vert → jaune → rouge
+/// (paliers linéaires à 0, ¼, ½, ¾, 1). Composantes 0…255. (Gardée sous le nom « turbo » pour les appels existants.)
+const PALIERS = [[0, 0, 80], [0, 180, 255], [0, 255, 0], [255, 255, 0], [255, 0, 0]];
 export function turbo(t) {
-  const x = Math.min(Math.max(t, 0), 1);
-  const r = 0.13572138 + x * (4.61539260 + x * (-42.66032258 + x * (132.13108234 + x * (-152.94239396 + x * 59.28637943))));
-  const g = 0.09140261 + x * (2.19418839 + x * (4.84296658 + x * (-14.18503333 + x * (4.27729857 + x * 2.82956604))));
-  const b = 0.10667330 + x * (12.64194608 + x * (-60.58204836 + x * (110.36276771 + x * (-89.90310912 + x * 27.34824973))));
-  const o = (v) => Math.round(Math.min(Math.max(v, 0), 1) * 255);
-  return [o(r), o(g), o(b)];
+  const x = Math.min(Math.max(t, 0), 1) * 4, k = Math.min(Math.floor(x), 3), u = x - k, a = PALIERS[k], b = PALIERS[k + 1];
+  return [0, 1, 2].map((i) => Math.round(a[i] + (b[i] - a[i]) * u));
 }
 
 /// Divergente pour la pression instantanée : bleu (dépression) → blanc → rouge (surpression).
