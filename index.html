@@ -52,6 +52,9 @@ h1, h2 { margin: 0; line-height: 1.1; text-wrap: balance; }
 .points button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .fenetre video { transition: none; } }
 
+.note { grid-column: 2; margin: 0; color: var(--muted); font-size: .8rem; line-height: 1.45; }
+@media (max-width: 520px) { .note { grid-column: 1 / -1; } }
+
 footer { border-top: 1px solid var(--border); padding-top: 16px; max-width: 640px; color: var(--muted); font-size: .8rem; }
 footer p { margin: 0 0 6px; }
 footer a { color: inherit; }
@@ -85,6 +88,32 @@ footer a { color: inherit; }
     </div>
   </section>
 
+  <section class="programme" aria-labelledby="acoustique">
+    <img src="medias/acoustique-icone.png" alt="" width="72" height="72">
+    <div class="entete">
+      <div class="titre">
+        <h2 id="acoustique">Acoustique</h2>
+        <p>Des enceintes dans une pièce, en 3D : modes, interférences, court-circuit acoustique.</p>
+      </div>
+      <a class="ouvrir" href="acoustique/Acoustique.dmg" download>Télécharger pour Mac</a>
+    </div>
+
+    <div class="defile">
+      <div class="fenetre">
+        <video src="medias/acoustique-impulsion.mp4" poster="medias/acoustique-impulsion.jpg" muted playsinline preload="auto" class="actif" aria-label="L'impulsion part de l'enceinte et rebondit sur les murs d'une pièce en L"></video>
+        <video src="medias/acoustique-onde.mp4" poster="medias/acoustique-onde.jpg" muted playsinline preload="metadata" aria-label="Une onde de 52 Hz qui oscille dans une chambre mansardée"></video>
+        <video src="medias/acoustique-orbite.mp4" poster="medias/acoustique-orbite.jpg" muted playsinline preload="metadata" aria-label="Tour de la chambre mansardée, niveaux à 63 Hz"></video>
+      </div>
+      <div class="points" role="group" aria-label="Choisir une animation">
+        <button type="button" aria-label="Impulsion" aria-current="true"></button>
+        <button type="button" aria-label="Onde"></button>
+        <button type="button" aria-label="Tour de la pièce"></button>
+      </div>
+    </div>
+    <p class="note">Mac à puce Apple, macOS 14 ou plus récent · 2,5 Mo. L'app n'est pas encore notarisée par Apple :
+      à la première ouverture, Réglages Système › Confidentialité et sécurité › « Ouvrir quand même ».</p>
+  </section>
+
   <footer>
     <p><a href="https://creativecommons.org/licenses/by-nc/4.0/deed.fr" rel="license">Licence CC BY-NC 4.0</a> —
       réutilisation libre pour l'enseignement, les exposés et les conférences, en citant la source ;
@@ -92,9 +121,9 @@ footer a { color: inherit; }
   </footer>
 </main>
 <script>
-  // fenêtre qui défile : chaque vidéo joue jusqu'au bout, puis la suivante ; à l'arrêt hors écran
-  (function () {
-    var videos = document.querySelectorAll(".fenetre video"), points = document.querySelectorAll(".points button");
+  // chaque fenêtre défile pour elle-même : une vidéo joue jusqu'au bout, puis la suivante ; à l'arrêt hors écran
+  document.querySelectorAll(".defile").forEach(function (bloc) {
+    var videos = bloc.querySelectorAll(".fenetre video"), points = bloc.querySelectorAll(".points button");
     var i = 0, visible = true, calme = matchMedia("(prefers-reduced-motion: reduce)").matches;
     function jouer() {
       var v = videos[i];
@@ -113,9 +142,9 @@ footer a { color: inherit; }
     points.forEach(function (b, k) { b.addEventListener("click", function () { montrer(k); }); });
     if ("IntersectionObserver" in window) {
       new IntersectionObserver(function (e) { visible = e[0].isIntersecting; jouer(); }, { threshold: 0.25 })
-        .observe(document.querySelector(".fenetre"));
+        .observe(bloc.querySelector(".fenetre"));
     } else jouer();
-  })();
+  });
 </script>
 </body>
 </html>
