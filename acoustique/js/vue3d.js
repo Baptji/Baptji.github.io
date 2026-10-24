@@ -695,13 +695,18 @@ export class Vue3D {
   dessinerMarquesPlacement(ctx) {
     const P = etat.placement;
     if (!P) return;
-    P.resultats.slice(0, 3).forEach((r, k) => {
-      const p = this.regard.projeter([r.x, r.y, r.z]);
+    for (const q of (P.resultats[0] || { positions: [] }).positions) {
+      const e = etat.scene.enceintes.find((x) => x.id === q.id), a = e && this.regard.projeter([e.x, e.y, e.z]), b = this.regard.projeter([q.x, q.y, q.z]);
+      if (!a || !b) continue;
+      ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.setLineDash([5, 4]); ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(52,199,89,0.95)'; ctx.stroke(); ctx.setLineDash([]);
+    }
+    P.resultats.slice(0, 3).forEach((r, k) => r.positions.forEach((q) => {
+      const p = this.regard.projeter([q.x, q.y, q.z]);
       if (!p) return;
       ctx.beginPath(); ctx.arc(p[0], p[1], 9, 0, 2 * Math.PI); ctx.fillStyle = k === 0 ? '#34c759' : 'rgba(52,199,89,0.75)'; ctx.fill();
       ctx.lineWidth = 2; ctx.strokeStyle = '#fff'; ctx.stroke();
       ctx.fillStyle = '#000'; ctx.font = '600 11px -apple-system, system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(k + 1), p[0], p[1] + 0.5);
-    });
+    }));
   }
 
   // MARK: Souris

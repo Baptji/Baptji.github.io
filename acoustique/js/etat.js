@@ -16,7 +16,7 @@ export const etat = {
   // Graves toujours en finesse « normal » ; calcul seulement sur demande (sauf « Auto » coché).
   qualite: 'normal', mode: 'frequence', frequence: 63, affichage: 'troisD', volume3D: false, ponderationA: false,
   solo: null, animer: false, selection: null, editionPlan: false,
-  gravesAuto: false, courbeGraves: true, coinActif: null, reprise: null, seuilVolume: 6, dessin: null, coupeOrientation: 0,
+  gravesAuto: false, courbeGraves: true, coinActif: null, reprise: null, seuilVolume: 6, dessin: null, coupeOrientation: 0, hauteursSalle: [1.5, 1.9],
   champs: new Map(), raster: null, rasterCoupe: null, volume: null, placement: null, recherche: null, courbe: [], courbesSources: [], version: 0,
   enCours: false, progression: 0, etape: '', apercu: null, message: null, webgpu: null,
   cadrage: 0, recadrage: { n: 0, dx: 0, dy: 0 },
@@ -472,7 +472,7 @@ export function supprimer(id) {
   }
   modifier((s) => { s.blocs = s.blocs.filter((b) => b.id !== id); s.enceintes = s.enceintes.filter((e) => e.id !== id); });
   etat.champs.delete(id);
-  if (etat.placement && etat.placement.id === id) etat.placement = null;
+  if (etat.placement && etat.placement.resultats.some((r) => r.positions.some((q) => q.id === id))) etat.placement = null;
   if (etat.solo === id) etat.solo = null;
   if (etat.selection === id) etat.selection = null;
   notifier();

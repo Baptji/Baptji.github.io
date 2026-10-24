@@ -379,27 +379,38 @@ function carteEnceinte(e) {
     nombre('Hauteur', () => get().z, ecrire('z'), { mini: 0, maxi: 100 }),
     g !== 'omni' ? nombre('Orientation', () => get().azimut, (v) => tournerObjet(id, v), { unite: '°', mini: -180, maxi: 180, pas: 5, dec: 0 }) : null,
     g === 'nu' ? nombre("Côté de l'écran", () => get().baffle, ecrire('baffle'), { mini: 0, maxi: 3, pas: 0.05 }) : null,
-    el('div', { class: 'boutons' }, el('button', { type: 'button', onclick: () => dupliquer(id) }, 'Dupliquer'), el('button', { type: 'button', class: 'danger', onclick: () => supprimer(id) }, 'Supprimer')),
-    el('div', { class: 'ligne' }, el('span', { class: 'etiquette' }, 'Meilleure place'), aide('Meilleure place', "Essaie la source à de nombreux endroits de la pièce et garde ceux où la réponse dans les graves (25–200 Hz) est la plus régulière, c'est-à-dire la plus fiable. « Point d'écoute » : au micro (un seul calcul, par réciprocité). « Toute la pièce » : en moyenne sur une grille de points d'écoute (un calcul par emplacement).")),
-    etat.webgpu === false ? el('p', { class: 'note alerte' }, 'Demande WebGPU (Chrome, Edge ou Safari récents).') : el('div', { class: 'boutons' },
-      el('button', { type: 'button', disabled: !!(etat.enCours || etat.recherche), onclick: () => chercherEcoute(id) }, `Point d'écoute · ≈ ${duree(dureeEcoute())}`),
-      el('button', { type: 'button', disabled: !!(etat.enCours || etat.recherche), onclick: () => chercherSalle(id) }, `Toute la pièce · ≈ ${duree(dureeSalle())}`)));
+    el('div', { class: 'boutons' }, el('button', { type: 'button', onclick: () => dupliquer(id) }, 'Dupliquer'), el('button', { type: 'button', class: 'danger', onclick: () => supprimer(id) }, 'Supprimer')));
 }
 
-/// Résultats de « Meilleure place » : trois emplacements, et la place actuelle pour comparer.
+/// « Meilleure place » : toutes les sources actives bougent ensemble ; trois propositions et la place actuelle pour comparer.
 function cartePlacement() {
+  const s = etat.scene;
+  if (!s.enceintes.some((e) => e.active)) return null;
+  const occupe = !!(etat.enCours || etat.recherche), H = etat.hauteursSalle;
+  const hauteur = (i, titre) => curseur(titre, () => etat.hauteursSalle[i], (x) => {
+    const h = etat.hauteursSalle.slice(); h[i] = x;
+    if (h[0] > h[1]) h[1 - i] = x;
+    reglage('hauteursSalle', h);
+  }, { mini: 0.3, maxi: 3, pas: 0.05 });
+  const contenu = etat.webgpu === false ? [el('p', { class: 'note alerte' }, 'Demande WebGPU (Chrome, Edge ou Safari récents).')] : [
+    el('button', { type: 'button', class: 'large', disabled: occupe, onclick: chercherEcoute }, `Micro au plus près de 0 dB · ≈ ${duree(dureeEcoute())}`),
+    el('button', { type: 'button', class: 'large', disabled: occupe, onclick: chercherSalle }, `Toute la pièce au plus près de 0 dB · ≈ ${duree(dureeSalle())}`),
+    hauteur(0, 'Écoute de'), hauteur(1, 'à')];
   const P = etat.placement;
-  if (!P) return null;
-  const o = origine(etat.scene), salle = P.mode === 'salle';
-  const note = (r) => (salle ? `pièce ±${r.salle.toFixed(1)} dB${r.ecoute != null ? ` · écoute ±${r.ecoute.toFixed(1)}` : ''}` : `±${r.ecoute.toFixed(1)} dB`);
-  return carte(`Meilleure place · ${P.nom}`, "± = écart type de la réponse dans les graves autour de sa moyenne : plus il est petit, plus la réponse est régulière. Les cercles verts numérotés marquent les places dans les vues.",
-    el('p', { class: 'note' }, salle ? 'Pour toute la pièce (moyenne sur une grille de points d’écoute).' : 'Pour le point d’écoute (micro).'),
-    el('div', { class: 'places' }, P.resultats.map((r, k) => el('div', { class: 'place' },
-      el('span', { class: `rang${k ? ' autre' : ''}` }, String(k + 1)),
-      el('div', {}, el('div', { class: 'chiffres' }, `x ${(r.x - o[0]).toFixed(2)} · y ${(r.y - o[1]).toFixed(2)} m`), el('div', { class: 'note' }, note(r))),
-      el('button', { type: 'button', onclick: () => deplacerObjet(P.id, r.x, r.y, null, false) }, 'Placer')))),
-    P.actuelle && (P.actuelle.ecoute != null || P.actuelle.salle != null) ? el('p', { class: 'note' }, `Place de départ : ${note(Object.assign({ ecoute: P.actuelle.ecoute ?? 0, salle: P.actuelle.salle ?? 0 }, P.actuelle))}`) : null,
-    el('button', { type: 'button', onclick: () => { etat.placement = null; notifier(); } }, 'Effacer les propositions'));
+  if (P) {
+    const o = origine(s), salle = P.mode === 'salle', plusieurs = P.resultats.some((r) => r.positions.length > 1);
+    const note = (r) => (salle ? `pièce ±${r.salle.toFixed(1)} dB${r.ecoute != null ? ` · micro ±${r.ecoute.toFixed(1)}` : ''}` : `micro ±${r.ecoute.toFixed(1)} dB`);
+    contenu.push(
+      el('p', { class: 'note' }, salle ? `Toute la pièce, de ${P.hauteurs[0].toFixed(2)} à ${P.hauteurs[1].toFixed(2)} m :` : 'Au micro :'),
+      el('div', { class: 'places' }, P.resultats.map((r, k) => el('div', { class: 'place' },
+        el('span', { class: `rang${k ? ' autre' : ''}` }, String(k + 1)),
+        el('div', {}, r.positions.map((q) => el('div', { class: 'chiffres' }, `${plusieurs ? `${q.nom} : ` : ''}x ${(q.x - o[0]).toFixed(2)} · y ${(q.y - o[1]).toFixed(2)} m`)),
+          el('div', { class: 'note' }, note(r))),
+        el('button', { type: 'button', onclick: () => { for (const q of r.positions) deplacerObjet(q.id, q.x, q.y, null, false); } }, 'Placer')))),
+      P.actuelle && (P.actuelle.ecoute != null || P.actuelle.salle != null) ? el('p', { class: 'note' }, `Places de départ : ${note(Object.assign({ ecoute: 0, salle: 0 }, P.actuelle))}`) : null,
+      el('button', { type: 'button', onclick: () => { etat.placement = null; notifier(); } }, 'Effacer les propositions'));
+  }
+  return carte('Meilleure place', "Déplace toutes les sources actives (chacune à sa hauteur) pour que les graves (25–200 Hz) soient le plus près possible de 0 dB, c'est-à-dire de leur moyenne. « Micro » : la réponse au point d'écoute (un seul calcul). « Toute la pièce » : tous les points d'une grille de 50 cm entre les deux hauteurs d'écoute (un calcul par emplacement essayé). ± = écart type autour de 0 dB : plus il est petit, mieux c'est. Les cercles verts numérotés marquent les propositions.", ...contenu);
 }
 
 // MARK: Légende et bandeaux
@@ -525,7 +536,7 @@ let cleStructure = '';
 function structure() {
   const s = etat.scene, b = s.blocs.find((x) => x.id === etat.selection), e = s.enceintes.find((x) => x.id === etat.selection), m = murDuPlan(s, etat.selection);
   return [etat.selection, s.typePiece, s.plan ? s.plan.coins.length : 0, b ? `${b.forme}${b.dansParoi}${b.nom}` : '', e ? `${e.genre}${e.filtre}${e.nom}` : '',
-    m != null ? s.plan.murs[m].rampant : '', etat.webgpu, etat.dessin ? `d${Math.min(etat.dessin.points.length, 3)}` : '', !!(etat.dessin && etat.dessin.points.length), etat.placement ? etat.placement.version : 0, !!etat.recherche, etat.enCours].join('|');
+    m != null ? s.plan.murs[m].rampant : '', etat.webgpu, etat.dessin ? `d${Math.min(etat.dessin.points.length, 3)}` : '', !!(etat.dessin && etat.dessin.points.length), etat.placement ? etat.placement.version : 0, !!etat.recherche, etat.enCours, s.enceintes.filter((e) => e.active).length].join('|');
 }
 let cleListe = '';
 function cleDeListe() {

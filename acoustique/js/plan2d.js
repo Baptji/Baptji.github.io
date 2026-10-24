@@ -452,12 +452,20 @@ export class Plan2D {
   dessinerPlacement(c) {
     const P = etat.placement, ctx = this.ctx;
     if (!P) return;
-    P.resultats.slice(0, 3).forEach((r, k) => {
-      const p = this.vue === 'plan' ? this.versVue(r.x, r.y, c) : this.versVue(this.hor([r.x, r.y]), r.z, c);
+    const vers = (q) => (this.vue === 'plan' ? this.versVue(q.x, q.y, c) : this.versVue(this.hor([q.x, q.y]), q.z, c));
+    // Proposition 1 : un trait pointillé relie chaque source à sa place proposée.
+    for (const q of (P.resultats[0] || { positions: [] }).positions) {
+      const e = this.scene.enceintes.find((x) => x.id === q.id);
+      if (!e) continue;
+      const a = vers(e), b = vers(q);
+      ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.setLineDash([5, 4]); ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(30,140,60,0.9)'; ctx.stroke(); ctx.setLineDash([]);
+    }
+    P.resultats.slice(0, 3).forEach((r, k) => r.positions.forEach((q) => {
+      const p = vers(q);
       ctx.beginPath(); ctx.arc(p[0], p[1], 9, 0, 2 * Math.PI); ctx.fillStyle = k === 0 ? '#34c759' : 'rgba(52,199,89,0.7)'; ctx.fill();
       ctx.lineWidth = 2; ctx.strokeStyle = '#fff'; ctx.stroke();
       ctx.fillStyle = '#000'; ctx.font = '600 11px -apple-system, system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(k + 1), p[0], p[1] + 0.5);
-    });
+    }));
   }
 
   /// Distances de l'objet sélectionné aux murs, et trait vert là où il touche un mur.
