@@ -172,13 +172,13 @@ export function raster(E, champsR, maxi = 220, brut = false) {
 /// Tout le volume de la pièce, couche horizontale par couche (cellules à peu près cubiques).
 /// Renvoie { nx, ny, nz, db, phaseurs } ou null si annule() devient vrai en route.
 export async function rasterVolume(E, champsR, annule) {
-  const s = E.scene, dx = Math.max(s.longueur, s.largeur, s.hauteur) / 48;
-  const nz = Math.min(Math.max(Math.round(s.hauteur / dx), 6), 32);
+  const s = E.scene, dx = Math.max(s.longueur, s.largeur, s.hauteur) / 76;
+  const nz = Math.min(Math.max(Math.round(s.hauteur / dx), 8), 56);
   let nx = 0, ny = 0, db = null, ph = null;
   for (let k = 0; k < nz; k++) {
     if (k % 6 === 0) await new Promise((ok) => setTimeout(ok, 0));
     if (annule()) return null;
-    const r = raster(Object.assign({}, E, { vue: 'plan', z: (k + 0.5) / nz * s.hauteur }), champsR, 48, true);
+    const r = raster(Object.assign({}, E, { vue: 'plan', z: (k + 0.5) / nz * s.hauteur }), champsR, 76, true);
     if (!db) { nx = r.l; ny = r.h; db = new Float32Array(nx * ny * nz); ph = r.phaseurs ? new Float32Array(nx * ny * nz * 2) : null; }
     db.set(r.db, k * nx * ny);
     if (ph && r.phaseurs) ph.set(r.phaseurs, k * nx * ny * 2);

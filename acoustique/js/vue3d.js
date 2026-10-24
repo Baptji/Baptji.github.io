@@ -114,8 +114,10 @@ in vec2 vt;
 uniform sampler2D tex;
 out vec4 sortie;
 void main() { vec4 c = texture(tex, vt); if (c.a < 0.05) discard; sortie = c; }`;
-// Volume : un triangle plein écran ; chaque pixel lance un rayon dans la boîte de la pièce et cumule
-// les cellules traversées (texture 3D : niveau, partie réelle, partie imaginaire, cellule d'air).
+// Volume : un triangle plein écran ; chaque pixel lance un rayon dans la boîte de la pièce et dessine,
+// nettes et éclairées, les surfaces où le niveau franchit un seuil (texture 3D : niveau, partie réelle,
+// partie imaginaire, cellule d'air). Niveaux : +seuil (rouge), −seuil (bleu), −12 dB (annulation).
+// Onde animée : surpression et dépression au même seuil.
 const VSV = `#version 300 es
 in vec2 p;
 out vec2 ndc;
@@ -126,8 +128,8 @@ precision highp sampler3D;
 in vec2 ndc;
 uniform sampler3D vol;
 uniform mat4 inv;
-uniform vec3 oeil, bmax;
-uniform float cphase, sphase, onde, densite;
+uniform vec3 oeil, bmax, texel;
+uniform float cphase, sphase, onde, seuil;
 out vec4 sortie;
 vec3 turbo(float x) {
   x = clamp(x, 0.0, 1.0) * 4.0;
@@ -135,10 +137,18 @@ vec3 turbo(float x) {
   vec3 c = x < 1.0 ? mix(p0, p1, x) : x < 2.0 ? mix(p1, p2, x - 1.0) : x < 3.0 ? mix(p2, p3, x - 2.0) : mix(p3, p4, x - 3.0);
   return c / 255.0;
 }
-vec3 divergente(float v) {
-  float t = min(abs(v), 1.0);
-  vec3 a = v < 0.0 ? vec3(0.16, 0.33, 0.72) : vec3(0.80, 0.20, 0.15);
-  return mix(vec3(0.97, 0.96, 0.94), a, t);
+float valeur(vec3 u) {
+  vec4 s = texture(vol, u);
+  if (onde > 0.5) return s.g * cphase - s.b * sphase;
+  return s.r;
+}
+vec3 normale(vec3 u) {
+  vec3 h = 1.5 * texel;   // différences centrées sur un pas et demi : normales lisses
+  vec3 g = vec3(valeur(u + vec3(h.x, 0.0, 0.0)) - valeur(u - vec3(h.x, 0.0, 0.0)),
+                valeur(u + vec3(0.0, h.y, 0.0)) - valeur(u - vec3(0.0, h.y, 0.0)),
+                valeur(u + vec3(0.0, 0.0, h.z)) - valeur(u - vec3(0.0, 0.0, h.z))) / (h * bmax);
+  float l = length(g);
+  return l > 1e-6 ? g / l : vec3(0.0, 0.0, 1.0);
 }
 void main() {
   vec4 a = inv * vec4(ndc, -1.0, 1.0), b = inv * vec4(ndc, 1.0, 1.0);
@@ -147,23 +157,38 @@ void main() {
   vec3 tn3 = min(t0, t1), tf3 = max(t0, t1);
   float tn = max(max(max(tn3.x, tn3.y), tn3.z), 0.0), tf = min(min(tf3.x, tf3.y), tf3.z);
   if (tf <= tn) discard;
-  const int N = 140;
-  float pas = (tf - tn) / float(N), echelle = 9.0 / length(bmax);
+  const int N = 360;
+  float pas = (tf - tn) / float(N);
+  // Seuils : niveaux (échelle 0…1 pour −12…+12 dB) ou onde (−1.5…+1.5).
+  float hi = onde > 0.5 ? seuil / 12.0 : 0.5 + seuil / 24.0;
+  float lo = onde > 0.5 ? -seuil / 12.0 : 0.5 - seuil / 24.0;
+  float ann = onde > 0.5 ? -100.0 : 0.02;
+  vec3 cHi = vec3(0.95, 0.22, 0.12), cLo = vec3(0.12, 0.45, 0.95), cAnn = vec3(0.04, 0.04, 0.32);
   vec4 acc = vec4(0.0);
+  float prev = 0.0; bool avant = false;
   for (int i = 0; i < N; i++) {
-    vec3 q = oeil + d * (tn + (float(i) + 0.5) * pas);
-    vec4 s = texture(vol, q / bmax);
-    if (s.a < 0.5) continue;
-    vec3 c; float dens;
-    if (onde > 0.5) {
-      float v = ((s.g * 2.0 - 1.0) * cphase - (s.b * 2.0 - 1.0) * sphase) * 1.5;
-      c = divergente(v); dens = 1.6 * min(v * v, 1.0);
-    } else {
-      c = turbo(s.r); float e = abs(s.r - 0.5) * 2.0; dens = 0.02 + 1.5 * e * e * e;
+    vec3 q = oeil + d * (tn + (float(i) + 0.5) * pas), u = q / bmax;
+    if (texture(vol, u).a < 0.5) { avant = false; continue; }
+    float v = valeur(u);
+    if (avant) {
+      for (int k = 0; k < 3; k++) {
+        float iso = k == 0 ? hi : (k == 1 ? lo : ann);
+        if ((prev - iso) * (v - iso) >= 0.0) continue;
+        // Position exacte de la surface : dichotomie entre les deux échantillons.
+        float ta = -pas, tb = 0.0, va = prev;
+        for (int r = 0; r < 5; r++) {
+          float tm = 0.5 * (ta + tb), vm = valeur((q + d * tm) / bmax);
+          if ((va - iso) * (vm - iso) <= 0.0) tb = tm; else { ta = tm; va = vm; }
+        }
+        vec3 uh = (q + d * tb) / bmax, n = normale(uh);
+        float lum = 0.3 + 0.7 * abs(dot(n, d)), brillant = pow(abs(dot(reflect(d, n), -d)), 24.0) * 0.35;
+        vec3 c = (k == 0 ? cHi : (k == 1 ? cLo : cAnn)) * lum + brillant;
+        float al = k == 2 ? 0.8 : 0.55;
+        acc.rgb += (1.0 - acc.a) * al * c; acc.a += (1.0 - acc.a) * al;
+      }
+      if (acc.a > 0.97) break;
     }
-    float al = 1.0 - exp(-dens * densite * pas * echelle);
-    acc.rgb += (1.0 - acc.a) * al * c; acc.a += (1.0 - acc.a) * al;
-    if (acc.a > 0.97) break;
+    prev = v; avant = true;
   }
   if (acc.a < 0.003) discard;
   sortie = vec4(acc.rgb / acc.a, acc.a);
@@ -432,46 +457,62 @@ export class Vue3D {
     if (this.cleVolume === cle && this.texVolume) return this.texVolume;
     this.cleVolume = cle;
     if (!this.texVolume) this.texVolume = gl.createTexture();
-    const n = v.nx * v.ny * v.nz, px = new Uint8Array(n * 4), ph = v.phaseurs;
-    const oct = (x) => Math.round(Math.min(Math.max(x / 1.5 * 0.5 + 0.5, 0), 1) * 255);
+    // Texture en nombres flottants (demi-précision) : pas de paliers, surfaces lisses.
+    const n = v.nx * v.ny * v.nz, px = new Float32Array(n * 4), ph = v.phaseurs;
     for (let k = 0; k < n; k++) {
       const d = v.db[k];
       if (isNaN(d)) continue;
-      px[4 * k] = isFinite(d) ? Math.round(Math.min(Math.max(versEchelle(d, v), 0), 1) * 255) : 0;
-      if (ph) { px[4 * k + 1] = oct(ph[2 * k]); px[4 * k + 2] = oct(ph[2 * k + 1]); }
-      px[4 * k + 3] = 255;
+      px[4 * k] = isFinite(d) ? Math.min(Math.max(versEchelle(d, v), -0.5), 1.5) : -0.5;
+      if (ph) { px[4 * k + 1] = ph[2 * k]; px[4 * k + 2] = ph[2 * k + 1]; }
+      px[4 * k + 3] = 1;
+    }
+    // Léger lissage 3D (noyau 1-2-1 sur chaque axe, cases d'air seulement) : le bruit de la grille
+    // de calcul au ras des parois ne fait plus de grain sur les surfaces.
+    {
+      const nx = v.nx, ny = v.ny, nz = v.nz, nxy = nx * ny, pas = [1, nx, nxy], taille = [nx, ny, nz];
+      for (let ax = 0; ax < 3; ax++) {
+        const src = px.slice();
+        for (let k = 0; k < n; k++) {
+          if (!src[4 * k + 3]) continue;
+          const pos = [k % nx, Math.floor(k / nx) % ny, Math.floor(k / nxy)][ax];
+          let w = 2, r = 2 * src[4 * k], g = 2 * src[4 * k + 1], b = 2 * src[4 * k + 2];
+          for (const sg of [-1, 1]) {
+            const p2 = pos + sg;
+            if (p2 < 0 || p2 >= taille[ax]) continue;
+            const m = k + sg * pas[ax];
+            if (!src[4 * m + 3]) continue;
+            r += src[4 * m]; g += src[4 * m + 1]; b += src[4 * m + 2]; w++;
+          }
+          px[4 * k] = r / w; px[4 * k + 1] = g / w; px[4 * k + 2] = b / w;
+        }
+      }
+    }
+    // Les cases pleines (murs, toit, meubles) prennent la valeur de leurs voisines d'air :
+    // l'interpolation au bord ne crée pas de fausse surface.
+    const nx = v.nx, nxy = v.nx * v.ny, connu = new Uint8Array(n);
+    for (let k = 0; k < n; k++) connu[k] = px[4 * k + 3] ? 1 : 0;
+    for (let passe = 0; passe < 3; passe++) {
+      const deja = connu.slice();
+      for (let k = 0; k < n; k++) {
+        if (deja[k]) continue;
+        const i = k % nx, j = Math.floor(k / nx) % v.ny, l = Math.floor(k / nxy);
+        let r = 0, g = 0, b = 0, c = 0;
+        for (const [di, dj, dl] of [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]) {
+          const ii = i + di, jj = j + dj, ll = l + dl;
+          if (ii < 0 || jj < 0 || ll < 0 || ii >= nx || jj >= v.ny || ll >= v.nz) continue;
+          const m = ll * nxy + jj * nx + ii;
+          if (!deja[m]) continue;
+          r += px[4 * m]; g += px[4 * m + 1]; b += px[4 * m + 2]; c++;
+        }
+        if (c) { px[4 * k] = r / c; px[4 * k + 1] = g / c; px[4 * k + 2] = b / c; connu[k] = 1; }
+      }
     }
     gl.bindTexture(gl.TEXTURE_3D, this.texVolume);
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-    gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA8, v.nx, v.ny, v.nz, 0, gl.RGBA, gl.UNSIGNED_BYTE, px);
+    gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA16F, v.nx, v.ny, v.nz, 0, gl.RGBA, gl.FLOAT, px);
     for (const [k, x] of [[gl.TEXTURE_MIN_FILTER, gl.LINEAR], [gl.TEXTURE_MAG_FILTER, gl.LINEAR], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE]])
       gl.texParameteri(gl.TEXTURE_3D, k, x);
     return this.texVolume;
-  }
-
-  /// Six à huit couches du volume, chacune en texture (échelle relative, hachures sous −12 dB).
-  tranches(v, phase) {
-    const n = Math.min(8, Math.max(4, Math.round(etat.scene.hauteur / 0.35))), pas = v.nz / n;
-    const cle = `${etat.version}|${n}`;
-    if (phase == null && this.cleTranches === cle) return this.texTranches;
-    const r = [], nxy = v.nx * v.ny, co = Math.cos(phase || 0), si = Math.sin(phase || 0);
-    for (let t = 0; t < n; t++) {
-      const k = Math.min(v.nz - 1, Math.floor((t + 0.5) * pas)), base = k * nxy;
-      const tex = this.texture(`tranche${t}`, v.nx, v.ny, (px) => {
-        for (let i = 0; i < nxy; i++) {
-          const d = v.db[base + i];
-          if (isNaN(d)) continue;
-          let col;
-          if (phase != null && v.phaseurs) col = divergente(v.phaseurs[2 * (base + i)] * co - v.phaseurs[2 * (base + i) + 1] * si);
-          else if (annulation(d, v)) col = (i % v.nx + Math.floor(i / v.nx)) % 4 < 2 ? [15, 15, 25] : turbo(0);
-          else col = turbo(versEchelle(d, v));
-          px[4 * i] = col[0]; px[4 * i + 1] = col[1]; px[4 * i + 2] = col[2]; px[4 * i + 3] = 130;
-        }
-      });
-      r.push({ tex, z: (k + 0.5) / v.nz * etat.scene.hauteur });
-    }
-    if (phase == null) { this.cleTranches = cle; this.texTranches = r; }
-    return r;
   }
 
   volume(v, vp, phase) {
@@ -487,7 +528,8 @@ export class Vue3D {
     gl.uniform3fv(gl.getUniformLocation(p, 'oeil'), this.regard.oeil);
     gl.uniform3fv(gl.getUniformLocation(p, 'bmax'), [s.longueur, s.largeur, s.hauteur]);
     gl.uniform1f(gl.getUniformLocation(p, 'onde'), phase != null && v.phaseurs ? 1 : 0);
-    gl.uniform1f(gl.getUniformLocation(p, 'densite'), etat.densite);
+    gl.uniform1f(gl.getUniformLocation(p, 'seuil'), etat.seuilVolume);
+    gl.uniform3fv(gl.getUniformLocation(p, 'texel'), [1 / v.nx, 1 / v.ny, 1 / v.nz]);
     gl.uniform1f(gl.getUniformLocation(p, 'cphase'), Math.cos(phase || 0));
     gl.uniform1f(gl.getUniformLocation(p, 'sphase'), Math.sin(phase || 0));
     gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -546,23 +588,7 @@ export class Vue3D {
     }
     const anime = etat.animer && etat.raster && etat.raster.phaseurs ? (performance.now() / 1000 % 1.6) / 1.6 * 2 * Math.PI : null;
     const L = s.longueur, W = s.largeur, z = s.ecoute;
-    if (etat.volume3D && etat.tranches3D && etat.volume && !etat.enCours) {
-      // Tranches : la carte des niveaux à plusieurs hauteurs, empilées (la plus lointaine d'abord).
-      this.lot(piece.concat(objets, g.opaques), gl.TRIANGLES);
-      this.lot(ar, gl.LINES);
-      gl.depthMask(false);
-      const phase = etat.animer && etat.volume.phaseurs ? (performance.now() / 1000 % 1.6) / 1.6 * 2 * Math.PI : null;
-      const tr = this.tranches(etat.volume, phase);
-      const ordre = tr.slice().sort((a, b) => (oeil[2] > a.z ? a.z - b.z : b.z - a.z));
-      for (const t of ordre) this.quad(t.tex, [0, 0, t.z], [L, 0, t.z], [L, W, t.z], [0, W, t.z], vp);
-      // Contour blanc de chaque tranche : on distingue les niveaux.
-      const k = s.contour && s.contour.length > 2 ? s.contour : [[0, 0], [L, 0], [L, W], [0, W]], bords = [];
-      for (const t of tr) for (let i = 0; i < k.length; i++) {
-        const a = k[i], b = k[(i + 1) % k.length];
-        bords.push(a[0], a[1], t.z, 0, 0, 0, 0, 1, 1, 1, 0.75, b[0], b[1], t.z, 0, 0, 0, 0, 1, 1, 1, 0.75);
-      }
-      this.lot(bords, gl.LINES);
-    } else if (etat.volume3D && etat.volume && !etat.enCours) {
+    if (etat.volume3D && etat.volume && !etat.enCours) {
       // Volume : la pièce, puis l'onde qui la remplit, puis les meubles et les enceintes par-dessus.
       this.lot(piece, gl.TRIANGLES);
       this.volume(etat.volume, vp, etat.animer && etat.volume.phaseurs ? (performance.now() / 1000 % 1.6) / 1.6 * 2 * Math.PI : null);
@@ -663,10 +689,6 @@ export class Vue3D {
     const rel = v != null ? v - zeroDB(etat.raster) : null;
     pastille(rel != null ? `${rel >= 0 ? '+' : '−'}${Math.abs(rel).toFixed(1)} dB` : 'micro', R.projeter([s.micro[0], s.micro[1], s.ecoute + 0.22]), 'rgba(255,255,255,0.88)', '#000', true);
     this.dessinerMarquesPlacement(ctx);
-    // Tranches : hauteur de chaque couche, au coin de la pièce.
-    if (etat.affichage === 'troisD' && etat.volume3D && etat.tranches3D && this.texTranches) {
-      for (const t of this.texTranches) pastille(`${t.z.toFixed(2)} m`, R.projeter([0, 0, t.z]), 'rgba(0,0,0,0.55)', '#fff', false);
-    }
   }
 
   /// Places proposées par la recherche de la meilleure position (numérotées).

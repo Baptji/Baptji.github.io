@@ -14,9 +14,9 @@ const CLE_STOCKAGE = 'acoustique-scene', CLE_PRECEDENT = 'acoustique-precedent';
 export const etat = {
   scene: null,
   // Graves toujours en finesse « normal » ; calcul seulement sur demande (sauf « Auto » coché).
-  qualite: 'normal', mode: 'frequence', frequence: 63, affichage: 'troisD', volume3D: false, tranches3D: false, ponderationA: false,
+  qualite: 'normal', mode: 'frequence', frequence: 63, affichage: 'troisD', volume3D: false, ponderationA: false,
   solo: null, animer: false, selection: null, editionPlan: false,
-  gravesAuto: false, courbeGraves: true, coinActif: null, reprise: null, densite: 1, dessin: null, coupeOrientation: 0,
+  gravesAuto: false, courbeGraves: true, coinActif: null, reprise: null, seuilVolume: 6, dessin: null, coupeOrientation: 0,
   champs: new Map(), raster: null, rasterCoupe: null, volume: null, placement: null, recherche: null, courbe: [], courbesSources: [], version: 0,
   enCours: false, progression: 0, etape: '', apercu: null, message: null, webgpu: null,
   cadrage: 0, recadrage: { n: 0, dx: 0, dy: 0 },

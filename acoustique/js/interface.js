@@ -154,8 +154,7 @@ function construireBarre() {
       el('div', {}, lier(el('div', { class: 'titre' }), () => etat.scene.nom),
         el('div', { class: 'statut' }, el('span', { class: 'voyant' }), lier(el('span', { class: 'texte-statut' }), () => statut()[0])))),
     segments([['troisD', '3D'], ['plan', 'Plan'], ['coupe', 'Coupe'], ['deux', 'Plan + coupe']], () => etat.affichage, (v) => { reglage('affichage', v); montrerVue(); }),
-    si(segments([['nappe', 'Nappe'], ['tranches', 'Tranches'], ['volume', 'Volume']], () => (etat.volume3D ? (etat.tranches3D ? 'tranches' : 'volume') : 'nappe'),
-      (v) => { etat.tranches3D = v === 'tranches'; reglage('volume3D', v !== 'nappe'); notifier(); }), () => etat.affichage === 'troisD'),
+    si(segments([[false, 'Nappe'], [true, 'Volume']], () => etat.volume3D, (v) => reglage('volume3D', v)), () => etat.affichage === 'troisD'),
     segments([['frequence', 'Son pur'], ['bande', "1/3 d'octave"], ['global', 'Bruit rose']], () => etat.mode, (v) => reglage('mode', v), 'modes'),
     el('div', { class: 'espace' }),
     calcul,
@@ -199,9 +198,10 @@ function construireSousBarre() {
   ecoute.addEventListener('input', () => modifier((s) => { s.ecoute = +ecoute.value; borner(s); }));
   liaisons.push({ e: freq, lire: () => { freq.disabled = etat.mode === 'global'; return versLog(etat.frequence); } });
   liaisons.push({ e: ecoute, lire: () => { ecoute.max = Math.max(etat.scene.hauteur - 0.05, 0.1); return etat.scene.ecoute; } });
-  const densite = el('input', { type: 'range', min: -1.5, max: 1.5, step: 0.05, 'aria-label': 'Densité du volume', title: 'Rendre le volume plus transparent ou plus opaque' });
-  densite.addEventListener('input', () => reglage('densite', Math.pow(3, +densite.value)));
-  lier(densite, () => Math.log(etat.densite) / Math.log(3));
+  const seuil = el('input', { type: 'range', min: 2, max: 11, step: 1, 'aria-label': 'Seuil des surfaces du volume',
+    title: 'Les surfaces montrent où le niveau dépasse +seuil (rouge) ou passe sous −seuil (bleu) ; bleu foncé : annulation sous −12 dB' });
+  seuil.addEventListener('input', () => reglage('seuilVolume', +seuil.value));
+  lier(seuil, () => etat.seuilVolume);
   b.append(
     el('span', { class: 'groupe-sb' }, el('span', { class: 'doux' }, 'Fréquence'), freq, lier(el('output', { class: 'valeur' }), texteFrequence), lier(el('output', { class: 'regime' }), regime)),
     el('span', { class: 'separateur' }),
@@ -210,7 +210,7 @@ function construireSousBarre() {
     el('span', { class: 'groupe-sb' },
       case_('Animer', () => etat.animer, (v) => reglage('animer', v), { title: "Montrer la pression qui oscille (son pur, graves calculés)" }),
       si(case_('Pondération A', () => etat.ponderationA, (v) => reglage('ponderationA', v)), () => etat.mode === 'global')),
-    si(el('span', { class: 'groupe-sb' }, el('span', { class: 'doux' }, 'Densité'), densite), () => etat.affichage === 'troisD' && etat.volume3D && !etat.tranches3D),
+    si(el('span', { class: 'groupe-sb' }, el('span', { class: 'doux' }, 'Surfaces à'), seuil, lier(el('output', { class: 'valeur' }), () => `± ${etat.seuilVolume} dB`)), () => etat.affichage === 'troisD' && etat.volume3D),
   );
   for (const o of b.querySelectorAll('output')) o.value = '';
 }
