@@ -303,8 +303,8 @@ function cartePiece() {
     const sc = etat.scene, ai = sc.plan ? Math.abs(aire(sc.plan.coins)) : sc.longueur * sc.largeur, v = sc.plan ? volumePlan(sc) : null;
     return `${ai.toFixed(1)} m² au sol · ${(v ?? ai * sc.hauteur).toFixed(1)} m³`;
   }));
-  return carte('Pièce', rect ? 'Glissez un mur dans la vue pour le pousser.'
-    : 'Choisissez une forme, ou « Dessiner à la main » : cliquez les coins un par un sur le plan (⇧ pour un mur droit, ⌥ sans grille), puis le point vert pour fermer. Ensuite « Modifier la forme » : glisser un coin, cliquer un « + » pour en ajouter, double-clic pour en ôter. Cliquez un mur pour lui donner un rampant.', ...contenu);
+  return carte('Pièce', rect ? 'Glissez un coin blanc dans le plan pour agrandir la pièce (elle reste rectangulaire).'
+    : 'Choisissez une forme, ou « Dessiner à la main » : cliquez les coins un par un sur le plan (⇧ pour un mur droit, ⌥ sans grille), puis le point vert pour fermer. Ensuite, dans le plan : glisser un coin, cliquer un « + » pour en ajouter, double-clic pour en ôter ; dans la coupe : glisser les points (hauteurs, pente). Cliquez un mur pour lui donner un rampant.', ...contenu);
 }
 
 function carteSelection() {
@@ -482,8 +482,6 @@ function majOutilsVue() {
     o.append(el('button', { type: 'button', class: 'actif', onclick: terminerDessin }, 'Fermer la pièce'), el('button', { type: 'button', onclick: annulerDessin }, 'Annuler le dessin'));
   } else if (perso && etat.affichage !== 'troisD') {
     o.append(el('button', { type: 'button', onclick: commencerDessin }, '✎ Dessiner'));
-    o.append(el('button', { type: 'button', class: etat.editionPlan ? 'actif' : '', 'aria-pressed': etat.editionPlan ? 'true' : 'false',
-      onclick: () => { etat.editionPlan = !etat.editionPlan; notifier(); } }, etat.editionPlan ? 'Terminer la forme' : 'Modifier la forme'));
   }
   if (etat.affichage === 'troisD') o.append(el('button', { type: 'button', onclick: () => vue3d && vue3d.recadrer() }, 'Recadrer'));
   if (etat.affichage === 'coupe' || etat.affichage === 'deux') {
@@ -493,15 +491,13 @@ function majOutilsVue() {
       el('span', { class: 'etiquette-coupe' }, 'Tourner la coupe'),
       el('button', { type: 'button', title: 'Tourner la coupe d’un quart de tour vers la droite', onclick: () => tourner(1) }, '↻')));
   }
-  const edition = etat.editionPlan && perso;
   const a = etat.affichage;
   $('#aide-vue').textContent = etat.dessin ? 'Dessin : clic = coin · ⇧ = mur droit · ⌥ = sans grille · ⌫ = retirer le dernier · Entrée ou point vert = fermer · Échap = annuler'
     : a === 'troisD' ? 'Vue seulement · glisser : tourner · clic droit ou ⇧ : décaler · molette : zoom · clic : sélectionner (les réglages se font en Plan et en Coupe)'
-    : edition && a !== 'coupe' ? 'Plan : glisser un coin · clic sur un + : nouveau coin · double-clic sur un coin : l’ôter · glisser un mur : le pousser · ⌥ : sans grille'
       : meuble ? 'Flèches vertes : étirer (en coupe, celle du dessus règle la hauteur) · glisser le meuble : le déplacer · ⌥ (plan) : l’orienter'
-        : a === 'coupe' ? (edition ? 'Coupe : glisser un coin (pied du mur = le pousser, haut du mur nain = sa hauteur, haut de la pente = l’angle) · glisser un mur ou le plafond'
-          : 'Coupe : glisser un mur le pousse, le plafond le monte · glisser une source, un objet ou le micro · ↺ ↻ : tourner la coupe (flèches orange sur le plan)')
-          : 'Glisser une source ou un objet : le déplacer (⌥ : l’orienter) · cliquer ailleurs : placer le micro';
+        : a === 'coupe' ? 'Coupe : glisser un point blanc — pied du mur : le déplacer · haut du mur : sa hauteur (mur nain ou plafond) · haut de la pente : son angle · ↺ ↻ : tourner'
+          : perso ? 'Glisser un point blanc : déplacer le coin · clic sur un + : nouveau coin · double-clic sur un coin : l’ôter · ⌥ : sans grille · glisser une source ou un objet : le déplacer'
+            : 'Glisser un coin blanc : agrandir la pièce · glisser une source ou un objet : le déplacer (⌥ : l’orienter) · glisser la croix : le micro';
 }
 
 function exporterImage() {

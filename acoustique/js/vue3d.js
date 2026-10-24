@@ -555,6 +555,13 @@ export class Vue3D {
       const tr = this.tranches(etat.volume, phase);
       const ordre = tr.slice().sort((a, b) => (oeil[2] > a.z ? a.z - b.z : b.z - a.z));
       for (const t of ordre) this.quad(t.tex, [0, 0, t.z], [L, 0, t.z], [L, W, t.z], [0, W, t.z], vp);
+      // Contour blanc de chaque tranche : on distingue les niveaux.
+      const k = s.contour && s.contour.length > 2 ? s.contour : [[0, 0], [L, 0], [L, W], [0, W]], bords = [];
+      for (const t of tr) for (let i = 0; i < k.length; i++) {
+        const a = k[i], b = k[(i + 1) % k.length];
+        bords.push(a[0], a[1], t.z, 0, 0, 0, 0, 1, 1, 1, 0.75, b[0], b[1], t.z, 0, 0, 0, 0, 1, 1, 1, 0.75);
+      }
+      this.lot(bords, gl.LINES);
     } else if (etat.volume3D && etat.volume && !etat.enCours) {
       // Volume : la pièce, puis l'onde qui la remplit, puis les meubles et les enceintes par-dessus.
       this.lot(piece, gl.TRIANGLES);

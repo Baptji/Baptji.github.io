@@ -58,13 +58,15 @@ export class Plan2D {
   /// Point (x, y) de la ligne de coupe à l'abscisse u de la vue.
   pointCoupe(u) { const s = this.scene, w = this.deHor(u); return this.axe === 0 ? [w, s.micro[1]] : [s.micro[0], w]; }
   get hauteurMonde() { return this.vue === 'plan' ? this.scene.largeur : this.scene.hauteur; }
-  get edition() { return etat.editionPlan && this.scene.plan && this.vue === 'plan'; }
-  get editionCoupe() { return etat.editionPlan && this.scene.plan && this.vue === 'coupe'; }
+  /// Les points de la pièce sont toujours là : on modifie la forme en déplaçant des points, jamais un mur entier.
+  get edition() { return !!this.scene.plan && this.vue === 'plan' && !etat.dessin; }
+  get editionCoupe() { return !!this.scene.plan && this.vue === 'coupe'; }
+  get perso() { return this.scene.typePiece === 'perso'; }
   /// Dessin à la main en cours (plan seulement).
   get dessin() { return !!etat.dessin && this.vue === 'plan'; }
   get bord() {
     const m = Math.max(this.scene.longueur, this.scene.largeur);
-    return this.dessin ? Math.max(2.5, 0.6 * m) : this.edition ? Math.max(1.0, 0.15 * m) : 0;
+    return this.dessin ? Math.max(2.5, 0.6 * m) : 0;
   }
 
   /// Rectangle de la boîte de calcul dans la vue (avec de la place autour pour l'agrandir en édition).
@@ -89,7 +91,7 @@ export class Plan2D {
     ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--fond-vue') || '#9a9a9a';
     ctx.fillRect(0, 0, this.taille[0], this.taille[1]);
     this.fond(c);
-    if (this.edition || this.dessin) this.grille(c);
+    if (this.dessin || (this.cible && this.cible.type === 'coin')) this.grille(c);
     const contour = this.vue === 'plan' ? (s.contour || []) : [];
     if (contour.length < 3) {
       const W = this.largeurMonde, coins = [[0, 0], [W, 0], [W, this.hauteurMonde], [0, this.hauteurMonde]].map((p) => this.versVue(p[0], p[1], c));
@@ -326,7 +328,7 @@ export class Plan2D {
         const dv = [nIn[0] * 0.22 * k, -nIn[1] * 0.22 * k];
         this.cote([a[0] + dv[0], a[1] + dv[1]], [b[0] + dv[0], b[1] + dv[1]], `${v2.dist(qm[i], qm[(i + 1) % n]).toFixed(2)} m`, ms === i ? '#fb8c00' : '#fff');
       }
-      if (this.edition) {
+      if (this.edition && this.perso) {
         const m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
         ctx.beginPath(); ctx.arc(m[0], m[1], 5, 0, 2 * Math.PI); ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 1; ctx.stroke();
         ctx.beginPath(); ctx.moveTo(m[0] - 3, m[1]); ctx.lineTo(m[0] + 3, m[1]); ctx.moveTo(m[0], m[1] - 3); ctx.lineTo(m[0], m[1] + 3); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.2; ctx.stroke();
@@ -389,32 +391,25 @@ export class Plan2D {
     }).sort((a, b) => a.u - b.u);
   }
 
-  /// Coupe, en « Modifier la forme » : les coins du profil (comme les coins du plan).
-  /// Pied du mur = le pousser ; haut du mur nain = sa hauteur ; jonction pente/plafond = la pente.
+  /// Coupe : les points du profil (comme les coins du plan). Pied du mur : le déplacer ; haut du mur :
+  /// la hauteur (mur nain sous un rampant, sinon le plafond) ou le déplacer ; haut de la pente : son angle
+  /// ou la hauteur du plafond. Le premier mouvement choisit le sens (horizontal ou vertical).
   viserCoupeSommets(p, c) {
     if (!this.editionCoupe) return null;
+    const H = this.scene.hauteur;
     for (const m of this.profilCoupe()) {
-      if (v2.dist(this.versVue(m.u, 0, c), p) < 10) return { type: 'mur-coupe', i: m.i, k: m.k };
-      if (m.jonction != null && v2.dist(this.versVue(m.u, m.haut, c), p) < 10) return { type: 'pied', i: m.i };
-      if (m.jonction != null && v2.dist(this.versVue(m.jonction, this.scene.hauteur, c), p) < 10) return { type: 'pente', i: m.i, u: m.u, k: m.k };
+      if (v2.dist(this.versVue(m.u, 0, c), p) < 10) return { type: 'sommet', role: 'bas', i: m.i, k: m.k };
+      if (v2.dist(this.versVue(m.u, m.haut, c), p) < 10) return { type: 'sommet', role: 'haut', i: m.i, k: m.k, rampant: m.jonction != null };
+      if (m.jonction != null && v2.dist(this.versVue(m.jonction, H, c), p) < 10) return { type: 'sommet', role: 'jonction', i: m.i, u: m.u, k: m.k };
     }
     return null;
   }
-  /// Coupe : glisser un mur le pousse, glisser le plafond le monte ou le descend (toujours, comme en plan).
+  /// Coupe : un clic sur un mur le choisit (sans le déplacer).
   viserCoupeLignes(p, c) {
-    const s = this.scene;
-    if (!s.plan || this.vue !== 'coupe') return null;
-    const prof = this.profilCoupe();
-    for (const m of prof) {
+    if (!this.scene.plan || this.vue !== 'coupe') return null;
+    for (const m of this.profilCoupe()) {
       const a = this.versVue(m.u, 0, c), b = this.versVue(m.u, m.haut, c);
-      if (Math.abs(p[0] - a[0]) < 7 && p[1] <= a[1] + 4 && p[1] >= b[1] - 4) return { type: 'mur-coupe', i: m.i, k: m.k };
-    }
-    const yH = this.versVue(0, s.hauteur, c)[1];
-    if (Math.abs(p[1] - yH) < 7) {
-      const xs = prof.map((m) => (m.jonction != null ? m.jonction : m.u));
-      const lo = xs.length >= 2 ? Math.min(...xs) : 0, hi = xs.length >= 2 ? Math.max(...xs) : this.largeurMonde;
-      const u = this.versMonde(p, c)[0];
-      if (u >= lo - 0.1 && u <= hi + 0.1) return { type: 'plafond' };
+      if (Math.abs(p[0] - a[0]) < 7 && p[1] <= a[1] + 4 && p[1] >= b[1] - 4) return { type: 'rien', i: m.i };
     }
     return null;
   }
@@ -422,9 +417,9 @@ export class Plan2D {
   /// Coupe : murs (le choisi en orange), cotes des hauteurs et de la largeur, coins en édition.
   dessinerProfilCoupe(c) {
     const ctx = this.ctx, s = this.scene, H = s.hauteur, prof = this.profilCoupe(), ms = murDuPlan(s, etat.selection), k = c.w / this.largeurMonde;
-    const actif = this.cible && this.cible.type, survol = this.survolLigne;
+    const survol = this.survolLigne;
     for (const m of prof) {
-      const choisi = ms === m.i || (survol && survol.i === m.i);
+      const choisi = ms === m.i || (this.cible && this.cible.type === 'sommet' && this.cible.i === m.i);
       if (choisi) {
         ctx.beginPath(); ctx.moveTo(...this.versVue(m.u, 0, c)); ctx.lineTo(...this.versVue(m.u, m.haut, c));
         if (m.jonction != null) ctx.lineTo(...this.versVue(m.jonction, H, c));
@@ -435,23 +430,21 @@ export class Plan2D {
       const a = this.versVue(m.u, 0, c), b = this.versVue(m.u, m.haut, c);
       this.cote([a[0] + d, a[1]], [b[0] + d, b[1]], `${m.haut.toFixed(2)} m`, choisi ? '#fb8c00' : '#fff');
     }
-    if (survol && survol.type === 'plafond' || actif === 'plafond') {
-      ctx.beginPath(); ctx.moveTo(...this.versVue(0, H, c)); ctx.lineTo(...this.versVue(this.largeurMonde, H, c)); ctx.strokeStyle = '#fb8c00'; ctx.lineWidth = 3; ctx.stroke();
-    }
     // Largeur au sol entre les deux murs extrêmes, et hauteur sous plafond au milieu.
     if (prof.length >= 2) {
       const g = prof[0], dr = prof[prof.length - 1], y = 0.22;
       this.cote(this.versVue(g.u, y, c), this.versVue(dr.u, y, c), `${Math.abs(dr.u - g.u).toFixed(2)} m`, '#fff');
       const um = prof.length === 2 && g.jonction != null && dr.jonction != null ? (g.jonction + dr.jonction) / 2 : (g.u + dr.u) / 2;
-      this.cote(this.versVue(um, 0, c), this.versVue(um, H, c), `${H.toFixed(2)} m`, actif === 'plafond' ? '#fb8c00' : '#fff');
+      this.cote(this.versVue(um, 0, c), this.versVue(um, H, c), `${H.toFixed(2)} m`, '#fff');
     }
     if (!this.editionCoupe) return;
     const coin = (u, v, on) => { const p = this.versVue(u, v, c); ctx.beginPath(); ctx.arc(p[0], p[1], 6, 0, 2 * Math.PI); ctx.fillStyle = on ? '#fb8c00' : '#fff'; ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.lineWidth = 1.5; ctx.stroke(); };
+    const role = (r, i) => (this.cible && this.cible.type === 'sommet' && this.cible.i === i && this.cible.role === r)
+      || (survol && survol.type === 'sommet' && survol.i === i && survol.role === r);
     for (const m of prof) {
-      const on = this.cible && this.cible.i === m.i;
-      coin(m.u, 0, on && actif === 'mur-coupe');
-      coin(m.u, m.haut, on && actif === 'pied');
-      if (m.jonction != null) coin(m.jonction, H, on && actif === 'pente');
+      coin(m.u, 0, role('bas', m.i));
+      coin(m.u, m.haut, role('haut', m.i));
+      if (m.jonction != null) coin(m.jonction, H, role('jonction', m.i));
     }
   }
 
@@ -568,11 +561,11 @@ export class Plan2D {
     q.forEach((x, i) => { const d = v2.dist(x, p); if (d < 10 && (!best || d < best[1])) best = [i, d]; });
     if (best) {
       const i = best[0];
-      if (this.dernierCoin && this.dernierCoin[0] === i && performance.now() - this.dernierCoin[1] < 400) { this.dernierCoin = null; supprimerCoin(i); finirEditionPlan(); return { type: 'rien' }; }
+      if (this.perso && this.dernierCoin && this.dernierCoin[0] === i && performance.now() - this.dernierCoin[1] < 400) { this.dernierCoin = null; supprimerCoin(i); finirEditionPlan(); return { type: 'rien' }; }
       this.dernierCoin = [i, performance.now()];
       return { type: 'coin', i };
     }
-    for (let i = 0; i < q.length; i++) {
+    for (let i = 0; i < q.length && this.perso; i++) {
       const m = v2.mul(v2.add(q[i], q[(i + 1) % q.length]), 0.5);
       if (v2.dist(m, p) < 8) { const w = this.versMonde(m, c), k = insererCoin(i, w); if (k != null) return { type: 'coin', i: k }; }
     }
@@ -589,7 +582,7 @@ export class Plan2D {
     for (let i = 0; i < n; i++) { const d = dist(p, q[i], q[(i + 1) % n]); if (d < tol && (!best || d < best[1])) best = [i, d]; }
     if (!best) return null;
     etat.selection = idMur(best[0]); notifier();
-    return { type: 'mur', i: best[0], depart: this.versMonde(p, c), coins: s.plan.coins.map((x) => x.slice()) };
+    return { type: 'rien' };   // un mur se choisit d'un clic ; il ne se déplace que par ses coins
   }
 
   souris() {
@@ -621,10 +614,8 @@ export class Plan2D {
         }
       }
       if (!cible) cible = this.viserMur(p, c) || this.viserCoupeLignes(p, c);
-      if (cible && ['mur-coupe', 'pied', 'pente'].includes(cible.type)) {
-        Object.assign(cible, { u0: this.versMonde(p, c)[0], coins: s.plan.coins.map((x) => x.slice()) });
-        etat.selection = idMur(cible.i); notifier();
-      }
+      if (cible && cible.type === 'sommet') Object.assign(cible, { u0: this.versMonde(p, c)[0], coins: s.plan.coins.map((x) => x.slice()) });
+      if (cible && cible.i != null && (cible.type === 'sommet' || cible.type === 'rien')) { etat.selection = idMur(cible.i); notifier(); }
       if (!cible && this.vue === 'plan') {
         const b = [...s.blocs].reverse().find((x) => x.duPlan != null && dansPolygone(p[0], p[1], this.enveloppe(x, c)));
         if (b) { etat.selection = b.id; notifier(); cible = { type: 'rien' }; }
@@ -640,16 +631,16 @@ export class Plan2D {
       if (!this.cible || !ev.buttons) {
         const c = this.cadre(), q = this.poigneesMeuble(c).find((x) => v2.dist(x.v, p) < 11), nom = q ? q.nom : null;
         this.survolPoignee = nom;
-        const l = !q && this.vue === 'coupe' && this.scene.plan ? (this.viserCoupeSommets(p, c) || this.viserCoupeLignes(p, c)) : null;
+        const l = !q && this.vue === 'coupe' && this.scene.plan ? this.viserCoupeSommets(p, c) : null;
+        const coinPlan = !q && this.edition && coinsPlan(this.scene).some((x) => v2.dist(this.versVue(x[0], x[1], c), p) < 10);
         this.survolLigne = l;
-        cv.style.cursor = q ? (q.vertical ? 'ns-resize' : 'ew-resize')
-          : l ? (l.type === 'plafond' || l.type === 'pied' ? 'ns-resize' : 'ew-resize') : '';
+        cv.style.cursor = q ? (q.vertical ? 'ns-resize' : 'ew-resize') : (l || coinPlan) ? 'move' : '';
       }
       if (this.cible && ev.buttons) this.glisser(p, ev);
     });
     cv.addEventListener('pointerleave', () => { this.survol = null; this.besoin = true; });
     cv.addEventListener('pointerup', () => {
-      if (this.cible && (this.cible.type === 'coin' || this.cible.type === 'mur' || this.cible.type === 'mur-coupe')) finirEditionPlan();
+      if (this.cible && (this.cible.type === 'coin' || (this.cible.type === 'sommet' && this.cible.pousse))) finirEditionPlan();
       this.cible = null; this.besoin = true;
     });
   }
@@ -686,37 +677,28 @@ export class Plan2D {
       case 'micro':
         modifier((sc) => { if (this.vue === 'plan') sc.micro = [u, v]; else { sc.micro[this.axe] = this.deHor(u); sc.ecoute = v; } });
         break;
-      case 'plafond': {
-        const h = Math.min(Math.max(Math.round(v * 20) / 20, 1.8), 20);
-        if (h !== s.hauteur) modifier((sc) => { sc.hauteur = h; borner(sc); });
-        break;
-      }
-      case 'pied': {
-        const h = Math.min(Math.max(Math.round(v * 20) / 20, 0), s.hauteur - 0.1);
-        if (s.plan.murs[C.i] && s.plan.murs[C.i].pied !== h) modifier((sc) => { sc.plan.murs[C.i].pied = h; });
-        break;
-      }
-      case 'pente': {
+      case 'sommet': {
+        // Le premier mouvement fixe le sens : horizontal (déplacer le mur ou changer la pente) ou vertical (hauteur).
+        const dx = p[0] - this.depart[0], dy = p[1] - this.depart[1];
+        if (!C.verrou) { if (Math.hypot(dx, dy) < 4) return; C.verrou = C.role === 'bas' || Math.abs(dx) >= Math.abs(dy) ? 'h' : 'v'; }
         const m = s.plan.murs[C.i];
         if (!m) break;
-        const av = Math.max(Math.abs(u - C.u) * Math.abs(C.k), 0.02);
-        const deg = Math.min(Math.max(Math.round(Math.atan2(s.hauteur - m.pied, av) * 180 / Math.PI), 5), 85);
-        if (m.pente !== deg) modifier((sc) => { sc.plan.murs[C.i].pente = deg; });
-        break;
-      }
-      case 'mur-coupe': {
-        if (v2.dist(p, this.depart) <= 2) return;
-        const dw = this.deHor(u) - this.deHor(C.u0);
-        pousserMur(C.i, C.coins, dw / C.k, ev.altKey);
+        if (C.verrou === 'h' && C.role !== 'jonction') {
+          pousserMur(C.i, C.coins, (this.deHor(u) - this.deHor(C.u0)) / C.k, ev.altKey); C.pousse = true;
+        } else if (C.verrou === 'h') {
+          const av = Math.max(Math.abs(u - C.u) * Math.abs(C.k), 0.02);
+          const deg = Math.min(Math.max(Math.round(Math.atan2(s.hauteur - m.pied, av) * 180 / Math.PI), 5), 85);
+          if (m.pente !== deg) modifier((sc) => { sc.plan.murs[C.i].pente = deg; });
+        } else if (C.role === 'haut' && C.rampant) {
+          const h = Math.min(Math.max(Math.round(v * 20) / 20, 0), s.hauteur - 0.1);
+          if (m.pied !== h) modifier((sc) => { sc.plan.murs[C.i].pied = h; });
+        } else {
+          const h = Math.min(Math.max(Math.round(v * 20) / 20, 1.8), 20);
+          if (h !== s.hauteur) modifier((sc) => { sc.hauteur = h; borner(sc); });
+        }
         break;
       }
       case 'coin': deplacerCoin(C.i, [u, v], ev.altKey); break;
-      case 'mur': {
-        if (v2.dist(p, this.depart) <= 2) return;
-        const nIn = normalePlan(s, C.i);
-        if (nIn) pousserMur(C.i, C.coins, -((u - C.depart[0]) * nIn[0] + (v - C.depart[1]) * nIn[1]), ev.altKey);
-        break;
-      }
       default: break;
     }
     this.besoin = true;
