@@ -130,7 +130,7 @@ function remplirCalcul(z) {
   z.innerHTML = '';
   if (etat.webgpu === false) z.append(el('button', { type: 'button', disabled: true, title: "Ce navigateur n'a pas WebGPU : essayez Chrome, Edge ou Safari récents." }, 'Graves indisponibles'));
   else if (etat.enCours) z.append(el('button', { type: 'button', class: 'calcul-en-cours', onclick: arreterCalcul, title: 'Arrêter le calcul' }, `Arrêter · ${Math.round(etat.progression * 100)} %`));
-  else if (n && etat.webgpu) z.append(el('button', { type: 'button', class: 'principal', onclick: () => lancerCalcul(false), title: `Ondes jusqu'à ${Math.round(estimation().fmax)} Hz` }, `Calculer les graves · ≈ ${duree(estimation().secondes * n)}`));
+  else if (n && etat.webgpu) z.append(el('button', { type: 'button', class: 'principal', onclick: () => lancerCalcul(false), title: `Ondes jusqu'à ${Math.round(estimation().fmax)} Hz` }, `Calculer les graves (≈ ${duree(estimation().secondes * n)})`));
   else z.append(el('button', { type: 'button', disabled: true }, etat.webgpu == null ? 'Graves…' : 'Graves à jour'));
 }
 
@@ -154,13 +154,13 @@ function construireBarre() {
         el('div', { class: 'statut' }, el('span', { class: 'voyant' }), lier(el('span', { class: 'texte-statut' }), () => statut()[0])))),
     segments([['troisD', '3D'], ['plan', 'Plan'], ['coupe', 'Coupe'], ['deux', 'Plan + coupe']], () => etat.affichage, (v) => { reglage('affichage', v); montrerVue(); }),
     si(segments([[false, 'Nappe'], [true, 'Volume']], () => etat.volume3D, (v) => reglage('volume3D', v)), () => etat.affichage === 'troisD'),
-    segments([['frequence', 'Son pur'], ['bande', "Tiers d'octave"], ['global', 'Bruit rose']], () => etat.mode, (v) => reglage('mode', v), 'modes'),
+    segments([['frequence', 'Son pur'], ['bande', "1/3 d'octave"], ['global', 'Bruit rose']], () => etat.mode, (v) => reglage('mode', v), 'modes'),
     el('div', { class: 'espace' }),
     calcul,
     case_('Auto', () => etat.gravesAuto, (v) => reglage('gravesAuto', v), { title: 'Recalculer les graves seul après chaque retouche (si le calcul dure moins de 40 s)' }),
     el('div', { class: 'separateur' }),
-    el('button', { type: 'button', onclick: () => fichier.click(), title: 'Ouvrir une scène enregistrée (.json)' }, 'Ouvrir'),
-    el('button', { type: 'button', onclick: enregistrerScene, title: 'Enregistrer la scène (.json)' }, 'Enregistrer'),
+    Object.assign(menu('Fichier', [['ouvrir', 'Ouvrir une scène (.json)…'], ['enregistrer', 'Enregistrer la scène (.json)']],
+      (v) => (v === 'ouvrir' ? fichier.click() : enregistrerScene())), { title: 'Ouvrir ou enregistrer une scène' }),
     el('button', { type: 'button', onclick: demanderNouveau, title: 'Repartir d’une pièce vide' }, 'Nouveau projet'),
     el('button', { type: 'button', onclick: exporterImage, title: 'Enregistrer la vue en image PNG' }, 'Exporter l’image'),
     fichier,

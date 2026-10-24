@@ -182,3 +182,16 @@ button.calcul-en-cours { color: #b25000; border-color: var(--orange); }
 .place .rang.autre { background: rgba(52,199,89,0.6); }
 .place > div { flex: 1; min-width: 0; }
 .place .chiffres { font-size: 11px; }
+/* Barre du haut sur une seule ligne */
+.barre { flex-wrap: nowrap; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+.barre::-webkit-scrollbar { display: none; }
+.barre > * { flex: none; }
+.barre { font-size: 12px; }
+.barre .identite { width: auto; flex: 0 1 190px; min-width: 96px; }
+.barre .espace { flex: 1 1 0; min-width: 4px; }
+.barre .segmente button { padding: 3px 8px; }
+.barre button { white-space: nowrap; }
+.barre select.menu { padding: 4px 6px; border-radius: 6px; width: 78px; }
+.barre .identite > div { min-width: 0; overflow: hidden; }
+.barre .statut { overflow: hidden; text-overflow: ellipsis; }
+.barre .statut .texte-statut { overflow: hidden; text-overflow: ellipsis; }
