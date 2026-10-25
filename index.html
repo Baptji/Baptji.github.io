@@ -7,8 +7,8 @@
 <meta name="description" content="Atlas géologique et autres outils, à ouvrir dans le navigateur.">
 <link rel="icon" href="medias/favicon.png">
 <style>
-/* Une fenêtre par programme, côte à côte (grille qui se replie en colonne sur téléphone) : barre de titre, animations ou capture, puis
-   description et bouton. Ce qui n'est pas encore validé porte le ruban « En travaux ». Polices du système (aucune ressource extérieure). */
+/* Une fenêtre par programme, côte à côte (grille qui se replie en colonne sur téléphone) : barre à feux, animations ou capture, puis
+   titre et bouton ; toutes de même hauteur sur une ligne. Ce qui n'est pas encore validé porte le ruban « En travaux ». Polices du système (aucune ressource extérieure). */
 :root {
   --page: #f2f2ef; --surface: #fcfcfb; --barre: #ecebe7; --ink: #0b0b0b; --ink2: #52514e; --muted: #898781;
   --border: rgba(11, 11, 11, 0.12); --accent: #2a78d6; --chantier: #f5c518; --chantier-ink: #1a1a1a;
@@ -26,18 +26,16 @@ h1, h2 { margin: 0; line-height: 1.15; text-wrap: balance; }
 .site { text-align: center; margin-bottom: 28px; }
 .site h1 { font-size: 1.15rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
 
-.bureau { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); gap: 24px; align-items: start; }
+.bureau { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); gap: 24px; align-items: stretch; }
 
 .fenetre { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
   overflow: hidden; box-shadow: 0 1px 2px rgba(0, 0, 0, .06), 0 10px 28px rgba(0, 0, 0, .08); }
-.barre { position: relative; display: flex; align-items: center; justify-content: center; height: 34px; padding: 0 12px;
-  background: var(--barre); border-bottom: 1px solid var(--border); font-size: .82rem; font-weight: 600; color: var(--ink2); }
-.barre .feux { position: absolute; left: 12px; display: flex; gap: 7px; }
+.barre { position: relative; display: flex; align-items: center; height: 30px; padding: 0 12px;
+  background: var(--barre); border-bottom: 1px solid var(--border); }
+.barre .feux { display: flex; gap: 7px; }
 .barre .feux i { width: 11px; height: 11px; border-radius: 50%; background: #ff5f57; }
 .barre .feux i:nth-child(2) { background: #febc2e; }
 .barre .feux i:nth-child(3) { background: #28c840; }
-.barre .etat { position: absolute; right: 10px; padding: 1px 8px; border-radius: 6px; font-size: .7rem; letter-spacing: .04em;
-  text-transform: uppercase; background: var(--chantier); color: var(--chantier-ink); }
 
 .ecran { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: #fff; border-bottom: 1px solid var(--border); }
 .ecran video, .ecran > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
@@ -54,21 +52,20 @@ h1, h2 { margin: 0; line-height: 1.15; text-wrap: balance; }
   background: repeating-linear-gradient(-45deg, #1a1a1a 0 8px, var(--chantier) 8px 16px); }
 .ruban::before { top: 0; } .ruban::after { bottom: 0; }
 
-.corps { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 4px 14px; padding: 16px 18px 18px; }
+.corps { flex: 1; display: grid; grid-template-columns: 52px minmax(0, 1fr); grid-template-rows: auto auto 1fr; gap: 4px 14px; padding: 16px 18px 18px; }
 .corps > img { width: 52px; height: 52px; grid-row: 1 / span 2; }
 .corps h2 { font-size: 1.3rem; letter-spacing: -0.01em; }
-.corps p { margin: 0; color: var(--ink2); font-size: .93rem; }
-.actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 12px; }
-.ouvrir { padding: 8px 16px; border-radius: 10px; background: var(--accent); color: #fff; text-decoration: none; font-weight: 600; font-size: .95rem; }
+.corps p { margin: 0; color: var(--ink2); font-size: .93rem; line-height: 1.45; height: 2.9em; overflow: hidden; } /* deux lignes réservées partout : toutes les fenêtres ont la même hauteur, d'une ligne à l'autre de la grille */
+.actions { grid-column: 1 / -1; align-self: end; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 12px; }
+.ouvrir { padding: 8px 16px; border: 1px solid transparent; border-radius: 10px; background: var(--accent); color: #fff; text-decoration: none; font-weight: 600; font-size: .95rem; }
 .ouvrir:hover { filter: brightness(1.08); }
 .ouvrir:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
-.travaux .ouvrir { background: transparent; color: var(--ink); border: 1px solid var(--border); }
+.travaux .ouvrir { background: transparent; color: var(--ink); border-color: var(--border); }
 .travaux .ouvrir:hover { background: var(--barre); filter: none; }
 .points { display: flex; gap: 8px; }
 .points button { width: 10px; height: 10px; padding: 0; border-radius: 50%; border: 0; cursor: pointer; background: var(--muted); opacity: .45; }
 .points button[aria-current="true"] { background: var(--accent); opacity: 1; }
 .points button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-.note { grid-column: 1 / -1; margin: 10px 0 0; color: var(--muted); font-size: .78rem; line-height: 1.45; }
 @media (prefers-reduced-motion: reduce) { .ecran video { transition: none; } }
 @media (max-width: 520px) { main { padding: 28px 16px 40px; } }
 
@@ -84,7 +81,7 @@ footer a { color: inherit; }
 
   <div class="bureau">
     <section class="fenetre" aria-labelledby="atlas">
-      <div class="barre"><span class="feux" aria-hidden="true"><i></i><i></i><i></i></span>Atlas géologique</div>
+      <div class="barre"><span class="feux" aria-hidden="true"><i></i><i></i><i></i></span></div>
       <div class="ecran defile">
         <video src="medias/formation.mp4" poster="medias/formation.jpg" muted playsinline preload="auto" class="actif" aria-label="Formation du granite, étape par étape"></video>
         <video src="medias/argile-eau.mp4" poster="medias/argile-eau.jpg" muted playsinline preload="metadata" aria-label="Une argile qui gonfle en prenant l'eau, en 3D"></video>
@@ -95,7 +92,7 @@ footer a { color: inherit; }
         <h2 id="atlas">Atlas géologique</h2>
         <p>Roches, minéraux et argiles de France.</p>
         <div class="actions">
-          <a class="ouvrir" href="atlas/">Ouvrir l'Atlas</a>
+          <a class="ouvrir" href="atlas/">Ouvrir</a>
           <div class="points" role="group" aria-label="Choisir une animation">
             <button type="button" aria-label="Formation d'une roche" aria-current="true"></button>
             <button type="button" aria-label="Argile et eau, en 3D"></button>
@@ -106,7 +103,7 @@ footer a { color: inherit; }
     </section>
 
     <section class="fenetre" aria-labelledby="acoustique">
-      <div class="barre"><span class="feux" aria-hidden="true"><i></i><i></i><i></i></span>Acoustique</div>
+      <div class="barre"><span class="feux" aria-hidden="true"><i></i><i></i><i></i></span></div>
       <div class="ecran defile">
         <video src="medias/acoustique-impulsion.mp4" poster="medias/acoustique-impulsion.jpg" muted playsinline preload="auto" class="actif" aria-label="L'impulsion part de l'enceinte et rebondit sur les murs d'une pièce en L"></video>
         <video src="medias/acoustique-onde.mp4" poster="medias/acoustique-onde.jpg" muted playsinline preload="metadata" aria-label="Une onde de 52 Hz qui oscille dans une chambre mansardée"></video>
@@ -115,22 +112,20 @@ footer a { color: inherit; }
       <div class="corps">
         <img src="medias/acoustique-icone.png" alt="" width="52" height="52">
         <h2 id="acoustique">Acoustique</h2>
-        <p>Des enceintes dans une pièce, en 3D : modes, interférences, court-circuit acoustique.</p>
+        <p>Des enceintes dans une pièce, en 3D.</p>
         <div class="actions">
-          <a class="ouvrir" href="acoustique/">Ouvrir Acoustique</a>
+          <a class="ouvrir" href="acoustique/">Ouvrir</a>
           <div class="points" role="group" aria-label="Choisir une animation">
             <button type="button" aria-label="Impulsion" aria-current="true"></button>
             <button type="button" aria-label="Onde"></button>
             <button type="button" aria-label="Tour de la pièce"></button>
           </div>
         </div>
-        <p class="note">Dans le navigateur, sans rien installer. Les graves se calculent sur la carte graphique avec WebGPU :
-          Chrome, Edge ou Safari récents ; ailleurs, seuls les aigus sont calculés.</p>
       </div>
     </section>
 
     <section class="fenetre travaux" aria-labelledby="climat">
-      <div class="barre"><span class="feux" aria-hidden="true"><i></i><i></i><i></i></span>Climat<span class="etat">En travaux</span></div>
+      <div class="barre"><span class="feux" aria-hidden="true"><i></i><i></i><i></i></span></div>
       <div class="ecran">
         <img src="medias/climat.jpg" alt="Une maille de 8 km en Loir-et-Cher : température, pluie et évapotranspiration de 1960 à aujourd'hui" loading="lazy">
         <div class="ruban" aria-hidden="true">En travaux</div>
@@ -138,13 +133,13 @@ footer a { color: inherit; }
       <div class="corps">
         <img src="medias/climat-icone.png" alt="" width="52" height="52">
         <h2 id="climat">Climat</h2>
-        <p>Le climat réel de chaque maille de 8 km, jour par jour depuis 1959 (France et Royaume-Uni).</p>
-        <div class="actions"><a class="ouvrir" href="climat/">Ouvrir Climat</a></div>
+        <p>Le climat de chaque lieu, jour par jour depuis 1959.</p>
+        <div class="actions"><a class="ouvrir" href="climat/">Ouvrir</a></div>
       </div>
     </section>
 
     <section class="fenetre travaux" aria-labelledby="nations">
-      <div class="barre"><span class="feux" aria-hidden="true"><i></i><i></i><i></i></span>Squid Nations<span class="etat">En travaux</span></div>
+      <div class="barre"><span class="feux" aria-hidden="true"><i></i><i></i><i></i></span></div>
       <div class="ecran">
         <img src="medias/nations.jpg" alt="La carte du monde au début d'une partie avec la France" loading="lazy">
         <div class="ruban" aria-hidden="true">En travaux</div>
@@ -152,13 +147,13 @@ footer a { color: inherit; }
       <div class="corps">
         <img src="medias/nations-icone.png" alt="" width="52" height="52">
         <h2 id="nations">Squid Nations</h2>
-        <p>Un pays à mener sur la planète entière : production, armée, guerre.</p>
-        <div class="actions"><a class="ouvrir" href="squid-nations/">Ouvrir Squid Nations</a></div>
+        <p>Un pays à mener sur la planète entière.</p>
+        <div class="actions"><a class="ouvrir" href="squid-nations/">Ouvrir</a></div>
       </div>
     </section>
 
     <section class="fenetre travaux" aria-labelledby="ferme">
-      <div class="barre"><span class="feux" aria-hidden="true"><i></i><i></i><i></i></span>Squid Ferme<span class="etat">En travaux</span></div>
+      <div class="barre"><span class="feux" aria-hidden="true"><i></i><i></i><i></i></span></div>
       <div class="ecran">
         <img src="medias/ferme.jpg" alt="La ferme en pixels : parcelles, maison et grange, liste des semences" loading="lazy">
         <div class="ruban" aria-hidden="true">En travaux</div>
@@ -166,16 +161,14 @@ footer a { color: inherit; }
       <div class="corps">
         <img src="medias/ferme-icone.svg" alt="" width="52" height="52">
         <h2 id="ferme">Squid Ferme</h2>
-        <p>Une petite ferme en pixels, avec les rendements réels des cultures.</p>
-        <div class="actions"><a class="ouvrir" href="squid-ferme/">Ouvrir Squid Ferme</a></div>
+        <p>Une ferme en pixels, aux rendements réels.</p>
+        <div class="actions"><a class="ouvrir" href="squid-ferme/">Ouvrir</a></div>
       </div>
     </section>
   </div>
 
   <footer>
-    <p><a href="https://creativecommons.org/licenses/by-nc/4.0/deed.fr" rel="license">Licence CC BY-NC 4.0</a> —
-      réutilisation libre pour l'enseignement, les exposés et les conférences, en citant la source ;
-      pas d'utilisation commerciale sans autorisation.</p>
+    <p><a href="https://creativecommons.org/licenses/by-nc/4.0/deed.fr" rel="license">Licence CC BY-NC 4.0</a></p>
   </footer>
 </main>
 <script>
