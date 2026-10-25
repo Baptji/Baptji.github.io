@@ -4,17 +4,17 @@
 import { etat, abonner, notifier, demarrer, modifier, reglage, formePlan, finirEditionPlan, retirerMur, ouvrirDansMur,
   ajouterEnceinte, ajouterBloc, supprimer, dupliquer, lancerCalcul, arreterCalcul, aJour, aRecalculer, estimation, ECHELLE_DB, deplacerObjet,
   entrees, gravesAutomatiques, nouveauProjet, ouvrirScene, reprendre, dimensionsRect, typePiece, tournerObjet,
-  commencerDessin, annulerDessin, terminerDessin, retirerPointDessin } from './etat.js?v=20261025135051';
-import { MATERIAUX, materiau, GENRES, genre, FILTRES, FORMES, FORMES_AJOUTABLES, borner, estOuvert } from './modele.js?v=20261025135051';
-import { FORMES_PLAN, coinsPlan, murDuPlan, origine, volumePlan, EPAISSEUR, idMur } from './plan.js?v=20261025135051';
-import { Bandes } from './rayons.js?v=20261025135051';
-import { fmaxOndes } from './calcul.js?v=20261025135051';
-import { cssMateriau, turbo, v2, aire } from './base.js?v=20261025135051';
-import { textePixel } from './police.js?v=20261025135051';
-import { chercherEcoute, chercherSalle, arreterRecherche, dureeEcoute, dureeSalle } from './placement.js?v=20261025135051';
-import { Vue3D } from './vue3d.js?v=20261025135051';
-import { Plan2D } from './plan2d.js?v=20261025135051';
-import { Courbe, FMIN, FMAX } from './courbe.js?v=20261025135051';
+  commencerDessin, annulerDessin, terminerDessin, retirerPointDessin } from './etat.js?v=20261025140234';
+import { MATERIAUX, materiau, GENRES, genre, FILTRES, FORMES, FORMES_AJOUTABLES, borner, estOuvert } from './modele.js?v=20261025140234';
+import { FORMES_PLAN, coinsPlan, murDuPlan, origine, volumePlan, EPAISSEUR, idMur } from './plan.js?v=20261025140234';
+import { Bandes } from './rayons.js?v=20261025140234';
+import { fmaxOndes } from './calcul.js?v=20261025140234';
+import { cssMateriau, turbo, v2, aire } from './base.js?v=20261025140234';
+import { textePixel } from './police.js?v=20261025140234';
+import { chercherEcoute, chercherSalle, arreterRecherche, dureeEcoute, dureeSalle } from './placement.js?v=20261025140234';
+import { Vue3D } from './vue3d.js?v=20261025140234';
+import { Plan2D } from './plan2d.js?v=20261025140234';
+import { Courbe, FMIN, FMAX } from './courbe.js?v=20261025140234';
 
 const $ = (sel, r = document) => r.querySelector(sel);
 const el = (tag, attrs = {}, ...enfants) => {
@@ -139,13 +139,9 @@ function construireBarre() {
   const b = $('#barre');
   b.innerHTML = '';
   // Pas de filtre « accept » : Safari (iPhone, iPad et parfois Mac) grise alors les .json. Le contenu est vérifié à la lecture.
-  const fichier = el('input', { type: 'file', hidden: true });
-  fichier.addEventListener('change', async () => {
-    const f = fichier.files[0]; if (!f) return;
-    try { const sc = JSON.parse(await f.text()); if (!sc.enceintes) throw new Error(); ouvrirScene(sc); }
-    catch { etat.message = 'Fichier illisible : il faut une scène enregistrée par Acoustique.'; notifier(); }
-    fichier.value = '';
-  });
+  // Le champ est dans une étiquette : le clic de l'utilisateur l'ouvre lui-même (Safari refuse un click() lancé par programme).
+  const fichier = el('input', { type: 'file', class: 'champ-fichier', tabindex: -1 });
+  fichier.addEventListener('change', () => { lireScene(fichier.files[0]); fichier.value = ''; fermerMenuFichier(); });
   const calcul = el('div', { class: 'zone-calcul' });
   liaisons.push({ e: calcul, lire: () => { remplirCalcul(calcul); return ''; } });
   calcul.value = '';
@@ -161,13 +157,37 @@ function construireBarre() {
     calcul,
     case_('Auto', () => etat.gravesAuto, (v) => reglage('gravesAuto', v), { title: 'Recalculer les graves seul après chaque retouche (si le calcul dure moins de 40 s)' }),
     el('div', { class: 'separateur' }),
-    Object.assign(menu('Fichier', [['ouvrir', 'Ouvrir une scène (.json)…'], ['enregistrer', 'Enregistrer la scène (.json)']],
-      (v) => (v === 'ouvrir' ? fichier.click() : enregistrerScene())), { title: 'Ouvrir ou enregistrer une scène' }),
+    menuFichier(fichier),
     el('button', { type: 'button', onclick: demanderNouveau, title: 'Repartir d’une pièce vide' }, 'Nouveau projet'),
     el('button', { type: 'button', onclick: exporterImage, title: 'Enregistrer la vue en image PNG' }, 'Exporter l’image'),
-    fichier,
   );
   for (const n of b.querySelectorAll('.titre, .texte-statut')) n.textContent = '';
+}
+
+async function lireScene(f) {
+  if (!f) return;
+  try { const sc = JSON.parse(await f.text()); if (!sc.enceintes) throw new Error(); ouvrirScene(sc); }
+  catch { etat.message = 'Fichier illisible : il faut une scène enregistrée par Acoustique.'; notifier(); }
+}
+
+/// Menu « Fichier » fait de vrais boutons (un <select> ne peut pas ouvrir la fenêtre de fichiers dans Safari).
+let menuOuvert = null;
+function fermerMenuFichier() { if (menuOuvert) menuOuvert.open = false; }
+function menuFichier(fichier) {
+  const liste = el('div', { class: 'menu-liste', role: 'menu' },
+    el('label', { class: 'menu-choix', role: 'menuitem' }, 'Ouvrir une scène (.json)…', fichier),
+    el('button', { type: 'button', class: 'menu-choix', role: 'menuitem', onclick: () => { fermerMenuFichier(); enregistrerScene(); } }, 'Enregistrer la scène (.json)'));
+  const d = el('details', { class: 'menu-fichier', title: 'Ouvrir ou enregistrer une scène' }, el('summary', {}, 'Fichier'), liste);
+  d.addEventListener('toggle', () => {
+    if (!d.open) return;
+    const r = d.querySelector('summary').getBoundingClientRect();
+    liste.style.top = `${r.bottom + 4}px`;
+    liste.style.right = `${Math.max(8, window.innerWidth - r.right)}px`;
+  });
+  document.addEventListener('pointerdown', (ev) => { if (d.open && !d.contains(ev.target)) d.open = false; });
+  document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') d.open = false; });
+  menuOuvert = d;
+  return d;
 }
 
 function demanderNouveau() {
@@ -542,6 +562,9 @@ function cleDeListe() {
 export function lancer() {
   demarrer();
   construireBarre();
+  // Une scène .json lâchée sur la page s'ouvre.
+  window.addEventListener('dragover', (ev) => { if (ev.dataTransfer && [...ev.dataTransfer.types].includes('Files')) ev.preventDefault(); });
+  window.addEventListener('drop', (ev) => { const f = ev.dataTransfer && ev.dataTransfer.files[0]; if (f) { ev.preventDefault(); lireScene(f); } });
   construireSousBarre();
   vue3d = new Vue3D($('#vue3d'));
   vue2d = new Plan2D($('#vue2d'));

@@ -190,6 +190,14 @@ button.calcul-en-cours { color: #b25000; border-color: var(--orange); }
 .barre .segmente button { padding: 3px 8px; }
 .barre button { white-space: nowrap; }
 .barre select.menu { padding: 4px 6px; border-radius: 6px; width: 78px; }
+.menu-fichier > summary { list-style: none; cursor: pointer; border: 1px solid var(--bord); background: var(--champ); border-radius: 6px; padding: 4px 10px; white-space: nowrap; }
+.menu-fichier > summary::-webkit-details-marker { display: none; }
+.menu-fichier > summary::after { content: ' ▾'; color: var(--texte-doux); }
+.menu-fichier[open] > summary { background: var(--choisi); }
+.menu-liste { position: fixed; z-index: 30; display: flex; flex-direction: column; min-width: 210px; padding: 4px; border: 1px solid var(--bord); border-radius: 8px; background: var(--panneau); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18); }
+.menu-choix { display: block; text-align: left; border: 0; background: transparent; border-radius: 5px; padding: 6px 10px; cursor: pointer; white-space: nowrap; position: relative; }
+.menu-choix:hover { background: var(--choisi); filter: none; }
+.champ-fichier { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; pointer-events: none; }
 .barre .identite > div { min-width: 0; overflow: hidden; }
 .barre .statut { overflow: hidden; text-overflow: ellipsis; }
 .barre .statut .texte-statut { overflow: hidden; text-overflow: ellipsis; }

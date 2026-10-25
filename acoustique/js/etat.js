@@ -1,13 +1,13 @@
 // État de l'application : la scène, les réglages d'affichage, les calculs en cours.
 // Traduction d'Etat.swift. Les vues s'abonnent et se redessinent à chaque changement.
 
-import { copie, nouvelleEnceinte, nouveauBloc, nouvelleScene, borner, cleEspace, cleGeometrie, genre, FORMES, FORMES_AJOUTABLES, materiau } from './modele.js?v=20261025135051';
+import { copie, nouvelleEnceinte, nouveauBloc, nouvelleScene, borner, cleEspace, cleGeometrie, genre, FORMES, FORMES_AJOUTABLES, materiau } from './modele.js?v=20261025140234';
 import { appliquerPlan, dessinerPlan as dessinerPlanScene, retirerPlan as retirerPlanScene, FORMES_PLAN, murDuPlan, normalePlan, coinsPlan,
-  aimanter, EPAISSEUR, toit, idMur, aimanterObjet, emprise, dansLaPiece, rectangle, nouveauPlan } from './plan.js?v=20261025135051';
-import { PREREGLAGES } from './modeles.js?v=20261025135051';
-import { grillePour, calculer, estimation as estimationOndes, moteurOndes } from './ondes.js?v=20261025135051';
-import { raster, rasterVolume, courbe, courbesSources, rayonsPour, rayonsDeja, sources, fmaxOndes } from './calcul.js?v=20261025135051';
-import { v2 } from './base.js?v=20261025135051';
+  aimanter, EPAISSEUR, toit, idMur, aimanterObjet, emprise, dansLaPiece, rectangle, nouveauPlan } from './plan.js?v=20261025140234';
+import { PREREGLAGES } from './modeles.js?v=20261025140234';
+import { grillePour, calculer, estimation as estimationOndes, moteurOndes } from './ondes.js?v=20261025140234';
+import { raster, rasterVolume, courbe, courbesSources, rayonsPour, rayonsDeja, sources, fmaxOndes } from './calcul.js?v=20261025140234';
+import { v2 } from './base.js?v=20261025140234';
 
 const CLE_STOCKAGE = 'acoustique-scene', CLE_PRECEDENT = 'acoustique-precedent';
 
