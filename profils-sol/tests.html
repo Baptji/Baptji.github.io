@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Profils de sol — vérifications</title>
+<style>
+  body { font: 13px/1.5 ui-monospace, Menlo, monospace; margin: 20px; background: #fafaf8; color: #1d1d1f; }
+  .ok { color: #1b7d33; } .echec { color: #c2001b; font-weight: 700; } h1 { font: 600 16px -apple-system, sans-serif; }
+</style>
+</head>
+<body>
+<h1>Profils de sol — vérifications</h1>
+<div id="sortie"></div>
+<script type="module">
+  // Le portage des 60 vérifications de l'autotest de l'app Mac (Application.swift), plus celles
+  // propres au web (stockage refusé, fichier de l'app Mac relu, SVG du PDF bien formé).
+  import * as M from './js/modele.js?v=20261025203629';
+  import * as F from './js/figure.js?v=20261025203629';
+  import * as Munsell from './js/munsell.js?v=20261025203629';
+
+  const sortie = document.getElementById('sortie');
+  let echecs = 0, total = 0;
+  const verifier = (nom, ok, detail = '') => {
+    total++;
+    if (!ok) echecs++;
+    sortie.insertAdjacentHTML('beforeend', `<div class="${ok ? 'ok' : 'echec'}">${ok ? 'ok   ' : 'ÉCHEC'} ${nom}${detail ? ' — ' + detail : ''}</div>`);
+  };
+  const ep = (f) => f.horizons.map((h) => h.epaisseur).join(', ');
+
+  // 1. Schéma neuf
+  let s = M.schemaNeuf(1);
+  verifier('schéma neuf : 2 fosses de 100 cm', s.fosses.length === 2 && s.fosses.every((f) => M.epaisseurTotale(f) === 100));
+  verifier('sans titre numéroté', M.nomAffiche(s) === 'Sans titre 1');
+
+  // 2. Limite déplacée au centimètre
+  let f = s.fosses[0];
+  const depart = f.horizons.map((h) => h.epaisseur);          // [25, 75]
+  M.deplacerLimite(f, 0, 7, depart);
+  verifier('limite descendue de 7 cm', f.horizons[0].epaisseur === 32 && f.horizons[1].epaisseur === 68, ep(f));
+  M.deplacerLimite(f, 0, -500, depart);
+  verifier('limite bloquée à 1 cm', f.horizons[0].epaisseur === 1 && M.epaisseurTotale(f) === 100, ep(f));
+  M.deplacerLimite(f, 0, 500, depart);
+  verifier('limite bloquée à 1 cm vers le bas aussi', f.horizons[1].epaisseur === 1 && M.epaisseurTotale(f) === 100, ep(f));
+  M.deplacerLimite(f, 0, 0, depart);
+
+  // 3. Épaisseur saisie à la main
+  M.fixerEpaisseur(f, 0, 40);
+  verifier('épaisseur fixée, total conservé', f.horizons[0].epaisseur === 40 && M.epaisseurTotale(f) === 100);
+
+  // 4. Ajout / suppression d'horizon
+  M.ajouterHorizon(f, 0);
+  verifier('horizon ajouté, total conservé', f.horizons.length === 3 && M.epaisseurTotale(f) === 100, ep(f));
+  verifier('renumérotation automatique', f.horizons.map((h) => h.nom).join(' ') === 'H1 H2 H3');
+  f.horizons[1].nom = 'Btg';
+  M.ajouterHorizon(f, 2);
+  verifier('nom saisi à la main conservé', f.horizons[1].nom === 'Btg', f.horizons.map((h) => h.nom).join(' '));
+  M.supprimerHorizon(f, 1);
+  verifier('horizon supprimé, total conservé', f.horizons.length === 3 && M.epaisseurTotale(f) === 100);
+
+  // 5. Profondeur du schéma
+  s.profondeur = 130; M.recaler(s);
+  verifier('profondeur portée à 130 cm', s.fosses.every((x) => M.epaisseurTotale(x) === 130), s.fosses.map(M.epaisseurTotale).join(', '));
+  s.profondeur = 20; M.recaler(s);
+  verifier('profondeur réduite à 20 cm sans horizon vide',
+    s.fosses.every((x) => M.epaisseurTotale(x) === 20 && x.horizons.every((h) => h.epaisseur >= 1)), s.fosses.map(ep).join(' | '));
+  s.profondeur = 9999; M.recaler(s);
+  verifier('profondeur bornée à 400 cm', s.profondeur === 400 && s.fosses.every((x) => M.epaisseurTotale(x) === 400));
+  s.profondeur = 100; M.recaler(s);
+
+  // 6. Mise en page : six colonnes au plus
+  verifier('6 fosses tiennent sur une ligne', M.lignes(6).length === 1);
+  const sept = M.lignes(7);
+  verifier('7 fosses : retour à la ligne', sept.length === 2 && sept[0][1] - sept[0][0] === 6 && sept[1][1] - sept[1][0] === 1);
+  verifier('largeur figée à 6 colonnes', M.largeur(9) === M.largeur(6), `${M.largeur(9)}`);
+  verifier('moins de 6 fosses : figure plus étroite', M.largeur(3) < M.largeur(6));
+
+  // 7. Texte dans les horizons : on n'écrit que ce qui tient
+  verifier('horizon fin : rien ou le seul repère', M.lignesTenant(8) === 0 && M.lignesTenant(22) === 1);
+  verifier('horizon épais : les trois lignes', M.lignesTenant(40) === 3 && M.lignesTenant(400) === 3);
+  const hz = M.horizon({ nom: 'H1', libelle: '', commentaire: 'écarté' });
+  verifier("à l'export, une ligne vide ne prend pas de place",
+    F.lignesVisibles(hz, 3, { export: true, choisi: false }).map((l) => l.clef).join(' ') === 'nom commentaire');
+  verifier('en saisie, le repère reste offert, les autres lignes vides seulement à la sélection',
+    F.lignesVisibles(M.horizon({ nom: '' }), 3, { export: false, choisi: false }).length === 1
+    && F.lignesVisibles(M.horizon({ nom: '' }), 3, { export: false, choisi: true }).length === 3);
+
+  // 8. Zoom
+  let zoom = 1;
+  verifier('zoom à 100 % au départ', zoom === 1);
+  zoom = M.bornerZoom(zoom * 1.15);
+  verifier("le zoom s'agrandit", zoom > 1.14 && zoom < 1.16, zoom.toFixed(3));
+  zoom = M.bornerZoom(zoom * 100);
+  verifier('le zoom plafonne', zoom === M.zoomMax, `${zoom}`);
+  zoom = M.bornerZoom(zoom * 0.0001);
+  verifier('le zoom a un plancher', zoom === M.zoomMin, `${zoom}`);
+  zoom = 1;
+  verifier('retour à la taille réelle', zoom === 1);
+
+  // Le zoom agrandit la MISE EN PAGE, pas une image déjà rendue : c'est ce qui garde les textes nets.
+  const normal = M.miseEnPage(1), grossi = M.miseEnPage(3);
+  verifier('la police grandit avec le zoom', grossi.t(9) === normal.t(9) * 3, `${normal.t(9)} → ${grossi.t(9)}`);
+  verifier("la géométrie grandit d'autant", grossi.barre === normal.barre * 3 && grossi.hauteurBarre === normal.hauteurBarre * 3);
+  verifier("à 100 % la mise en page est celle d'origine",
+    normal.barre === M.mise.largeurBarre && normal.t(11) === 11 && normal.colonne === M.mise.largeurColonne);
+  verifier('le texte affiché ne dépend pas du zoom', grossi.lignesTenant(40 * 3) === normal.lignesTenant(40));
+  const fig1 = F.composer(M.exemple(), { z: 1, export: true }), fig3 = F.composer(M.exemple(), { z: 3, export: true });
+  verifier('la figure entière se recompose à l\'échelle', Math.abs(fig3.largeur - 3 * fig1.largeur) < 0.01 && Math.abs(fig3.hauteur - 3 * fig1.hauteur) < 4,
+    `${fig1.largeur}×${fig1.hauteur} → ${fig3.largeur}×${fig3.hauteur}`);
+
+  // 9. Une colonne : titre à l'aplomb de la barre
+  verifier("la barre n'est pas au centre de la colonne", M.mise.largeurAxe + M.mise.largeurBarre < M.mise.largeurColonne);
+  // On mesure vraiment le rendu : le milieu de l'encre du titre doit tomber sur le milieu de la barre,
+  // pas sur le milieu de la colonne (le décalage que la règle des profondeurs introduit).
+  {
+    const un = M.schema({ fosses: [M.exemple().fosses[1]] });
+    const fig = F.composer(un, { export: true });
+    const c = F.versCanvas(fig, 2);
+    const col = fig.elements.find((e) => e.type === 'colonne');
+    const titre = fig.elements.find((e) => e.type === 'texte' && e.champ?.cible === 'fosse' && e.champ.clef === 'nom');
+    const px = c.getContext('2d').getImageData(0, Math.floor(titre.y * 2), c.width, Math.ceil(titre.h * 2)).data;
+    let sx = 0, p = 0;
+    for (let i = 0; i < px.length; i += 4) {
+      const encre = Math.max(0, 200 - (0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2]));
+      sx += ((i / 4) % c.width) * encre; p += encre;
+    }
+    const mesure = p ? sx / p / 2 - col.x : NaN;
+    const centreBarre = (M.mise.largeurColonne - M.mise.largeurAxe - M.mise.largeurBarre) / 2 + M.mise.largeurAxe + M.mise.largeurBarre / 2;
+    verifier('titre de fosse centré sur la barre, pas sur la colonne',
+      Math.abs(mesure - centreBarre) < 3 && Math.abs(centreBarre - M.mise.largeurColonne / 2) > 5,
+      `encre à ${mesure.toFixed(1)} · barre ${centreBarre.toFixed(1)} · colonne ${M.mise.largeurColonne / 2}`);
+  }
+
+  // 10. Le petit « + » et la poignée ne se marchent pas dessus
+  verifier('place réservée au petit +', M.mise.placeDuPlus > 8);
+  {
+    const fig = F.composer(M.schemaNeuf(1), {});
+    const poignee = fig.elements.find((e) => e.type === 'poignee');
+    const horizon = fig.elements.find((e) => e.type === 'horizon');
+    verifier('la poignée laisse le coin du + libre', poignee.x + poignee.w <= horizon.x + horizon.w - M.mise.placeDuPlus + 0.01);
+    verifier('la poignée est à cheval sur la limite', Math.abs(poignee.y + poignee.h / 2 - (horizon.y + horizon.h)) < 0.01);
+  }
+  // « Hz développement » doit tenir en entier dans un horizon, comme sur le schéma d'origine.
+  const largeurTexte = M.mise.largeurBarre - 10;
+  const mesureTexte = F.mesurer('Hz développement', 7.5, false);
+  verifier('le commentaire le plus long tient dans la barre', mesureTexte <= largeurTexte,
+    `${mesureTexte.toFixed(1)} px pour ${largeurTexte} px disponibles`);
+  let fosseAjout = M.fosseNeuve(1, 100);
+  const avant = fosseAjout.horizons.length;
+  M.ajouterHorizon(fosseAjout, 0);
+  verifier('le + ajoute bien un horizon en dessous', fosseAjout.horizons.length === avant + 1 && M.epaisseurTotale(fosseAjout) === 100, ep(fosseAjout));
+  const mince = M.fosse({ horizons: [M.horizon({ epaisseur: 5 }), M.horizon({ epaisseur: 1 })] });
+  M.ajouterHorizon(mince, 1);
+  verifier("un horizon d'1 cm emprunte au voisin du dessus", mince.horizons.length === 3 && M.epaisseurTotale(mince) === 6, ep(mince));
+
+  // 11. Légende réécrite à la main
+  const schemaLegende = M.exemple();
+  const auto = M.legende(schemaLegende);
+  verifier('libellé suggéré par défaut', auto[0]?.nom === 'Écarté', auto[0]?.nom ?? '—');
+  M.fixerLibelleLegende(schemaLegende, auto[0], 'Remblai à évacuer');
+  verifier('libellé réécrit retenu', M.libelleLegende(schemaLegende, auto[0]) === 'Remblai à évacuer');
+  const relu = M.relireSchema(JSON.parse(JSON.stringify(schemaLegende)));
+  verifier("libellé réécrit survit à l'enregistrement", relu.libellesLegende?.[auto[0].hex] === 'Remblai à évacuer');
+  M.fixerLibelleLegende(schemaLegende, auto[0], 'Écarté');
+  verifier('remettre le libellé suggéré efface la retouche', schemaLegende.libellesLegende === undefined);
+  const ancien = M.relireSchema({ id: 'X', titre: 'Ancien', numeroSansTitre: 1, sousTitre: '', basDePage: '', profondeur: 100, legende: true, fosses: [], modifie: '2026-08-30T10:00:00Z' });
+  verifier("un schéma d'avant se relit sans la légende retouchée", ancien?.titre === 'Ancien' && ancien.libellesLegende === undefined);
+
+  // 12. La légende ne déborde pas d'un schéma étroit, et reste centrée (mesuré sur le rendu).
+  {
+    const etroit = M.schema({ titre: 'Test légende', fosses: [M.fosse({ horizons: M.teintes.slice(0, 9).map((t, i) => M.horizon({ nom: `H${i + 1}`, epaisseur: 11, couleur: t.hex })) })] });
+    M.recaler(etroit);
+    const fig = F.composer(etroit, { export: true });
+    const attendu = M.largeur(1);
+    const c = document.createElement('canvas');
+    c.width = attendu * 2; c.height = Math.ceil(fig.hauteur);
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = 'rgb(128,128,128)'; ctx.fillRect(0, 0, c.width, c.height);
+    F.dessinerCanvas(ctx, fig);
+    const leg = fig.elements.filter((e) => e.type === 'texte' && e.champ?.cible === 'legende');
+    const y0 = Math.floor(Math.min(...leg.map((e) => e.y))) - 8, y1 = Math.ceil(Math.max(...leg.map((e) => e.y + e.h))) + 8;
+    const px = ctx.getImageData(0, y0, c.width, y1 - y0).data;
+    let xMax = 0, xMin = c.width;
+    for (let i = 0; i < px.length; i += 4) {
+      const x = (i / 4) % c.width;
+      if (Math.abs(px[i] - 128) + Math.abs(px[i + 1] - 128) + Math.abs(px[i + 2] - 128) > 6) xMax = Math.max(xMax, x);
+      const enc = Math.abs(px[i] - 248) + Math.abs(px[i + 1] - 246) + Math.abs(px[i + 2] - 241);
+      if (x < attendu && enc > 40) xMin = Math.min(xMin, x);
+    }
+    verifier('la légende ne déborde pas des colonnes du schéma', xMax <= attendu + 1, `encre jusqu'à ${xMax} px pour ${attendu} px de schéma`);
+    verifier('la légende revient à la ligne', new Set(leg.map((e) => Math.round(e.y))).size > 1, `${new Set(leg.map((e) => Math.round(e.y))).size} rangées`);
+  }
+
+  // 13. Le livret Munsell
+  const planches = Munsell.pages.filter((p) => p.hue !== 'Gley 1');
+  const pageGley = Munsell.pages[Munsell.pages.length - 1];
+  verifier('livret : 9 planches de teinte + Gley 1', planches.length === 9 && pageGley.hue === 'Gley 1');
+  verifier("planches dans l'ordre du livret", planches.map((p) => p.hue).join(' ') === '5R 7.5R 10R 2.5YR 5YR 7.5YR 10YR 2.5Y 5Y', planches.map((p) => p.hue).join(' '));
+  const toutesPuces = Munsell.pages.flatMap((p) => p.lignes.flatMap(([, puces]) => puces.filter(Boolean)));
+  verifier('assez de puces extraites du PDF', toutesPuces.length === 356, `${toutesPuces.length} puces`);
+  verifier('toutes les puces ont une couleur valide', toutesPuces.every(([, h]) => /^#[0-9A-F]{6}$/i.test(h)));
+  verifier('notations bien formées', toutesPuces.every(([n]) => n.includes('/')) && toutesPuces.some(([n]) => n === '10YR 4/3'), `ex. ${toutesPuces[0][0]}`);
+  verifier('la valeur décroît du haut vers le bas de la planche', planches[6].lignes.map(([v]) => v).join(' ') === '8 7 6 5 4 3 2', planches[6].lignes.map(([v]) => v).join(' '));
+  verifier('le chroma croît de gauche à droite', Munsell.chromas.join(',') === '1,2,3,4,6,8');
+  verifier('chaque ligne a autant de cases que de colonnes', Munsell.pages.every((p) => p.lignes.every(([, l]) => l.length === 6)));
+  const clair = planches[6].lignes[0][1][2], sombre = planches[6].lignes[5][1][2];
+  verifier("les couleurs suivent bien l'échelle de valeur", M.luminance(clair[1]) > M.luminance(sombre[1]), `${clair[1]} vs ${sombre[1]}`);
+  const pdf = await fetch('Munsell-Soil-Color-Charts.pdf', { method: 'HEAD' }).then((r) => r.ok).catch(() => false);
+  verifier("le livret PDF (sous droits) n'est pas publié", !pdf);
+
+  // 14. Nuancier rapide
+  verifier('une vingtaine de teintes proposées', M.teintes.length >= 20, `${M.teintes.length} teintes`);
+  verifier('pas de doublon de teinte', new Set(M.teintes.map((t) => t.hex.toUpperCase())).size === M.teintes.length);
+
+  // 15. Couleurs
+  verifier('encre lisible selon la teinte', M.encre('#4CAF7D') === '#FFFFFF' && M.encre('#E0D8C8') !== '#FFFFFF');
+  verifier('aller-retour hexadécimal', M.versHex(M.composantes('#F5A623')) === '#F5A623', M.versHex(M.composantes('#F5A623')));
+  verifier('contour = teinte × 0,6', M.contour('#FF8000') === 'rgb(153, 77, 0)', M.contour('#FF8000'));
+  verifier('une couleur douteuse donne du gris', M.composantes('pas une couleur').join(',') === '0.5,0.5,0.5');
+
+  // 16. Légende déduite des teintes employées
+  const modele = M.exemple();
+  const teintesEmployees = M.legende(modele);
+  verifier("légende : 4 teintes dans l'ordre d'apparition", teintesEmployees.length === 4 && teintesEmployees[0].hex === M.teintes[2].hex.toUpperCase(),
+    teintesEmployees.map((t) => t.hex).join(' '));
+  const libre = M.schema({ fosses: [M.fosse({ horizons: [M.horizon({ couleur: '#123456' }), M.horizon({ couleur: '#123456', commentaire: 'remblai' })] })] });
+  verifier("teinte hors palette : libellé tiré du premier commentaire", M.legende(libre)[0].nom === 'remblai', M.legende(libre)[0].nom);
+
+  // 17. Historique enregistré puis relu
+  const memoire = M.stockageMemoire();
+  const b1 = new M.Bibliotheque(memoire);
+  b1.courant.titre = modele.titre;
+  b1.courant.fosses = structuredClone(modele.fosses);
+  b1.enregistrer();
+  b1.nouveau();
+  b1.enregistrer();
+  const b2 = new M.Bibliotheque(memoire);
+  verifier('historique relu du stockage', b2.schemas.length === 2, `${b2.schemas.length} schéma(s)`);
+  verifier('contenu conservé', b2.schemas.some((x) => x.titre === modele.titre && x.fosses.length === 6
+    && x.fosses[2].horizons[2].commentaire === 'Hz développement' && x.fosses[0].horizons[1].libelle === 'Btg'
+    && x.fosses[0].horizons[0].munsell === '10YR 4/3'));
+  verifier('numérotation des sans-titre', b2.schemas.filter((x) => !x.titre).map(M.nomAffiche).join(', ') === 'Sans titre 1', b2.schemas.map(M.nomAffiche).join(', '));
+  verifier('le dernier schéma ouvert revient en premier', M.nomAffiche(b2.courant) === 'Sans titre 1');
+  b2.dupliquer();
+  verifier('schéma dupliqué : identifiants neufs', b2.schemas.length === 3 && b2.courant.fosses.every((x) => !b2.schemas[1].fosses.some((y) => y.id === x.id)));
+  b2.supprimer(b2.courant.id);
+  verifier('schéma supprimé', b2.schemas.length === 2);
+  const refuse = { getItem() { throw new Error('refusé'); }, setItem() { throw new Error('refusé'); } };
+  let bRefus = null;
+  try { bRefus = new M.Bibliotheque(refuse); bRefus.enregistrer(); } catch { bRefus = null; }
+  verifier('stockage refusé (navigation privée) : la page tient quand même', bRefus && bRefus.schemas.length === 1);
+
+  // 18. Fichiers
+  const fichierMac = JSON.stringify([{ id: 'A1B2', titre: 'Depuis le Mac', numeroSansTitre: 1, sousTitre: '', basDePage: '', profondeur: 100, legende: true,
+    fosses: [{ id: 'F1', nom: 'Fosse 1', sousTitre: '', note: '', horizons: [{ id: 'H1', nom: 'H1', libelle: 'Ap', commentaire: '', epaisseur: 30, couleur: '#4caf7d', munsell: '10YR 4/3' },
+      { id: 'H2', nom: 'H2', libelle: '', commentaire: '', epaisseur: 70, couleur: '#E0D8C8' }] }], modifie: '2026-08-31T10:00:00Z' }]);
+  const lusMac = M.relireFichier(fichierMac);
+  verifier("historique de l'app Mac relu tel quel", lusMac.length === 1 && lusMac[0].fosses[0].horizons[0].munsell === '10YR 4/3'
+    && lusMac[0].fosses[0].horizons[0].couleur === '#4CAF7D');
+  verifier('fichier illisible refusé', M.relireFichier('{"pas":"un schéma"}').length === 0 && M.relireFichier('n’importe quoi').length === 0);
+  const bImport = new M.Bibliotheque(M.stockageMemoire());
+  bImport.importer(lusMac);
+  verifier('schéma importé ouvert et rangé dans l\'historique', bImport.courant.titre === 'Depuis le Mac' && bImport.schemas.length === 2);
+  verifier('nom de fichier assaini', M.nomDeFichier('Fosses 12/03') === 'Fosses 12-03' && M.nomDeFichier('  ') === 'profil-de-sol');
+
+  // 19. Export
+  const fig = F.composer(modele, { export: true });
+  const png = await new Promise((ok) => F.versCanvas(fig, 2).toBlob(ok, 'image/png'));
+  verifier('PNG écrit', png && png.size > 5000, `${png?.size} octets`);
+  const image = await createImageBitmap(png);
+  verifier('PNG à double définition, à la largeur du schéma', Math.abs(image.width / 2 - M.largeur(6)) < 2, `${image.width} px`);
+  const svg = F.versSVG(fig);
+  const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
+  verifier('SVG du PDF bien formé', !doc.querySelector('parsererror') && doc.documentElement.getAttribute('width') == M.largeur(6));
+  verifier("le SVG garde tous les textes (vectoriel)", svg.includes('Valorisation des matériaux') && svg.includes('Hz développement') && svg.includes('⚠ Ne pas prioriser'));
+  verifier("l'export n'a ni poignée, ni +, ni outils", !fig.elements.some((e) => ['poignee', 'outils'].includes(e.type) || e.plus));
+  verifier('texte trop long : coupé avec des points de suspension', F.tronquer('Un commentaire beaucoup trop long pour la barre', 82, 7.5, false).endsWith('…'));
+
+  const fin = document.createElement('p');
+  fin.className = echecs ? 'echec' : 'ok';
+  fin.textContent = echecs ? `${echecs} ÉCHEC(S) sur ${total}` : `TOUT EST BON (${total} vérifications)`;
+  sortie.append(fin);
+  document.title = echecs ? `${echecs} échec(s)` : `Tout est bon (${total})`;
+</script>
+</body>
+</html>

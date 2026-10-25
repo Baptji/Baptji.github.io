@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Profils de sol</title>
+<meta name="description" content="Dessiner des profils de fosses pédologiques : horizons empilés, règle des profondeurs, légende, livret Munsell.">
+<link rel="icon" href="favicon.png">
+<link rel="stylesheet" href="style.css?v=20261025203629">
+</head>
+<body>
+<div id="app">
+  <header id="barre" class="barre"></header>
+  <main class="corps">
+    <section id="planche" class="planche" aria-label="Schéma">
+      <div id="feuille" class="feuille"></div>
+    </section>
+    <aside id="inspecteur" class="inspecteur" aria-label="Réglages"></aside>
+  </main>
+  <footer class="pied-page">Profils de sol · <a href="../">Squid</a> · <a href="https://creativecommons.org/licenses/by-nc/4.0/deed.fr" rel="license">CC BY-NC 4.0</a></footer>
+</div>
+<div id="impression" class="impression" aria-hidden="true"></div>
+<script type="module">
+  import { lancer } from './js/interface.js?v=20261025203629';
+  lancer();
+</script>
+</body>
+</html>

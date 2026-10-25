@@ -1,0 +1,134 @@
+/* Présentation des autres pages du site (Acoustique) : barre d'outils en haut, plan de travail,
+   panneau de droite. Polices du système, aucune ressource extérieure. La figure, elle, reste
+   toujours sur papier clair, comme dans l'app Mac. */
+:root {
+  --page: #ececea; --panneau: #f6f6f4; --carte: rgba(0, 0, 0, 0.045); --texte: #1d1d1f; --texte-doux: #6e6e73;
+  --bord: rgba(0, 0, 0, 0.12); --accent: #3e9bfe; --choisi: rgba(62, 155, 254, 0.16); --champ: #fff;
+  --plan: rgba(0, 0, 0, 0.05); --papier: #F8F6F1;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --page: #1c1c1e; --panneau: #232325; --carte: rgba(255, 255, 255, 0.06); --texte: #f2f2f7; --texte-doux: #9a9aa0;
+    --bord: rgba(255, 255, 255, 0.12); --choisi: rgba(62, 155, 254, 0.24); --champ: #2c2c2e; --plan: rgba(255, 255, 255, 0.05); color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--page); color: var(--texte);
+  font: 13px/1.35 -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+button, select, input { font: inherit; color: inherit; }
+#app { display: grid; grid-template-rows: auto 1fr auto; height: 100vh; height: 100dvh; min-height: 520px; }
+
+/* Barre d'outils */
+.barre { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-bottom: 1px solid var(--bord); background: var(--panneau); flex-wrap: wrap; }
+.separateur { width: 1px; height: 18px; background: var(--bord); }
+.espace { flex: 1; }
+button { cursor: pointer; border: 1px solid var(--bord); background: var(--champ); border-radius: 6px; padding: 4px 10px; }
+button:hover { filter: brightness(0.97); }
+button[disabled] { opacity: 0.45; cursor: default; }
+button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.icone-texte { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.icone-texte svg, .barre svg { flex: none; }
+.etiquette { font-size: 11px; color: var(--texte-doux); }
+.pas { display: inline-flex; align-items: center; gap: 4px; }
+.pas .valeur { font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; min-width: 44px; text-align: center; }
+.pas button { padding: 0 6px; line-height: 18px; min-width: 22px; }
+.zoom { display: inline-flex; align-items: center; gap: 6px; color: var(--texte-doux); }
+.zoom input[type=range] { width: 90px; accent-color: var(--accent); }
+.zoom .pourcent { border: 0; background: transparent; padding: 0; font-size: 10px; font-weight: 500; width: 36px; color: var(--texte-doux); font-variant-numeric: tabular-nums; }
+
+/* Menus déroulants faits de vrais boutons (Safari n'ouvre la fenêtre de fichiers que sur un vrai clic) */
+.menu > summary { list-style: none; cursor: pointer; border: 1px solid var(--bord); background: var(--champ); border-radius: 6px; padding: 4px 10px; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; }
+.menu > summary::-webkit-details-marker { display: none; }
+.menu > summary::after { content: '▾'; color: var(--texte-doux); font-size: 10px; }
+.menu[open] > summary { background: var(--choisi); }
+.menu-liste { position: fixed; z-index: 30; display: flex; flex-direction: column; min-width: 220px; max-height: 70vh; overflow: auto; padding: 4px; border: 1px solid var(--bord); border-radius: 8px; background: var(--panneau); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18); }
+.menu-choix { display: block; text-align: left; border: 0; background: transparent; border-radius: 5px; padding: 5px 10px; cursor: pointer; white-space: nowrap; position: relative; }
+.menu-choix:hover { background: var(--choisi); filter: none; }
+.menu-trait { height: 1px; background: var(--bord); margin: 4px 6px; }
+.champ-fichier { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; pointer-events: none; }
+
+/* Corps : plan de travail | panneau de droite */
+.corps { display: grid; grid-template-columns: minmax(0, 1fr) 286px; min-height: 0; }
+.planche { overflow: auto; background: var(--plan); padding: 34px; display: grid; justify-items: center; align-items: start; }
+.feuille { position: relative; background: var(--papier); box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18); color-scheme: light; }
+.inspecteur { overflow: auto; background: var(--panneau); border-left: 1px solid var(--bord); padding: 16px; display: flex; flex-direction: column; gap: 18px; }
+.pied-page { padding: 4px 14px; font-size: 11px; color: var(--texte-doux); border-top: 1px solid var(--bord); background: var(--panneau); }
+.pied-page a { color: inherit; }
+
+/* La figure modifiable : chaque élément est posé à sa place exacte, au zoom près */
+.feuille > *, .colonne > *, .case > * { position: absolute; }
+.colonne { }
+.f-rect { pointer-events: none; }
+.f-texte { white-space: nowrap; overflow: hidden; pointer-events: none; display: flex; align-items: center; justify-content: flex-end; }
+.champ-figure { border: 0; margin: 0; padding: 0 2px; background: transparent; outline: none; border-radius: 3px; min-width: 0;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; line-height: 1; }
+.champ-figure:focus-visible { outline: none; }
+.champ-figure:hover, .champ-figure:focus { background: color-mix(in srgb, currentColor 10%, transparent); }
+.champ-figure::placeholder { color: currentColor; opacity: 0.35; }
+.feuille .champ-figure::placeholder { color: #000; opacity: 0.25; }
+.case .champ-figure::placeholder { color: currentColor; opacity: 0.45; }
+.case { overflow: hidden; cursor: default; }
+.case .contour, .case .selection { inset: 0; pointer-events: none; }
+.plus { border: 0; padding: 0; border-radius: 50%; display: grid; place-items: center; opacity: 0; transition: opacity 0.12s; }
+.plus:hover { filter: none; }
+.case:hover .plus { opacity: 0.9; }
+.plus svg { display: block; }
+.poignee { cursor: ns-resize; touch-action: none; z-index: 2; }
+.outils { display: flex; justify-content: center; align-items: center; gap: 8px; opacity: 0; transition: opacity 0.12s; }
+.colonne:hover .outils, .outils:focus-within { opacity: 1; }
+.outils button { border: 0; background: transparent; padding: 0; color: #888; display: grid; place-items: center; }
+.outils button:hover { color: #1A2A1A; filter: none; }
+body.tire, body.tire * { cursor: ns-resize !important; user-select: none; }
+
+/* Panneau de droite */
+.carte { padding: 12px; background: var(--carte); border-radius: 10px; display: flex; flex-direction: column; gap: 8px; }
+.carte-titre { font-size: 10px; font-weight: 600; letter-spacing: 0.02em; color: var(--texte-doux); text-transform: uppercase; }
+.champ { display: flex; flex-direction: column; gap: 3px; }
+.champ > span { font-size: 10px; color: var(--texte-doux); }
+.champ input { width: 100%; padding: 3px 6px; font-size: 11px; border: 1px solid var(--bord); border-radius: 5px; background: var(--champ); }
+.case-a-cocher { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+.doux { font-size: 10px; color: var(--texte-doux); }
+.aide { font-size: 11px; color: var(--texte-doux); margin: 0; white-space: pre-line; }
+.rangee { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rangee button { font-size: 11px; }
+.notation { font: 500 9.5px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--texte-doux); padding: 1px 5px; border-radius: 99px; background: var(--carte); }
+.segmente { display: flex; background: rgba(128, 128, 128, 0.16); border-radius: 7px; padding: 2px; gap: 2px; }
+.segmente button { flex: 1; border: 0; background: transparent; padding: 2px 10px; border-radius: 5px; font-size: 11px; }
+.segmente button.actif { background: var(--champ); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15); }
+.nuancier { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.teinte { height: 26px; border-radius: 5px; border: 1px solid var(--bord); padding: 0; }
+.teinte.choisie { border: 2.5px solid var(--accent); }
+.autre-couleur { display: flex; align-items: center; gap: 8px; font-size: 11px; cursor: pointer; }
+.autre-couleur input { width: 36px; height: 22px; padding: 0; border: 1px solid var(--bord); border-radius: 5px; background: transparent; cursor: pointer; }
+
+/* Le livret Munsell, planche par planche */
+.livret { display: flex; flex-direction: column; gap: 10px; }
+.livret-entete { display: flex; align-items: center; justify-content: space-between; color: var(--texte-doux); }
+.livret-entete button { border: 0; background: transparent; padding: 2px 6px; color: inherit; font-size: 14px; }
+.livret-titre { text-align: center; }
+.livret-titre strong { display: block; font-size: 13px; color: var(--texte); font-family: ui-rounded, -apple-system, system-ui, sans-serif; }
+.livret-titre span { font-size: 9px; }
+.grille { display: grid; grid-template-columns: 22px repeat(6, 1fr); gap: 3px; padding: 10px; border-radius: 8px; background: var(--carte); }
+.grille .tete { font-size: 8px; color: var(--texte-doux); text-align: center; align-self: end; }
+.grille .valeur { font-size: 8px; color: var(--texte-doux); text-align: right; align-self: center; }
+.puce { height: 22px; border-radius: 4px; border: 0.8px solid var(--bord); padding: 0; }
+.puce.choisie { border: 2px solid var(--accent); }
+.livret-pied { font-size: 9px; color: var(--texte-doux); margin: 0; }
+
+/* Impression (PDF) : seule la figure part, à sa taille */
+.impression { display: none; }
+@media print {
+  #app { display: none !important; }
+  .impression { display: block !important; }
+  .impression svg { display: block; max-width: 100%; height: auto; }
+  html, body { background: #fff; height: auto; }
+}
+
+/* Téléphone et tablette étroite : le panneau passe sous le schéma */
+@media (max-width: 760px) {
+  #app { height: auto; min-height: 100vh; }
+  .corps { grid-template-columns: minmax(0, 1fr); }
+  .planche { padding: 16px; max-height: 75vh; justify-items: start; }
+  .inspecteur { border-left: 0; border-top: 1px solid var(--bord); overflow: visible; }
+  .barre { gap: 8px; padding: 8px 16px; }
+  .zoom input[type=range] { width: 70px; }
+}
