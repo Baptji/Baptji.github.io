@@ -137,6 +137,9 @@ button:disabled { opacity: 0.4; cursor: default; }
 #armee { left: 50%; top: 60px; transform: translateX(-50%); width: min(1180px, calc(100% - 16px)); max-height: calc(100% - 140px); overflow-y: auto; z-index: 7; }
 #mode { left: 50%; top: 60px; transform: translateX(-50%); z-index: 6; display: flex; align-items: center; gap: 8px; white-space: nowrap; border-color: var(--accent); }
 #mode select { font: inherit; font-size: 11px; background: var(--fond); color: var(--texte); border: 2px solid var(--bord); }
+#mode .sep { width: 2px; height: 18px; background: var(--bord); }
+#mode input[type=range] { width: 120px; accent-color: #f2c94c; }
+#mode .note { margin: 0; }
 #bulle { position: absolute; z-index: 8; pointer-events: none; padding: 3px 7px; font-size: 11px; background: rgba(15, 20, 25, 0.92); border: 2px solid var(--bord); max-width: 360px; }
 main.viser { cursor: crosshair; }
 .titre { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13px; color: var(--accent); margin-bottom: 4px; }

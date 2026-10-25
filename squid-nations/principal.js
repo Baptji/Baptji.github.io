@@ -6518,6 +6518,14 @@ var BATIMENTS = [
   "dca",
   "silo"
 ];
+var GROUPE_RENFORTS = 1;
+var MODE_POSITION = 2;
+var MODE_BOMBARDEMENT = 3;
+var MEMBRE_APPUI = 2;
+var EV_PRISE = 0;
+var EV_FIN_COMBAT = 1;
+var EV_DETRUIT = 2;
+var CASE_TERRITOIRE_KM = 10;
 
 // web/src/rendu/apparition.ts
 function paliers() {
@@ -6892,9 +6900,26 @@ var FS_TERRITOIRE2 = ENTETE2 + `
 uniform highp usampler2DArray uCouches;
 uniform highp usampler2D uIndex;
 uniform sampler2D uPalette;
-uniform vec3 uGeo;        // x_min, y_max, r\xE9solution km
+uniform vec4 uGeo;        // x_min, y_max, r\xE9solution km, circonf\xE9rence km
 uniform ivec3 uTaille;    // largeur, hauteur, tuile
+uniform highp usampler2D uOccupe;  // R.1 : occupant de chaque case de 10 km (0 = rien)
+uniform vec3 uOcc;        // c\xF4t\xE9 d'une case (km), cx0, cy1 (case du coin haut gauche)
+uniform ivec2 uOccTaille;
+uniform highp usampler2D uGuerre;  // 25/10 : 1 si les pays (x, y) sont en guerre
+uniform float uTemps;     // secondes d'animation (arr\xEAt\xE9es en pause) : la ligne de front respire
 out vec4 couleur;
+
+bool guerre(uint a, uint b) { return a != b && texelFetch(uGuerre, ivec2(int(a), int(b)), 0).r != 0u; }
+
+// R.1 : occupant de la case de 10 km sous un point (km de carte, x ramen\xE9 dans la carte)
+uint occ(vec2 km) {
+  float x = km.x - uGeo.x;
+  x = x - floor(x / uGeo.w) * uGeo.w + uGeo.x;
+  int tx = int(floor(x / uOcc.x)) - int(uOcc.y);
+  int ty = int(uOcc.z) - int(floor(km.y / uOcc.x));
+  if (tx < 0 || ty < 0 || tx >= uOccTaille.x || ty >= uOccTaille.y) return 0u;
+  return texelFetch(uOccupe, ivec2(tx, ty), 0).r;
+}
 
 uint lire(ivec2 cr) {
   if (cr.y < 0 || cr.y >= uTaille.y) return 0u;
@@ -6907,6 +6932,12 @@ uint lire(ivec2 cr) {
   return texelFetch(uCouches, ivec3(o + cr - t * uTaille.z, k / ${PAQUET * PAQUET}), 0).r;
 }
 bool eau(uint v) { return v == 0u || v == 250u; }
+// pays affich\xE9 en (cr, km) : l'occupant de la case s'il y en a un, sinon le pays officiel
+uint affiche(uint v, vec2 km) {
+  if (eau(v)) return v;
+  uint o = occ(km);
+  return o != 0u ? o : v;
+}
 float bruit(ivec2 cr) {
   uint h = uint(cr.x) * 374761393u + uint(cr.y) * 668265263u;
   h = (h ^ (h >> 13u)) * 1274126177u;
@@ -6918,18 +6949,37 @@ void main() {
   ivec2 cr = ivec2(floor(vec2((km.x - uGeo.x) / uGeo.z, (uGeo.y - km.y) / uGeo.z)));
   uint a = lire(cr);
   int s = max(1, int(floor(1.0 / (uEchelle * uGeo.z))));
+  float sk = float(s) * uGeo.z;
   uint d = lire(cr + ivec2(s, 0));
   uint b = lire(cr + ivec2(0, s));
   uint g = lire(cr - ivec2(s, 0));
   uint h = lire(cr - ivec2(0, s));
-  vec3 rgb = texelFetch(uPalette, ivec2(int(a), 0), 0).rgb;
+  // R.1 : pays affich\xE9 ici et chez les deux voisins (droite, dessous) : l'occupant prime
+  uint oA = affiche(a, km);
+  uint oD = affiche(d, km + vec2(sk, 0.0));
+  uint oB = affiche(b, km - vec2(0.0, sk));
+  vec3 rgb = texelFetch(uPalette, ivec2(int(oA), 0), 0).rgb;
   if (cr.y < 0 || cr.y >= uTaille.y) rgb *= 0.6;   // au-del\xE0 de 84\xB0 N ou de 61\xB0 S : hors carte
   float grain = smoothstep(3.0, 10.0, uEchelle * uGeo.z);
   if (!eau(a)) {
     rgb *= 1.0 + (bruit(cr) - 0.5) * 0.07 * grain;
-    bool frontiere = (d != a && !eau(d)) || (b != a && !eau(b));
+    // fronti\xE8re de ce qui est affich\xE9 (y compris la ligne de front) ; l'ancienne fronti\xE8re officielle en trait l\xE9ger
+    bool frontiere = (oD != oA && !eau(d)) || (oB != oA && !eau(b));
+    bool officielle = (d != a && !eau(d)) || (b != a && !eau(b));
     bool cote = eau(d) || eau(b) || eau(g) || eau(h);
-    if (frontiere) rgb *= 0.45;
+    // 25/10 : entre deux pays en guerre, une ligne de front rouge qui respire lentement, d'un pixel de chaque c\xF4t\xE9
+    // de la fronti\xE8re affich\xE9e \xE0 tout zoom (voisins pris \xE0 1,1 pixel \xE9cran, pas \xE0 une tuile : de pr\xE8s, une bande \xE9paisse)
+    float pk = 1.1 / uEchelle;
+    bool front = false;
+    for (int k = 0; k < 4; k++) {
+      vec2 q = km + (k == 0 ? vec2(pk, 0.0) : k == 1 ? vec2(-pk, 0.0) : k == 2 ? vec2(0.0, pk) : vec2(0.0, -pk));
+      uint v = lire(ivec2(floor(vec2((q.x - uGeo.x) / uGeo.z, (uGeo.y - q.y) / uGeo.z))));
+      if (!eau(v) && guerre(oA, affiche(v, q))) front = true;
+    }
+    bool frontEnGuerre = (oD != oA && guerre(oA, oD)) || (oB != oA && guerre(oA, oB));
+    if (front) rgb = mix(rgb * 0.35, mix(vec3(0.72, 0.13, 0.08), vec3(0.98, 0.4, 0.2), 0.5 + 0.5 * sin(uTemps * 2.0)), 0.85);
+    else if (frontiere && !frontEnGuerre) rgb *= 0.45;
+    else if (officielle) rgb *= 0.78;
     else if (cote) rgb *= 0.85;
   } else if (!eau(d) || !eau(b) || !eau(g) || !eau(h)) {
     rgb = mix(rgb, vec3(0.55, 0.72, 0.84), 0.3);
@@ -6980,10 +7030,22 @@ var RenduMonde = class {
   couleurParPays;
   /** octets envoyés à la carte graphique (textures et tampons) */
   octetsGPU;
+  /** R.1 : grille d'occupation (cases de 10 km) : case du coin haut gauche, taille, copie CPU, texture */
+  occ;
+  /** cases occupées reçues (pour l'autotest) */
+  casesOccupees;
+  /** 25/10 : cases reçues qui attendent leur moment (heure affichée) : indice dans la grille, occupant, heure ; triées */
+  aVenir;
+  /** 25/10 : table des guerres (TEXTURE4) et la liste reçue en dernier */
+  texGuerre;
+  guerresVues;
   constructor(canevas2, monde2) {
     this.canevas = canevas2;
     this.monde = monde2;
     this.uni = /* @__PURE__ */ new Map();
+    this.casesOccupees = 0;
+    this.aVenir = null;
+    this.guerresVues = "";
     const gl = canevas2.getContext("webgl2", {
       antialias: false,
       alpha: false,
@@ -7031,6 +7093,28 @@ var RenduMonde = class {
     gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
     filtre(gl.TEXTURE_2D);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, 256, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, tablePalette(this.couleurParPays));
+    const C = CASE_TERRITOIRE_KM, e = info.emprise;
+    const cx0 = Math.floor(e.x_min / C), cx1 = Math.floor((e.x_min + info.circonference_km) / C);
+    const cy0 = Math.floor(e.y_min / C), cy1 = Math.floor(e.y_max / C);
+    const w = cx1 - cx0 + 1, h = cy1 - cy0 + 1;
+    gl.activeTexture(gl.TEXTURE3);
+    const tOcc = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tOcc);
+    filtre(gl.TEXTURE_2D);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8UI, w, h, 0, gl.RED_INTEGER, gl.UNSIGNED_BYTE, null);
+    this.occ = {
+      cx0,
+      cy1,
+      w,
+      h,
+      donnees: new Uint8Array(w * h),
+      texture: tOcc
+    };
+    gl.activeTexture(gl.TEXTURE4);
+    this.texGuerre = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.texGuerre);
+    filtre(gl.TEXTURE_2D);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8UI, 256, 256, 0, gl.RED_INTEGER, gl.UNSIGNED_BYTE, new Uint8Array(65536));
     gl.activeTexture(gl.TEXTURE0);
     const pos = new Float32Array(2 * villes.n), classe = new Uint8Array(villes.n);
     for (let i = 0, j = villes.n - 1; j >= 0; i++, j--) {
@@ -7056,7 +7140,109 @@ var RenduMonde = class {
       else gl.vertexAttribIPointer(1, 1, gl.UNSIGNED_BYTE, 0, 0);
     }
     gl.bindVertexArray(null);
-    this.octetsGPU = nCouches * (PAQUET * T) ** 2 + 2 * tuiles.index.length + pos.byteLength + classe.byteLength;
+    this.octetsGPU = nCouches * (PAQUET * T) ** 2 + 2 * tuiles.index.length + pos.byteLength + classe.byteLength + w * h;
+  }
+  /**
+   * R.1 : cases du territoire reçues de la simulation pour l'heure `heure`. Tout l'état (`tout`) est posé d'un coup ; les
+   * changements attendent chacun leur moment (25/10 : `retard`, 0 à 1 h, étalé sur 0,9 h) et `avancerTerritoire` les pose
+   * au fil de l'heure affichée. Ce qui attendait encore est posé d'abord.
+   */
+  appliquerTerritoire(t, heure = 0) {
+    const o = this.occ;
+    this.vider();
+    if (t.tout) {
+      o.donnees.fill(0), this.casesOccupees = 0;
+      const k2 = new Int32Array(t.n);
+      for (let i = 0; i < t.n; i++) k2[i] = this.indice(t.cx[i], t.cy[i]);
+      this.ecrire(k2, t.occupant, 0, t.n, true);
+      return;
+    }
+    const ordre = [
+      ...Array(t.n).keys()
+    ].sort((a, b) => t.retard[a] - t.retard[b]);
+    const k = new Int32Array(t.n), occ = new Uint8Array(t.n), quand = new Float64Array(t.n);
+    ordre.forEach((j, i) => (k[i] = this.indice(t.cx[j], t.cy[j]), occ[i] = t.occupant[j], quand[i] = heure + t.retard[j] / 255 * 0.9));
+    this.aVenir = {
+      k,
+      occ,
+      quand,
+      i: 0
+    };
+  }
+  /** 25/10 : pose les cases dont le moment est venu à l'heure affichée ; rend vrai s'il en reste à venir. */
+  avancerTerritoire(heure) {
+    const a = this.aVenir;
+    if (!a) return false;
+    let j = a.i;
+    while (j < a.k.length && a.quand[j] <= heure) j++;
+    if (j > a.i) this.ecrire(a.k, a.occ, a.i, j, false), a.i = j;
+    if (a.i >= a.k.length) this.aVenir = null;
+    return !!this.aVenir;
+  }
+  /** Pose tout ce qui attend encore (nouveau message, rechargement). */
+  vider() {
+    const a = this.aVenir;
+    if (a && a.i < a.k.length) this.ecrire(a.k, a.occ, a.i, a.k.length, false);
+    this.aVenir = null;
+  }
+  /** Indice d'une case (cx, cy) dans la grille, −1 hors grille. */
+  indice(cx, cy) {
+    const o = this.occ, tx2 = cx - o.cx0, ty = o.cy1 - cy;
+    return tx2 < 0 || ty < 0 || tx2 >= o.w || ty >= o.h ? -1 : ty * o.w + tx2;
+  }
+  /** Écrit les cases [de, a[ dans la copie CPU, puis les envoie par blocs de 64 × 64 (ou toute la texture). */
+  ecrire(k, occ, de, a, tout) {
+    const gl = this.gl, o = this.occ, B = 64;
+    const blocs = /* @__PURE__ */ new Set();
+    for (let i = de; i < a; i++) {
+      const q = k[i];
+      if (q < 0) continue;
+      if (!o.donnees[q] && occ[i]) this.casesOccupees++;
+      else if (o.donnees[q] && !occ[i]) this.casesOccupees--;
+      o.donnees[q] = occ[i];
+      blocs.add(Math.floor(Math.floor(q / o.w) / B) * 1e5 + Math.floor(q % o.w / B));
+    }
+    gl.activeTexture(gl.TEXTURE3);
+    gl.bindTexture(gl.TEXTURE_2D, o.texture);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    if (tout) gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8UI, o.w, o.h, 0, gl.RED_INTEGER, gl.UNSIGNED_BYTE, o.donnees);
+    else {
+      gl.pixelStorei(gl.UNPACK_ROW_LENGTH, o.w);
+      for (const b of blocs) {
+        const by = Math.floor(b / 1e5) * B, bx = b % 1e5 * B;
+        const bw = Math.min(B, o.w - bx), bh = Math.min(B, o.h - by);
+        gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, bx);
+        gl.pixelStorei(gl.UNPACK_SKIP_ROWS, by);
+        gl.texSubImage2D(gl.TEXTURE_2D, 0, bx, by, bw, bh, gl.RED_INTEGER, gl.UNSIGNED_BYTE, o.donnees);
+      }
+      gl.pixelStorei(gl.UNPACK_ROW_LENGTH, 0);
+      gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, 0);
+      gl.pixelStorei(gl.UNPACK_SKIP_ROWS, 0);
+    }
+    gl.activeTexture(gl.TEXTURE0);
+  }
+  /** 25/10 : les paires de pays en guerre ((a << 8) | b) : la table n'est renvoyée que si elle a changé. */
+  appliquerGuerres(paires) {
+    const cle = paires.join(",");
+    if (cle === this.guerresVues) return;
+    this.guerresVues = cle;
+    const t = new Uint8Array(65536);
+    for (const p of paires) {
+      const a = p >> 8, b = p & 255;
+      t[a * 256 + b] = t[b * 256 + a] = 1;
+    }
+    const gl = this.gl;
+    gl.activeTexture(gl.TEXTURE4);
+    gl.bindTexture(gl.TEXTURE_2D, this.texGuerre);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 256, 256, gl.RED_INTEGER, gl.UNSIGNED_BYTE, t);
+    gl.activeTexture(gl.TEXTURE0);
+  }
+  /** R.1 : occupant d'un point (km de carte), 0 si aucun — pour les tests et l'autotest. */
+  occupantEn(x, y) {
+    const o = this.occ, C = CASE_TERRITOIRE_KM;
+    const tx2 = Math.floor(x / C) - o.cx0, ty = o.cy1 - Math.floor(y / C);
+    return tx2 < 0 || ty < 0 || tx2 >= o.w || ty >= o.h ? 0 : o.donnees[ty * o.w + tx2];
   }
   u(prog, nom) {
     const cle = `${prog === this.progT ? 0 : 1}:${nom}`;
@@ -7070,7 +7256,8 @@ var RenduMonde = class {
     gl.uniform1f(this.u(prog, "uEchelle"), cam.echelle * ratio2);
     gl.uniform2f(this.u(prog, "uVue"), this.canevas.width, this.canevas.height);
   }
-  dessiner(cam, ratio2) {
+  /** `temps` = secondes d'animation (la ligne de front respire ; arrêtées en pause). */
+  dessiner(cam, ratio2, temps = 0) {
     const gl = this.gl;
     const { info } = this.monde;
     gl.viewport(0, 0, this.canevas.width, this.canevas.height);
@@ -7079,8 +7266,13 @@ var RenduMonde = class {
     gl.uniform1i(this.u(pt, "uCouches"), 0);
     gl.uniform1i(this.u(pt, "uIndex"), 1);
     gl.uniform1i(this.u(pt, "uPalette"), 2);
-    gl.uniform3f(this.u(pt, "uGeo"), info.emprise.x_min, info.emprise.y_max, info.resolution_km);
+    gl.uniform4f(this.u(pt, "uGeo"), info.emprise.x_min, info.emprise.y_max, info.resolution_km, info.circonference_km);
     gl.uniform3i(this.u(pt, "uTaille"), info.largeur, info.hauteur, info.tuile);
+    gl.uniform1i(this.u(pt, "uOccupe"), 3);
+    gl.uniform3f(this.u(pt, "uOcc"), CASE_TERRITOIRE_KM, this.occ.cx0, this.occ.cy1);
+    gl.uniform2i(this.u(pt, "uOccTaille"), this.occ.w, this.occ.h);
+    gl.uniform1i(this.u(pt, "uGuerre"), 4);
+    gl.uniform1f(this.u(pt, "uTemps"), temps);
     gl.bindVertexArray(this.vaoVide);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     const pv = this.progV;
@@ -7107,15 +7299,6 @@ var garder2 = (cle, f) => {
   if (!d) memo2.set(cle, d = f());
   return d;
 };
-function cote(...blocs) {
-  const h = Math.max(...blocs.map((b) => b.length));
-  const out = Array(h).fill("");
-  for (const b of blocs) {
-    const w = Math.max(...b.map((l) => l.length));
-    for (let y = 0; y < h; y++) out[y] += (b[y - (h - b.length)] ?? "").padEnd(w, ".");
-  }
-  return out;
-}
 function carre(lignes) {
   const w = Math.max(...lignes.map((l) => l.length));
   return lignes.map((l) => l.padEnd(w, "."));
@@ -7132,215 +7315,40 @@ function versLignes(g) {
   for (let y = 0; y < g.h; y++) l.push(g.p.slice(y * g.w, (y + 1) * g.w).join(""));
   return l;
 }
-var CHARGE = [
-  "bache",
-  "citerne",
-  "citerne",
-  "caisses"
+var DIAMETRES_BILLES = [
+  5,
+  6,
+  7,
+  7
 ];
-function chargement(c2, taille, w) {
-  const P = "P".repeat(w), O = "O".repeat(w);
-  if (taille === "loin") {
-    if (c2 === "bache") return [
-      P,
-      [
-        ...P
-      ].map((_, i) => i % 2 ? "O" : "P").join("")
-    ];
-    if (c2 === "citerne") return [
-      "." + "P".repeat(w - 2) + ".",
-      "Pf" + "P".repeat(w - 2),
-      "." + "O".repeat(w - 2) + "."
-    ].slice(0, 3);
-    return [
-      "PPO" + "P".repeat(w - 3),
-      O
-    ];
+function disque(d) {
+  const l = [], r = d / 2;
+  for (let y = 0; y < d; y++) {
+    let s = "";
+    for (let x = 0; x < d; x++) {
+      const dx = x + 0.5 - r, dy = y + 0.5 - r;
+      s += dx * dx + dy * dy > r * r ? "." : dx + dy > r * 0.75 ? "O" : "P";
+    }
+    l.push(s);
   }
-  if (c2 === "bache") {
-    const nervure = [
-      ...P
-    ].map((_, i) => i % 4 === 1 ? "O" : "P").join("");
-    return [
-      "." + "P".repeat(w - 2) + ".",
-      P,
-      nervure,
-      nervure,
-      O
-    ];
-  }
-  if (c2 === "citerne") {
-    return [
-      "...PP" + ".".repeat(w - 5),
-      "." + "P".repeat(w - 2) + ".",
-      "Pff" + "P".repeat(w - 3),
-      P,
-      "." + "O".repeat(w - 2) + "."
-    ];
-  }
-  const caisse = (d) => [
-    ...P
-  ].map((_, i) => (i + d) % 5 === 4 ? "O" : "P").join("");
-  return [
-    caisse(0),
-    caisse(0),
-    O,
-    caisse(2),
-    caisse(2)
-  ];
+  return l;
 }
-function camion(c2, taille) {
-  if (taille === "loin") {
-    return [
-      ...cote(chargement(c2, "loin", 6), [
-        "....",
-        ".ab.",
-        ".aai"
-      ]),
-      "zzzzzzzzzz",
-      ".G....G.G."
-    ];
-  }
-  const charge = chargement(c2, "pres", 12);
-  const cabine = [
-    ".......",
-    "..aaa..",
-    ".abbba.",
-    ".abbbaa",
-    ".aaaaaa",
-    ".aaaaai"
-  ];
-  return [
-    ...cote([
-      "............",
-      ...charge
-    ], cabine),
-    "zzzzzzzzzzzzzzzzzzz",
-    ".GG.......GG...GG.."
-  ];
-}
-function wagon(c2, taille) {
-  if (taille === "loin") {
-    const w2 = c2 === "bache" ? [
-      "PPPPP",
-      "PbPbP"
-    ] : c2 === "citerne" ? [
-      ".PPP.",
-      "PfPPP",
-      ".OOO."
-    ] : [
-      "PPOPP",
-      "OOOOO"
-    ];
-    return [
-      ...w2,
-      "zzzzz",
-      ".G.G."
-    ];
-  }
-  const w = c2 === "bache" ? [
-    ".PPPPPPPPPP.",
-    "PPPPPPPPPPPP",
-    "PbbPbbPbbPbP",
-    "PbbPbbPbbPbP",
-    "OOOOOOOOOOOO"
-  ] : c2 === "citerne" ? chargement(c2, "pres", 12) : [
-    "PPPPPPPPPPPP",
-    "PPPPPOOPPPPP",
-    "PPPPPOOPPPPP",
-    "PPPPPOOPPPPP",
-    "OOOOOOOOOOOO"
-  ];
-  return [
-    ...w,
-    "zzzzzzzzzzzz",
-    ".GG......GG."
-  ];
-}
-function train(c2, taille) {
-  if (taille === "loin") {
-    const loco2 = [
-      "......",
-      ".aaab.",
-      "aaaabb",
-      "xxxxxx",
-      "zzzzzz",
-      ".G..G."
-    ];
-    const w2 = wagon(c2, "loin");
-    return cote(w2, [
-      ".",
-      "z",
-      "."
-    ], w2, [
-      ".",
-      "z",
-      "."
-    ], loco2);
-  }
-  const loco = [
-    ".............",
-    ".aaaaaaaaaa..",
-    "aaaaaaaaaabb.",
-    "abbabbabaabbb",
-    "xxxxxxxxxxxxx",
-    "aaaaaaaaaaaaa",
-    "zzzzzzzzzzzzi",
-    ".GG.......GG."
-  ];
-  const w = wagon(c2, "pres"), attelage = [
-    ".",
-    "z",
-    "."
-  ];
-  return cote(w, attelage, w, attelage, loco);
-}
-var CARGO_PRES = [
-  "...ww..................",
-  "...wbw.................",
-  "..wwwwPPOPPOPPOPPOPPO..",
-  "..wbwwPPOPPOPPOPPOPPO..",
-  "zzzzzzzzzzzzzzzzzzzzzzz",
-  ".zzzzzzzzzzzzzzzzzzzzz.",
-  "..xxxxxxxxxxxxxxxxxxx.."
-];
-var CARGO_LOIN = [
-  ".w.........",
-  "wwPOPOPOPO.",
-  "zzzzzzzzzzz",
-  ".xxxxxxxxx."
-];
-var PETROLIER_PRES = [
-  "..ww....................",
-  "..wbw...................",
-  ".wwwww..PP...PP...PP....",
-  ".wbwwgggggggggggggggggg.",
-  "PPPPPPPPPPPPPPPPPPPPPPPP",
-  ".OOOOOOOOOOOOOOOOOOOOOO.",
-  "..xxxxxxxxxxxxxxxxxxxx.."
-];
-var PETROLIER_LOIN = [
-  "w...........",
-  "wwgPgPgPgPg.",
-  "PPPPPPPPPPPP",
-  ".xxxxxxxxxx."
-];
-function dessinBille(sorte, produit, taille) {
-  return garder2(`bille-${sorte}-${produit}-${taille}`, () => {
-    const c2 = CHARGE[produit] ?? "caisses";
-    if (sorte === 0) return cerner(carre(camion(c2, taille)));
-    if (sorte === 1) return cerner(carre(train(c2, taille)));
-    if (sorte === 2) return cerner(taille === "loin" ? CARGO_LOIN : CARGO_PRES);
-    return cerner(taille === "loin" ? PETROLIER_LOIN : PETROLIER_PRES);
-  });
+function dessinBille(sorte, _produit, taille) {
+  const d = DIAMETRES_BILLES[sorte & 3] * (taille === "pres" ? 2 : 1);
+  return garder2(`bille-${sorte & 3}-${taille}`, () => cerner(disque(d)));
 }
 function dessinPointBille(sorte) {
   return garder2(`point-${sorte}`, () => {
     const l = sorte === 0 ? [
       "PP",
       "PP"
+    ] : sorte === 1 ? [
+      "kPPk",
+      "PPPP",
+      "kPPk"
     ] : [
       "kPPk",
+      "PPPP",
       "PPPP",
       "kPPk"
     ];
@@ -7837,6 +7845,157 @@ function svgDessin(d, teinte, z = 2) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${g.w * z}" height="${g.h * z}" viewBox="0 0 ${g.w} ${g.h}" shape-rendering="crispEdges">${r}</svg>`;
 }
 
+// web/src/rendu/dessins/troupes.ts
+var FIGURES = [
+  "soldat",
+  "drapeau",
+  "char",
+  "canon"
+];
+var FIG_SOLDAT = 0;
+var FIG_DRAPEAU = 1;
+var FIG_CHAR = 2;
+var FIG_CANON = 3;
+var POSES = [
+  "marche-a",
+  "marche-b",
+  "tir",
+  "eclair"
+];
+var POSE_A = 0;
+var POSE_B = 1;
+var POSE_TIR = 2;
+var POSE_ECLAIR = 3;
+var SOLDAT = [
+  [
+    ".MM.",
+    "MMMM",
+    ".ss.",
+    "PPPP",
+    "PPPP",
+    ".OO.",
+    "O..O"
+  ],
+  [
+    ".MM.",
+    "MMMM",
+    ".ss.",
+    "PPPP",
+    "PPPP",
+    ".OO.",
+    ".OO."
+  ],
+  [
+    ".MM...",
+    "MMMM..",
+    ".ss...",
+    "PPPkkk",
+    "PPPP..",
+    ".OO...",
+    ".O.O.."
+  ],
+  [
+    ".MM....",
+    "MMMM...",
+    ".ss....",
+    "PPPkkky",
+    "PPPP...",
+    ".OO....",
+    ".O.O..."
+  ]
+];
+var DRAPEAU = [
+  [
+    "...y.....",
+    "PPP|.....",
+    "POP|.MM..",
+    "PPP|MMMM.",
+    "...|.ss..",
+    "...|PPPP.",
+    "...|PPPP.",
+    "...|.OO..",
+    "...|O..O."
+  ],
+  [
+    "...y.....",
+    ".PP|.....",
+    "PPO|.MM..",
+    "PP.|MMMM.",
+    "...|.ss..",
+    "...|PPPP.",
+    "...|PPPP.",
+    "...|.OO..",
+    "...|.OO.."
+  ]
+];
+var CHAR = [
+  [
+    "...OO.....",
+    "..PPPPkkkk",
+    "PPPPPPPPOO",
+    ".zGzGzGzz."
+  ],
+  [
+    "...OO.....",
+    "..PPPPkkkk",
+    "PPPPPPPPOO",
+    ".GzGzGzGz."
+  ],
+  [
+    "...OO......",
+    "..PPPPkkkky",
+    "PPPPPPPPOO.",
+    ".zGzGzGzz.."
+  ]
+];
+var CANON = [
+  [
+    "........k",
+    "......kk.",
+    "..OOkk...",
+    ".PPPPO...",
+    "PPPPPPPPOO",
+    ".zGzGzGzz."
+  ],
+  [
+    "........k",
+    "......kk.",
+    "..OOkk...",
+    ".PPPPO...",
+    "PPPPPPPPOO",
+    ".GzGzGzGz."
+  ],
+  [
+    "........ky",
+    "......kk..",
+    "..OOkk....",
+    ".PPPPO....",
+    "PPPPPPPPOO",
+    ".zGzGzGzz."
+  ]
+];
+var memo3 = /* @__PURE__ */ new Map();
+var garder3 = (cle, lignes) => {
+  let d = memo3.get(cle);
+  if (!d) memo3.set(cle, d = cerner(lignes));
+  return d;
+};
+function dessinFigure(figure, pose2) {
+  switch (figure) {
+    case FIG_DRAPEAU: {
+      const p = pose2 === POSE_B ? 1 : 0;
+      return garder3(`drapeau-${p}`, DRAPEAU[p]);
+    }
+    case FIG_CHAR:
+    case FIG_CANON: {
+      const p = pose2 === POSE_ECLAIR ? 2 : pose2 === POSE_B ? 1 : 0, nom = figure === FIG_CHAR ? "char" : "canon";
+      return garder3(`${nom}-${p}`, (figure === FIG_CHAR ? CHAR : CANON)[p]);
+    }
+    default:
+      return garder3(`soldat-${pose2}`, SOLDAT[pose2] ?? SOLDAT[0]);
+  }
+}
+
 // web/src/rendu/lutins-flux.ts
 var LUTINS = [];
 var INDICE = /* @__PURE__ */ new Map();
@@ -7886,6 +8045,7 @@ var IMPACTS = [
   3,
   4
 ].map((r) => TAILLES.map((t) => ajouter(`impact-${r}-${t}`, dessinChampignon(r, t))));
+var FIGS = FIGURES.map((_, f) => POSES.map((_2, p) => ajouter(`figure-${f}-${p}`, dessinFigure(f, p))));
 var LUTIN_PORT = ajouter("port", dessinDecor("port"));
 var LUTIN_AEROPORT = ajouter("aeroport-civil", dessinDecor("aeroport-civil"));
 function lutinBille(sorte, produit, vue) {
@@ -7893,6 +8053,9 @@ function lutinBille(sorte, produit, vue) {
 }
 function lutinGroupe(type, pres2) {
   return GROUPES[type]?.[pres2 ? 1 : 0] ?? GROUPES[0][0];
+}
+function lutinFigure(figure, pose2) {
+  return FIGS[figure]?.[pose2] ?? FIGS[0][0];
 }
 function lutinBatiment(genre, niveau, pres2) {
   return BATS[genre][Math.min(2, niveau)][pres2 ? 1 : 0];
@@ -7973,6 +8136,109 @@ var TEINTES = [
 var TEINTE_CAMP = 4;
 var TEINTE_PORT = 9;
 var TEINTE_AEROPORT = 10;
+
+// web/src/rendu/colonnes.ts
+var LARGEUR_FIGURE = [
+  6,
+  11,
+  12,
+  12
+];
+function nombreFigurines(effectif) {
+  return Math.max(2, Math.min(7, 1 + Math.round(1.5 * Math.log10(Math.max(1, effectif / 300)))));
+}
+var POIDS = [
+  1,
+  10,
+  15
+];
+function colonne(compo3, effectif) {
+  const presents = [
+    0,
+    1,
+    2
+  ].filter((t) => compo3[t] >= (t === 0 ? 1 : 0.5));
+  if (!presents.length) return [
+    FIG_DRAPEAU,
+    FIG_SOLDAT
+  ];
+  const n = Math.max(nombreFigurines(effectif), presents.length);
+  const masse = [
+    0,
+    1,
+    2
+  ].map((t) => presents.includes(t) ? compo3[t] * POIDS[t] : 0);
+  const total = masse[0] + masse[1] + masse[2];
+  const parts = [
+    0,
+    0,
+    0
+  ];
+  for (const t of presents) parts[t] = 1;
+  const reste = n - presents.length;
+  const voulu = masse.map((m) => total > 0 ? m / total * reste : 0);
+  for (const t of presents) parts[t] += Math.floor(voulu[t]);
+  let manque = n - parts[0] - parts[1] - parts[2];
+  const ordre = [
+    ...presents
+  ].sort((a, b) => voulu[b] - Math.floor(voulu[b]) - (voulu[a] - Math.floor(voulu[a])) || a - b);
+  for (let i = 0; manque > 0; i++, manque--) parts[ordre[i % ordre.length]]++;
+  const figs = [];
+  if (parts[0] > 0) figs.push(FIG_DRAPEAU);
+  for (let k = 0; k < parts[1]; k++) figs.push(FIG_CHAR);
+  for (let k = parts[0] > 0 ? 1 : 0; k < parts[0]; k++) figs.push(FIG_SOLDAT);
+  for (let k = 0; k < parts[2]; k++) figs.push(FIG_CANON);
+  return figs;
+}
+function distancesColonne(figs) {
+  const d = [
+    0
+  ];
+  for (let k = 1; k < figs.length; k++) d.push(d[k - 1] + (LARGEUR_FIGURE[figs[k - 1]] + LARGEUR_FIGURE[figs[k]]) / 2 + 1);
+  return d;
+}
+var COIN = [
+  [
+    0,
+    0
+  ],
+  [
+    -1,
+    -0.75
+  ],
+  [
+    -1,
+    0.75
+  ],
+  [
+    -2,
+    0
+  ],
+  [
+    -2,
+    -1.5
+  ],
+  [
+    -2,
+    1.5
+  ],
+  [
+    -3,
+    -0.75
+  ]
+];
+function formation(figs) {
+  const pas = Math.max(...figs.map((f) => LARGEUR_FIGURE[f])) * 0.8 + 1;
+  return figs.map((_, k) => [
+    COIN[k % COIN.length][0] * pas,
+    COIN[k % COIN.length][1] * 8
+  ]);
+}
+function hasard(a, b, c2) {
+  let h = a * 374761393 + b * 668265263 + c2 * 2246822519 >>> 0;
+  h = Math.imul(h ^ h >>> 13, 1274126177) >>> 0;
+  return ((h ^ h >>> 16) >>> 0) / 4294967296;
+}
 
 // web/src/carte/projection-monde.ts
 var R_KM = 6371.0072;
@@ -8708,7 +8974,7 @@ function traversesRails(e, classe = 3) {
 var N_LUTINS = LUTINS.length;
 var VS_LUTINS = ENTETE3 + `
 layout(location = 0) in vec2 aPos;     // km (ramen\xE9 dans la carte)
-layout(location = 1) in uvec4 aInfo;   // lutin, teinte, drapeaux (1 = miroir), libre
+layout(location = 1) in uvec4 aInfo;   // lutin, teinte, drapeaux (1 = miroir, 2 = pixels doubl\xE9s), libre
 uniform uvec4 uRects[${N_LUTINS}];
 uniform float uPixel;                  // pixels \xE9cran par pixel du dessin
 out vec2 vTexel;
@@ -8719,11 +8985,12 @@ void main() {
   vec2 coin = vec2(float(gl_VertexID & 1), float(gl_VertexID >> 1));
   // cal\xE9 sur la grille des pixels \xE9cran (origine en bas \xE0 gauche)
   vec2 s = floor((aPos + vec2(uDecal, 0.0) - uCentre) * uEchelle + uVue * 0.5);
-  vec2 basGauche = s - floor(taille * 0.5) * uPixel;
+  float px = (aInfo.z & 2u) != 0u ? 2.0 * uPixel : uPixel;
+  vec2 basGauche = s - floor(taille * 0.5) * px;
   float cx = (aInfo.z & 1u) != 0u ? 1.0 - coin.x : coin.x;
   vTexel = vec2(r.xy) + vec2(cx * taille.x, (1.0 - coin.y) * taille.y);
   vTeinte = aInfo.y;
-  vec2 p = basGauche + coin * taille * uPixel - uVue * 0.5;
+  vec2 p = basGauche + coin * taille * px - uVue * 0.5;
   gl_Position = vec4(p / (uVue * 0.5), 0.0, 1.0);
 }`;
 var FS_LUTINS = `#version 300 es
@@ -8821,6 +9088,14 @@ var RenduFlux = class {
   presBatiments;
   /** positions affichées des groupes (km de carte, dans la carte) : pour les étiquettes et le survol */
   posGroupes;
+  /** 25/10 : indice de chaque groupe du dernier rendu par numéro ; côté (0, 1) et combat de chaque groupe engagé */
+  indiceGroupe;
+  auCombat;
+  /** sens de chaque groupe (1 : vers l'est), gardé quand il s'arrête ; centres des deux côtés de chaque combat (km de carte) */
+  sens;
+  centresCombats;
+  /** taille des figurines à la dernière image : 0 cadres OTAN, 1 figurines, 2 figurines aux pixels doublés */
+  vueTroupes;
   /** octets envoyés à la carte graphique pour les lignes */
   octetsGPU;
   /** segments des axes, et des lignes maritimes */
@@ -8843,6 +9118,11 @@ var RenduFlux = class {
     this.presTours = false;
     this.presBatiments = false;
     this.posGroupes = new Float32Array(0);
+    this.indiceGroupe = /* @__PURE__ */ new Map();
+    this.auCombat = /* @__PURE__ */ new Map();
+    this.sens = /* @__PURE__ */ new Map();
+    this.centresCombats = new Float32Array(0);
+    this.vueTroupes = 1;
     this.sortie = new Float32Array(3);
     this.xMin = monde2.info.emprise.x_min;
     this.C = monde2.info.circonference_km;
@@ -8989,7 +9269,28 @@ var RenduFlux = class {
   recevoir(r) {
     if (r.trajets) this.trajets.recevoir(r.trajets);
     this.dernier = r;
+    this.indiceGroupe.clear();
+    for (let i = 0; i < r.groupes.n; i++) this.indiceGroupe.set(r.groupes.id[i], i);
+    this.auCombat.clear();
+    const k = r.combats;
+    for (let c2 = 0; c2 < k.n; c2++) {
+      for (let j = k.debut[c2]; j < k.debut[c2 + 1]; j++) {
+        if (!this.auCombat.has(k.membre[j])) this.auCombat.set(k.membre[j], {
+          combat: c2,
+          cote: k.role[j] & 1,
+          appui: (k.role[j] & MEMBRE_APPUI) !== 0
+        });
+      }
+    }
     this.poserImmobiles();
+  }
+  /** 25/10 : position affichée d'un groupe (km de carte), null s'il n'est plus là. */
+  positionDe(id) {
+    const i = this.indiceGroupe.get(id);
+    return i === void 0 || 2 * i + 1 >= this.posGroupes.length ? null : [
+      this.posGroupes[2 * i],
+      this.posGroupes[2 * i + 1]
+    ];
   }
   /** Tours et bâtiments : immobiles jusqu'au prochain message ; refaits aussi quand on passe de loin à près. */
   poserImmobiles() {
@@ -9024,13 +9325,13 @@ var RenduFlux = class {
   get posBilles() {
     return this.billes.pos;
   }
-  /** Quelque chose bouge (billes ou groupes en marche) : redessiner à chaque image tant que le temps passe. */
+  /** Quelque chose bouge (billes, groupes en marche, drapeaux au vent, combats) : redessiner tant que le temps passe. */
   anime() {
     const r = this.dernier;
-    return !!r && (r.billes.n > 0 || r.groupes.dt.some((d) => d !== 0));
+    return !!r && (r.billes.n > 0 || r.groupes.n > 0 || r.combats.n > 0);
   }
   /** Place billes et groupes à l'heure affichée (fractionnaire) : t + dt × (heure − heure du rendu). */
-  placer(heure) {
+  placer(heure, cam, texelCss, tAnim2) {
     const r = this.dernier;
     if (!r) return;
     const f = Math.min(1.5, Math.max(0, heure - r.heure));
@@ -9045,22 +9346,121 @@ var RenduFlux = class {
       bi.info[o] = lutinBille(g & 3, g >> 2, this.vueBilles), bi.info[o + 1] = g >> 2, bi.info[o + 2] = s[2] * dt < 0 ? 1 : 0;
     }
     bi.envoyer();
-    const G = r.groupes, gr = this.groupes;
-    gr.reserver(G.n);
+    const G = r.groupes;
     if (this.posGroupes.length < 2 * G.n) this.posGroupes = new Float32Array(2 * G.n);
+    const sensTete = new Int8Array(G.n);
     for (let i = 0; i < G.n; i++) {
       if (G.trajet[i] >= 0) T.position(G.trajet[i], G.t[i] + G.dt[i] * f, s, 0);
-      else s[0] = G.xy[2 * i], s[1] = G.xy[2 * i + 1];
-      const x = boucler(s[0], this.xMin, this.C);
-      gr.pos[2 * i] = this.posGroupes[2 * i] = x, gr.pos[2 * i + 1] = this.posGroupes[2 * i + 1] = s[1];
-      gr.info.set([
-        lutinGroupe(G.type[i], this.presTours),
-        TEINTE_CAMP + G.camp[i],
+      else s[0] = G.xy[2 * i], s[1] = G.xy[2 * i + 1], s[2] = 1;
+      this.posGroupes[2 * i] = boucler(s[0], this.xMin, this.C), this.posGroupes[2 * i + 1] = s[1];
+      sensTete[i] = s[2] < 0 ? -1 : 1;
+    }
+    const K = r.combats, cc = this.centresCombats.length >= 4 * K.n ? this.centresCombats : this.centresCombats = new Float32Array(4 * K.n);
+    for (let c2 = 0; c2 < K.n; c2++) {
+      const sx = [
         0,
         0
-      ], 4 * i);
+      ], sy = [
+        0,
+        0
+      ], n = [
+        0,
+        0
+      ];
+      for (const appuis of [
+        false,
+        true
+      ]) {
+        for (let j = K.debut[c2]; j < K.debut[c2 + 1]; j++) {
+          const cote = K.role[j] & 1, i = this.indiceGroupe.get(K.membre[j]);
+          if (i === void 0 || (K.role[j] & MEMBRE_APPUI) !== 0 !== appuis || appuis && n[cote] > 0) continue;
+          sx[cote] += pres(this.posGroupes[2 * i], K.xy[2 * c2], this.C), sy[cote] += this.posGroupes[2 * i + 1], n[cote]++;
+        }
+      }
+      for (const k of [
+        0,
+        1
+      ]) {
+        cc[4 * c2 + 2 * k] = n[k] ? sx[k] / n[k] : K.xy[2 * c2], cc[4 * c2 + 2 * k + 1] = n[k] ? sy[k] / n[k] : K.xy[2 * c2 + 1];
+      }
+    }
+    this.placerTroupes(r, f, sensTete, cam, texelCss, tAnim2);
+  }
+  /**
+   * 25/10 : les groupes à l'écran. De très loin, un cadre OTAN chacun ; plus près, une colonne de figurines : sur la route
+   * derrière la tête quand il marche, en coin quand il s'arrête, tournée vers l'ennemi au combat (tir, éclairs au hasard).
+   */
+  placerTroupes(r, f, sensTete, cam, texelCss, tAnim2) {
+    const G = r.groupes, gr = this.groupes, T = this.trajets, s = this.sortie, e = cam.echelle;
+    this.vueTroupes = e < LOIN_TROUPES ? 0 : e < PRES_TROUPES ? 1 : 2;
+    if (this.vueTroupes === 0) {
+      gr.reserver(G.n);
+      for (let i = 0; i < G.n; i++) {
+        gr.pos[2 * i] = this.posGroupes[2 * i], gr.pos[2 * i + 1] = this.posGroupes[2 * i + 1];
+        gr.info.set([
+          lutinGroupe(G.type[i], false),
+          TEINTE_CAMP + G.camp[i],
+          0,
+          0
+        ], 4 * i);
+      }
+      gr.envoyer();
+      return;
+    }
+    const echelle = this.vueTroupes === 2 ? 2 : 1, kmParPixel = echelle * texelCss / e, double = echelle === 2 ? 2 : 0;
+    const colonnes = [];
+    let total = 0;
+    for (let i = 0; i < G.n; i++) {
+      const c2 = colonne(G.compo.subarray(3 * i, 3 * i + 3), G.effectif[i]);
+      colonnes.push(c2), total += c2.length;
+    }
+    gr.reserver(total);
+    const marche = Math.floor(tAnim2 * 6), chenilles = Math.floor(tAnim2 * 8), vent = Math.floor(tAnim2 * 2.5), tir = Math.floor(tAnim2 * 7);
+    let o = 0;
+    for (let i = 0; i < G.n; i++) {
+      const id = G.id[i], figs = colonnes[i], x0 = this.posGroupes[2 * i], y0 = this.posGroupes[2 * i + 1];
+      const bouge = G.dt[i] !== 0 && G.trajet[i] >= 0;
+      const combat = this.auCombat.get(id);
+      let sens = this.sens.get(id) ?? 1;
+      if (bouge) sens = sensTete[i];
+      else if (combat) {
+        const c2 = combat.combat, ex = this.centresCombats[4 * c2 + 2 * (1 - combat.cote)];
+        if (Math.abs(pres(ex, x0, this.C) - x0) > 1e-3) sens = pres(ex, x0, this.C) > x0 ? 1 : -1;
+      }
+      this.sens.set(id, sens);
+      const auFeu = !!combat && !bouge;
+      const d = bouge ? distancesColonne(figs) : null, coin = bouge ? null : formation(figs);
+      const L = bouge ? T.longueur(G.trajet[i]) : 0, tTete = G.t[i] + G.dt[i] * f;
+      for (let k = figs.length - 1; k >= 0; k--, o++) {
+        const fig = figs[k];
+        let x = x0, y = y0;
+        if (d) {
+          T.position(G.trajet[i], L > 0 ? tTete - d[k] * kmParPixel / L : tTete, s, 0);
+          x = boucler(s[0], this.xMin, this.C), y = s[1];
+        } else {
+          x = x0 + coin[k][0] * sens * kmParPixel, y = y0 - coin[k][1] * kmParPixel;
+        }
+        let pose2 = POSE_A, haut = 0;
+        if (fig === FIG_DRAPEAU) pose2 = (bouge ? marche : vent) + k & 1;
+        else if (fig === FIG_CHAR || fig === FIG_CANON) {
+          pose2 = bouge ? chenilles + k & 1 : auFeu && hasard(id, k, tir) < (fig === FIG_CANON ? 0.12 : 0.08) ? POSE_ECLAIR : POSE_A;
+        } else pose2 = bouge ? marche + k & 1 : auFeu ? hasard(id, k, tir) < 0.2 ? POSE_ECLAIR : POSE_TIR : POSE_B;
+        if (bouge && (fig === FIG_DRAPEAU || fig < FIG_CHAR) && pose2 === POSE_B) haut = 1;
+        gr.pos[2 * o] = x, gr.pos[2 * o + 1] = y + haut * kmParPixel;
+        gr.info.set([
+          lutinFigure(fig, pose2),
+          TEINTE_CAMP + G.camp[i],
+          (sens < 0 ? 1 : 0) | double,
+          0
+        ], 4 * o);
+      }
     }
     gr.envoyer();
+    if (this.sens.size > 4 * G.n + 64) {
+      for (const id of [
+        ...this.sens.keys()
+      ]) if (!this.indiceGroupe.has(id)) this.sens.delete(id);
+    }
   }
   u(p, nom) {
     const cle = `${p === this.progL ? "L" : "S"}:${nom}`;
@@ -9074,21 +9474,24 @@ var RenduFlux = class {
     gl.uniform1f(this.u(p, "uEchelle"), cam.echelle * ratio2);
     gl.uniform2f(this.u(p, "uVue"), w, h);
   }
-  /** Dessine tout, après la planète. `heure` = heure de jeu affichée (fractionnaire). Rend le nombre d'appels de dessin. */
-  dessiner(cam, ratio2, w, h, heure) {
+  /**
+   * Dessine tout, après la planète. `heure` = heure de jeu affichée (fractionnaire) ; `tAnim` = secondes d'animation (arrêtées
+   * pendant la pause : pas des soldats, drapeaux, tirs). Rend le nombre d'appels de dessin.
+   */
+  dessiner(cam, ratio2, w, h, heure, tAnim2 = 0) {
     const gl = this.gl;
     const e = cam.echelle;
     this.vueBilles = e < LOIN_BILLES || this.vue === "flux" ? 0 : e < PRES_BILLES ? 1 : 2;
     const tp = e >= PRES_FORCES, bp = e >= PRES_BATIMENTS;
     if (tp !== this.presTours || bp !== this.presBatiments) this.presTours = tp, this.presBatiments = bp, this.poserImmobiles();
-    this.placer(heure);
+    const px = Math.max(1, Math.round(ratio2));
+    this.placer(heure, cam, px / ratio2, tAnim2);
     const copies = copiesVisibles(cam.cx, cam.largeur / 2 / e, this.xMin, this.C);
     let appels = 0;
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     const pl = this.progL;
     this.communs(pl, cam, ratio2, w, h);
-    const px = Math.max(1, Math.round(ratio2));
     const largeurs = largeursLignes(e).map((l) => l * px);
     gl.uniform1fv(this.u(pl, "uLargeur"), largeurs);
     gl.uniform4fv(this.u(pl, "uCouleur"), COULEURS.flat());
@@ -9261,17 +9664,20 @@ var RenduFlux = class {
     if (cam.echelle < 0.1 || this.vue === "flux") return;
     ctx.font = "600 10px ui-monospace, Menlo, monospace";
     ctx.textBaseline = "middle";
-    const g = this.posGroupes;
+    const g = this.posGroupes, haut = this.vueTroupes === 2 ? 16 : this.vueTroupes === 1 ? 11 : 10;
     for (let i = 0; i < r.groupes.n; i++) {
-      const texte2 = formatEffectif(r.groupes.effectif[i]);
+      if (this.auCombat.has(r.groupes.id[i])) continue;
+      const texte2 = formatEffectif(r.groupes.effectif[i]), camp = r.groupes.camp[i];
       for (const d of copies) {
         const [sx, sy] = cam.versEcran(g[2 * i] + d, g[2 * i + 1]);
-        if (sx < -40 || sy < -20 || sx > cam.largeur + 40 || sy > cam.hauteur + 20) continue;
-        const l = ctx.measureText(texte2).width;
-        ctx.fillStyle = "rgba(15, 20, 25, 0.75)";
-        ctx.fillRect(sx + 9, sy - 6, l + 4, 12);
+        if (sx < -40 || sy < -30 || sx > cam.largeur + 40 || sy > cam.hauteur + 20) continue;
+        const l = Math.ceil(ctx.measureText(texte2).width), x0 = Math.round(sx - l / 2 - 3), y0 = Math.round(sy - haut - 7);
+        ctx.fillStyle = "rgba(15, 20, 25, 0.78)";
+        ctx.fillRect(x0, y0, l + 7, 12);
+        ctx.fillStyle = COULEURS_CAMPS[camp] ?? "#cfc6b0";
+        ctx.fillRect(x0, y0, 2, 12);
         ctx.fillStyle = "#f6efdc";
-        ctx.fillText(texte2, sx + 11, sy);
+        ctx.fillText(texte2, x0 + 5, y0 + 6);
       }
     }
   }
@@ -9294,6 +9700,14 @@ var CERCLES_IMPACT = [
   ]
 ];
 var LOIN_BILLES = 0.5;
+var LOIN_TROUPES = 0.12;
+var PRES_TROUPES = 0.5;
+var COULEURS_CAMPS = [
+  "#6fb3ff",
+  "#4fd1b5",
+  "#cfc6b0",
+  "#ff6b5a"
+];
 var PRES_BILLES = 2;
 var PRES_FORCES = 1;
 var PRES_BATIMENTS = 0.6;
@@ -9302,6 +9716,523 @@ function formatEffectif(n) {
   if (n < 1e5) return `${(Math.round(n / 100) / 10).toLocaleString("fr-FR")} k`;
   if (n < 1e6) return `${Math.round(n / 1e3)} k`;
   return `${(Math.round(n / 1e5) / 10).toLocaleString("fr-FR")} M`;
+}
+
+// web/src/rendu/effets-guerre.ts
+var LOIN_EFFETS = 0.12;
+function cadenceTirs(mode, masse) {
+  if (mode === MODE_BOMBARDEMENT) return 0;
+  const base = mode === MODE_POSITION ? 1.2 : 4;
+  return base * Math.min(1.6, Math.max(0.5, 0.6 + 0.25 * Math.log10(masse / 1e3 + 1)));
+}
+function rayonLueur(masse) {
+  return Math.min(26, Math.max(10, 9 + 3 * Math.log10(masse + 1)));
+}
+var DUREE_ECLAT = 0.45;
+var DUREE_DRAPEAU = 2.6;
+var DUREE_DEBRIS = 0.8;
+var KM_ENTRE_DRAPEAUX = 30;
+var DRAPEAUX_PX = 18;
+var MAX = {
+  eclats: 500,
+  obus: 150,
+  anneaux: 80,
+  drapeaux: 40,
+  debris: 200,
+  attente: 400
+};
+var EffetsGuerre = class {
+  flux;
+  couleurPays;
+  eclats;
+  obus;
+  anneaux;
+  drapeaux;
+  debris;
+  attente;
+  /** par combat : éclairs en réserve (cadence), rapport des forces affiché (glisse vers le vrai), instant d'apparition */
+  reserve;
+  balance;
+  vu;
+  /** par groupe d'artillerie : instant du prochain coup */
+  prochainObus;
+  /** combats à marquer par-dessus les étiquettes (épées et rapport des forces), posés par la passe du sol */
+  marques;
+  dernierT;
+  epees;
+  constructor(flux2, couleurPays) {
+    this.flux = flux2;
+    this.couleurPays = couleurPays;
+    this.eclats = [];
+    this.obus = [];
+    this.anneaux = [];
+    this.drapeaux = [];
+    this.debris = [];
+    this.attente = [];
+    this.reserve = /* @__PURE__ */ new Map();
+    this.balance = /* @__PURE__ */ new Map();
+    this.vu = /* @__PURE__ */ new Map();
+    this.prochainObus = /* @__PURE__ */ new Map();
+    this.marques = [];
+    this.dernierT = -1;
+    this.epees = dessinCombat().grille;
+  }
+  /** Un message de rendu : ses événements attendent l'heure affichée où ils se produisent (la ville change de couleur). */
+  recevoir(r) {
+    const e = r.evenements;
+    for (let i = 0; i < e.n && this.attente.length < MAX.attente; i++) {
+      this.attente.push({
+        heure: r.heure + e.retard[i] / 255 * 0.9,
+        genre: e.genre[i],
+        x: e.xy[2 * i],
+        y: e.xy[2 * i + 1],
+        camp: e.camp[i],
+        pays: e.pays[i]
+      });
+    }
+  }
+  /** Quelque chose bouge encore (effets en vol, combats, événements à venir) : il faut redessiner. */
+  actif() {
+    return this.eclats.length + this.obus.length + this.anneaux.length + this.drapeaux.length + this.debris.length + this.attente.length > 0 || (this.flux.dernier?.combats.n ?? 0) > 0;
+  }
+  /**
+   * Passe du sol, sous les étiquettes des groupes : itinéraires, lueurs, éclairs, obus, débris. `heure` = heure de jeu
+   * affichée ; `t` = horloge d'animation (s, arrêtée en pause).
+   */
+  dessinerSol(ctx, cam, heure, t) {
+    this.marques = [];
+    const r = this.flux.dernier;
+    if (!r || this.flux.vue === "flux") return;
+    const dt = this.dernierT < 0 ? 0 : Math.min(0.1, Math.max(0, t - this.dernierT));
+    this.dernierT = t;
+    const chaque = this.chaque(cam), z = this.flux.vueTroupes === 2 ? 2 : 1;
+    this.liberer(heure, t);
+    this.itineraires(ctx, cam, r, heure);
+    this.combats(ctx, cam, r, t, dt, z, chaque);
+    this.dessinerEffets(ctx, cam, t, z, chaque);
+    this.anneauxEtDrapeaux(ctx, t, z, chaque);
+  }
+  /**
+   * Passe du dessus, par-dessus les étiquettes : épées et rapport des forces de chaque combat, avec les effectifs des deux
+   * côtés (les groupes engagés n'ont plus leur propre étiquette, flux-gl.ts).
+   */
+  dessinerMarques(ctx, cam) {
+    const r = this.flux.dernier;
+    if (!r || this.flux.vue === "flux") return;
+    const chaque = this.chaque(cam), z = this.flux.vueTroupes === 2 ? 2 : 1;
+    for (const m of this.marques) chaque(m.x, m.y, 60, (sx, sy) => this.epeesEtForces(ctx, r, m, sx, sy, z));
+  }
+  chaque(cam) {
+    const C = this.flux.monde.info.circonference_km, xMin = this.flux.monde.info.emprise.x_min;
+    const copies = copiesVisibles(cam.cx, cam.largeur / 2 / cam.echelle, xMin, C);
+    return (x, y, marge, f) => {
+      for (const d of copies) {
+        const [sx, sy] = cam.versEcran(x + d, y);
+        if (sx > -marge && sy > -marge && sx < cam.largeur + marge && sy < cam.hauteur + marge) f(sx, sy);
+      }
+    };
+  }
+  // ------------------------------------------------------------------ événements
+  liberer(heure, t) {
+    if (!this.attente.length) return;
+    const restent = [];
+    for (const a of this.attente) {
+      if (a.heure > heure) {
+        restent.push(a);
+        continue;
+      }
+      const couleur = COULEURS_CAMPS[a.camp] ?? COULEURS_CAMPS[2];
+      if (a.genre === EV_PRISE) {
+        if (this.drapeaux.some((d) => t - d.t0 < DUREE_DRAPEAU && Math.hypot(d.x - a.x, d.y - a.y) < KM_ENTRE_DRAPEAUX)) continue;
+        if (this.drapeaux.length < MAX.drapeaux) this.drapeaux.push({
+          x: a.x,
+          y: a.y,
+          t0: t,
+          couleur: this.couleurPays(a.pays),
+          camp: a.camp
+        });
+        this.anneau(a.x, a.y, t, 0.7, 16, couleur);
+      } else if (a.genre === EV_FIN_COMBAT) {
+        this.anneau(a.x, a.y, t, 0.9, 26, couleur);
+      } else if (a.genre === EV_DETRUIT) {
+        for (let k = 0; k < 3; k++) this.eclat(a.x, a.y, (Math.random() - 0.5) * 10, (Math.random() - 0.5) * 8, t + k * 0.09, 1.7);
+        for (let k = 0; k < 7 && this.debris.length < MAX.debris; k++) {
+          const ang = Math.random() * Math.PI * 2, v = 18 + Math.random() * 26;
+          this.debris.push({
+            x: a.x,
+            y: a.y,
+            vx: Math.cos(ang) * v,
+            vy: Math.sin(ang) * v - 18,
+            t0: t,
+            couleur
+          });
+        }
+      }
+    }
+    this.attente = restent;
+  }
+  anneau(x, y, t0, duree, rayon, couleur) {
+    if (this.anneaux.length < MAX.anneaux) this.anneaux.push({
+      x,
+      y,
+      t0,
+      duree,
+      rayon,
+      couleur
+    });
+  }
+  eclat(x, y, dx, dy, t0, taille = 1) {
+    if (this.eclats.length < MAX.eclats) this.eclats.push({
+      x,
+      y,
+      dx,
+      dy,
+      t0,
+      taille
+    });
+  }
+  // ------------------------------------------------------------------ itinéraires
+  /** Les groupes en marche du joueur (et, de plus près, ceux de ses ennemis) : tirets qui coulent jusqu'au but, pointe. */
+  itineraires(ctx, cam, r, heure) {
+    const G = r.groupes, T = this.flux.trajets, C = this.flux.monde.info.circonference_km, e = cam.echelle;
+    ctx.save();
+    ctx.lineJoin = "round", ctx.lineCap = "round";
+    for (let i = 0; i < G.n; i++) {
+      const camp = G.camp[i];
+      if (G.dt[i] === 0 || G.trajet[i] < 0 || G.etat[i] & GROUPE_RENFORTS) continue;
+      if (camp !== CAMP_JOUEUR && !(camp === CAMP_ENNEMI && e >= LOIN_EFFETS)) continue;
+      const p = this.flux.positionDe(G.id[i]);
+      if (!p) continue;
+      const tr = G.trajet[i], d = T.debut[tr], f = T.debut[tr + 1] - 1, L = T.cumul[f];
+      if (!(L > 0)) continue;
+      const tete = Math.min(1, Math.max(0, G.t[i] + G.dt[i] * Math.min(1.5, Math.max(0, heure - r.heure)))) * L;
+      const pts = [
+        p[0],
+        p[1]
+      ];
+      let ref = p[0];
+      for (let k = d; k <= f; k++) {
+        if (T.cumul[k] <= tete) continue;
+        const x = pres(T.xy[2 * k], ref, C);
+        pts.push(x, T.xy[2 * k + 1]);
+        ref = x;
+      }
+      if (pts.length < 4) continue;
+      const joueur = camp === CAMP_JOUEUR;
+      for (const dc of copiesVisibles(cam.cx, cam.largeur / 2 / e, this.flux.monde.info.emprise.x_min, C)) {
+        const ecran2 = [];
+        for (let k2 = 0; k2 < pts.length; k2 += 2) {
+          const [sx, sy] = cam.versEcran(pts[k2] + dc, pts[k2 + 1]);
+          ecran2.push(sx, sy);
+        }
+        const n = ecran2.length;
+        let dedans = false;
+        for (let k2 = 0; k2 < n && !dedans; k2 += 2) dedans = ecran2[k2] > -20 && ecran2[k2 + 1] > -20 && ecran2[k2] < cam.largeur + 20 && ecran2[k2 + 1] < cam.hauteur + 20;
+        if (!dedans) continue;
+        const trace = () => {
+          ctx.beginPath();
+          ctx.moveTo(ecran2[0], ecran2[1]);
+          for (let k2 = 2; k2 < n; k2 += 2) ctx.lineTo(ecran2[k2], ecran2[k2 + 1]);
+        };
+        ctx.setLineDash([]);
+        ctx.strokeStyle = "rgba(10, 14, 20, 0.5)";
+        ctx.lineWidth = joueur ? 4.5 : 3.5;
+        trace();
+        ctx.stroke();
+        ctx.setLineDash([
+          6,
+          4
+        ]);
+        ctx.lineDashOffset = -this.dernierT * 16;
+        ctx.strokeStyle = joueur ? "rgba(140, 196, 255, 0.98)" : "rgba(255, 120, 100, 0.8)";
+        ctx.lineWidth = joueur ? 2 : 1.5;
+        trace();
+        ctx.stroke();
+        let k = n - 4;
+        while (k > 0 && Math.hypot(ecran2[n - 2] - ecran2[k], ecran2[n - 1] - ecran2[k + 1]) < 4) k -= 2;
+        const ux = ecran2[n - 2] - ecran2[k], uy = ecran2[n - 1] - ecran2[k + 1], l = Math.hypot(ux, uy) || 1;
+        const ax = ux / l, ay = uy / l, bx = ecran2[n - 2], by = ecran2[n - 1], tl = joueur ? 8 : 6;
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.moveTo(bx + ax * 2, by + ay * 2);
+        ctx.lineTo(bx - ax * tl - ay * tl * 0.55, by - ay * tl + ax * tl * 0.55);
+        ctx.lineTo(bx - ax * tl + ay * tl * 0.55, by - ay * tl - ax * tl * 0.55);
+        ctx.closePath();
+        ctx.fillStyle = joueur ? "#6fb3ff" : "rgba(255, 107, 90, 0.85)";
+        ctx.strokeStyle = "rgba(10, 14, 20, 0.6)";
+        ctx.lineWidth = 1;
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+  // ------------------------------------------------------------------ combats
+  combats(ctx, cam, r, t, dt, z, chaque) {
+    const K = r.combats, cc = this.flux.centresCombats, C = this.flux.monde.info.circonference_km, e = cam.echelle;
+    const vivants = /* @__PURE__ */ new Set();
+    for (let c2 = 0; c2 < K.n; c2++) {
+      const id = K.id[c2], mode = K.mode[c2], masse = K.masse[c2];
+      vivants.add(id);
+      if (!this.vu.has(id)) this.vu.set(id, t);
+      const joueur = K.camp[2 * c2] === CAMP_JOUEUR || K.camp[2 * c2 + 1] === CAMP_JOUEUR;
+      const ax = cc[4 * c2], ay = cc[4 * c2 + 1], bx = pres(cc[4 * c2 + 2], ax, C), by = cc[4 * c2 + 3];
+      const mx = mode === MODE_BOMBARDEMENT ? K.xy[2 * c2] : (ax + bx) / 2, my = mode === MODE_BOMBARDEMENT ? K.xy[2 * c2 + 1] : (ay + by) / 2;
+      const vrai = K.balance[c2], b0 = this.balance.get(id) ?? vrai, b = b0 + (vrai - b0) * Math.min(1, dt * 3);
+      this.balance.set(id, b);
+      if (e < LOIN_EFFETS) {
+        const phase = (t - (this.vu.get(id) ?? 0)) % 1.4 / 1.4;
+        chaque(mx, my, 20, (sx, sy) => {
+          ctx.beginPath();
+          ctx.arc(sx, sy, 3 + 9 * phase, 0, Math.PI * 2);
+          ctx.strokeStyle = joueur ? `rgba(255, 120, 70, ${0.8 * (1 - phase)})` : `rgba(255, 150, 110, ${0.45 * (1 - phase)})`;
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+          ctx.fillStyle = joueur ? "#ff6b4a" : "rgba(230, 120, 90, 0.8)";
+          ctx.fillRect(Math.round(sx) - 1, Math.round(sy) - 1, 3, 3);
+        });
+        continue;
+      }
+      if (dt > 0) {
+        let res = (this.reserve.get(id) ?? Math.random()) + cadenceTirs(mode, masse) * dt;
+        while (res >= 1) {
+          res -= 1;
+          const [sax, say] = cam.versEcran(ax, ay), [sbx, sby] = cam.versEcran(bx, by);
+          let ux = sbx - sax, uy = sby - say, l = Math.hypot(ux, uy);
+          if (l < 2) ux = 1, uy = 0, l = 1;
+          ux /= l, uy /= l;
+          const front = Math.min(40, Math.max(12, l * 0.8 + 10)), s = (Math.random() - 0.5) * front, q = (Math.random() - 0.5) * 6;
+          this.eclat(mx, my, -uy * s + ux * q, ux * s + uy * q, t + Math.random() * 0.05);
+        }
+        this.reserve.set(id, res);
+      }
+      if (dt > 0) {
+        for (let j = K.debut[c2]; j < K.debut[c2 + 1]; j++) {
+          if (!(K.role[j] & MEMBRE_APPUI)) continue;
+          const g = K.membre[j], cote = K.role[j] & 1, prochain = this.prochainObus.get(g);
+          if (prochain === void 0) {
+            this.prochainObus.set(g, t + Math.random() * 1.2);
+            continue;
+          }
+          if (t < prochain || this.obus.length >= MAX.obus) continue;
+          this.prochainObus.set(g, t + 1.3 + Math.random() * 0.9);
+          const p = this.flux.positionDe(g);
+          if (!p) continue;
+          const cx = mode === MODE_BOMBARDEMENT ? K.xy[2 * c2] : cc[4 * c2 + 2 * (1 - cote)];
+          const cy = mode === MODE_BOMBARDEMENT ? K.xy[2 * c2 + 1] : cc[4 * c2 + 2 * (1 - cote) + 1];
+          this.obus.push({
+            x0: p[0],
+            y0: p[1],
+            x1: pres(cx, p[0], C),
+            y1: cy,
+            dx: (Math.random() - 0.5) * 14,
+            dy: (Math.random() - 0.5) * 10,
+            t0: t,
+            duree: 0.7 + Math.random() * 0.25
+          });
+        }
+      }
+      const R = rayonLueur(masse) * (z === 2 ? 1.5 : 1.2), pouls = 0.5 + 0.5 * Math.sin(t * Math.PI * 2 / 1.4);
+      const naissance = Math.min(1, (t - (this.vu.get(id) ?? t)) / 0.3);
+      chaque(mx, my, R + 30, (sx, sy) => {
+        const a = joueur ? 0.42 + 0.2 * pouls : 0.24 + 0.12 * pouls;
+        const gr = ctx.createRadialGradient(sx, sy, 0, sx, sy, R);
+        gr.addColorStop(0, `rgba(255, 214, 140, ${a})`);
+        gr.addColorStop(0.45, `rgba(255, 120, 50, ${a * 0.6})`);
+        gr.addColorStop(1, "rgba(255, 80, 40, 0)");
+        ctx.globalCompositeOperation = "screen";
+        ctx.fillStyle = gr;
+        ctx.fillRect(sx - R, sy - R, 2 * R, 2 * R);
+        ctx.globalCompositeOperation = "source-over";
+      });
+      this.marques.push({
+        x: mx,
+        y: my,
+        c: c2,
+        joueur,
+        b,
+        naissance
+      });
+    }
+    for (const m of [
+      this.reserve,
+      this.balance,
+      this.vu
+    ]) for (const id of m.keys()) if (!vivants.has(id)) m.delete(id);
+    if (this.prochainObus.size > 500) this.prochainObus.clear();
+  }
+  /** Épées au-dessus du combat (apparition avec un léger rebond), rapport des forces dessous, au-dessus des étiquettes. */
+  epeesEtForces(ctx, r, m, sx, sy, z) {
+    const K = r.combats, c2 = m.c, joueur = m.joueur;
+    const echelle = (joueur ? 2 : 1) * (m.naissance >= 1 ? 1 : 0.6 + 0.4 * rebond(m.naissance));
+    const g = this.epees, w = g.w * echelle, h = g.h * echelle;
+    const x0 = Math.round(sx - w / 2), y0 = Math.round(sy - (z === 2 ? 34 : 27) - h - 6);
+    ctx.globalAlpha = joueur ? 1 : 0.85;
+    ctx.fillStyle = "rgba(15, 20, 25, 0.82)";
+    ctx.fillRect(x0 - 2, y0 - 2, Math.round(w) + 4, Math.round(h) + 4);
+    for (let v = 0; v < g.h; v++) {
+      for (let u = 0; u < g.w; u++) {
+        const k = g.get(u, v);
+        if (k === ".") continue;
+        ctx.fillStyle = k === "a" ? joueur ? "#ffe9b0" : "#d8d2c4" : PALETTE2[k];
+        ctx.fillRect(x0 + Math.floor(u * echelle), y0 + Math.floor(v * echelle), Math.ceil(echelle), Math.ceil(echelle));
+      }
+    }
+    const bw = Math.max(20, Math.round(w) + 4), bx0 = Math.round(sx - bw / 2), by0 = y0 + Math.round(h) + 3;
+    const j = K.camp[2 * c2 + 1] === CAMP_JOUEUR ? 1 : 0, part = j === 1 ? 1 - m.b : m.b;
+    const gauche = joueur ? COULEURS_CAMPS[CAMP_JOUEUR] : COULEURS_CAMPS[K.camp[2 * c2]] ?? "#cfc6b0";
+    const droite = joueur ? COULEURS_CAMPS[K.camp[2 * c2 + 1 - j]] ?? COULEURS_CAMPS[CAMP_ENNEMI] : "#8d8678";
+    ctx.fillStyle = "rgba(15, 20, 25, 0.85)";
+    ctx.fillRect(bx0 - 1, by0 - 1, bw + 2, 6);
+    ctx.fillStyle = droite;
+    ctx.fillRect(bx0, by0, bw, 4);
+    ctx.fillStyle = gauche;
+    ctx.fillRect(bx0, by0, Math.round(bw * Math.min(1, Math.max(0, part))), 4);
+    if (joueur || this.flux.vueTroupes > 0) {
+      const n = [
+        0,
+        0
+      ];
+      for (let k = K.debut[c2]; k < K.debut[c2 + 1]; k++) {
+        const i = this.flux.indiceGroupe.get(K.membre[k]);
+        if (i !== void 0) n[K.role[k] & 1] += r.groupes.effectif[i];
+      }
+      const a = formatEffectif(n[j]), b2 = formatEffectif(n[1 - j]);
+      ctx.font = "600 10px ui-monospace, Menlo, monospace";
+      ctx.textBaseline = "middle";
+      const la = Math.ceil(ctx.measureText(a).width), lb = Math.ceil(ctx.measureText(b2).width), ym = by0 + 2;
+      ctx.fillStyle = "rgba(15, 20, 25, 0.82)";
+      ctx.fillRect(bx0 - la - 7, ym - 6, la + 5, 12);
+      ctx.fillRect(bx0 + bw + 2, ym - 6, lb + 5, 12);
+      ctx.fillStyle = gauche;
+      ctx.fillText(a, bx0 - la - 4, ym);
+      ctx.fillStyle = droite;
+      ctx.fillText(b2, bx0 + bw + 4, ym);
+    }
+    ctx.globalAlpha = 1;
+  }
+  // ------------------------------------------------------------------ éclats, obus, anneaux, drapeaux, débris
+  dessinerEffets(ctx, cam, t, z, chaque) {
+    this.obus = this.obus.filter((o) => {
+      const a = (t - o.t0) / o.duree;
+      if (a >= 1) {
+        this.eclat(o.x1, o.y1, o.dx, o.dy, t, 1.5);
+        return false;
+      }
+      if (a < 0) return true;
+      chaque(o.x0, o.y0, 400, (sx0, sy0) => {
+        const sx1 = sx0 + (o.x1 - o.x0) * cam.echelle, sy1 = sy0 - (o.y1 - o.y0) * cam.echelle;
+        const ex = sx1 + o.dx, ey = sy1 + o.dy, haut = Math.min(70, 0.4 * Math.hypot(ex - sx0, ey - sy0) + 8);
+        const point = (u) => [
+          sx0 + (ex - sx0) * u,
+          sy0 + (ey - sy0) * u - haut * 4 * u * (1 - u)
+        ];
+        for (let k = 4; k >= 0; k--) {
+          const u = a - k * 0.035;
+          if (u < 0) continue;
+          const [px, py] = point(u);
+          ctx.fillStyle = k === 0 ? "#fff3c4" : `rgba(255, 210, 140, ${0.5 - k * 0.1})`;
+          const s = k === 0 ? 2 : 1;
+          ctx.fillRect(Math.round(px) - (s >> 1), Math.round(py) - (s >> 1), s, s);
+        }
+      });
+      return true;
+    });
+    this.eclats = this.eclats.filter((c2) => {
+      const a = t - c2.t0;
+      if (a > DUREE_ECLAT * c2.taille) return false;
+      if (a < 0) return true;
+      const k = z * c2.taille, u = a / (DUREE_ECLAT * c2.taille);
+      chaque(c2.x, c2.y, 30, (sx, sy) => {
+        const x = Math.round(sx + c2.dx * z), y = Math.round(sy + c2.dy * z);
+        if (u < 0.16) {
+          const s = Math.max(1, Math.round(k));
+          ctx.fillStyle = "#fff8d8";
+          ctx.fillRect(x - s, y - s, 2 * s, 2 * s);
+          ctx.fillStyle = "#ffd25a";
+          ctx.fillRect(x - 3 * s, y, 6 * s, Math.max(1, s >> 1) || 1);
+          ctx.fillRect(x, y - 3 * s, Math.max(1, s >> 1) || 1, 6 * s);
+        } else if (u < 0.4) {
+          const s = Math.round((2 + 2 * (u - 0.16) / 0.24) * k);
+          ctx.fillStyle = "#ff9a3c";
+          ctx.fillRect(x - s, y - s, 2 * s, 2 * s);
+          ctx.fillStyle = "#ffd25a";
+          ctx.fillRect(x - (s >> 1), y - (s >> 1), s, s);
+        } else {
+          const v = (u - 0.4) / 0.6, s = Math.round((2.5 + 1.5 * v) * k), up = Math.round(4 * v * k);
+          ctx.fillStyle = `rgba(90, 86, 80, ${0.55 * (1 - v)})`;
+          ctx.fillRect(x - s, y - s - up, 2 * s, 2 * s);
+        }
+      });
+      return true;
+    });
+    this.debris = this.debris.filter((p) => {
+      const a = t - p.t0;
+      if (a >= DUREE_DEBRIS) return false;
+      if (a < 0) return true;
+      chaque(p.x, p.y, 60, (sx, sy) => {
+        ctx.globalAlpha = 1 - a / DUREE_DEBRIS;
+        ctx.fillStyle = p.couleur;
+        ctx.fillRect(Math.round(sx + p.vx * a * z), Math.round(sy + (p.vy * a + 60 * a * a) * z), z, z);
+        ctx.globalAlpha = 1;
+      });
+      return true;
+    });
+  }
+  anneauxEtDrapeaux(ctx, t, z, chaque) {
+    this.anneaux = this.anneaux.filter((n) => {
+      const u = (t - n.t0) / n.duree;
+      if (u >= 1) return false;
+      if (u < 0) return true;
+      const v = 1 - (1 - u) * (1 - u);
+      chaque(n.x, n.y, n.rayon * 2 + 10, (sx, sy) => {
+        ctx.beginPath();
+        ctx.arc(sx, sy, 3 + n.rayon * z * v, 0, Math.PI * 2);
+        ctx.strokeStyle = n.couleur;
+        ctx.globalAlpha = 0.9 * (1 - u);
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      });
+      return true;
+    });
+    const poses = [];
+    this.drapeaux = this.drapeaux.filter((d) => {
+      const a = t - d.t0;
+      if (a >= DUREE_DRAPEAU) return false;
+      if (a < 0) return true;
+      const monte = Math.min(1, a / 0.35), fond = a > DUREE_DRAPEAU - 0.5 ? (DUREE_DRAPEAU - a) / 0.5 : 1;
+      const vent = Math.floor(a * 4) & 1;
+      chaque(d.x, d.y, 30, (sx, sy) => {
+        for (let i = 0; i < poses.length; i += 2) if (Math.hypot(poses[i] - sx, poses[i + 1] - sy) < DRAPEAUX_PX * z) return;
+        poses.push(sx, sy);
+        const x = Math.round(sx), y = Math.round(sy), mat = Math.round(12 * z * rebond(monte));
+        ctx.globalAlpha = fond;
+        ctx.fillStyle = "#1d1a17";
+        ctx.fillRect(x - 1, y - mat - 1, 3, mat + 2);
+        ctx.fillStyle = "#d9dee2";
+        ctx.fillRect(x, y - mat, z, mat);
+        if (monte >= 1) {
+          const w = 7 * z, h = 5 * z, y0 = y - mat;
+          ctx.fillStyle = "#1d1a17";
+          ctx.fillRect(x + z, y0 - 1, w + 2, h + 2);
+          ctx.fillStyle = d.couleur;
+          ctx.fillRect(x + z + 1, y0, w, h);
+          ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
+          for (let c2 = vent; c2 < w; c2 += 2 * z) ctx.fillRect(x + z + 1 + c2, y0, z, h);
+          ctx.fillStyle = COULEURS_CAMPS[d.camp] ?? "#cfc6b0";
+          ctx.fillRect(x + z + 1, y0 + h - z, w, z);
+        }
+        ctx.globalAlpha = 1;
+      });
+      return true;
+    });
+  }
+};
+function rebond(u) {
+  const c2 = 1.7;
+  const v = u - 1;
+  return 1 + (c2 + 1) * v * v * v + c2 * v * v;
 }
 
 // web/src/sim/calendrier.ts
@@ -9337,10 +10268,13 @@ function heureEnLettres(heure) {
 var VITESSES = [
   1,
   2,
-  4
+  4,
+  100
 ];
-var MS_PAR_JOUR = 1e4;
-var MS_PAR_PAS = MS_PAR_JOUR / 24;
+var VITESSE_MAX = 100;
+var MS_PAR_PAS = 4e3;
+var MS_PAR_JOUR = MS_PAR_PAS * 24;
+var pasParSeconde = (v) => 1e3 * v / MS_PAR_PAS;
 
 // web/src/interface/panneaux.ts
 function echapper(t) {
@@ -9453,7 +10387,7 @@ function htmlLancement(c2, pays, filtre = "") {
       "0",
       "non"
     ]
-  ], c2.nucleaire ? "1" : "0")) + ch("Victoire", seg("victoire", Object.entries(NOMS_VICTOIRE), c2.victoire)) + `<div class="note">Un jour de jeu dure dix secondes \xE0 la vitesse de base ; une ann\xE9e, une heure.</div></div></div><div class="bas"><button data-act="charger">Charger une partie\u2026</button><button class="gros" data-act="jouer">Jouer avec ${echapper(choisi?.nom ?? "\u2026")}</button></div>`;
+  ], c2.nucleaire ? "1" : "0")) + ch("Victoire", seg("victoire", Object.entries(NOMS_VICTOIRE), c2.victoire)) + `<div class="note">Une heure de jeu dure quatre secondes \xE0 la vitesse de base (un jour : 1 min 36) ; \xD7100 : un jour par seconde.</div></div></div><div class="bas"><button data-act="charger">Charger une partie\u2026</button><button class="gros" data-act="jouer">Jouer avec ${echapper(choisi?.nom ?? "\u2026")}</button></div>`;
 }
 var Lancement = class {
   pays;
@@ -9853,8 +10787,8 @@ function etatPays(d, p) {
 function htmlPays(p, nom, d, camp) {
   const e = etatPays(d, p), g = d?.guerres.find((x) => x.pays === p);
   const info = g ? `<div class="ligne">Villes prises : ${g.prises[0]} par toi, ${g.prises[1]} par eux \xB7 front fig\xE9 depuis ${g.figeJours} j${g.defense ? " \xB7 guerre de d\xE9fense" : ""}</div>` : "";
-  const guerre = e !== "en guerre", cessez = e === "en guerre", paix = e === "en guerre" || e === "cessez-le-feu";
-  return `<div class="titre"><span class="signe camp${camp}">\u2691</span> ${echapper(nom)} <span class="note">${e}</span>${fermer}</div>${info}<div class="boutons"><button class="rouge" data-decret="guerre" data-pays="${p}"${guerre ? "" : " disabled"}>\u2694 D\xE9clarer la guerre</button><button data-decret="cessez-le-feu" data-pays="${p}"${cessez ? "" : " disabled"}>Cessez-le-feu</button><button data-decret="paix" data-pays="${p}"${paix ? "" : " disabled"}>\u2605 Paix</button></div>` + (camp === CAMP_ALLIE && guerre ? `<div class="note">Attaquer un alli\xE9 : ses autres alli\xE9s te d\xE9clarent la guerre le jour m\xEAme.</div>` : "") + (camp === CAMP_ENNEMI ? `<div class="note">Envoie un groupe sur une de ses villes depuis un d\xE9p\xF4t.</div>` : "");
+  const cessez = e === "en guerre", paix = e === "en guerre" || e === "cessez-le-feu";
+  return `<div class="titre"><span class="signe camp${camp}">\u2691</span> ${echapper(nom)} <span class="note">${e}</span>${fermer}</div>${info}<div class="boutons"><button data-decret="cessez-le-feu" data-pays="${p}"${cessez ? "" : " disabled"}>Cessez-le-feu</button><button data-decret="paix" data-pays="${p}"${paix ? "" : " disabled"}>\u2605 Paix</button></div>` + (camp === CAMP_ALLIE ? `<div class="note">Ton alli\xE9 : tes troupes peuvent s'y rendre, pas l'attaquer.</div>` : "") + (camp === CAMP_ENNEMI ? `<div class="note">\u2694 Pour attaquer : clique un de tes d\xE9p\xF4ts \u25A3, puis une de ses villes ; tes troupes partent et ta couleur avance derri\xE8re elles.</div>` : camp === CAMP_JOUEUR ? "" : `<div class="note">\u2694 Pour l'attaquer : clique un de tes d\xE9p\xF4ts \u25A3, puis une de ses villes. La guerre est d\xE9clar\xE9e par le geste (ses alli\xE9s le d\xE9fendent).</div>`);
 }
 
 // web/src/interface/armee.ts
@@ -9948,7 +10882,7 @@ function htmlGuerre(partie, d, g, cat, nomPays2, paysListe, paysDecret, pont) {
     corps = `<div class="ligne"><span class="n">Victoire</span><b>${vic}</b></div><div class="sous-titre">Tes guerres</div>${guerres}${cessez}<div class="sous-titre">Tes alli\xE9s (${d?.allies.length ?? 0})</div><div class="note">${echapper((d?.allies ?? []).map(nomPays2).join(", ") || "aucun")}</div><div class="sous-titre">Le monde</div><div class="ligne">${d?.nGuerres ?? 0} guerres \xB7 ${g?.total ?? 0} combats \xB7 ${nombre(g?.tues ?? 0)} tu\xE9s chez toi${g?.forces ? ` \xB7 ${nombre(g.forces.avionsPerdus)} avions et ${nombre(g.forces.naviresPerdus)} navires perdus` : ""}</div>` + (d?.monde.length ? `<div class="note">${d.monde.slice(0, 12).map(([a, b]) => `${echapper(nomPays2(a))} \u2013 ${echapper(nomPays2(b))}`).join(" \xB7 ")}</div>` : "") + (tombes.length ? `<div class="note">Tomb\xE9s : ${echapper(tombes.join(", "))}</div>` : "") + (g?.termines.length ? `<div class="sous-titre">Combats termin\xE9s</div>${g.termines.slice().reverse().slice(0, 6).map((c2) => htmlCombat(c2, nomPays2)).join("")}` : "");
   } else if (partie === "decrets") {
     const options = paysListe.map((p) => `<option value="${p.id}"${p.id === paysDecret ? " selected" : ""}>${echapper(p.nom)}</option>`).join("");
-    corps = `<div class="note">Les m\xEAmes d\xE9crets que les autres pays. Une proposition de cessez-le-feu ou de paix est accept\xE9e ou refus\xE9e le jour m\xEAme.</div><div class="ligne"><select data-decret-pays>${options}</select></div><div class="boutons"><button class="rouge" data-decret="guerre" data-pays="${paysDecret}">\u2694 Guerre</button><button data-decret="cessez-le-feu" data-pays="${paysDecret}">Cessez-le-feu</button><button data-decret="paix" data-pays="${paysDecret}">\u2605 Paix</button></div>` + (d?.propositions.length ? `<div class="sous-titre">Propositions re\xE7ues</div>${d.propositions.map((p) => `<div class="ligne">${echapper(nomPays2(p.pays))} propose ${p.decret === "paix" ? "la paix" : "un cessez-le-feu"}<button class="mini oui" data-decret="${p.decret}" data-pays="${p.pays}">Accepter</button><button class="mini non" data-decret="refuser" data-pays="${p.pays}">Refuser</button></div>`).join("")}` : "");
+    corps = `<div class="note">Pas de d\xE9claration de guerre ici : on attaque en envoyant des troupes (clic sur un d\xE9p\xF4t \u25A3, puis sur une ville du pays), la guerre suit le geste. Une proposition de cessez-le-feu ou de paix est accept\xE9e ou refus\xE9e le jour m\xEAme.</div><div class="ligne"><select data-decret-pays>${options}</select></div><div class="boutons"><button data-decret="cessez-le-feu" data-pays="${paysDecret}">Cessez-le-feu</button><button data-decret="paix" data-pays="${paysDecret}">\u2605 Paix</button></div>` + (d?.propositions.length ? `<div class="sous-titre">Propositions re\xE7ues</div>${d.propositions.map((p) => `<div class="ligne">${echapper(nomPays2(p.pays))} propose ${p.decret === "paix" ? "la paix" : "un cessez-le-feu"}<button class="mini oui" data-decret="${p.decret}" data-pays="${p.pays}">Accepter</button><button class="mini non" data-decret="refuser" data-pays="${p.pays}">Refuser</button></div>`).join("")}` : "");
   } else if (partie === "bombe") {
     const n = g?.forces?.nucleaire;
     if (!cat?.nucleaire || !n?.autorise) corps = `<div class="note">Le nucl\xE9aire est d\xE9sactiv\xE9 dans cette partie.</div>`;
@@ -10125,13 +11059,14 @@ function notifsPropositions(d, nomPays2) {
 function actionsClicDroit(l, c2) {
   const a = [];
   const envoi = c2.groupe ?? c2.mix;
+  const chezMoi = !!l && l.camp === CAMP_JOUEUR;
+  const attaque = !!l && l.pays >= 0 && (l.camp === CAMP_ENNEMI || l.camp === CAMP_NEUTRE);
   a.push({
     cle: "envoyer",
-    signe: "\u279C",
-    nom: envoi ? `Envoyer ici : ${envoi}` : "Envoyer ici",
-    off: envoi ? null : "Choisis d'abord un groupe, ou ouvre un d\xE9p\xF4t"
+    signe: attaque ? "\u2694" : "\u279C",
+    nom: envoi ? `${attaque ? "Attaquer" : "Envoyer"} ici : ${envoi}` : attaque ? "Attaquer ici" : "Envoyer ici",
+    off: envoi ? null : "Clique d'abord un de tes d\xE9p\xF4ts \u25A3 ou un de tes groupes"
   });
-  const chezMoi = !!l && l.camp === CAMP_JOUEUR;
   a.push({
     cle: "construire",
     signe: "\u25A3",
@@ -10143,12 +11078,6 @@ function actionsClicDroit(l, c2) {
       cle: "paix",
       signe: "\u2605",
       nom: "Proposer la paix",
-      off: null
-    });
-    else if (l.camp === CAMP_NEUTRE || l.camp === CAMP_ALLIE) a.push({
-      cle: "guerre",
-      signe: "\u2694",
-      nom: "D\xE9clarer la guerre",
       off: null
     });
     if (c2.nucleaire) {
@@ -10214,6 +11143,32 @@ var ClicDroit = class {
 };
 
 // web/src/interface/ecran.ts
+var CLE_PART = "squid-nations-v2.part";
+function lirePart() {
+  try {
+    const v = Number(localStorage.getItem(CLE_PART));
+    return v >= 0.1 && v <= 1 ? v : 0.5;
+  } catch {
+    return 0.5;
+  }
+}
+function mixPart(presents, part, nom = "") {
+  const q = (n, pas) => Math.max(n >= pas ? pas : 0, Math.floor(n * part / pas) * pas);
+  return {
+    soldats: q(presents[0], 1e3),
+    chars: q(presents[1], 1),
+    artillerie: q(presents[2], 1),
+    avions: 0,
+    nom
+  };
+}
+var NOMS_USINES = [
+  "Caserne",
+  "Chars",
+  "Canons",
+  "Avions",
+  "Navires"
+];
 var GENRE_DEPOT = 9;
 var RAFRAICHIR_MS = 1e3;
 var VillesProches = class {
@@ -10277,6 +11232,8 @@ var Ecran = class {
   finVue;
   dernierRafraichi;
   dernierFlux;
+  /** R.2 : part des troupes envoyée d'un clic depuis un dépôt */
+  part;
   poseEnVol;
   villes;
   paysListe;
@@ -10309,6 +11266,7 @@ var Ecran = class {
     this.finVue = false;
     this.dernierRafraichi = 0;
     this.dernierFlux = 0;
+    this.part = lirePart();
     this.poseEnVol = false;
     this.poseIci = null;
     const $2 = (id) => document.getElementById(id);
@@ -10347,6 +11305,7 @@ var Ecran = class {
       e.addEventListener("click", (ev) => this.clic(ev.target, ev));
     }
     this.el.objet.addEventListener("input", (ev) => this.saisie(ev.target));
+    this.el.mode.addEventListener("input", (ev) => this.saisieMode(ev.target));
     this.el.droite.addEventListener("change", (ev) => {
       const s = ev.target;
       if (s.matches("[data-decret-pays]")) this.paysDecret = Number(s.value), this.afficherDroite();
@@ -10403,7 +11362,7 @@ var Ecran = class {
       this.dernierRafraichi = t;
       this.rafraichir();
     }
-    if (this.vue === "flux" && t - this.dernierFlux >= 2e3) {
+    if (t - this.dernierFlux >= 2e3) {
       this.dernierFlux = t;
       this.l.demander({
         sujet: "depots"
@@ -10443,7 +11402,7 @@ var Ecran = class {
   }
   // ------------------------------------------------------------------ barres
   afficherHaut() {
-    this.el.haut.innerHTML = `<div class="vues">${htmlVues(this.vue)}</div><div class="chiffres"></div><div class="temps"><div id="date"></div><button id="pause" data-act="pause" title="Pause (Espace)">\u25B6</button><button id="vitesse" data-act="vitesse" title="Vitesse (+ et \u2212)">base</button></div><div class="menus"><button data-act="armee" title="Page Arm\xE9e (A)">Arm\xE9e</button><button data-act="guerre" title="Menu de guerre (G)">Guerre</button><button data-act="combats" title="Combats en cours (C)">Combats</button><button data-act="sauver" title="Sauvegarder la partie">\u2913</button><button data-act="charger" title="Charger une partie">\u2912</button></div>`;
+    this.el.haut.innerHTML = `<div class="vues">${htmlVues(this.vue)}</div><div class="chiffres"></div><div class="temps"><div id="date"></div><button id="pause" data-act="pause" title="Pause (Espace)">\u25B6</button><button id="vitesse" data-act="vitesse" title="Vitesse : base, \xD72, \xD74 (+ et \u2212)">base</button><button id="x100" data-act="x100" title="Grande vitesse : un jour de jeu par seconde (encore un clic : retour \xE0 la base)">\xD7100</button></div><div class="menus"><button data-act="armee" title="Page Arm\xE9e (A)">Arm\xE9e</button><button data-act="guerre" title="Menu de guerre (G)">Guerre</button><button data-act="combats" title="Combats en cours (C)">Combats</button><button data-act="sauver" title="Sauvegarder la partie">\u2913</button><button data-act="charger" title="Charger une partie">\u2912</button></div>`;
     this.afficherChiffres();
   }
   afficherChiffres() {
@@ -10457,7 +11416,9 @@ var Ecran = class {
     const enPause = !e || e.enPause;
     b.textContent = enPause ? "\u25B6" : "\u275A\u275A";
     b.classList.toggle("actif", enPause);
-    this.el.haut.querySelector("#vitesse").textContent = e ? nomVitesse(e.vitesse) : "base";
+    const v = e?.vitesse ?? 1;
+    this.el.haut.querySelector("#vitesse").textContent = v === VITESSE_MAX ? "\xD7100" : nomVitesse(v);
+    this.el.haut.querySelector("#x100").classList.toggle("actif", v === VITESSE_MAX);
     this.el.haut.querySelector("#date").innerHTML = e?.pret ? htmlDate(this.l.heure()) : `<span id="jour">${echapper(e?.chargement || "\u2014")}</span>`;
   }
   afficherBas() {
@@ -10538,7 +11499,8 @@ var Ecran = class {
     this.afficherGauche();
     this.afficherBas();
   }
-  ouvrirDepot(site) {
+  /** R.2 : ouvre le dépôt, règle la table de mixage à la part courante et attend la cible sur la carte (s'il a des troupes). */
+  ouvrirDepot(site, viser = true) {
     const g = {
       quoi: "depot",
       site,
@@ -10551,7 +11513,8 @@ var Ecran = class {
     }).then((f) => {
       if (f?.sujet !== "depot" || this.gauche !== g) return;
       g.fiche = f;
-      this.mixes.set(site, bornerMix(this.mixDe(site), f));
+      const nom = this.mixDe(site).nom;
+      this.mixes.set(site, bornerMix(mixPart(f.presents, this.part, nom), f));
       this.selection = {
         genre: "site",
         id: site,
@@ -10559,10 +11522,37 @@ var Ecran = class {
         y: f.y
       };
       this.afficherGauche();
+      if (viser && f.presents[0] + f.presents[1] + f.presents[2] > 0) this.viserDepuisDepot(site);
+      else if (viser && this.mode?.quoi === "cible" && this.mode.source) this.annulerMode();
       this.l.redessiner();
     });
   }
-  ouvrirGroupe(id) {
+  /** Mode « clique la cible » depuis un dépôt : la cible reçoit le groupe de la table de mixage ; on y reste pour enchaîner. */
+  viserDepuisDepot(site) {
+    this.mode = {
+      quoi: "cible",
+      texte: "",
+      source: {
+        genre: "depot",
+        id: site
+      },
+      rappel: (x, y) => {
+        this.composer(site, x, y);
+        setTimeout(() => this.gauche?.quoi === "depot" && this.gauche.site === site && this.ouvrirDepot(site), 200);
+      }
+    };
+    this.afficherMode();
+  }
+  /** Effectifs que la table de mixage enverrait (texte court). */
+  texteMix(site) {
+    const m = this.mixDe(site), p = [];
+    if (m.soldats) p.push(`${court(m.soldats)} soldats`);
+    if (m.chars) p.push(`${m.chars} chars`);
+    if (m.artillerie) p.push(`${m.artillerie} canons`);
+    return p.join(", ") || "rien";
+  }
+  /** R.2 : un groupe à soi cliqué attend sa destination sur la carte (ville ennemie ou neutre = attaque). */
+  ouvrirGroupe(id, viser = true) {
     const g = {
       quoi: "groupe",
       id,
@@ -10581,6 +11571,24 @@ var Ecran = class {
         y: f.y
       };
       this.afficherGauche();
+      if (viser && f.camp === CAMP_JOUEUR) {
+        this.mode = {
+          quoi: "cible",
+          texte: `\u279C Clique la destination de ${f.nom} (ville ennemie ou neutre : attaque)`,
+          source: {
+            genre: "groupe",
+            id
+          },
+          rappel: (x, y) => (this.l.envoyer({
+            type: "ordre-groupe",
+            groupe: id,
+            ordre: "envoyer",
+            x,
+            y
+          }), this.bientot())
+        };
+        this.afficherMode();
+      } else if (viser && this.mode?.quoi === "cible" && this.mode.source) this.annulerMode();
       this.l.redessiner();
     });
   }
@@ -10683,7 +11691,10 @@ var Ecran = class {
     e.hidden = !m;
     this.zone.classList.toggle("viser", !!m);
     if (!m) return void (this.el.bulle.hidden = true);
-    if (m.quoi === "cible") e.innerHTML = `${echapper(m.texte)} <button data-act="annuler-mode">Annuler (\xC9chap)</button>`;
+    if (m.quoi === "cible" && m.source?.genre === "depot") {
+      const site = m.source.id;
+      e.innerHTML = `<b>\u2694 Clique la cible</b> <span class="note">ville ennemie ou neutre : attaque \xB7 chez toi : d\xE9placement</span><span class="sep"></span>Troupes <input type="range" data-part min="10" max="100" step="10" value="${Math.round(this.part * 100)}"><b data-part-val>${Math.round(this.part * 100)} %</b> <span class="note" data-part-texte>${echapper(this.texteMix(site))}</span><button data-act="annuler-mode">Garder (\xC9chap)</button>`;
+    } else if (m.quoi === "cible") e.innerHTML = `${echapper(m.texte)} <button data-act="annuler-mode">Annuler (\xC9chap)</button>`;
     else {
       const cat = this.cat;
       const silo = m.genre === 11 ? ` \xB7 bombe <select data-bombe>${cat.bombes.map((b, i) => `<option value="${i}"${i === m.bombe ? " selected" : ""}>${echapper(b.nom)} (${court(b.prix)})</option>`).join("")}</select>` : "";
@@ -10766,6 +11777,25 @@ var Ecran = class {
   clicCarte(x, y, ev) {
     this.clicDroit.fermer();
     const m = this.mode;
+    if (m?.quoi === "cible" && m.source) {
+      const src = m.source;
+      this.l.demander({
+        sujet: "lieu",
+        x,
+        y,
+        km: 14 / this.l.camera().echelle
+      }).then((f) => {
+        if (this.mode !== m) return;
+        const l = f?.sujet === "lieu" ? f : null;
+        if (l?.groupe && l.groupe.camp === CAMP_JOUEUR && !(src.genre === "groupe" && src.id === l.groupe.id)) return this.ouvrirGroupe(l.groupe.id);
+        if (l?.site && l.site.genre === GENRE_DEPOT && l.site.camp === CAMP_JOUEUR && !(src.genre === "depot" && src.id === l.site.site)) {
+          return this.ouvrirDepot(l.site.site);
+        }
+        this.mode = null, this.afficherMode();
+        m.rappel(x, y);
+      });
+      return;
+    }
     if (m?.quoi === "cible") {
       this.mode = null, this.afficherMode();
       return m.rappel(x, y);
@@ -10865,7 +11895,6 @@ var Ecran = class {
           y
         ];
         break;
-      case "guerre":
       case "paix":
         if (l && l.pays >= 0) this.l.envoyer({
           type: "decret",
@@ -11054,7 +12083,13 @@ var Ecran = class {
       case "vitesse":
         if (this.etat) this.l.envoyer({
           type: "vitesse",
-          vitesse: this.etat.vitesse === 4 ? 1 : vitesseVoisine(this.etat.vitesse, 1)
+          vitesse: this.etat.vitesse >= 4 ? 1 : vitesseVoisine(this.etat.vitesse, 1)
+        });
+        return;
+      case "x100":
+        if (this.etat) this.l.envoyer({
+          type: "vitesse",
+          vitesse: this.etat.vitesse === VITESSE_MAX ? 1 : VITESSE_MAX
         });
         return;
       case "armee":
@@ -11159,6 +12194,25 @@ var Ecran = class {
     this.el.objet.querySelector(`[data-val="${k}"]`).textContent = Number(i.value).toLocaleString("fr-FR");
     const vide = mixVide(m);
     for (const b of this.el.objet.querySelectorAll("[data-act=mix-envoyer], [data-act=mix-former]")) b.disabled = vide;
+    const t = this.el.mode.querySelector("[data-part-texte]");
+    if (t) t.textContent = this.texteMix(g.site);
+  }
+  /** R.2 : curseur de la part des troupes dans la barre du mode : la table de mixage du dépôt suit. */
+  saisieMode(i) {
+    if (!i.matches("[data-part]")) return;
+    this.part = Math.max(0.1, Math.min(1, Number(i.value) / 100));
+    try {
+      localStorage.setItem(CLE_PART, String(this.part));
+    } catch {
+    }
+    const g = this.gauche, m = this.mode;
+    this.el.mode.querySelector("[data-part-val]").textContent = `${Math.round(this.part * 100)} %`;
+    if (g?.quoi === "depot" && g.fiche && m?.quoi === "cible" && m.source?.genre === "depot" && m.source.id === g.site) {
+      const mix = bornerMix(mixPart(g.fiche.presents, this.part, this.mixDe(g.site).nom), g.fiche);
+      this.mixes.set(g.site, mix);
+      this.el.objet.querySelector(".dp-mix").innerHTML = htmlMix(g.fiche, mix);
+      this.el.mode.querySelector("[data-part-texte]").textContent = this.texteMix(g.site);
+    }
   }
   /** Glisser un bâtiment de la liste vers une case de la barre du bas ; clic droit sur une case : la vider (⇧ : tout remettre). */
   brancherGlisser() {
@@ -11221,7 +12275,7 @@ var Ecran = class {
     return false;
   }
   // ------------------------------------------------------------------ calque de la carte
-  /** Par-dessus la carte : combats (icône et barre des puissances), choix en cours, emplacements de la pose, dépôts (vue Flux). */
+  /** Par-dessus la carte : choix en cours, emplacements de la pose, dépôts (vue Flux). */
   dessiner(ctx, cam) {
     const m = this.l.monde, copies = copiesVisibles(cam.cx, cam.largeur / 2 / cam.echelle, m.info.emprise.x_min, m.info.circonference_km);
     const chaque = (x, y, f) => {
@@ -11249,28 +12303,45 @@ var Ecran = class {
         });
       }
     }
-    const g = this.etat?.guerre;
-    if (g && this.vue === "jeu") {
-      const epees = dessinCombat().grille;
-      for (const c2 of g.enCours) {
-        const j = c2.joueur === 1 ? 1 : 0, p = c2.puissance[j] + c2.puissance[1 - j] > 0 ? c2.puissance[j] / (c2.puissance[j] + c2.puissance[1 - j]) : 0.5;
-        chaque(c2.x, c2.y, (sx, sy) => {
-          ctx.fillStyle = "rgba(15,20,25,0.85)";
-          ctx.fillRect(sx - 12, sy - 22, 24, 16);
-          const x0 = Math.round(sx - epees.w / 2), y0 = Math.round(sy - 14 - epees.h / 2);
-          for (let v = 0; v < epees.h; v++) {
-            for (let u = 0; u < epees.w; u++) {
-              const k = epees.get(u, v);
-              if (k === ".") continue;
-              ctx.fillStyle = k === "a" ? c2.joueur >= 0 ? "#ffe9b0" : "#d8d2c4" : PALETTE2[k];
-              ctx.fillRect(x0 + u, y0 + v, 1, 1);
-            }
+    if (this.depots && this.etat?.pret) {
+      ctx.font = "700 11px ui-monospace, Menlo, monospace";
+      ctx.textBaseline = "middle";
+      ctx.textAlign = "center";
+      const choisi = this.gauche?.quoi === "depot" ? this.gauche.site : -1;
+      const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 250);
+      for (const d of this.depots.depots) {
+        const n = d.presents[0] + d.presents[1] + d.presents[2];
+        const texte2 = n > 0 ? `\u2694 ${court(n)}` : "\u25A3 vide";
+        chaque(d.x, d.y, (sx, sy) => {
+          const w = ctx.measureText(texte2).width + 10, y0 = sy + 8;
+          if (d.site === choisi) {
+            ctx.strokeStyle = `rgba(242, 201, 76, ${0.5 + 0.5 * pulse})`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(sx, sy, 14 + 4 * pulse, 0, 2 * Math.PI);
+            ctx.stroke();
           }
-          ctx.fillStyle = "#e8684a";
-          ctx.fillRect(sx - 12, sy - 5, 24, 4);
-          ctx.fillStyle = c2.joueur >= 0 ? "#6fb3ff" : "#cfc6b0";
-          ctx.fillRect(sx - 12, sy - 5, 24 * p, 4);
+          ctx.fillStyle = n > 0 ? "rgba(58, 120, 216, 0.92)" : "rgba(15, 20, 25, 0.8)";
+          ctx.fillRect(sx - w / 2, y0, w, 15);
+          ctx.strokeStyle = d.site === choisi ? "#f2c94c" : "#dfe8f0";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(sx - w / 2 + 0.5, y0 + 0.5, w - 1, 14);
+          ctx.fillStyle = "#ffffff";
+          ctx.fillText(texte2, sx, y0 + 8);
         });
+      }
+      if (cam.echelle >= 0.3) {
+        ctx.font = "10px ui-monospace, Menlo, monospace";
+        for (const u of this.depots.usines) {
+          const texte2 = NOMS_USINES[u.type] ?? "Usine";
+          chaque(u.x, u.y, (sx, sy) => {
+            const w = ctx.measureText(texte2).width + 6;
+            ctx.fillStyle = "rgba(15, 20, 25, 0.75)";
+            ctx.fillRect(sx - w / 2, sy + 8, w, 12);
+            ctx.fillStyle = "#9cc8e6";
+            ctx.fillText(texte2, sx, sy + 14);
+          });
+        }
       }
       ctx.textAlign = "start";
     }
@@ -11347,6 +12418,9 @@ var camera;
 var rendu;
 var flux = null;
 var fluxEnAttente = [];
+var effets = null;
+var tAnim = 0;
+var dernierTick = performance.now();
 var survolFlux = {
   genre: null,
   i: -1
@@ -11362,7 +12436,7 @@ var mesures = {
   msRendu: 0,
   images: 0
 };
-var travailleur = new Worker("travailleur.js", {
+var travailleur = new Worker(`travailleur.js${new URL(import.meta.url).search}`, {
   type: "module"
 });
 var envoyer = (m, transfert = []) => travailleur.postMessage(m, transfert);
@@ -11404,7 +12478,9 @@ travailleur.onmessage = (e) => {
       attenteMesure?.(m), attenteMesure = null;
       break;
     case "rendu":
-      if (flux) flux.recevoir(m), aRedessiner = true;
+      if (m.territoire && rendu) rendu.appliquerTerritoire(m.territoire, m.heure), aRedessiner = true;
+      if (rendu) rendu.appliquerGuerres(m.guerres);
+      if (flux) flux.recevoir(m), effets?.recevoir(m), aRedessiner = true;
       else fluxEnAttente.push(m);
       break;
     case "retard":
@@ -11448,7 +12524,7 @@ function lancerPartie(o) {
       id: "bienvenue",
       genre: "info",
       titre: `Tu joues ${p.nom}`,
-      texte: "Espace : reprendre. Clique un d\xE9p\xF4t \u25A3 pour composer un groupe ; B : construire ; A : arm\xE9e ; G : guerre.",
+      texte: "Espace : reprendre. Pour attaquer : clique un de tes d\xE9p\xF4ts \u25A3 (pastille \u2694), puis la ville vis\xE9e : tes troupes partent et ta couleur avance derri\xE8re elles. B : construire ; A : arm\xE9e ; G : guerre.",
       x: NaN,
       y: NaN,
       boutons: [],
@@ -11539,12 +12615,16 @@ function etiquettes() {
   }
 }
 function dessiner2() {
-  const t0 = performance.now();
-  rendu.dessiner(camera, ratio());
-  if (flux) appelsDessin = flux.dessiner(camera, ratio(), canevas.width, canevas.height, heureAffichee());
+  const t0 = performance.now(), h = heureAffichee();
+  rendu.avancerTerritoire(h);
+  rendu.dessiner(camera, ratio(), tAnim);
+  if (flux) appelsDessin = flux.dessiner(camera, ratio(), canevas.width, canevas.height, h, tAnim);
   etiquettes();
-  if (flux) flux.calque(calque.getContext("2d"), camera, survolFlux);
-  ecran?.dessiner(calque.getContext("2d"), camera);
+  const ctx = calque.getContext("2d");
+  effets?.dessinerSol(ctx, camera, h, tAnim);
+  if (flux) flux.calque(ctx, camera, survolFlux);
+  effets?.dessinerMarques(ctx, camera);
+  ecran?.dessiner(ctx, camera);
   dernierDessin = performance.now();
   msRendu = msRendu * 0.8 + (performance.now() - t0) * 0.2;
   mesures.msRendu = msRendu, mesures.images++;
@@ -11554,7 +12634,11 @@ function image() {
   ajuster();
   if (camera && rendu) {
     const anime = camera.animer(16);
-    const roule = !!flux?.anime() && !!etat?.pret && !etat.enPause && performance.now() - dernierDessin >= 33;
+    const maintenant = performance.now(), joue = !!etat?.pret && !etat.enPause;
+    if (joue) tAnim += Math.min(0.1, (maintenant - dernierTick) / 1e3);
+    dernierTick = maintenant;
+    const bouge = !!flux?.anime() || !!effets?.actif() || rendu.avancerTerritoire(heureAffichee());
+    const roule = bouge && joue && maintenant - dernierDessin >= 33;
     if (anime || aRedessiner || roule) {
       dessiner2();
       aRedessiner = false;
@@ -11697,7 +12781,11 @@ async function demarrer() {
     $("chargement").hidden = true;
     chargerReseauMonde(lire).then((r) => {
       flux = new RenduFlux(rendu.gl, monde, r);
-      for (const m of fluxEnAttente.splice(0)) flux.recevoir(m);
+      effets = new EffetsGuerre(flux, (p) => {
+        const c2 = PALETTE[rendu.couleurParPays.get(p) ?? 0] ?? PALETTE[0];
+        return `rgb(${c2[0]}, ${c2[1]}, ${c2[2]})`;
+      });
+      for (const m of fluxEnAttente.splice(0)) flux.recevoir(m), effets.recevoir(m);
       mesures.gpuMo += flux.octetsGPU / 1e6;
       aRedessiner = true;
     }).catch((x) => avis(`R\xE9seau du monde non charg\xE9 : ${x}`, false));
@@ -11906,7 +12994,7 @@ async function autotest() {
   });
   envoyer({
     type: "vitesse",
-    vitesse: 4
+    vitesse: 100
   });
   if (etat?.enPause) envoyer({
     type: "pause"
@@ -11929,7 +13017,8 @@ async function autotest() {
   const diplomatieOk = !!dip && dip.allies.length > 0 && Array.isArray(dip.guerres) && dip.fin === null && /pas en guerre|Paix|refuse/.test(decret);
   const guerreOk = diplomatieOk && !!g && Array.isArray(g.enCours) && Array.isArray(g.termines) && g.tues >= 0 && pont.includes("canons") && airMerOk;
   const ressourcesOk = !!res && res.argent > 0 && res.gainHeure > 0 && achat.includes("en route") && batimentsOk && groupesOk && guerreOk;
-  const horlogeOk = pasReels > 9.6 * 0.7 && pasReels < 9.6 * 1.3;
+  const attendus = pasParSeconde(100);
+  const horlogeOk = pasReels > attendus * 0.7 && pasReels < attendus * 1.3;
   rapport({
     ok: course.heures === JOURS * 24 && course.heure === JOURS * 24 && recharge && horlogeOk && rv.ok && ressourcesOk && interfaceE1.ok,
     interface: interfaceE1,
@@ -11939,7 +13028,7 @@ async function autotest() {
     msParPas: +course.msParPas.toFixed(4),
     sauvegardeOctets: taille,
     rechargeIdentique: recharge,
-    pasParSecondeX4: +pasReels.toFixed(2),
+    pasParSecondeX100: +pasReels.toFixed(2),
     horlogeOk,
     msChargementCarte: Math.round(mesures.chargementMs),
     msPartiePrete: msPartie,
@@ -11972,7 +13061,8 @@ async function autotest() {
       enCours: g.enCours.length,
       termines: g.termines.length,
       total: g.total,
-      zones: g.zones
+      zones: g.zones,
+      casesDessinees: rendu.casesOccupees
     },
     ressources: res,
     couts: etat?.couts.map((c2) => `${c2.nom} ${c2.ms.toFixed(3)}`)
@@ -12075,6 +13165,49 @@ async function apercu(quoi) {
     sujet: "armee"
   });
   const d0 = armee?.sujet === "armee" ? armee.depots[0] : null;
+  if (quoi === "front") {
+    const che = monde.pays.find((p) => p.iso3 === "CHE").id, b = ville("Gen\xE8ve");
+    const depots = armee?.sujet === "armee" ? armee.depots : [];
+    const d = parametres.get("depot") === "premier" ? depots[0] : depots.sort((p, q) => Math.hypot(p.x - V.x[b], p.y - V.y[b]) - Math.hypot(q.x - V.x[b], q.y - V.y[b]))[0];
+    envoyer({
+      type: "decret",
+      decret: "guerre",
+      pays: che
+    });
+    if (d) {
+      const [s0, c0, a0] = d.presents;
+      envoyer({
+        type: "composer",
+        depot: d.site,
+        soldats: Math.min(25e3, s0),
+        chars: Math.min(150, c0),
+        artillerie: Math.min(24, a0),
+        nom: "1re arm\xE9e",
+        x: V.x[b],
+        y: V.y[b]
+      });
+    }
+    await mesurer({
+      type: "avancer",
+      heures: Number(parametres.get("heures") ?? 1)
+    });
+    await attendre(400);
+    ajuster();
+    const cb = etat?.guerre?.enCours.find((c2) => c2.joueur >= 0);
+    const x = cb ? cb.x : d ? (d.x + V.x[b]) / 2 : V.x[b], y = cb ? cb.y : d ? (d.y + V.y[b]) / 2 : V.y[b];
+    camera.cx = x, camera.cy = y;
+    camera.zoomerTout(Number(parametres.get("zoom") ?? 1.1) / camera.echelle, camera.largeur / 2, camera.hauteur / 2);
+    envoyer({
+      type: "vitesse",
+      vitesse: Number(parametres.get("vitesse") ?? 2)
+    });
+    if (etat?.enPause) envoyer({
+      type: "pause"
+    });
+    aRedessiner = true;
+    document.body.dataset.fini = "1";
+    return;
+  }
   if (quoi === "guerre" || quoi === "combats" || quoi === "groupe") {
     const che = monde.pays.find((p) => p.iso3 === "CHE").id, b = ville("Gen\xE8ve");
     envoyer({

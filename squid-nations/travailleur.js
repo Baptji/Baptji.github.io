@@ -2,10 +2,11 @@
 var VITESSES = [
   1,
   2,
-  4
+  4,
+  100
 ];
-var MS_PAR_JOUR = 1e4;
-var MS_PAR_PAS = MS_PAR_JOUR / 24;
+var MS_PAR_PAS = 4e3;
+var MS_PAR_JOUR = MS_PAR_PAS * 24;
 var SEUIL_RETARD_MS = 3e3;
 var Horloge = class {
   /** Heures de jeu écoulées depuis le départ. */
@@ -31,9 +32,13 @@ var Horloge = class {
   fraction() {
     return Math.min(1, Math.max(0, this.reserveMs / MS_PAR_PAS));
   }
-  /** Vrai si la boucle ne suit plus : la vitesse a alors été baissée d'un cran. */
+  /**
+   * Vrai si la boucle ne suit plus (des pas dus et non faits valent plus de SEUIL_RETARD_MS de temps réel) : la vitesse a
+   * alors été baissée d'un cran. Le temps qui attend le pas suivant (moins d'un pas) n'est pas du retard : à la vitesse de
+   * base, il monte jusqu'à quatre secondes, plus que le seuil (25/10 : le jeu ne pouvait plus avancer à la base).
+   */
   verifierRetard() {
-    if (this.reserveMs / this.vitesse <= SEUIL_RETARD_MS) return false;
+    if ((this.reserveMs - MS_PAR_PAS) / this.vitesse <= SEUIL_RETARD_MS) return false;
     this.reserveMs = 0;
     const i = VITESSES.indexOf(this.vitesse);
     if (i > 0) this.vitesse = VITESSES[i - 1];
@@ -288,8 +293,33 @@ var CollecteRendu = class {
     dt: f32(),
     type: u8(),
     camp: u8(),
-    effectif: f32()
+    effectif: f32(),
+    compo: f32(3),
+    etat: u8()
   };
+  /** 25/10 : combats en cours (membres à plat), événements de la guerre, paires de pays en guerre */
+  k = {
+    n: 0,
+    id: [],
+    xy: [],
+    mode: [],
+    camp: [],
+    balance: [],
+    masse: [],
+    debut: [
+      0
+    ],
+    membre: [],
+    role: []
+  };
+  e = {
+    genre: [],
+    xy: [],
+    camp: [],
+    pays: [],
+    retard: []
+  };
+  paires = [];
   o = {
     n: 0,
     id: new Pile(new Int32Array(64)),
@@ -339,8 +369,11 @@ var CollecteRendu = class {
       b.genre
     ]) p.n = b.n;
   }
-  /** Un groupe : sur un trajet (trajet ≥ 0, t, dt) ou immobile en (x, y). */
-  groupe(id, x, y, trajet, t, dt, type, camp, effectif) {
+  /**
+   * Un groupe : sur un trajet (trajet ≥ 0, t, dt) ou immobile en (x, y). `compo` = soldats, chars, canons (sinon tout
+   * l'effectif dans le type dominant) ; `etat` = bits GROUPE_RENFORTS.
+   */
+  groupe(id, x, y, trajet, t, dt, type, camp, effectif, compo, etat = 0) {
     const g = this.g, i = g.n;
     for (const p of [
       g.id,
@@ -350,11 +383,33 @@ var CollecteRendu = class {
       g.dt,
       g.type,
       g.camp,
-      g.effectif
+      g.effectif,
+      g.compo,
+      g.etat
     ]) p.place(1), p.n = i + 1;
     g.id.t[i] = id, g.xy.t[2 * i] = x, g.xy.t[2 * i + 1] = y, g.trajet.t[i] = trajet, g.t.t[i] = t, g.dt.t[i] = dt;
-    g.type.t[i] = type, g.camp.t[i] = camp, g.effectif.t[i] = effectif;
+    g.type.t[i] = type, g.camp.t[i] = camp, g.effectif.t[i] = effectif, g.etat.t[i] = etat;
+    for (let k = 0; k < 3; k++) g.compo.t[3 * i + k] = compo ? compo[k] : k === type ? effectif : 0;
     g.n++;
+  }
+  /**
+   * 25/10 : un combat en cours : centre, mode (MODE_*), camp de chaque côté vu du joueur, part de la puissance du côté 0,
+   * hommes et engins engagés, membres (numéros de groupe) et leur rôle (côté | MEMBRE_APPUI).
+   */
+  combat(id, x, y, mode, camp0, camp1, balance, masse, membres, roles) {
+    const k = this.k;
+    k.id.push(id), k.xy.push(x, y), k.mode.push(mode), k.camp.push(camp0, camp1), k.balance.push(balance), k.masse.push(masse);
+    k.membre.push(...membres), k.role.push(...roles), k.debut.push(k.membre.length);
+    k.n++;
+  }
+  /** 25/10 : un événement de la guerre (EV_*) : lieu, camp et pays concernés, moment dans l'heure (0 à 1). */
+  evenement(genre, x, y, camp, pays, retard = 0) {
+    const e = this.e;
+    e.genre.push(genre), e.xy.push(x, y), e.camp.push(camp), e.pays.push(pays), e.retard.push(Math.round(255 * Math.min(1, Math.max(0, retard))));
+  }
+  /** 25/10 : les paires de pays en guerre ((a << 8) | b, a < b). */
+  guerres(paires) {
+    this.paires = paires;
   }
   /** Une tour à rayon (avions sur un aéroport, navires sur une zone de mer). */
   tour(id, x, y, rayonKm, genre, camp, nombre2) {
@@ -383,7 +438,7 @@ var CollecteRendu = class {
     m.xy.t[2 * i] = x, m.xy.t[2 * i + 1] = y, m.genre.t[i] = genre, m.camp.t[i] = camp, m.niveau.t[i] = niveau;
     m.n++;
   }
-  fin(heure, trajets) {
+  fin(heure, trajets, territoire = null) {
     const b = this.b, g = this.g, o = this.o, m = this.m;
     const billes = {
       n: b.n,
@@ -401,7 +456,30 @@ var CollecteRendu = class {
       dt: g.dt.fin(g.n),
       type: g.type.fin(g.n),
       camp: g.camp.fin(g.n),
-      effectif: g.effectif.fin(g.n)
+      effectif: g.effectif.fin(g.n),
+      compo: g.compo.fin(g.n),
+      etat: g.etat.fin(g.n)
+    };
+    const k = this.k, e = this.e;
+    const combats = {
+      n: k.n,
+      id: Int32Array.from(k.id),
+      xy: Float32Array.from(k.xy),
+      mode: Uint8Array.from(k.mode),
+      camp: Uint8Array.from(k.camp),
+      balance: Float32Array.from(k.balance),
+      masse: Float32Array.from(k.masse),
+      debut: Uint32Array.from(k.debut),
+      membre: Int32Array.from(k.membre),
+      role: Uint8Array.from(k.role)
+    };
+    const evenements = {
+      n: e.genre.length,
+      genre: Uint8Array.from(e.genre),
+      xy: Float32Array.from(e.xy),
+      camp: Uint8Array.from(e.camp),
+      pays: Uint8Array.from(e.pays),
+      retard: Uint8Array.from(e.retard)
     };
     const tours = {
       n: o.n,
@@ -426,7 +504,11 @@ var CollecteRendu = class {
       billes,
       groupes: groupes2,
       tours,
-      batiments
+      batiments,
+      territoire,
+      combats,
+      evenements,
+      guerres: Uint16Array.from(this.paires)
     };
   }
 };
@@ -437,7 +519,13 @@ function transferts(r) {
     r.billes,
     r.groupes,
     r.tours,
-    r.batiments
+    r.batiments,
+    r.territoire,
+    r.combats,
+    r.evenements,
+    {
+      g: r.guerres
+    }
   ]) {
     if (!partie2) continue;
     for (const v of Object.values(partie2)) if (ArrayBuffer.isView(v)) l.push(v.buffer);
@@ -1023,6 +1111,12 @@ var BATIMENTS = [
   "dca",
   "silo"
 ];
+var GROUPE_RENFORTS = 1;
+var MEMBRE_APPUI = 2;
+var EV_PRISE = 0;
+var EV_FIN_COMBAT = 1;
+var EV_DETRUIT = 2;
+var CASE_TERRITOIRE_KM = 10;
 
 // web/src/sim/essai-rendu.ts
 var VILLES = {
@@ -4561,6 +4655,11 @@ var Combat = class {
       enumerable: false,
       writable: true
     });
+    Object.defineProperty(this, "journal", {
+      value: [],
+      enumerable: false,
+      writable: true
+    });
     this.detruits = new Uint8Array(d.pontArete.length);
   }
   apresRestauration() {
@@ -4952,6 +5051,13 @@ var Combat = class {
     if (x.fini) return;
     this.grp.supprimer(x.id);
     this.groupesDetruits++;
+    this.noter(EV_DETRUIT, x.x, x.y, x.pays);
+  }
+  /** 25/10 : un événement pour le rendu (au plus 400 en attente : à ×100, les plus anciens tombent). */
+  noter(genre, x, y, pays) {
+    const j = this.journal;
+    if (j.length >= 4 * 400) j.splice(0, 4 * 100);
+    j.push(genre, x, y, pays);
   }
   /** Le camp cède : ses groupes engagés sont détruits (les restants dispersés, le matériel perdu). */
   detruire(cb, k, gs) {
@@ -4974,6 +5080,9 @@ var Combat = class {
   }
   terminer(cb, heure, issue) {
     cb.issue = issue, cb.fin = heure;
+    if ((issue === 0 || issue === 1) && cb.mode !== BOMBARDEMENT && cb.cotes[issue].pays.length) {
+      this.noter(EV_FIN_COMBAT, cb.x, cb.y, cb.cotes[issue].pays[0]);
+    }
     for (const s of cb.cotes) for (const id of s.groupes) if (this.membre.get(id) === cb) this.membre.delete(id);
     if (cb.mode === BOMBARDEMENT && cb.cotes[0].perdu + cb.cotes[1].perdu <= 0) return;
     const j = this.coteDuJoueur(cb);
@@ -5155,6 +5264,37 @@ var Combat = class {
     const a = this.alertes;
     this.alertes = [];
     return a;
+  }
+  /**
+   * 25/10 (motion design de la guerre) : les combats en cours (centre, mode, camps, rapport des forces, membres) et les
+   * combats gagnés et groupes détruits depuis le dernier envoi, pour les dessiner sur le terrain.
+   */
+  rendu(c) {
+    const g = this.grp;
+    for (const cb of this.combats) {
+      if (cb.issue >= 0) continue;
+      const membres = [], roles = [], camps = [
+        CAMP_NEUTRE,
+        CAMP_NEUTRE
+      ];
+      for (const k of [
+        0,
+        1
+      ]) {
+        const s = cb.cotes[k];
+        for (const id of s.groupes) membres.push(id), roles.push(k);
+        for (const id of s.appuis) membres.push(id), roles.push(k | MEMBRE_APPUI);
+        const p = s.pays[0] ?? g.trouver(s.groupes[0] ?? s.appuis[0] ?? -1)?.pays;
+        if (p !== void 0) camps[k] = g.camp(p);
+      }
+      if (!membres.length) continue;
+      const [a, b] = cb.cotes, total = a.puissance + b.puissance;
+      const masse = a.effectifs[0] + a.effectifs[1] + a.effectifs[2] + b.effectifs[0] + b.effectifs[1] + b.effectifs[2];
+      c.combat(cb.id, cb.x, cb.y, cb.mode, camps[0], camps[1], total > 0 ? a.puissance / total : 0.5, masse, membres, roles);
+    }
+    const j = this.journal;
+    for (let i = 0; i < j.length; i += 4) c.evenement(j[i], j[i + 1], j[i + 2], g.camp(j[i + 3]), j[i + 3]);
+    this.journal = [];
   }
   systemes() {
     return [
@@ -6120,7 +6260,7 @@ var AirMer = class {
       if (g) {
         const [s, ch, a] = g.n;
         const type = ch >= s / 100 && ch >= a ? GROUPE_CHARS : a > s / 100 && a > ch ? GROUPE_ARTILLERIE : GROUPE_SOLDATS;
-        c.groupe(g.id, f.x, f.y, -1, 0, 0, type, camp(g.pays), s + ch + a);
+        c.groupe(g.id, f.x, f.y, -1, 0, 0, type, camp(g.pays), s + ch + a, g.n);
       }
     }
     const n = this.cargos.length;
@@ -6280,6 +6420,11 @@ var Groupes = class {
     });
     Object.defineProperty(this, "parId", {
       value: /* @__PURE__ */ new Map(),
+      enumerable: false,
+      writable: true
+    });
+    Object.defineProperty(this, "guerreAuto", {
+      value: null,
       enumerable: false,
       writable: true
     });
@@ -6526,23 +6671,31 @@ var Groupes = class {
       pays: w >= 0 ? r.proprietaire[w] : -1
     };
   }
-  /** Envoyer : nouvel objectif (ville ou point) ; ami → il y va et attend, ennemi → il y va, prend, puis progresse. */
+  /**
+   * Envoyer : nouvel objectif (ville ou point) ; ami → il y va et attend ; ennemi → il y va, prend, puis progresse ;
+   * neutre → c'est une attaque : la guerre est déclarée par le geste (R.2), puis comme un ennemi. Un allié est refusé.
+   */
   envoyer(pays, id, x, y) {
     const g = this.duJoueur(pays, id);
     if (typeof g === "string") return this.refus(g);
     if (!isFinite(x) || !isFinite(y)) return this.refus("Objectif invalide.");
     const c = this.cible(x, y);
     if (typeof c === "string") return this.refus(c);
-    const offensive = c.pays >= 0 && this.enGuerre(pays, c.pays);
+    let offensive = c.pays >= 0 && this.enGuerre(pays, c.pays), declaration = "";
     if (c.pays >= 0 && !offensive && !this.ami(pays, c.pays)) {
-      return this.refus(`${this.nomPays(c.pays)} n'est pas en guerre avec toi : d\xE9clare-lui la guerre d'abord.`);
+      if (!this.chercher(g, (v) => v === c.noeud, PARAMS8.kmMaxOrdre)) return this.refus("Aucune route ne m\xE8ne l\xE0 depuis ce groupe.");
+      const defenseurs = this.guerreAuto ? this.guerreAuto(pays, c.pays) : (this.declarerGuerre(pays, c.pays, true), []);
+      offensive = true;
+      declaration = `Guerre d\xE9clar\xE9e \xE0 ${this.nomPays(c.pays)}${defenseurs.length ? ` (ses alli\xE9s entrent en guerre contre toi : ${defenseurs.map((p) => this.nomPays(p)).join(", ")})` : ""}. `;
+    } else if (c.pays >= 0 && !offensive && c.pays !== pays && this.ami(pays, c.pays) && g.pays === this.joueur) {
+      declaration = `${this.nomPays(c.pays)} est ton alli\xE9 : ${g.nom} s'y rend sans combattre. `;
     }
     if (!this.chercher(g, (v) => v === c.noeud, PARAMS8.kmMaxOrdre)) return this.refus("Aucune route ne m\xE8ne l\xE0 depuis ce groupe.");
     g.ordre = ENVOYER, g.ville = c.ville, g.but = c.noeud, g.offensive = offensive, g.surPlace = 0;
     const km = g.cum[g.cum.length - 1] - g.km, h = km / this.vitesse(g);
     return {
       ok: true,
-      texte: `${g.nom} en route${offensive ? ` contre ${this.nomPays(c.pays)}` : ""} : ${nombre(km)} km, ${h < 48 ? `${Math.max(1, Math.round(h))} h` : `${Math.round(h / 24)} jours`}.`
+      texte: `${declaration}${g.nom} en route${offensive ? ` contre ${this.nomPays(c.pays)}` : ""} : ${nombre(km)} km, ${h < 48 ? `${Math.max(1, Math.round(h))} h` : `${Math.round(h / 24)} jours`}.`
     };
   }
   /** S'arrêter : tenir sur place. */
@@ -7020,8 +7173,11 @@ var Groupes = class {
       const total = g.cum[g.cum.length - 1];
       const bouge = !this.auBout(g) && !(g.aSec & SEC_CARBURANT) && (g.ordre === ENVOYER && g.contact < 0 || g.ordre === RETIRER || g.ordre === LIVRER);
       const sur = g.trajet >= 0 && total > 0;
-      c.groupe(g.id, g.x, g.y, sur ? g.trajet : -1, sur ? g.km / total : 0, sur && bouge ? this.vitesse(g) / total : 0, type, this.camp(g.pays), s + ch + a);
+      c.groupe(g.id, g.x, g.y, sur ? g.trajet : -1, sur ? g.km / total : 0, sur && bouge ? this.vitesse(g) / total : 0, type, this.camp(g.pays), s + ch + a, g.n, g.ordre === LIVRER ? GROUPE_RENFORTS : 0);
     }
+    const paires = [], G = this.guerre;
+    for (let a = 0; a < 256; a++) for (let b = a + 1; b < 256; b++) if (G[a * 256 + b]) paires.push(a << 8 | b);
+    c.guerres(paires);
     const n = this.convois.filter((v) => v.trajet >= 0);
     c.billes(n.length, n.map((v) => v.trajet), n.map((v) => v.t), n.map((v) => v.dt), n.map((v) => SORTE_CAMION | (v.munitions > v.carburant ? PRODUIT_MUNITIONS : PRODUIT_CARBURANT) << 2));
     this.unites.dessiner(c, (p) => this.camp(p));
@@ -7030,14 +7186,21 @@ var Groupes = class {
 
 // web/src/sim/territoire.ts
 var PARAMS9 = {
-  /** Côté d'une case de l'occupation (km de carte). */
-  caseKm: 10,
-  /** ❓ Rayon autour d'une ville prise où ses cases sont cherchées (km) ; une ville tient au plus ce rayon. */
-  rayonKm: 60,
+  /** Côté d'une case de l'occupation (km de carte) ; la même grille que le rendu (protocole.ts). */
+  caseKm: CASE_TERRITOIRE_KM,
+  /** ❓ Rayon autour d'une ville prise où ses cases sont cherchées (km) ; une ville tient au plus ce rayon. 25/10 : 60 → 150
+   *  (au-delà de 60 km d'une ville, les grandes régions peu peuplées gardaient la couleur du vaincu). */
+  rayonKm: 150,
   /** Un site ou un port dépend de la ville vivante la plus proche à moins de cette distance (comme V2.C.2). */
   kmTerritoire: 300,
   /** Villes prises gardées pour le menu de guerre. */
-  gardesPrises: 200
+  gardesPrises: 200,
+  /** ❓ R.1 : le front d'une ville prise s'étale de tant de km par heure autour d'elle (60 km en 6 h). */
+  kmFrontHeure: 10,
+  /** ❓ R.1 : demi-largeur du couloir peint autour d'un groupe qui avance en pays ennemi (km de carte). */
+  kmCouloir: 15,
+  /** 25/10 : au-delà de ce saut en une heure (débarquement), pas de couloir entre l'avant et l'après (km de carte). */
+  kmSautMax: 250
 };
 var cle3 = (cx, cy) => (cx + 5e4) * 1e5 + (cy + 5e4);
 var Territoire = class {
@@ -7052,9 +7215,16 @@ var Territoire = class {
   tombes;
   /** cases occupées (hors du pays d'origine de leur ville) : case → occupant */
   zones;
+  /** R.1 : fronts en cours d'étalement (une entrée par ville changée) */
+  fronts;
+  /** 25/10 : position de chaque groupe à l'heure précédente (x, y, km parcourus, trajet) : le couloir suit le chemin de l'heure */
+  avant;
   prises;
   alertes;
   sitesPerdus;
+  // ---- bilans R.1
+  casesCouloir;
+  casesFront;
   constructor(res, grp, unites, joueur) {
     this.joueur = joueur;
     this.vu = 0;
@@ -7062,9 +7232,13 @@ var Territoire = class {
     this.depart = new Int32Array(256);
     this.tombes = [];
     this.zones = /* @__PURE__ */ new Map();
+    this.fronts = [];
+    this.avant = /* @__PURE__ */ new Map();
     this.prises = [];
     this.alertes = [];
     this.sitesPerdus = 0;
+    this.casesCouloir = 0;
+    this.casesFront = 0;
     Object.defineProperty(this, "res", {
       value: res,
       enumerable: false
@@ -7076,6 +7250,21 @@ var Territoire = class {
     Object.defineProperty(this, "unites", {
       value: unites,
       enumerable: false
+    });
+    Object.defineProperty(this, "journal", {
+      value: /* @__PURE__ */ new Map(),
+      enumerable: false,
+      writable: true
+    });
+    Object.defineProperty(this, "chemins", {
+      value: [],
+      enumerable: false,
+      writable: true
+    });
+    Object.defineProperty(this, "plantees", {
+      value: [],
+      enumerable: false,
+      writable: true
     });
     const V = res.d.villes, xy = new Float32Array(2 * V.n);
     for (let k = 0; k < V.n; k++) xy[2 * k] = V.x[k], xy[2 * k + 1] = V.y[k];
@@ -7111,6 +7300,8 @@ var Territoire = class {
   }
   // ------------------------------------------------------------------ chaque heure
   heure(m) {
+    this.couloirs();
+    this.avancerFronts();
     const r = this.res;
     if (r.villesChangees === this.vu) return;
     this.vu = r.villesChangees;
@@ -7141,7 +7332,8 @@ var Territoire = class {
         a,
         heure: m.heure
       });
-      this.refaireZones(i);
+      const quand = this.ouvrirFront(i);
+      if (this.plantees.length < 3 * 300) this.plantees.push(i, a, Math.round(255 * quand));
     }
     if (this.prises.length > PARAMS9.gardesPrises) this.prises.splice(0, this.prises.length - PARAMS9.gardesPrises);
     for (const de of new Set(changees.map((i) => parVille.get(i)))) {
@@ -7155,23 +7347,195 @@ var Territoire = class {
     this.unites.commande[s] = 0;
     this.sitesPerdus++;
   }
-  /** Cases de 10 km autour d'une ville qu'elle tient : occupées si elle n'est plus à son pays d'origine. */
-  refaireZones(v) {
-    const r = this.res, V = r.d.villes, C2 = PARAMS9.caseKm, R = PARAMS9.rayonKm;
-    const occupant = r.proprietaire[v], origine = V.pays[v];
-    const cx0 = Math.floor((V.x[v] - R) / C2), cx1 = Math.floor((V.x[v] + R) / C2);
-    const cy0 = Math.floor((V.y[v] - R) / C2), cy1 = Math.floor((V.y[v] + R) / C2);
-    for (let cx = cx0; cx <= cx1; cx++) {
-      for (let cy = cy0; cy <= cy1; cy++) {
-        const x = (cx + 0.5) * C2, y = (cy + 0.5) * C2;
-        if (Math.hypot(x - V.x[v], y - V.y[v]) > R) continue;
-        const [w] = this.villes.proche(x, y, R);
-        if (w !== v) continue;
-        const k = cle3(cx, cy);
-        if (occupant !== origine) this.zones.set(k, occupant);
-        else this.zones.delete(k);
+  // ------------------------------------------------------------------ R.1 : la couleur avance
+  /** Pays d'origine d'une case (celui de la ville vivante la plus proche à moins de kmTerritoire ; −1 : aucune). */
+  origine(x, y) {
+    const [w] = this.villes.proche(x, y, PARAMS9.kmTerritoire);
+    return w < 0 ? -1 : this.res.d.villes.pays[w];
+  }
+  /** Pays qui tient une case : son occupant, sinon le pays qui tient sa ville la plus proche (−1 : aucune). */
+  tenant(cx, cy) {
+    const o = this.zones.get(cle3(cx, cy));
+    if (o !== void 0) return o;
+    const C2 = PARAMS9.caseKm, [w] = this.villes.proche((cx + 0.5) * C2, (cy + 0.5) * C2, PARAMS9.kmTerritoire);
+    return w < 0 ? -1 : this.res.proprietaire[w];
+  }
+  /**
+   * La case passe à `pays` : gardée en creux (effacée si c'est son pays d'origine), notée pour le rendu si elle change,
+   * avec le moment de l'heure où elle change (0 à 1).
+   */
+  marquer(cx, cy, pays, quand = 0) {
+    const k = cle3(cx, cy), C2 = PARAMS9.caseKm, avant = this.zones.get(k);
+    const origine = this.origine((cx + 0.5) * C2, (cy + 0.5) * C2);
+    const moment = Math.round(255 * Math.min(1, Math.max(0, quand))) << 8;
+    if (pays === origine) {
+      if (avant === void 0) return false;
+      this.zones.delete(k);
+      this.journal.set(k, moment);
+      return true;
+    }
+    if (avant === pays) return false;
+    this.zones.set(k, pays);
+    this.journal.set(k, pays | moment);
+    return true;
+  }
+  /**
+   * Les groupes en marche peignent leur couloir : les cases à moins de kmCouloir du chemin de l'heure tenues par un pays en
+   * guerre avec eux, chacune au moment où la tête du groupe y passe. Le chemin est l'itinéraire du groupe entre ses deux
+   * positions (même trajet qu'à l'heure d'avant), sinon la ligne droite entre elles.
+   */
+  couloirs() {
+    const g = this.grp, C2 = PARAMS9.caseKm, K = PARAMS9.kmCouloir, vus = /* @__PURE__ */ new Map(), chemins = [];
+    const ax = this.res.d.reseau.axes.noeuds, pas = K / 3, ennemi = (p, t) => t >= 0 && t !== p && g.enGuerre(p, t);
+    for (const x of g.groupes) {
+      if (x.fini) continue;
+      const a = this.avant.get(x.id);
+      vus.set(x.id, [
+        x.x,
+        x.y,
+        x.km,
+        x.trajet
+      ]);
+      if (x.ordre !== ENVOYER || x.surPlace > 0) continue;
+      let x0 = a ? a[0] : x.x, y0 = a ? a[1] : x.y;
+      if (Math.hypot(x.x - x0, x.y - y0) > PARAMS9.kmSautMax) x0 = x.x, y0 = x.y;
+      chemins.push(x.pays, x0, y0, x.x, x.y);
+      const pts = [];
+      if (a && a[3] === x.trajet && x.trajet >= 0 && a[2] < x.km && x.cum.length > 1) {
+        const km0 = a[2], n = Math.max(1, Math.ceil((x.km - km0) / pas));
+        let seg = 0;
+        for (let i = 0; i <= n; i++) {
+          const km = km0 + (x.km - km0) * i / n;
+          while (seg + 1 < x.cum.length - 1 && x.cum[seg + 1] < km) seg++;
+          const u = x.noeuds[seg], w = x.noeuds[Math.min(seg + 1, x.noeuds.length - 1)], l = x.cum[seg + 1] - x.cum[seg];
+          const f = l > 0 ? Math.min(1, Math.max(0, (km - x.cum[seg]) / l)) : 0;
+          pts.push(ax[2 * u] + (ax[2 * w] - ax[2 * u]) * f, ax[2 * u + 1] + (ax[2 * w + 1] - ax[2 * u + 1]) * f, i / n);
+        }
+      } else {
+        const n = Math.max(1, Math.ceil(Math.hypot(x.x - x0, x.y - y0) / pas));
+        for (let i = 0; i <= n; i++) pts.push(x0 + (x.x - x0) * i / n, y0 + (x.y - y0) * i / n, i / n);
+      }
+      const vues = /* @__PURE__ */ new Set();
+      for (let i = 0; i < pts.length; i += 3) {
+        const px = pts[i], py = pts[i + 1];
+        for (let cx = Math.floor((px - K) / C2); cx <= Math.floor((px + K) / C2); cx++) {
+          for (let cy = Math.floor((py - K) / C2); cy <= Math.floor((py + K) / C2); cy++) {
+            const k = cle3(cx, cy);
+            if (vues.has(k) || Math.hypot((cx + 0.5) * C2 - px, (cy + 0.5) * C2 - py) > K) continue;
+            vues.add(k);
+            if (!ennemi(x.pays, this.tenant(cx, cy))) continue;
+            if (this.marquer(cx, cy, x.pays, pts[i + 2])) this.casesCouloir++;
+          }
+        }
       }
     }
+    this.avant = vus;
+    this.chemins = chemins;
+  }
+  /** Moment de l'heure (0 à 1) où un groupe de `pays` en marche est passé au plus près de (x, y) ; 0 si aucun n'y est passé. */
+  passage(pays, x, y) {
+    const c = this.chemins;
+    let mieux = PARAMS9.kmCouloir * 2, quand = 0;
+    for (let i = 0; i < c.length; i += 5) {
+      if (c[i] !== pays) continue;
+      const x0 = c[i + 1], y0 = c[i + 2], dx = c[i + 3] - x0, dy = c[i + 4] - y0, l2 = dx * dx + dy * dy;
+      const u = l2 > 0 ? Math.min(1, Math.max(0, ((x - x0) * dx + (y - y0) * dy) / l2)) : 0;
+      const d = Math.hypot(x - x0 - u * dx, y - y0 - u * dy);
+      if (d < mieux) mieux = d, quand = u;
+    }
+    return quand;
+  }
+  /**
+   * Une ville a changé de mains : son front s'ouvre (la ville elle-même change de couleur au passage de ses preneurs,
+   * dans l'heure). Rend ce moment (0 à 1).
+   */
+  ouvrirFront(v) {
+    this.fronts = this.fronts.filter((f2) => f2.ville !== v);
+    const f = {
+      ville: v,
+      rayon: 0
+    }, V = this.res.d.villes;
+    const quand = this.passage(this.res.proprietaire[v], V.x[v], V.y[v]);
+    this.fronts.push(f);
+    this.peindreAnneau(f, 0, PARAMS9.caseKm, quand);
+    f.rayon = PARAMS9.caseKm;
+    return quand;
+  }
+  /**
+   * Chaque heure, chaque front gagne un anneau de kmFrontHeure ; fini quand il atteint rayonKm, ou dès qu'un anneau ne
+   * touche plus aucune case de sa ville (la zone d'une ville, la plus proche de chaque point, est d'un seul tenant : au-delà
+   * il n'y a plus rien à elle — en Europe, c'est fini en quelques heures).
+   */
+  avancerFronts() {
+    if (!this.fronts.length) return;
+    const R = PARAMS9.rayonKm, restants = [];
+    for (const f of this.fronts) {
+      const r1 = Math.min(R, f.rayon + PARAMS9.kmFrontHeure);
+      const a = this.peindreAnneau(f, f.rayon, r1);
+      f.rayon = r1;
+      if (r1 < R && a > 0) restants.push(f);
+    }
+    this.fronts = restants;
+  }
+  /**
+   * Cases de 10 km dont la ville du front est la plus proche, à une distance de (r0, r1] : au maître actuel de la ville,
+   * chacune au moment de l'heure où l'anneau l'atteint (`quand` pour la ville elle-même, au premier anneau). Rend le nombre
+   * de cases de la ville dans l'anneau (déjà peintes comprises).
+   */
+  peindreAnneau(f, r0, r1, quand) {
+    const r = this.res, V = r.d.villes, C2 = PARAMS9.caseKm, R = PARAMS9.rayonKm, v = f.ville, maitre = r.proprietaire[v];
+    let a = 0;
+    const cx0 = Math.floor((V.x[v] - r1) / C2), cx1 = Math.floor((V.x[v] + r1) / C2);
+    const cy0 = Math.floor((V.y[v] - r1) / C2), cy1 = Math.floor((V.y[v] + r1) / C2);
+    for (let cx = cx0; cx <= cx1; cx++) {
+      for (let cy = cy0; cy <= cy1; cy++) {
+        const x = (cx + 0.5) * C2, y = (cy + 0.5) * C2, d = Math.hypot(x - V.x[v], y - V.y[v]);
+        if (d > r1 || d <= r0 && r0 > 0) continue;
+        const [w] = this.villes.proche(x, y, R);
+        if (w !== v) continue;
+        a++;
+        if (this.marquer(cx, cy, maitre, quand ?? (r1 > r0 ? (d - r0) / (r1 - r0) : 0))) this.casesFront++;
+      }
+    }
+    return a;
+  }
+  /** Cases changées depuis le dernier appel, pour le rendu (null : aucune). */
+  renduChangements() {
+    const j = this.journal;
+    if (!j.size) return null;
+    const n = j.size, cx = new Int32Array(n), cy = new Int32Array(n), occ = new Uint8Array(n), retard = new Uint8Array(n);
+    let i = 0;
+    for (const [k, v] of j) cx[i] = Math.floor(k / 1e5) - 5e4, cy[i] = k % 1e5 - 5e4, occ[i] = v & 255, retard[i] = v >> 8, i++;
+    this.journal = /* @__PURE__ */ new Map();
+    return {
+      tout: false,
+      n,
+      cx,
+      cy,
+      occupant: occ,
+      retard
+    };
+  }
+  /** Toutes les cases occupées (nouvelle partie, rechargement), sans délai. */
+  renduComplet() {
+    this.journal = /* @__PURE__ */ new Map();
+    const n = this.zones.size, cx = new Int32Array(n), cy = new Int32Array(n), occ = new Uint8Array(n);
+    let i = 0;
+    for (const [k, p] of this.zones) cx[i] = Math.floor(k / 1e5) - 5e4, cy[i] = k % 1e5 - 5e4, occ[i] = p, i++;
+    return {
+      tout: true,
+      n,
+      cx,
+      cy,
+      occupant: occ,
+      retard: new Uint8Array(n)
+    };
+  }
+  /** 25/10 : les villes prises depuis le dernier envoi (drapeau planté, au moment où la ville change de couleur). */
+  rendu(c) {
+    const p = this.plantees, V = this.res.d.villes;
+    for (let i = 0; i < p.length; i += 3) c.evenement(EV_PRISE, V.x[p[i]], V.y[p[i]], this.grp.camp(p[i + 1]), p[i + 1], p[i + 2] / 255);
+    this.plantees = [];
   }
   /** Le pays ne tient plus aucune ville : ses groupes disparaissent, ses bâtiments s'arrêtent, ses guerres prennent fin. */
   tomber(p, vainqueur) {
@@ -7187,10 +7551,10 @@ var Territoire = class {
     }
   }
   // ------------------------------------------------------------------ pour les autres modules et l'interface
-  /** Pays qui tient (x, y) : celui de la ville vivante la plus proche (−1 : trop loin de toute ville). */
+  /** Pays qui tient (x, y) : l'occupant de sa case s'il y en a un, sinon celui de la ville vivante la plus proche (−1 : trop loin). */
   controleur(x, y) {
-    const [v] = this.villes.proche(x, y, PARAMS9.kmTerritoire);
-    return v < 0 ? -1 : this.res.proprietaire[v];
+    const C2 = PARAMS9.caseKm;
+    return this.tenant(Math.floor(x / C2), Math.floor(y / C2));
   }
   /** Part de la population d'origine d'un pays que d'autres tiennent (0 à 1). */
   partConquise(p) {
@@ -7249,6 +7613,7 @@ var Territoire = class {
   empreinte(h) {
     h = melanger(h, this.prises.length);
     h = melanger(h, this.zones.size);
+    h = melanger(h, this.fronts.length * 7 + this.casesCouloir);
     return melanger(h, this.tombes.length * 1e3 + this.sitesPerdus);
   }
 };
@@ -7712,6 +8077,7 @@ var Diplomatie = class {
       value: terr,
       enumerable: false
     });
+    grp.guerreAuto = (a, b) => this.declarer(a, b, -1);
   }
   // ------------------------------------------------------------------ états
   vivant(p) {
@@ -8158,7 +8524,7 @@ var IA = class {
       value: {
         jour: -1
       },
-      enumerable: false,
+      enumerable: true,
       writable: true
     });
     const prix = [];
@@ -9492,7 +9858,18 @@ function fiche(r, joueur, d) {
     }
     case "emplacements":
       return emplacements(r, joueur, d.genre);
-    case "depots":
+    case "depots": {
+      u.assurer();
+      const usines = [];
+      for (let s = 0; s < res.n; s++) {
+        const t = u.typeUsine(s);
+        if (t >= 0 && res.pays[s] === joueur && res.actif[s]) usines.push({
+          site: s,
+          x: res.x[s],
+          y: res.y[s],
+          type: t
+        });
+      }
       return {
         sujet: "depots",
         porteeKm: PARAMS2.porteeDepotKm,
@@ -9502,9 +9879,16 @@ function fiche(r, joueur, d) {
           y: res.y[s],
           carburant: res.stock[4 * s + CARBURANT],
           munitions: res.stock[4 * s + MUNITIONS],
-          cap: res.capacite[4 * s + CARBURANT] + res.capacite[4 * s + MUNITIONS]
-        }))
+          cap: res.capacite[4 * s + CARBURANT] + res.capacite[4 * s + MUNITIONS],
+          presents: [
+            0,
+            1,
+            2
+          ].map((t) => u.parc[5 * s + t])
+        })),
+        usines
       };
+    }
   }
 }
 function lieu(r, joueur, x, y, km) {
@@ -10136,7 +10520,9 @@ function envoyerRendu() {
   const reg = racines.rendu;
   const nouveaux = reg && reg.n > trajetsEnvoyes ? reg.depuis(trajetsEnvoyes) : null;
   if (reg) trajetsEnvoyes = reg.n;
-  const r = c.fin(monde.heure, nouveaux);
+  const terr = racines.territoire;
+  const territoire = terr ? heureRendu < 0 ? terr.renduComplet() : terr.renduChangements() : null;
+  const r = c.fin(monde.heure, nouveaux, territoire);
   heureRendu = monde.heure;
   portee.postMessage(r, transferts(r));
   const dt = performance.now() - t0;
