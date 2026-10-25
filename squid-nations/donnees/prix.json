@@ -1,0 +1,239 @@
+{
+ "echelle": {
+  "habitant_euro_par_heure": 1,
+  "heures_par_mois": 720,
+  "mois_recettes_france": 49357190160,
+  "k_argent_jeu_par_euro_reel": 268.2,
+  "diviseur_unites": 50,
+  "carburant_jeu_par_tonne": 268246
+ },
+ "batiments": [
+  {
+   "id": "puits",
+   "nom": "Puits",
+   "unite_prix": "site",
+   "delai_jours": 10,
+   "prix_brut": 4935719016,
+   "source": "estimé : 0.1 × une Usine de chars",
+   "prix": 5000000000
+  },
+  {
+   "id": "raffinerie",
+   "nom": "Raffinerie",
+   "unite_prix": "site",
+   "delai_jours": 90,
+   "prix_brut": 246785950800,
+   "source": "estimé : 5 × une Usine de chars",
+   "prix": 250000000000
+  },
+  {
+   "id": "usine_munitions",
+   "nom": "Usine de munitions",
+   "unite_prix": "site",
+   "delai_jours": 30,
+   "v1_meur": 500.0,
+   "prix_brut": 134122799348,
+   "source": "V1 constructions.csv : usine_munitions",
+   "prix": 120000000000
+  },
+  {
+   "id": "caserne",
+   "nom": "Caserne",
+   "unite_prix": "site",
+   "delai_jours": 10,
+   "v1_meur": 40.0,
+   "prix_brut": 10729823948,
+   "source": "V1 constructions.csv : base_terrestre",
+   "prix": 10000000000
+  },
+  {
+   "id": "usine_chars",
+   "nom": "Usine de chars",
+   "unite_prix": "site",
+   "delai_jours": 55,
+   "v1_meur": 184.0,
+   "prix_brut": 49357190160,
+   "source": "V1 constructions.csv : usine_chars",
+   "prix": 50000000000
+  },
+  {
+   "id": "usine_artillerie",
+   "nom": "Usine d'artillerie",
+   "unite_prix": "site",
+   "delai_jours": 55,
+   "v1_meur": 184.0,
+   "prix_brut": 49357190160,
+   "source": "V1 constructions.csv : usine_artillerie",
+   "prix": 50000000000
+  },
+  {
+   "id": "usine_avions",
+   "nom": "Usine d'avions",
+   "unite_prix": "site",
+   "delai_jours": 60,
+   "v1_meur": 552.0,
+   "prix_brut": 148071570480,
+   "source": "V1 constructions.csv : usine_avions",
+   "prix": 150000000000
+  },
+  {
+   "id": "aeroport",
+   "nom": "Aéroport",
+   "unite_prix": "site",
+   "delai_jours": 40,
+   "v1_meur": 690.0,
+   "prix_brut": 185089463100,
+   "source": "V1 constructions.csv : aeroport",
+   "prix": 200000000000
+  },
+  {
+   "id": "chantier_naval",
+   "nom": "Chantier naval",
+   "unite_prix": "site",
+   "delai_jours": 100,
+   "v1_meur": 407.0,
+   "prix_brut": 109175958669,
+   "source": "V1 constructions.csv : chantier_naval",
+   "prix": 100000000000
+  },
+  {
+   "id": "depot",
+   "nom": "Dépôt",
+   "unite_prix": "site",
+   "delai_jours": 15,
+   "v1_meur": 181.0,
+   "prix_brut": 48552453364,
+   "source": "V1 constructions.csv : depot_munitions ; ajusté pour l'équilibre (V2.D.1)",
+   "prix": 10000000000
+  },
+  {
+   "id": "dca",
+   "nom": "DCA",
+   "unite_prix": "site",
+   "delai_jours": 10,
+   "v1_meur": 368.0,
+   "prix_brut": 98714380320,
+   "source": "V1 constructions.csv : batterie_antiaerienne ; ajusté pour l'équilibre (V2.D.1)",
+   "prix": 20000000000
+  },
+  {
+   "id": "route",
+   "nom": "Route",
+   "unite_prix": "km",
+   "delai_jours": 1,
+   "v1_meur": 9.4,
+   "prix_brut": 2521508628,
+   "source": "V1 constructions.csv : route",
+   "prix": 2500000000
+  },
+  {
+   "id": "rail",
+   "nom": "Voie ferrée",
+   "unite_prix": "km",
+   "delai_jours": 1,
+   "v1_meur": 25.0,
+   "prix_brut": 6706139967,
+   "source": "V1 constructions.csv : voie_ferree",
+   "prix": 6000000000
+  },
+  {
+   "id": "silo",
+   "nom": "Silo",
+   "unite_prix": "site",
+   "delai_jours": 40,
+   "v1_meur": 149.0,
+   "prix_brut": 39968594206,
+   "source": "V1 constructions.csv : silo_nucleaire",
+   "prix": 40000000000
+  }
+ ],
+ "unites": [
+  {
+   "id": "soldats",
+   "nom": "Soldats (par millier)",
+   "usine": "caserne",
+   "v1_meur": 30.0,
+   "prix_brut": 160947359,
+   "prix": 150000000,
+   "carburant_t": 20.0,
+   "recrues": 1000,
+   "jours_production": 1.0
+  },
+  {
+   "id": "chars",
+   "nom": "Chars",
+   "usine": "usine_chars",
+   "v1_meur": 10.0,
+   "prix_brut": 53649120,
+   "prix": 50000000,
+   "carburant_t": 2.0,
+   "recrues": 0,
+   "jours_production": 0.25
+  },
+  {
+   "id": "artillerie",
+   "nom": "Artillerie",
+   "usine": "usine_artillerie",
+   "v1_meur": 4.5,
+   "prix_brut": 24142104,
+   "prix": 25000000,
+   "carburant_t": 0.5,
+   "recrues": 0,
+   "jours_production": 0.25
+  },
+  {
+   "id": "avions",
+   "nom": "Avions",
+   "usine": "usine_avions",
+   "v1_meur": 60.0,
+   "prix_brut": 321894718,
+   "prix": 300000000,
+   "carburant_t": 6.0,
+   "recrues": 0,
+   "jours_production": 1.0
+  },
+  {
+   "id": "navires",
+   "nom": "Navires",
+   "usine": "chantier_naval",
+   "v1_meur": 670.0,
+   "prix_brut": 3594491023,
+   "prix": 4000000000,
+   "carburant_t": 500.0,
+   "recrues": 0,
+   "jours_production": 15.0
+  }
+ ],
+ "bombes": [
+  {
+   "id": "b15kt",
+   "nom": "Bombe de 15 kt",
+   "prix": 25000000000,
+   "relatif_usine_chars": 0.5
+  },
+  {
+   "id": "b50kt",
+   "nom": "Bombe de 50 kt",
+   "prix": 50000000000,
+   "relatif_usine_chars": 1.0
+  },
+  {
+   "id": "b200kt",
+   "nom": "Bombe de 200 kt",
+   "prix": 100000000000,
+   "relatif_usine_chars": 2.0
+  },
+  {
+   "id": "b1mt",
+   "nom": "Bombe de 1 Mt",
+   "prix": 250000000000,
+   "relatif_usine_chars": 5.0
+  },
+  {
+   "id": "b10mt",
+   "nom": "Bombe H de 10 Mt",
+   "prix": 600000000000,
+   "relatif_usine_chars": 12.0
+  }
+ ]
+}

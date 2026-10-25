@@ -1,0 +1,629 @@
+/* Jetons de couleur. Un seul jeu de rôles, redéfini pour le thème sombre : les figures
+   SVG lisent ces mêmes variables, donc elles basculent avec le reste de l'interface. */
+:root {
+  color-scheme: light;
+
+  --plan: #f9f9f7;          /* fond de page */
+  --surface: #fcfcfb;       /* cartes, panneaux */
+  --fond-figure: #fcfcfb;   /* fond sur lequel les marques sont détourées */
+  --encre: #0b0b0b;
+  --encre-2: #52514e;
+  --encre-3: #898781;       /* graduations, libellés d'axe */
+  --grille: #e1e0d9;
+  --axe: #c3c2b7;
+  --filet: rgba(11, 11, 11, 0.10);
+
+  --serie-pluie: #2a78d6;
+  --serie-neige: #86b6ef;
+  --serie-etp: #eb6834;      /* ETP : fente catégorielle 2, validée contre le bleu */
+  /* Un onglet = une seule série : ces deux teintes ne côtoient jamais l'orange ni le
+     bleu dans une même figure. Chacune passe le contraste 3:1 sur les deux fonds. */
+  --serie-temp: #e34948;
+  --serie-humidex: #4a3aa7;
+  /* Rampes à trois marches pour min / moyenne / maximale : une seule teinte, la
+     marche la plus contrastée pour la maximale. Validées en clair et en sombre. */
+  /* Échelle divergente des écarts à la moyenne : deux teintes opposées (bleu / rouge)
+     et un gris au milieu, qui doit se lire comme « rien de particulier ». */
+  --div-froid-3: #1c5cab;
+  --div-froid-2: #3987e5;
+  --div-froid-1: #9ec5f4;
+  --div-neutre: #e6e5e1;
+  --div-chaud-1: #f2908f;
+  --div-chaud-2: #e34948;
+  --div-chaud-3: #8f2322;
+
+  /* les jours extrêmes : deux rampes, du seuil tiède au seuil sévère. La couleur
+     exacte est interpolée entre les deux bouts selon le seuil réglé. */
+  --seuil-froid-doux: #9ec5f4;
+  --seuil-froid-vif: #0f3d76;
+  --seuil-chaud-doux: #f7b3a4;
+  --seuil-chaud-vif: #5e100f;
+
+  --temp-min: #f2908f;
+  --temp-moy: #e34948;
+  --temp-max: #8f2322;
+  --humidex-min: #ada3e8;
+  --humidex-moy: #6b5ccf;
+  --humidex-max: #3a2b93;
+  --secheresse: #f0efec;                    /* bande des mois secs */
+  --survol: rgba(11, 11, 11, 0.045);
+  --reticule: #c3c2b7;
+  --lien: #256abf;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --plan: #0d0d0d;
+    --surface: #1a1a19;
+    --fond-figure: #1a1a19;
+    --encre: #ffffff;
+    --encre-2: #c3c2b7;
+    --encre-3: #898781;
+    --grille: #2c2c2a;
+    --axe: #383835;
+    --filet: rgba(255, 255, 255, 0.10);
+
+    --serie-pluie: #3987e5;
+    --serie-neige: #9ec5f4;
+    --serie-etp: #d95926;
+    --serie-temp: #e66767;
+    --serie-humidex: #9085e9;
+    /* sur fond sombre la rampe s'inverse : c'est la marche CLAIRE qui ressort le plus,
+       et la maximale doit rester la plus lisible des trois */
+    --div-froid-3: #86b6ef;
+    --div-froid-2: #3987e5;
+    --div-froid-1: #1c5cab;
+    --div-neutre: #3c3c39;
+    --div-chaud-1: #8f2322;
+    --div-chaud-2: #e34948;
+    --div-chaud-3: #f7b3b2;
+
+    /* en sombre la rampe s'inverse : l'extrême est le plus CLAIR, sinon le seuil
+       le plus sévère disparaît sur le fond */
+    --seuil-froid-doux: #35608f;
+    --seuil-froid-vif: #cfe3fd;
+    --seuil-chaud-doux: #8f4a49;
+    --seuil-chaud-vif: #ffd3d2;
+
+    --temp-min: #a02f2e;
+    --temp-moy: #e66767;
+    --temp-max: #f7b3b2;
+    --humidex-min: #5f4fc4;
+    --humidex-moy: #9085e9;
+    --humidex-max: #cfc9f5;
+    --secheresse: #262624;
+    --survol: rgba(255, 255, 255, 0.06);
+    --reticule: #52514e;
+    --lien: #6da7ec;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--encre);
+  background: var(--plan);
+}
+
+#app-body {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  height: 100%;
+}
+
+/* ------------------------------------------------------------ barre latérale */
+
+/* la barre latérale ne défile pas avec les figures : la carte reste toujours cliquable.
+   Deux largeurs, réglées par les boutons − et + de la carte. */
+#cote {
+  --largeur: 290px;
+  flex: 0 0 var(--largeur);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: flex-basis 0.18s ease;
+}
+
+.cote-titre {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--encre-3);
+}
+.cote-tete { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+
+#sommaire, #enregistrees {
+  background: var(--surface);
+  border: 1px solid var(--filet);
+  border-radius: 10px;
+  padding: 10px 8px 8px;
+}
+#sommaire .cote-titre, #enregistrees .cote-tete { padding: 0 6px 6px; }
+
+#onglets { display: flex; flex-direction: column; gap: 1px; }
+#onglets button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 8px;
+  background: transparent;
+  color: var(--encre-2);
+  border: none;
+  border-radius: 7px;
+  font: inherit;
+  font-size: 0.84rem;
+  text-align: left;
+  cursor: pointer;
+}
+#onglets button:hover { background: var(--survol); color: var(--encre); }
+#onglets button[aria-selected="true"] {
+  background: var(--serie-pluie);
+  color: #fff;
+  font-weight: 500;
+}
+#onglets .separe { margin-top: 5px; }
+
+/* les mailles enregistrées prennent la place qui reste, et défilent seules */
+#enregistrees { flex: 1 1 auto; min-height: 90px; display: flex; flex-direction: column; }
+#liste-enregistrees {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  min-height: 0;
+}
+#liste-enregistrees li { display: flex; align-items: center; border-radius: 7px; }
+#liste-enregistrees li:hover { background: var(--survol); }
+#liste-enregistrees li.active { background: var(--survol); }
+#liste-enregistrees li.active .nom { color: var(--encre); font-weight: 500; }
+#liste-enregistrees .ouvrir {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 5px 8px;
+  background: none;
+  border: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+#liste-enregistrees .nom {
+  font-size: 0.84rem;
+  color: var(--encre-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#liste-enregistrees .detail { font-size: 0.7rem; color: var(--encre-3); }
+#liste-enregistrees .retirer {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  margin-right: 4px;
+  padding: 0;
+  background: none;
+  color: var(--encre-3);
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  visibility: hidden;
+}
+#liste-enregistrees li:hover .retirer { visibility: visible; }
+#liste-enregistrees .retirer:hover { background: var(--survol); color: var(--encre); }
+#liste-enregistrees input {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 3px 6px;
+  padding: 3px 6px;
+  font: inherit;
+  font-size: 0.84rem;
+  color: var(--encre);
+  background: var(--plan);
+  border: 1px solid var(--encre-3);
+  border-radius: 6px;
+}
+#aucune-enregistree { margin: 2px 6px; font-size: 0.74rem; }
+#aucune-enregistree[hidden] { display: none; }
+#btn-enregistrer:disabled { opacity: 0.3; cursor: default; }
+
+/* -------------------------------------------------------------- partie principale */
+
+#principal {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#presentation[hidden] { display: none; }
+#presentation { display: flex; flex-direction: column; gap: 12px; }
+/* six tuiles : sur une ligne quand la place le permet, sinon trois et trois */
+#presentation .tuiles { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+#presentation .tuile .precision b { font-weight: 600; }
+#presentation .tuile { background: var(--surface); }
+
+/* la frise : une rayure par année */
+.frise-nom {
+  font-size: 11.5px;
+  fill: var(--encre-2);
+}
+.frise-unite { font-size: 10.5px; fill: var(--encre-3); }
+
+#bas {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  /* la barre de défilement est réservée d'avance : sinon elle apparaît une fois les
+     figures dessinées, rogne la largeur de quelques pixels, et la carte de droite —
+     calculée juste avant — passe à la ligne */
+  scrollbar-gutter: stable;
+}
+
+/* ------------------------------------------------------- le panneau de la carte */
+
+#carte {
+  flex: 0 0 auto;
+  height: 250px;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--filet);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.panneau-tete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 8px 8px 14px;
+  border-bottom: 1px solid var(--filet);
+}
+.panneau-tete h2 {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--encre-3);
+}
+.panneau-outils { display: flex; gap: 4px; }
+.panneau-outils button {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  color: var(--encre-2);
+  border: 1px solid var(--filet);
+  border-radius: 7px;
+  cursor: pointer;
+}
+.panneau-outils button.pays {
+  width: auto;
+  padding: 0 5px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.panneau-tete h2 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.panneau-outils button:hover:not(:disabled) { background: var(--survol); color: var(--encre); }
+.panneau-outils button:disabled { opacity: 0.3; cursor: default; }
+
+#map { flex: 1 1 auto; min-height: 0; }
+.leaflet-container { background: var(--plan); font: inherit; }
+.leaflet-control-attribution {
+  font-size: 9px;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+/* Une carte par figure, large de ce que sa figure demande (fixée en JS). En ligne et
+   avec retour à la ligne : le profil des mois et le détail de l'année se rangent côte
+   à côte, la figure annuelle — qui a besoin de toute la largeur — passe dessous. */
+#charts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+}
+/* `display: flex` prend le pas sur l'attribut `hidden` (feuille du navigateur, plus
+   faible) : sans cette ligne les cartes vides s'affichent avant toute sélection. */
+#charts[hidden] { display: none; }
+
+.figure[hidden] { display: none; }
+
+.figure {
+  max-width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--filet);
+  border-radius: 10px;
+  padding: 16px 22px 20px;
+}
+
+#attente {
+  margin: 0;
+  color: var(--encre-3);
+  font-size: 0.9rem;
+  padding-top: 40px;
+  text-align: center;
+}
+
+/* le nom du lieu, seul et centré ; il rétrécit à mesure qu'on descend dans les figures
+   (`--repli` va de 0 en haut à 1 après ~140 px de défilement, posé par app.js) */
+#selection { text-align: center; padding: calc(10px - 8px * var(--repli, 0)) 4px 0; }
+#cell-title {
+  margin: 0;
+  font-size: calc(2.1rem - 0.95rem * var(--repli, 0));
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.muted { color: var(--encre-2); font-size: 0.8rem; line-height: 1.45; }
+
+#status { margin: 2px 0 0; font-size: 0.78rem; }
+#status:empty { display: none; }   /* elle ne parle que pendant un chargement ou une erreur */
+#status.erreur { color: #d03b3b; }
+
+/* ------------------------------------------------------------------- tuiles */
+
+.tuiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 14px 0 0;
+}
+.tuile {
+  flex: 1 1 130px;
+  padding: 10px 12px;
+  border: 1px solid var(--filet);
+  border-radius: 9px;
+}
+.tuile .etiquette {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--encre-3);
+  margin-bottom: 2px;
+}
+.tuile .valeur {
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.tuile .unite { font-size: 0.85rem; font-weight: 400; color: var(--encre-2); }
+.tuile .precision { display: block; margin-top: 2px; font-size: 0.7rem; color: var(--encre-3); }
+
+/* ------------------------------------------------------------------ figures */
+
+.figure-tete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 4px;
+}
+.tete-outils { display: flex; align-items: center; gap: 10px; }
+.annee-nav { display: flex; align-items: center; gap: 2px; }
+.annee-nav[hidden] { display: none; }
+.bascule {
+  width: 28px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  color: var(--encre-2);
+  border: 1px solid var(--filet);
+  border-radius: 7px;
+  cursor: pointer;
+}
+.bascule:hover { background: var(--survol); color: var(--encre); }
+.bascule[aria-pressed="true"] { background: var(--serie-pluie); border-color: transparent; color: #fff; }
+#nav-decennie span { min-width: 4.6em; }
+.annee-nav span {
+  min-width: 3.4em;
+  text-align: center;
+  font-size: 0.88rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.annee-nav button {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  background: transparent;
+  color: var(--encre-2);
+  border: 1px solid var(--filet);
+  border-radius: 7px;
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.annee-nav button:hover:not(:disabled) { background: var(--survol); color: var(--encre); }
+.annee-nav button:disabled { opacity: 0.3; cursor: default; }
+
+.figure h3 { margin: 0 0 4px; font-size: 0.95rem; letter-spacing: -0.01em; }
+.figure-tete h3 { margin: 0; }
+.figure-corps { margin-top: 12px; }
+.figure-corps svg { display: block; max-width: 100%; }
+
+.g-tick {
+  font-size: 10.5px;
+  fill: var(--encre-3);
+  font-variant-numeric: tabular-nums;
+}
+.g-repere {
+  font-size: 10.5px;
+  fill: var(--encre-2);
+  font-weight: 600;
+}
+.g-titre-axe {
+  font-size: 10.5px;
+  fill: var(--encre-3);
+  letter-spacing: 0.02em;
+}
+/* halo dans la couleur du fond : l'étiquette reste lisible quand elle passe
+   par-dessus une colonne ou un filet, sans cartouche ni rectangle dessiné */
+.g-valeur {
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--encre-2);
+  stroke: var(--fond-figure);
+  stroke-width: 3px;
+  paint-order: stroke fill;
+}
+
+.legende {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 10px;
+  font-size: 0.76rem;
+  color: var(--encre-2);
+}
+.legende span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* les pastilles à cocher du détail journalier */
+.pastilles { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 8px 0 0; }
+/* même piège que pour #charts : `display: flex` l'emporte sur l'attribut `hidden`,
+   et les pastilles d'un onglet restaient affichées sur les suivants */
+.pastilles[hidden] { display: none; }
+.pastilles .ecart { width: 14px; }
+.pastilles .intitule { margin-right: 2px; font-size: 0.76rem; color: var(--encre-3); }
+
+/* le réglage du seuil : deux pastilles pour le sens, un curseur pour la valeur */
+.curseur-seuil { width: 190px; margin: 0 2px; cursor: pointer; }
+.valeur-seuil {
+  min-width: 4.2em;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  font-size: 0.82rem;
+  color: var(--encre);
+}
+
+/* l'échelle divergente sous la figure annuelle */
+.echelle:empty { display: none; }
+.echelle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 0.74rem;
+  color: var(--encre-2);
+}
+.echelle .marches { display: flex; gap: 2px; }
+.echelle .marches i { width: 16px; height: 10px; border-radius: 2px; }
+.pastille {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  font: inherit;
+  font-size: 0.76rem;
+  color: var(--encre-3);
+  background: transparent;
+  border: 1px solid var(--filet);
+  border-radius: 999px;
+  cursor: pointer;
+  user-select: none;
+}
+.pastille:hover:not(:disabled) { background: var(--survol); color: var(--encre-2); }
+/* allumée : c'est la surbrillance qui dit qu'elle est active */
+.pastille[aria-pressed="true"] {
+  color: var(--encre);
+  background: var(--survol);
+  border-color: var(--encre-3);
+  font-weight: 500;
+}
+.pastille:disabled { opacity: 0.4; cursor: default; }
+.pastille .cle-trait { opacity: 0.35; }
+.pastille[aria-pressed="true"] .cle-trait { opacity: 1; }
+.pastilles .cle-trait { width: 14px; height: 2px; border-radius: 1px; }
+.cle { width: 10px; height: 10px; border-radius: 3px; }
+.cle-trait { width: 14px; height: 2px; border-radius: 1px; }
+.cle-bande { width: 10px; height: 12px; border-radius: 2px; background: var(--secheresse); }
+
+/* ------------------------------------------------------------ infobulle */
+
+.infobulle {
+  position: fixed;
+  z-index: 2000;
+  pointer-events: none;
+  min-width: 150px;
+  padding: 9px 11px;
+  background: var(--surface);
+  color: var(--encre);
+  border: 1px solid var(--filet);
+  border-radius: 9px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.16);
+  font-size: 0.78rem;
+}
+.infobulle strong { display: block; margin-bottom: 5px; font-size: 0.8rem; }
+.bulle-ligne { display: flex; align-items: center; gap: 7px; margin-top: 3px; }
+.bulle-nom { color: var(--encre-2); }
+.bulle-val { margin-left: auto; font-weight: 600; font-variant-numeric: tabular-nums; }
+.puce { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
+.bulle-note { margin-top: 6px; font-size: 0.72rem; color: var(--encre-3); }
+
+/* ------------------------------------------------------------- table de secours */
+
+.tableau { margin-top: 12px; }
+.tableau summary {
+  font-size: 0.76rem;
+  color: var(--encre-2);
+  cursor: pointer;
+}
+.tableau table {
+  margin-top: 8px;
+  border-collapse: collapse;
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+}
+.tableau th, .tableau td {
+  padding: 3px 12px 3px 0;
+  text-align: right;
+  border-bottom: 1px solid var(--grille);
+}
+.tableau th:first-child, .tableau td:first-child { text-align: left; }
+.tableau th { color: var(--encre-3); font-weight: 500; }
+.tableau .defile { max-height: 240px; overflow-y: auto; }
+.tableau .large { overflow-x: auto; }
+.tableau .sec { background: var(--secheresse); }
+.tableau .note { margin-top: 6px; font-size: 0.72rem; color: var(--encre-3); }
+
+/* mailles SAFRAN et ERA5 sur la carte */
+.safran-cell { transition: fill-opacity 0.1s; }
+
+/* les jours de pluie : réglage du seuil et de la période (onglet Pluie) */
+.reglage-pluie select,
+.reglage-pluie input[type="number"] {
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--encre);
+  background: transparent;
+  border: 1px solid var(--filet);
+  border-radius: 6px;
+  padding: 3px 6px;
+}
+.reglage-pluie input[type="number"] { width: 4.6em; font-variant-numeric: tabular-nums; }
+.reglage-pluie .unite-seuil { font-size: 0.78rem; color: var(--encre-2); }
+.figure-tete.sous-figure { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--filet); }

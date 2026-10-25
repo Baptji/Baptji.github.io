@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Climat</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="app-body">
+
+  <!-- Barre latérale, qui ne défile pas avec les figures : la carte en haut à gauche,
+       le sommaire de la maille, puis les mailles enregistrées. -->
+  <aside id="cote">
+    <section id="carte" aria-label="Carte des mailles">
+      <div class="panneau-tete">
+        <h2>Carte</h2>
+        <div class="panneau-outils">
+          <!-- les deux grilles sont toujours affichées : ces boutons ne font que recadrer -->
+          <button id="btn-france" class="pays" type="button" title="Cadrer sur la France (SAFRAN)"
+                  aria-label="Cadrer sur la France">FR</button>
+          <button id="btn-uk" class="pays" type="button" title="Cadrer sur le Royaume-Uni (ERA5)"
+                  aria-label="Cadrer sur le Royaume-Uni">UK</button>
+          <button id="btn-retrecir" type="button" title="Rétrécir la barre latérale" aria-label="Rétrécir la barre latérale">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="10,4 10,10 4,10"/><polyline points="14,4 14,10 20,10"/>
+              <polyline points="10,20 10,14 4,14"/><polyline points="14,20 14,14 20,14"/>
+            </svg>
+          </button>
+          <button id="btn-agrandir" type="button" title="Agrandir la barre latérale" aria-label="Agrandir la barre latérale">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="4,10 4,4 10,4"/><polyline points="20,10 20,4 14,4"/>
+              <polyline points="4,14 4,20 10,20"/><polyline points="20,14 20,20 14,20"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div id="map"></div>
+    </section>
+
+    <!-- le sommaire : la présentation de la maille, puis une entrée par variable -->
+    <nav id="sommaire" aria-label="Sommaire de la maille">
+      <h2 class="cote-titre">Sommaire</h2>
+      <div id="onglets" role="tablist" aria-orientation="vertical" aria-label="Partie affichée"></div>
+    </nav>
+
+    <section id="enregistrees" aria-label="Mailles enregistrées">
+      <div class="cote-tete">
+        <h2 class="cote-titre">Mailles enregistrées</h2>
+        <button id="btn-enregistrer" type="button" class="bascule" aria-pressed="false" disabled
+                title="Enregistrer cette maille" aria-label="Enregistrer cette maille">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 3h12v18l-6-4.5L6 21z"/>
+          </svg>
+        </button>
+      </div>
+      <ul id="liste-enregistrees"></ul>
+      <p id="aucune-enregistree" class="muted">Choisissez une maille sur la carte, puis le signet pour la garder ici.</p>
+    </section>
+  </aside>
+
+  <main id="principal">
+    <p id="attente">Sélectionnez une maille sur la carte pour commencer.</p>
+
+    <header id="selection" hidden>
+      <h1 id="cell-title">Maille</h1>
+      <p id="status" class="muted" role="status"></p>
+    </header>
+
+  <!-- les figures, dans la partie qui défile -->
+  <div id="bas">
+    <!-- la présentation de la maille : les chiffres de base, puis la frise des années -->
+    <div id="presentation" hidden>
+      <div id="resume" class="tuiles"></div>
+      <section class="figure" id="carte-frise">
+        <h3>Les années, une à une</h3>
+        <p class="muted">Une rayure par année, coloriée selon son écart à la référence. Un clic ouvre la variable.</p>
+        <div id="fig-frise" class="figure-corps"></div>
+        <div class="echelle" id="echelle-frise"></div>
+      </section>
+    </div>
+
+    <div id="charts" hidden>
+      <section class="figure">
+        <div class="figure-tete">
+          <h3 id="titre-mois"></h3>
+          <div class="tete-outils">
+            <button id="btn-decennie" type="button" class="bascule" aria-pressed="false"
+                    title="Découper par décennie" aria-label="Découper par décennie">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                <rect x="3" y="6" width="18" height="12" rx="2"/>
+                <line x1="9" y1="6" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="18"/>
+              </svg>
+            </button>
+            <div class="annee-nav" id="nav-decennie" hidden>
+              <button id="dec-prec" type="button" title="Décennie précédente"
+                      aria-label="Décennie précédente">‹</button>
+              <span id="dec-libelle"></span>
+              <button id="dec-suiv" type="button" title="Décennie suivante"
+                      aria-label="Décennie suivante">›</button>
+            </div>
+          </div>
+        </div>
+        <p class="muted" id="note-mois" hidden></p>
+        <div id="fig-mois" class="figure-corps"></div>
+        <div class="legende" id="legende-mois"></div>
+        <details class="tableau">
+          <summary>Voir le tableau</summary>
+          <div id="table-mois"></div>
+        </details>
+      </section>
+
+      <section class="figure" id="carte-annee">
+        <div class="figure-tete">
+          <h3 id="titre-annee"></h3>
+          <div class="tete-outils">
+          <button id="btn-anomalies" type="button" class="bascule"
+                  title="Afficher les écarts à la moyenne du jour"
+                  aria-label="Afficher les écarts à la moyenne du jour" aria-pressed="false">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <line x1="6" y1="12" x2="6" y2="6"/><line x1="10" y1="12" x2="10" y2="17"/>
+              <line x1="14" y1="12" x2="14" y2="4"/><line x1="18" y1="12" x2="18" y2="15"/>
+            </svg>
+          </button>
+          <div class="annee-nav">
+            <button id="annee-prec" type="button" title="Année précédente" aria-label="Année précédente">‹</button>
+            <span id="annee-libelle"></span>
+            <button id="annee-suiv" type="button" title="Année suivante" aria-label="Année suivante">›</button>
+          </div>
+          </div>
+        </div>
+        <div class="pastilles" id="pastilles-annee" hidden></div>
+        <div id="fig-annee" class="figure-corps"></div>
+        <div class="legende" id="legende-annee"></div>
+      </section>
+
+      <section class="figure">
+        <h3 id="titre-annuel"></h3>
+        <p class="muted" id="sous-titre-annuel"></p>
+        <div class="pastilles" id="pastilles-paquets"></div>
+        <div id="fig-annuel" class="figure-corps"></div>
+        <div class="echelle" id="echelle-annuel"></div>
+        <details class="tableau">
+          <summary>Voir le tableau</summary>
+          <div id="table-annuel"></div>
+        </details>
+      </section>
+
+      <!-- second graphique annuel, seulement pour les onglets qui en définissent un -->
+      <section class="figure" id="carte-annuel-bis" hidden>
+        <h3 id="titre-annuel-bis"></h3>
+        <p class="muted" id="sous-titre-annuel-bis"></p>
+        <div class="pastilles" id="pastilles-paquets-bis"></div>
+        <div class="pastilles" id="reglage-seuil" hidden></div>
+        <div id="fig-annuel-bis" class="figure-corps"></div>
+        <div class="echelle" id="echelle-annuel-bis"></div>
+        <details class="tableau">
+          <summary>Voir le tableau</summary>
+          <div id="table-annuel-bis"></div>
+        </details>
+      </section>
+
+      <!-- onglet Pluie : les jours de pluie d'une période réglable, année par année,
+           puis le détail jour par jour d'une année choisie -->
+      <section class="figure" id="carte-jours-pluie" hidden>
+        <h3>Jours de pluie par année</h3>
+        <p class="muted" id="sous-titre-jours-pluie"></p>
+        <div class="pastilles reglage-pluie" id="reglage-pluie-seuil"></div>
+        <div class="pastilles reglage-pluie" id="reglage-pluie-periode"></div>
+        <div id="fig-jours-pluie" class="figure-corps"></div>
+        <div class="figure-tete sous-figure">
+          <h3 id="titre-jours-annee"></h3>
+          <div class="tete-outils">
+            <div class="annee-nav">
+              <button id="pluie-prec" type="button" title="Année précédente" aria-label="Année précédente">‹</button>
+              <span id="pluie-libelle"></span>
+              <button id="pluie-suiv" type="button" title="Année suivante" aria-label="Année suivante">›</button>
+            </div>
+          </div>
+        </div>
+        <div id="fig-jours-annee" class="figure-corps"></div>
+        <details class="tableau">
+          <summary>Voir le tableau</summary>
+          <div id="table-jours-pluie"></div>
+        </details>
+      </section>
+    </div>
+  </div>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="projection.js"></script>
+<script src="data/grid.js"></script>
+<script src="data/grid-uk.js"></script>
+<script src="graphiques.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

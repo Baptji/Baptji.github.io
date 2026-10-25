@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Squid Ferme</title>
+<meta name="description" content="Petit jeu de ferme : cultiver des légumes et des céréales selon leur rendement réel et leur densité énergétique.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="entete">
+  <h1>Squid Ferme</h1>
+  <div class="etat">
+    <span id="date" class="date"></span>
+    <span id="argent" class="argent"></span>
+  </div>
+  <div id="vitesses" class="vitesses" role="group" aria-label="Vitesse du temps">
+    <button data-vitesse="0" title="Pause (barre d’espace)">❚❚</button>
+    <button data-vitesse="1">×1</button>
+    <button data-vitesse="3">×3</button>
+    <button data-vitesse="10">×10</button>
+  </div>
+</header>
+
+<main class="jeu">
+  <section class="champ">
+    <div id="defile" class="defile"><canvas id="ecran"></canvas></div>
+    <div id="toast" class="toast" role="status"></div>
+    <div id="outils" class="outils" role="group" aria-label="Outils">
+      <button data-outil="semer">Semer : <b id="nom-semence"></b></button>
+      <button data-outil="fumier">Fumier <span class="discret">4 €</span></button>
+      <button data-outil="arracher">Arracher</button>
+      <button data-outil="regarder">Regarder</button>
+    </div>
+    <ol id="journal" class="journal"></ol>
+  </section>
+
+  <aside class="panneau">
+    <nav id="onglets" class="onglets" role="tablist">
+      <button role="tab" data-onglet="semences">Semences</button>
+      <button role="tab" data-onglet="grange">Grange</button>
+      <button role="tab" data-onglet="village">Village</button>
+      <button role="tab" data-onglet="comparer">Comparer</button>
+      <button role="tab" data-onglet="objectifs">Objectifs</button>
+    </nav>
+    <div id="vue" class="vue"></div>
+    <div id="info" class="info"></div>
+  </aside>
+</main>
+<div id="bulle" class="bulle" hidden></div>
+
+<script src="js/donnees.js"></script>
+<script src="js/dessin.js"></script>
+<script src="js/jeu.js"></script>
+</body>
+</html>
