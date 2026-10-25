@@ -4,17 +4,17 @@
 import { etat, abonner, notifier, demarrer, modifier, reglage, formePlan, finirEditionPlan, retirerMur, ouvrirDansMur,
   ajouterEnceinte, ajouterBloc, supprimer, dupliquer, lancerCalcul, arreterCalcul, aJour, aRecalculer, estimation, ECHELLE_DB, deplacerObjet,
   entrees, gravesAutomatiques, nouveauProjet, ouvrirScene, reprendre, dimensionsRect, typePiece, tournerObjet,
-  commencerDessin, annulerDessin, terminerDessin, retirerPointDessin } from './etat.js?v=20261024222224';
-import { MATERIAUX, materiau, GENRES, genre, FILTRES, FORMES, FORMES_AJOUTABLES, borner, estOuvert } from './modele.js?v=20261024222224';
-import { FORMES_PLAN, coinsPlan, murDuPlan, origine, volumePlan, EPAISSEUR, idMur } from './plan.js?v=20261024222224';
-import { Bandes } from './rayons.js?v=20261024222224';
-import { fmaxOndes } from './calcul.js?v=20261024222224';
-import { cssMateriau, turbo, v2, aire } from './base.js?v=20261024222224';
-import { textePixel } from './police.js?v=20261024222224';
-import { chercherEcoute, chercherSalle, arreterRecherche, dureeEcoute, dureeSalle } from './placement.js?v=20261024222224';
-import { Vue3D } from './vue3d.js?v=20261024222224';
-import { Plan2D } from './plan2d.js?v=20261024222224';
-import { Courbe, FMIN, FMAX } from './courbe.js?v=20261024222224';
+  commencerDessin, annulerDessin, terminerDessin, retirerPointDessin } from './etat.js?v=20261025135051';
+import { MATERIAUX, materiau, GENRES, genre, FILTRES, FORMES, FORMES_AJOUTABLES, borner, estOuvert } from './modele.js?v=20261025135051';
+import { FORMES_PLAN, coinsPlan, murDuPlan, origine, volumePlan, EPAISSEUR, idMur } from './plan.js?v=20261025135051';
+import { Bandes } from './rayons.js?v=20261025135051';
+import { fmaxOndes } from './calcul.js?v=20261025135051';
+import { cssMateriau, turbo, v2, aire } from './base.js?v=20261025135051';
+import { textePixel } from './police.js?v=20261025135051';
+import { chercherEcoute, chercherSalle, arreterRecherche, dureeEcoute, dureeSalle } from './placement.js?v=20261025135051';
+import { Vue3D } from './vue3d.js?v=20261025135051';
+import { Plan2D } from './plan2d.js?v=20261025135051';
+import { Courbe, FMIN, FMAX } from './courbe.js?v=20261025135051';
 
 const $ = (sel, r = document) => r.querySelector(sel);
 const el = (tag, attrs = {}, ...enfants) => {
@@ -138,7 +138,8 @@ function remplirCalcul(z) {
 function construireBarre() {
   const b = $('#barre');
   b.innerHTML = '';
-  const fichier = el('input', { type: 'file', accept: '.json,application/json', hidden: true });
+  // Pas de filtre « accept » : Safari (iPhone, iPad et parfois Mac) grise alors les .json. Le contenu est vérifié à la lecture.
+  const fichier = el('input', { type: 'file', hidden: true });
   fichier.addEventListener('change', async () => {
     const f = fichier.files[0]; if (!f) return;
     try { const sc = JSON.parse(await f.text()); if (!sc.enceintes) throw new Error(); ouvrirScene(sc); }

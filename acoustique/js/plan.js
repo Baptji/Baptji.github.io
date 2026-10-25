@@ -2,8 +2,8 @@
 // dérivent murs, pentes affichées et volumes solides ; fenêtres ancrées ; cotes et aimant.
 // Traduction de l'app Mac (Plan.swift, Toit.swift).
 
-import { v2, aire, trianguler, dansPolygone } from './base.js?v=20261024222224';
-import { nouveauBloc, borner, polyedre, axe, solides } from './modele.js?v=20261024222224';
+import { v2, aire, trianguler, dansPolygone } from './base.js?v=20261025135051';
+import { nouveauBloc, borner, polyedre, axe, solides } from './modele.js?v=20261025135051';
 
 export const EPAISSEUR = 0.14;
 

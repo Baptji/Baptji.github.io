@@ -1,10 +1,10 @@
 // Combinaison des enceintes : niveau, délai, polarité et filtre s'appliquent après coup (aucun
 // nouveau calcul). Ondes sous la limite de la grille, rayons au-dessus. Traduction de Champ.swift.
 
-import { cxAdd, cxMul, cxPhase, cxScal, cxDiv, norme2, v3 } from './base.js?v=20261024222224';
-import { cleGeometrie, cleRayons, solides, dansContour } from './modele.js?v=20261024222224';
-import { Bandes, directivite, direct, energie, NOMBRE_DE_RAYONS } from './rayons.js?v=20261024222224';
-import { frequences } from './ondes.js?v=20261024222224';
+import { cxAdd, cxMul, cxPhase, cxScal, cxDiv, norme2, v3 } from './base.js?v=20261025135051';
+import { cleGeometrie, cleRayons, solides, dansContour } from './modele.js?v=20261025135051';
+import { Bandes, directivite, direct, energie, NOMBRE_DE_RAYONS } from './rayons.js?v=20261025135051';
+import { frequences } from './ondes.js?v=20261025135051';
 
 // MARK: Filtres et amplitude
 
@@ -41,7 +41,7 @@ function pool() {
   if (!travailleurs.length) {
     const n = Math.max(1, Math.min((navigator.hardwareConcurrency || 4) - 1, 6));
     for (let i = 0; i < n; i++) {
-      const w = new Worker(new URL('./travailleur.js?v=20261024222224', import.meta.url), { type: 'module' });
+      const w = new Worker(new URL('./travailleur.js?v=20261025135051', import.meta.url), { type: 'module' });
       w.onmessage = (ev) => { const r = attente.get(ev.data.id); attente.delete(ev.data.id); if (r) r(ev.data); };
       travailleurs.push(w);
     }

@@ -3,9 +3,9 @@
 // En dB relatifs : 0 dB = niveau moyen de la somme sur la bande affichée (une réponse plate
 // suivrait le 0) ; au-delà de ±12 dB, couplage trop fort ou annulation.
 
-import { etat, abonner, reglage, gravesAutomatiques } from './etat.js?v=20261024222224';
-import { fmaxOndes } from './calcul.js?v=20261024222224';
-import { entrees } from './etat.js?v=20261024222224';
+import { etat, abonner, reglage, gravesAutomatiques } from './etat.js?v=20261025135051';
+import { fmaxOndes } from './calcul.js?v=20261025135051';
+import { entrees } from './etat.js?v=20261025135051';
 
 export const FMIN = 20, FMAX = 16000;
 const TEINTES = ['#fb8c00', '#43a047', '#e91e63', '#8e24aa', '#fdd835', '#26a69a', '#00897b', '#795548'];
