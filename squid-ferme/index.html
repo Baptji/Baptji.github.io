@@ -4,53 +4,101 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Squid Ferme</title>
-<meta name="description" content="Petit jeu de ferme : cultiver des légumes et des céréales selon leur rendement réel et leur densité énergétique.">
-<link rel="stylesheet" href="style.css">
+<meta name="description" content="Jeu de ferme sur le vrai climat de France depuis 1959 : rendements, énergie et état du sol selon la manière de cultiver.">
+<link rel="stylesheet" href="style.css?v=20261027210339">
 </head>
 <body>
 <header class="entete">
   <h1>Squid Ferme</h1>
-  <div class="etat">
-    <span id="date" class="date"></span>
-    <span id="argent" class="argent"></span>
+  <div class="choix">
+    <button id="choix-ferme" class="ferme-actuelle" aria-haspopup="true"><span id="ferme-nom"></span> ▾</button>
+    <div id="menu-fermes" class="menu-fermes" hidden></div>
+  </div>
+  <button id="niveau" class="niveau" style="--avance:0">
+    <span class="anneau"><svg viewBox="0 0 36 36" aria-hidden="true"><circle class="piste" cx="18" cy="18" r="15.5"/><circle class="arc" cx="18" cy="18" r="15.5" pathLength="100"/></svg><span class="niv">1</span></span>
+    <span class="etoiles"><span class="or">★</span><b>0</b></span>
+  </button>
+  <span id="date" class="date"></span>
+  <div id="meteo" class="meteo">
+    <canvas id="icone-meteo" width="24" height="24"></canvas>
+    <span id="temp"></span>
+    <span id="pluie" class="pluie"></span>
+    <canvas id="spark" class="spark" aria-label="Pluie et températures des 60 derniers jours"></canvas>
+  </div>
+  <div id="production" class="production" title="Production de cette ferme">
+    <b id="prod-t">0 t</b><span id="prod-kcal"></span><span id="prod-pers"></span>
   </div>
   <div id="vitesses" class="vitesses" role="group" aria-label="Vitesse du temps">
     <button data-vitesse="0" title="Pause (barre d’espace)">❚❚</button>
     <button data-vitesse="1">×1</button>
     <button data-vitesse="3">×3</button>
     <button data-vitesse="10">×10</button>
+    <button data-vitesse="30">×30</button>
   </div>
+  <span id="argent" class="argent" title="Trésorerie (prix fixes)"></span>
 </header>
 
 <main class="jeu">
   <section class="champ">
     <div id="defile" class="defile"><canvas id="ecran"></canvas></div>
     <div id="toast" class="toast" role="status"></div>
+    <div id="bandeau" class="bandeau" role="status" hidden></div>
+    <div id="bilan" class="bilan" role="status" hidden></div>
     <div id="outils" class="outils" role="group" aria-label="Outils">
       <button data-outil="semer">Semer : <b id="nom-semence"></b></button>
-      <button data-outil="fumier">Fumier <span class="discret">4 €</span></button>
+      <button data-action-outil="recolter">Récolter tout</button>
       <button data-outil="arracher">Arracher</button>
-      <button data-outil="regarder">Regarder</button>
+      <span class="separateur"></span>
+      <button data-action-outil="irrigation"></button>
+      <button data-action-outil="ferti"></button>
     </div>
     <ol id="journal" class="journal"></ol>
   </section>
 
   <aside class="panneau">
     <nav id="onglets" class="onglets" role="tablist">
+      <button role="tab" data-onglet="commandes">Commandes<span class="pastille" hidden></span></button>
       <button role="tab" data-onglet="semences">Semences</button>
-      <button role="tab" data-onglet="grange">Grange</button>
-      <button role="tab" data-onglet="village">Village</button>
-      <button role="tab" data-onglet="comparer">Comparer</button>
-      <button role="tab" data-onglet="objectifs">Objectifs</button>
+      <button role="tab" data-onglet="production">Production</button>
+      <button role="tab" data-onglet="sol">Sol</button>
+      <button role="tab" data-onglet="ferme">Ferme</button>
+      <span id="indicateur" class="indicateur" aria-hidden="true"></span>
     </nav>
     <div id="vue" class="vue"></div>
     <div id="info" class="info"></div>
   </aside>
 </main>
-<div id="bulle" class="bulle" hidden></div>
 
-<script src="js/donnees.js"></script>
-<script src="js/dessin.js"></script>
-<script src="js/jeu.js"></script>
+<div id="installation" class="installation" hidden>
+  <div class="install-boite">
+    <div class="install-carte">
+      <h1 id="install-titre"></h1>
+      <svg id="carte-france" role="group" aria-label="Régions agricoles"></svg>
+      <p class="discret">Climat réel SAFRAN (Météo-France) de chaque région, jour par jour depuis 1959.</p>
+    </div>
+    <div class="install-choix">
+      <div id="install-region"></div>
+      <h3>Manière de cultiver</h3>
+      <div id="install-modes" class="install-modes"></div>
+      <button id="install-go" class="principal grand"></button>
+    </div>
+  </div>
+</div>
+
+<div id="bulle" class="bulle" hidden></div>
+<div id="guide" class="guide" hidden></div>
+<canvas id="effets" class="effets"></canvas>
+
+<script src="donnees/regions.js?v=20261027210339"></script>
+<script src="donnees/lieux.js?v=20261027210339"></script>
+<script src="js/donnees.js?v=20261027210339"></script>
+<script src="js/climat.js?v=20261027210339"></script>
+<script src="js/agronomie.js?v=20261027210339"></script>
+<script src="js/dessin.js?v=20261027210339"></script>
+<script src="js/rendu.js?v=20261027210339"></script>
+<script src="js/vie.js?v=20261027210339"></script>
+<script src="js/animations.js?v=20261027210339"></script>
+<script src="js/mecaniques.js?v=20261027210339"></script>
+<script src="js/jeu.js?v=20261027210339"></script>
 </body>
 </html>

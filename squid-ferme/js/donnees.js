@@ -1,95 +1,178 @@
 'use strict';
 /* Cultures du jeu.
-   rdt     : rendement moyen en France, tonnes de produit récolté par hectare (grain sec pour céréales,
-             légumineuses sèches et tournesol ; produit frais pour le reste). Ordres de grandeur Agreste,
-             FranceAgriMer, guides techniques maraîchers.
-   kcal    : énergie pour 100 g de produit cru (table CIQUAL de l'ANSES, USDA à défaut).
-   cycle   : jours entre le semis (ou la plantation) et la récolte.
-   semis   : mois où l'on peut semer ou planter (1 = janvier).
-   prix    : prix de base payé au producteur, € par kg.
-   graine  : semences ou plants pour une case de 100 m², en €.
-   demande : ce que le marché absorbe sans faire baisser le prix, kg par mois.
-   azote   : fertilité prise au sol par une récolte (négatif = légumineuse qui en rend).
-   conserv : jours de conservation en grange.
-   forme, coul : dessin de la plante (f feuillage, c clair, m mûr, a accent). */
+   rdt     : rendement moyen en France (t/ha ; grain sec, graines ou produit frais). Agreste, FranceAgriMer,
+             références maraîchères. Le potentiel sans stress vaut environ 1,3 fois cette moyenne.
+   kcal    : énergie pour 100 g crus (table CIQUAL de l'ANSES, USDA à défaut).
+   tb, dj  : température de base (°C) et somme de degrés-jours du semis à la récolte.
+   kc, ky  : coefficient cultural en pleine croissance (FAO 56) et sensibilité du rendement au manque d'eau (FAO 33).
+   gel     : température minimale qui abîme la culture ; chaud : maximale qui échaude la floraison et le remplissage.
+   npt     : azote absorbé par tonne récoltée (kg N/t) ; leg : légumineuse qui fixe l'azote de l'air.
+   semis   : mois de semis ou de plantation ; cycle : durée indicative (jours).
+   prix    : prix fixe au producteur (€/kg) ; graine : semences ou plants (€/ha).
+   prod    : dessin du produit sur les caisses. forme, coul : dessin de la plante. */
 const CULTURES = [
   // Céréales
-  { id: 'ble', nom: 'Blé tendre', cat: 'Céréales', famille: 'poacée', forme: 'epi',
-    rdt: 7.0, kcal: 335, cycle: 270, semis: [10, 11], prix: 0.22, graine: 1.5, demande: 50000, azote: 18, conserv: 720,
-    coul: { f: '#5f9e3a', c: '#8fbf55', m: '#d6b04a', a: '#ecd078' } },
-  { id: 'orge', nom: 'Orge de printemps', cat: 'Céréales', famille: 'poacée', forme: 'epi',
-    rdt: 6.0, kcal: 345, cycle: 130, semis: [2, 3], prix: 0.20, graine: 1.4, demande: 50000, azote: 15, conserv: 720,
-    coul: { f: '#6aa548', c: '#9cc76a', m: '#cfb867', a: '#f0e2a0' } },
-  { id: 'seigle', nom: 'Seigle', cat: 'Céréales', famille: 'poacée', forme: 'epi',
-    rdt: 5.0, kcal: 335, cycle: 290, semis: [9, 10], prix: 0.20, graine: 1.4, demande: 30000, azote: 12, conserv: 720,
-    coul: { f: '#5b9150', c: '#88b07a', m: '#b9a274', a: '#8f8466' } },
-  { id: 'mais', nom: 'Maïs grain', cat: 'Céréales', famille: 'poacée', forme: 'mais',
-    rdt: 9.0, kcal: 365, cycle: 165, semis: [4, 5], prix: 0.19, graine: 2.5, demande: 50000, azote: 25, conserv: 720,
-    coul: { f: '#4f9a3a', c: '#7cc05a', m: '#bfa66a', a: '#f0c43c' } },
-  { id: 'sarrasin', nom: 'Sarrasin', cat: 'Céréales', famille: 'polygonacée', forme: 'sarrasin',
-    rdt: 1.5, kcal: 343, cycle: 100, semis: [5, 6, 7], prix: 1.0, graine: 0.8, demande: 800, azote: 5, conserv: 720,
-    coul: { f: '#5d9a45', c: '#f3e3ea', m: '#8a4a3a', a: '#b8564a' } },
+  { id: 'ble', nom: 'Blé tendre', cat: 'Céréales', famille: 'poacée', forme: 'epi', prod: 'epi',
+    rdt: 7.0, kcal: 335, tb: 0, dj: 2100, kc: 1.15, ky: 1.05, gel: -16, chaud: 28, npt: 30, hiver: true,
+    semis: [10, 11], cycle: 270, prix: 0.22, graine: 150, coul: { f: '#5f9e3a', c: '#8fbf55', m: '#d6b04a', a: '#ecd078' } },
+  { id: 'epeautre', nom: 'Épeautre', cat: 'Céréales', famille: 'poacée', forme: 'epi', prod: 'epi',
+    rdt: 4.5, kcal: 338, tb: 0, dj: 2150, kc: 1.1, ky: 0.95, gel: -18, chaud: 28, npt: 27, hiver: true,
+    semis: [10, 11], cycle: 280, prix: 0.45, graine: 180, coul: { f: '#5a9640', c: '#8ab85e', m: '#c79a52', a: '#b9824a' } },
+  { id: 'orge', nom: 'Orge de printemps', cat: 'Céréales', famille: 'poacée', forme: 'epi', prod: 'epi',
+    rdt: 6.0, kcal: 345, tb: 0, dj: 1550, kc: 1.15, ky: 1.0, gel: -6, chaud: 28, npt: 25,
+    semis: [2, 3], cycle: 130, prix: 0.20, graine: 140, coul: { f: '#6aa548', c: '#9cc76a', m: '#cfb867', a: '#f0e2a0' } },
+  { id: 'avoine', nom: 'Avoine', cat: 'Céréales', famille: 'poacée', forme: 'avoine', prod: 'epi',
+    rdt: 5.0, kcal: 370, tb: 0, dj: 1600, kc: 1.1, ky: 1.0, gel: -6, chaud: 27, npt: 25,
+    semis: [2, 3], cycle: 140, prix: 0.20, graine: 120, coul: { f: '#679e4c', c: '#9ac574', m: '#d9c98a', a: '#efe3b0' } },
+  { id: 'seigle', nom: 'Seigle', cat: 'Céréales', famille: 'poacée', forme: 'epi', prod: 'epi',
+    rdt: 5.0, kcal: 335, tb: 0, dj: 2000, kc: 1.1, ky: 0.9, gel: -22, chaud: 29, npt: 24, hiver: true,
+    semis: [9, 10], cycle: 290, prix: 0.20, graine: 140, coul: { f: '#5b9150', c: '#88b07a', m: '#b9a274', a: '#8f8466' } },
+  { id: 'triticale', nom: 'Triticale', cat: 'Céréales', famille: 'poacée', forme: 'epi', prod: 'epi',
+    rdt: 5.5, kcal: 336, tb: 0, dj: 2050, kc: 1.1, ky: 0.95, gel: -18, chaud: 28, npt: 26, hiver: true,
+    semis: [10, 11], cycle: 275, prix: 0.19, graine: 140, coul: { f: '#58964a', c: '#86b866', m: '#c8a860', a: '#d8b878' } },
+  { id: 'mais', nom: 'Maïs grain', cat: 'Céréales', famille: 'poacée', forme: 'mais', prod: 'epi-mais',
+    rdt: 9.0, kcal: 365, tb: 6, dj: 1750, kc: 1.2, ky: 1.25, gel: -1, chaud: 35, npt: 22,
+    semis: [4, 5], cycle: 165, prix: 0.19, graine: 250, coul: { f: '#4f9a3a', c: '#7cc05a', m: '#bfa66a', a: '#f0c43c' } },
+  { id: 'sorgho', nom: 'Sorgho grain', cat: 'Céréales', famille: 'poacée', forme: 'sorgho', prod: 'grain',
+    rdt: 5.5, kcal: 330, tb: 7, dj: 1650, kc: 1.0, ky: 0.9, gel: -1, chaud: 38, npt: 25,
+    semis: [5], cycle: 150, prix: 0.18, graine: 90, coul: { f: '#4f8f3a', c: '#7cb85a', m: '#a8a060', a: '#a8452c' } },
+  { id: 'sarrasin', nom: 'Sarrasin', cat: 'Céréales', famille: 'polygonacée', forme: 'sarrasin', prod: 'grain',
+    rdt: 1.5, kcal: 343, tb: 5, dj: 1100, kc: 1.0, ky: 1.0, gel: -1, chaud: 32, npt: 30,
+    semis: [5, 6, 7], cycle: 100, prix: 1.0, graine: 80, coul: { f: '#5d9a45', c: '#f3e3ea', m: '#8a4a3a', a: '#b8564a' } },
   // Légumineuses
-  { id: 'haricot', nom: 'Haricot sec', cat: 'Légumineuses', famille: 'fabacée', forme: 'legume',
-    rdt: 2.2, kcal: 330, cycle: 110, semis: [5, 6], prix: 2.5, graine: 3, demande: 500, azote: -12, conserv: 720,
-    coul: { f: '#4e9440', c: '#f4f1e2', m: '#c2a86e', a: '#8a6a3a' } },
-  { id: 'lentille', nom: 'Lentille', cat: 'Légumineuses', famille: 'fabacée', forme: 'legume',
-    rdt: 1.6, kcal: 350, cycle: 120, semis: [3, 4], prix: 1.6, graine: 1.5, demande: 500, azote: -15, conserv: 720,
-    coul: { f: '#6a9e4c', c: '#dfe6f5', m: '#bfa877', a: '#7d8a4a' } },
-  { id: 'pois', nom: 'Petit pois', cat: 'Légumineuses', famille: 'fabacée', forme: 'legume',
-    rdt: 7.5, kcal: 80, cycle: 90, semis: [2, 3, 4], prix: 0.8, graine: 2.5, demande: 400, azote: -12, conserv: 5,
-    coul: { f: '#5aa548', c: '#f6f6ee', m: '#6fbf4a', a: '#8fd060' } },
-  // Racines et tubercules
-  { id: 'pdt', nom: 'Pomme de terre', cat: 'Racines et tubercules', famille: 'solanacée', forme: 'pdt',
-    rdt: 43, kcal: 80, cycle: 110, semis: [3, 4, 5], prix: 0.30, graine: 22, demande: 3000, azote: 22, conserv: 240,
-    coul: { f: '#3f8a3a', c: '#5fa84f', m: '#b5a24a', a: '#e8e0f0' } },
-  { id: 'topinambour', nom: 'Topinambour', cat: 'Racines et tubercules', famille: 'astéracée', forme: 'topi',
-    rdt: 30, kcal: 73, cycle: 210, semis: [3, 4], prix: 1.0, graine: 18, demande: 250, azote: 10, conserv: 30,
-    coul: { f: '#4f9440', c: '#78b85a', m: '#8a6d45', a: '#f2c230' } },
-  { id: 'carotte', nom: 'Carotte', cat: 'Racines et tubercules', famille: 'apiacée', forme: 'racine',
-    rdt: 55, kcal: 36, cycle: 100, semis: [3, 4, 5, 6, 7], prix: 0.45, graine: 4, demande: 1500, azote: 10, conserv: 150,
-    coul: { f: '#4f9e3a', c: '#7cc456', m: '#ee8a2a', a: '#4f9e3a' } },
-  { id: 'panais', nom: 'Panais', cat: 'Racines et tubercules', famille: 'apiacée', forme: 'racine',
-    rdt: 25, kcal: 70, cycle: 150, semis: [3, 4, 5], prix: 1.2, graine: 3, demande: 400, azote: 12, conserv: 90,
-    coul: { f: '#5c9a42', c: '#86bb62', m: '#efe2b8', a: '#5c9a42' } },
-  { id: 'betterave', nom: 'Betterave rouge', cat: 'Racines et tubercules', famille: 'chénopodiacée', forme: 'racine',
-    rdt: 40, kcal: 43, cycle: 100, semis: [4, 5, 6], prix: 0.5, graine: 2.5, demande: 600, azote: 15, conserv: 150,
-    coul: { f: '#3f7f3a', c: '#5e9a4a', m: '#8a1f3a', a: '#b0304f' } },
-  { id: 'oignon', nom: 'Oignon', cat: 'Racines et tubercules', famille: 'alliacée', forme: 'bulbe',
-    rdt: 45, kcal: 40, cycle: 150, semis: [2, 3, 4], prix: 0.40, graine: 9, demande: 1200, azote: 12, conserv: 240,
-    coul: { f: '#4f9a4a', c: '#c9c26a', m: '#d9a45a', a: '#e8d0a0' } },
-  { id: 'ail', nom: 'Ail', cat: 'Racines et tubercules', famille: 'alliacée', forme: 'bulbe',
-    rdt: 9, kcal: 140, cycle: 240, semis: [10, 11], prix: 3.5, graine: 40, demande: 100, azote: 10, conserv: 270,
-    coul: { f: '#5a9a5a', c: '#cdc47a', m: '#f2ece0', a: '#d8c8e0' } },
-  // Légumes-feuilles
-  { id: 'laitue', nom: 'Laitue', cat: 'Légumes-feuilles', famille: 'astéracée', forme: 'rosette',
-    rdt: 30, kcal: 15, cycle: 55, semis: [3, 4, 5, 6, 7, 8, 9], prix: 1.0, graine: 12, demande: 400, azote: 8, conserv: 7,
-    coul: { f: '#6cbf4a', c: '#b5e27a', m: '#9ad860', a: '#d6f09a' } },
-  { id: 'chou', nom: 'Chou pommé', cat: 'Légumes-feuilles', famille: 'brassicacée', forme: 'chou',
-    rdt: 45, kcal: 27, cycle: 120, semis: [4, 5, 6, 7], prix: 0.45, graine: 10, demande: 700, azote: 25, conserv: 90,
-    coul: { f: '#4f8a78', c: '#a9d2a0', m: '#c7e2b0', a: '#7fae94' } },
-  { id: 'epinard', nom: 'Épinard', cat: 'Légumes-feuilles', famille: 'chénopodiacée', forme: 'rosette',
-    rdt: 20, kcal: 23, cycle: 50, semis: [3, 4, 8, 9], prix: 1.8, graine: 3, demande: 200, azote: 12, conserv: 5,
-    coul: { f: '#2f7a3a', c: '#4e9a4a', m: '#3d8a42', a: '#62ad55' } },
-  // Légumes-fruits
-  { id: 'tomate', nom: 'Tomate (plein champ)', cat: 'Légumes-fruits', famille: 'solanacée', forme: 'tomate',
-    rdt: 60, kcal: 18, cycle: 120, semis: [5], prix: 1.3, graine: 35, demande: 900, azote: 20, conserv: 10,
-    coul: { f: '#3f8a3a', c: '#6aad4f', m: '#d8402a', a: '#8cc34a' } },
-  { id: 'courgette', nom: 'Courgette', cat: 'Légumes-fruits', famille: 'cucurbitacée', forme: 'courgette',
-    rdt: 40, kcal: 17, cycle: 80, semis: [5, 6], prix: 0.9, graine: 6, demande: 700, azote: 18, conserv: 10,
-    coul: { f: '#3f8a3a', c: '#7cbf5a', m: '#2f6a2a', a: '#f4c430' } },
-  { id: 'potiron', nom: 'Potiron', cat: 'Légumes-fruits', famille: 'cucurbitacée', forme: 'courge',
-    rdt: 25, kcal: 26, cycle: 140, semis: [5, 6], prix: 0.6, graine: 4, demande: 600, azote: 18, conserv: 180,
-    coul: { f: '#4a8f3a', c: '#78b85a', m: '#e07b24', a: '#f4c430' } },
+  { id: 'haricot', nom: 'Haricot sec', cat: 'Légumineuses', famille: 'fabacée', forme: 'legume', prod: 'graine-blanche',
+    rdt: 2.2, kcal: 330, tb: 8, dj: 1150, kc: 1.15, ky: 1.15, gel: -1, chaud: 32, npt: 60, leg: true,
+    semis: [5, 6], cycle: 110, prix: 2.5, graine: 300, coul: { f: '#4e9440', c: '#f4f1e2', m: '#c2a86e', a: '#8a6a3a' } },
+  { id: 'lentille', nom: 'Lentille', cat: 'Légumineuses', famille: 'fabacée', forme: 'legume', prod: 'lentille',
+    rdt: 1.6, kcal: 350, tb: 2, dj: 1500, kc: 1.05, ky: 1.0, gel: -6, chaud: 31, npt: 60, leg: true,
+    semis: [3, 4], cycle: 120, prix: 1.6, graine: 150, coul: { f: '#6a9e4c', c: '#dfe6f5', m: '#bfa877', a: '#7d8a4a' } },
+  { id: 'poischiche', nom: 'Pois chiche', cat: 'Légumineuses', famille: 'fabacée', forme: 'legume', prod: 'graine-beige',
+    rdt: 1.8, kcal: 364, tb: 4, dj: 1700, kc: 1.0, ky: 0.85, gel: -5, chaud: 35, npt: 55, leg: true,
+    semis: [3, 4], cycle: 130, prix: 1.4, graine: 200, coul: { f: '#6aa050', c: '#e9e0f2', m: '#c9ad78', a: '#a88a50' } },
+  { id: 'feverole', nom: 'Féverole', cat: 'Légumineuses', famille: 'fabacée', forme: 'feverole', prod: 'graine-brune',
+    rdt: 4.0, kcal: 341, tb: 2, dj: 1800, kc: 1.1, ky: 1.0, gel: -10, chaud: 30, npt: 50, leg: true, hiver: true,
+    semis: [11, 2], cycle: 200, prix: 0.30, graine: 160, coul: { f: '#4a8a42', c: '#f2f2ea', m: '#4a3a2a', a: '#2a2a2a' } },
+  { id: 'soja', nom: 'Soja', cat: 'Légumineuses', famille: 'fabacée', forme: 'legume', prod: 'graine-jaune',
+    rdt: 2.8, kcal: 446, tb: 8, dj: 1450, kc: 1.15, ky: 0.85, gel: -1, chaud: 34, npt: 70, leg: true,
+    semis: [5], cycle: 140, prix: 0.42, graine: 200, coul: { f: '#4f9440', c: '#d9c8ea', m: '#b9a060', a: '#8a7040' } },
+  { id: 'pois', nom: 'Petit pois', cat: 'Légumineuses', famille: 'fabacée', forme: 'legume', prod: 'gousse',
+    rdt: 7.5, kcal: 80, tb: 3, dj: 1000, kc: 1.1, ky: 1.15, gel: -5, chaud: 28, npt: 12, leg: true,
+    semis: [2, 3, 4], cycle: 90, prix: 0.8, graine: 250, coul: { f: '#5aa548', c: '#f6f6ee', m: '#6fbf4a', a: '#8fd060' } },
+  { id: 'haricotvert', nom: 'Haricot vert', cat: 'Légumineuses', famille: 'fabacée', forme: 'legume', prod: 'gousse',
+    rdt: 15, kcal: 31, tb: 10, dj: 800, kc: 1.05, ky: 1.15, gel: 0, chaud: 32, npt: 10, leg: true,
+    semis: [5, 6, 7], cycle: 75, prix: 2.0, graine: 600, coul: { f: '#4f9a3f', c: '#f2f0e0', m: '#5aa83a', a: '#3f8a2a' } },
   // Oléagineux
-  { id: 'tournesol', nom: 'Tournesol', cat: 'Oléagineux', famille: 'astéracée', forme: 'tournesol',
-    rdt: 2.3, kcal: 580, cycle: 150, semis: [4, 5], prix: 0.45, graine: 1.5, demande: 50000, azote: 12, conserv: 365,
-    coul: { f: '#4f9440', c: '#78b85a', m: '#f2c230', a: '#5a3a1a' } },
+  { id: 'colza', nom: 'Colza', cat: 'Oléagineux', famille: 'brassicacée', forme: 'colza', prod: 'graine-noire',
+    rdt: 3.3, kcal: 520, tb: 0, dj: 2400, kc: 1.05, ky: 0.95, gel: -15, chaud: 30, npt: 65, hiver: true,
+    semis: [8, 9], cycle: 320, prix: 0.45, graine: 70, coul: { f: '#4f8a5a', c: '#7fae7a', m: '#9a8a50', a: '#f6dc2a' } },
+  { id: 'tournesol', nom: 'Tournesol', cat: 'Oléagineux', famille: 'astéracée', forme: 'tournesol', prod: 'graine-tournesol',
+    rdt: 2.3, kcal: 580, tb: 6, dj: 1650, kc: 1.05, ky: 0.95, gel: -2, chaud: 36, npt: 45,
+    semis: [4, 5], cycle: 150, prix: 0.45, graine: 150, coul: { f: '#4f9440', c: '#78b85a', m: '#f2c230', a: '#5a3a1a' } },
+  { id: 'lin', nom: 'Lin oléagineux', cat: 'Oléagineux', famille: 'linacée', forme: 'lin', prod: 'graine-brune',
+    rdt: 1.8, kcal: 534, tb: 3, dj: 1500, kc: 1.0, ky: 0.95, gel: -4, chaud: 30, npt: 60,
+    semis: [3, 4], cycle: 130, prix: 0.50, graine: 90, coul: { f: '#5e9a58', c: '#88b87a', m: '#b9a26a', a: '#6a8fe0' } },
+  // Racines et tubercules
+  { id: 'pdt', nom: 'Pomme de terre', cat: 'Racines et tubercules', famille: 'solanacée', forme: 'pdt', prod: 'tubercule',
+    rdt: 43, kcal: 80, tb: 6, dj: 1400, kc: 1.15, ky: 1.1, gel: -1, chaud: 32, npt: 4,
+    semis: [3, 4, 5], cycle: 110, prix: 0.30, graine: 2200, coul: { f: '#3f8a3a', c: '#5fa84f', m: '#b5a24a', a: '#e8e0f0' } },
+  { id: 'betsucre', nom: 'Betterave sucrière', cat: 'Racines et tubercules', famille: 'chénopodiacée', forme: 'betsucre', prod: 'betsucre',
+    rdt: 85, kcal: 70, tb: 3, dj: 2400, kc: 1.2, ky: 1.0, gel: -4, chaud: 34, npt: 2.2,
+    semis: [3, 4], cycle: 200, prix: 0.03, graine: 250, coul: { f: '#3f8a3f', c: '#6aab55', m: '#efe6d0', a: '#2f6a2f' } },
+  { id: 'topinambour', nom: 'Topinambour', cat: 'Racines et tubercules', famille: 'astéracée', forme: 'topi', prod: 'tubercule-rose',
+    rdt: 30, kcal: 73, tb: 5, dj: 2600, kc: 1.0, ky: 0.8, gel: -3, chaud: 35, npt: 3,
+    semis: [3, 4], cycle: 210, prix: 1.0, graine: 1800, coul: { f: '#4f9440', c: '#78b85a', m: '#8a6d45', a: '#f2c230' } },
+  { id: 'carotte', nom: 'Carotte', cat: 'Racines et tubercules', famille: 'apiacée', forme: 'racine', prod: 'carotte',
+    rdt: 55, kcal: 36, tb: 3, dj: 1500, kc: 1.05, ky: 1.0, gel: -6, chaud: 32, npt: 2.5,
+    semis: [3, 4, 5, 6, 7], cycle: 100, prix: 0.45, graine: 400, coul: { f: '#4f9e3a', c: '#7cc456', m: '#ee8a2a', a: '#4f9e3a' } },
+  { id: 'panais', nom: 'Panais', cat: 'Racines et tubercules', famille: 'apiacée', forme: 'racine', prod: 'panais',
+    rdt: 25, kcal: 70, tb: 3, dj: 1900, kc: 1.05, ky: 1.0, gel: -10, chaud: 32, npt: 3,
+    semis: [3, 4, 5], cycle: 150, prix: 1.2, graine: 300, coul: { f: '#5c9a42', c: '#86bb62', m: '#efe2b8', a: '#5c9a42' } },
+  { id: 'betterave', nom: 'Betterave rouge', cat: 'Racines et tubercules', famille: 'chénopodiacée', forme: 'racine', prod: 'betterave',
+    rdt: 40, kcal: 43, tb: 4, dj: 1500, kc: 1.05, ky: 1.0, gel: -3, chaud: 32, npt: 3,
+    semis: [4, 5, 6], cycle: 100, prix: 0.5, graine: 250, coul: { f: '#3f7f3a', c: '#5e9a4a', m: '#8a1f3a', a: '#b0304f' } },
+  { id: 'radis', nom: 'Radis', cat: 'Racines et tubercules', famille: 'brassicacée', forme: 'racine', prod: 'radis',
+    rdt: 25, kcal: 16, tb: 4, dj: 420, kc: 0.9, ky: 1.0, gel: -3, chaud: 28, npt: 3,
+    semis: [3, 4, 5, 8, 9], cycle: 30, prix: 1.5, graine: 300, coul: { f: '#5aa548', c: '#86c86a', m: '#e0405a', a: '#5aa548' } },
+  { id: 'navet', nom: 'Navet', cat: 'Racines et tubercules', famille: 'brassicacée', forme: 'racine', prod: 'navet',
+    rdt: 35, kcal: 28, tb: 3, dj: 900, kc: 1.0, ky: 1.0, gel: -6, chaud: 28, npt: 3,
+    semis: [3, 4, 7, 8], cycle: 70, prix: 0.8, graine: 200, coul: { f: '#4f9a48', c: '#7cc062', m: '#f0eaf0', a: '#a050a0' } },
+  { id: 'oignon', nom: 'Oignon', cat: 'Racines et tubercules', famille: 'alliacée', forme: 'bulbe', prod: 'oignon',
+    rdt: 45, kcal: 40, tb: 4, dj: 1800, kc: 1.05, ky: 1.1, gel: -8, chaud: 34, npt: 3,
+    semis: [2, 3, 4], cycle: 150, prix: 0.40, graine: 900, coul: { f: '#4f9a4a', c: '#c9c26a', m: '#d9a45a', a: '#e8d0a0' } },
+  { id: 'echalote', nom: 'Échalote', cat: 'Racines et tubercules', famille: 'alliacée', forme: 'bulbe', prod: 'echalote',
+    rdt: 20, kcal: 72, tb: 4, dj: 1700, kc: 1.0, ky: 1.1, gel: -8, chaud: 33, npt: 3.5,
+    semis: [2, 3], cycle: 140, prix: 2.0, graine: 2500, coul: { f: '#559a52', c: '#c9be70', m: '#c27a5a', a: '#e2b8a0' } },
+  { id: 'ail', nom: 'Ail', cat: 'Racines et tubercules', famille: 'alliacée', forme: 'bulbe', prod: 'ail',
+    rdt: 9, kcal: 140, tb: 0, dj: 1900, kc: 1.0, ky: 1.0, gel: -15, chaud: 34, npt: 10, hiver: true,
+    semis: [10, 11], cycle: 240, prix: 3.5, graine: 4000, coul: { f: '#5a9a5a', c: '#cdc47a', m: '#f2ece0', a: '#d8c8e0' } },
+  // Légumes-feuilles et légumes-fleurs
+  { id: 'laitue', nom: 'Laitue', cat: 'Légumes-feuilles', famille: 'astéracée', forme: 'rosette', prod: 'salade',
+    rdt: 30, kcal: 15, tb: 4, dj: 700, kc: 1.0, ky: 1.1, gel: -3, chaud: 29, npt: 2.5,
+    semis: [3, 4, 5, 6, 7, 8, 9], cycle: 55, prix: 1.0, graine: 1200, coul: { f: '#6cbf4a', c: '#b5e27a', m: '#9ad860', a: '#d6f09a' } },
+  { id: 'epinard', nom: 'Épinard', cat: 'Légumes-feuilles', famille: 'chénopodiacée', forme: 'rosette', prod: 'feuilles',
+    rdt: 20, kcal: 23, tb: 2, dj: 600, kc: 1.0, ky: 1.1, gel: -8, chaud: 27, npt: 5,
+    semis: [3, 4, 8, 9], cycle: 50, prix: 1.8, graine: 300, coul: { f: '#2f7a3a', c: '#4e9a4a', m: '#3d8a42', a: '#62ad55' } },
+  { id: 'poireau', nom: 'Poireau', cat: 'Légumes-feuilles', famille: 'alliacée', forme: 'poireau', prod: 'poireau',
+    rdt: 40, kcal: 31, tb: 3, dj: 2000, kc: 1.0, ky: 1.0, gel: -12, chaud: 32, npt: 4,
+    semis: [4, 5, 6], cycle: 180, prix: 1.0, graine: 1500, coul: { f: '#4a7f6a', c: '#7aaa8a', m: '#f0f0e0', a: '#a8d0a0' } },
+  { id: 'chou', nom: 'Chou pommé', cat: 'Légumes-feuilles', famille: 'brassicacée', forme: 'chou', prod: 'chou',
+    rdt: 45, kcal: 27, tb: 3, dj: 1700, kc: 1.05, ky: 0.95, gel: -8, chaud: 30, npt: 4,
+    semis: [4, 5, 6, 7], cycle: 120, prix: 0.45, graine: 1000, coul: { f: '#4f8a78', c: '#a9d2a0', m: '#c7e2b0', a: '#7fae94' } },
+  { id: 'choufleur', nom: 'Chou-fleur', cat: 'Légumes-feuilles', famille: 'brassicacée', forme: 'choufleur', prod: 'choufleur',
+    rdt: 20, kcal: 25, tb: 4, dj: 1500, kc: 1.05, ky: 0.95, gel: -4, chaud: 28, npt: 7,
+    semis: [5, 6, 7], cycle: 130, prix: 0.9, graine: 1100, coul: { f: '#4f8a68', c: '#86b896', m: '#f4f0dc', a: '#d8d2b8' } },
+  { id: 'artichaut', nom: 'Artichaut', cat: 'Légumes-feuilles', famille: 'astéracée', forme: 'artichaut', prod: 'artichaut',
+    rdt: 10, kcal: 47, tb: 7, dj: 1800, kc: 1.0, ky: 1.0, gel: -5, chaud: 32, npt: 15,
+    semis: [3, 4], cycle: 150, prix: 1.6, graine: 2500, coul: { f: '#7a9a8a', c: '#a6c0b2', m: '#6f8a5a', a: '#8a4a8a' } },
+  // Légumes-fruits et fruits
+  { id: 'tomate', nom: 'Tomate (plein champ)', cat: 'Légumes-fruits', famille: 'solanacée', forme: 'tomate', prod: 'tomate',
+    rdt: 60, kcal: 18, tb: 10, dj: 1300, kc: 1.15, ky: 1.05, gel: 0, chaud: 35, npt: 2.5,
+    semis: [5], cycle: 120, prix: 1.3, graine: 3500, coul: { f: '#3f8a3a', c: '#6aad4f', m: '#d8402a', a: '#8cc34a' } },
+  { id: 'courgette', nom: 'Courgette', cat: 'Légumes-fruits', famille: 'cucurbitacée', forme: 'courgette', prod: 'courgette',
+    rdt: 40, kcal: 17, tb: 10, dj: 750, kc: 1.0, ky: 1.0, gel: 0, chaud: 35, npt: 3,
+    semis: [5, 6], cycle: 80, prix: 0.9, graine: 600, coul: { f: '#3f8a3a', c: '#7cbf5a', m: '#2f6a2a', a: '#f4c430' } },
+  { id: 'potiron', nom: 'Potiron', cat: 'Légumes-fruits', famille: 'cucurbitacée', forme: 'courge', prod: 'potiron',
+    rdt: 25, kcal: 26, tb: 10, dj: 1250, kc: 1.0, ky: 1.0, gel: 0, chaud: 35, npt: 3.5,
+    semis: [5, 6], cycle: 140, prix: 0.6, graine: 400, coul: { f: '#4a8f3a', c: '#78b85a', m: '#e07b24', a: '#f4c430' } },
+  { id: 'melon', nom: 'Melon', cat: 'Légumes-fruits', famille: 'cucurbitacée', forme: 'melon', prod: 'melon',
+    rdt: 25, kcal: 34, tb: 12, dj: 950, kc: 1.05, ky: 1.1, gel: 1, chaud: 38, npt: 4,
+    semis: [5, 6], cycle: 100, prix: 1.2, graine: 1500, coul: { f: '#4a8f3a', c: '#7cb85a', m: '#c9c27a', a: '#f4d040' } },
+  { id: 'fraise', nom: 'Fraise', cat: 'Légumes-fruits', famille: 'rosacée', forme: 'fraise', prod: 'fraise',
+    rdt: 20, kcal: 32, tb: 5, dj: 1500, kc: 0.85, ky: 1.1, gel: -12, chaud: 32, npt: 6, hiver: true,
+    semis: [8, 9], cycle: 260, prix: 4.0, graine: 8000, coul: { f: '#3f8a3a', c: '#6aad4f', m: '#d82a3a', a: '#f6f2e8' } },
 ];
 
-const CATEGORIES = ['Céréales', 'Légumineuses', 'Racines et tubercules', 'Légumes-feuilles', 'Légumes-fruits', 'Oléagineux'];
-
+const CATEGORIES = ['Céréales', 'Légumineuses', 'Oléagineux', 'Racines et tubercules', 'Légumes-feuilles', 'Légumes-fruits'];
 const CULTURE = Object.fromEntries(CULTURES.map(c => [c.id, c]));
-
-// Énergie produite par hectare et par cycle, en kcal
 const kcalParHa = c => c.rdt * 1e6 * c.kcal / 100;
+
+/* Modes de culture. Valeurs et sources détaillées dans references/modes-et-sol.md ([n] = numéro de source).
+   couverture : part du sol couverte (résidus, paillage) ; −5 % d'évaporation du sol par 10 % couverts [13].
+   erosion    : pertes en terre relatives au labour sur sol nu : semis direct ×0,18 [12].
+   kMO        : minéralisation annuelle de l'humus à 12 °C, k2 de 1 à 2 %/an [10] ; le semis direct ne stocke pas
+                plus de carbone sur 0-30 cm [5], seuls les couverts en ajoutent [4].
+   vdtMax     : vers de terre à l'équilibre (sur 100) ; ×2,4 sans labour [3].
+   potentiel  : rendement relatif ; transition : perte au départ, qui s'efface en « ans ». */
+const MODES = {
+  gc: { nom: 'Grande culture', court: 'Grande culture', echelle: 'champs', caseHa: 0.25,
+    labour: true, couvert: false, couverture: 0.05, erosion: 1, irrigation: 'enrouleur', fertilisation: 'minéral',
+    potentiel: 1.0, kMO: 0.015, vdtMax: 35, transition: { ans: 1, perte: 0 },
+    cats: ['Céréales', 'Légumineuses', 'Oléagineux', 'Racines et tubercules'], exclus: ['radis', 'navet', 'echalote', 'ail', 'topinambour'],
+    texte: 'Champs labourés, engrais minéraux, irrigation par enrouleur si vous la mettez en route. Le meilleur rendement tout de suite ; la matière organique baisse lentement et les vers de terre se font rares.' },
+  acs: { nom: 'Agriculture de conservation', court: 'ACS', echelle: 'champs', caseHa: 0.25,
+    labour: false, couvert: true, couverture: 0.7, erosion: 0.18, irrigation: 'enrouleur', fertilisation: 'minéral réduit',
+    potentiel: 1.0, kMO: 0.015, vdtMax: 85, transition: { ans: 5, perte: 0.06 },
+    cats: ['Céréales', 'Légumineuses', 'Oléagineux'], exclus: [], plus: ['betsucre'],
+    texte: 'Semis direct, couverts entre deux cultures, résidus en surface. Environ 6 % de rendement en moins au début, qui s’effacent en cinq ans ; deux fois et demie plus de vers de terre, cinq fois moins d’érosion, un sol qui perd moins d’eau.' },
+  agro: { nom: 'Agroforesterie', court: 'Agroforesterie', echelle: 'champs', caseHa: 0.25,
+    labour: true, couvert: false, couverture: 0.1, erosion: 0.7, irrigation: null, fertilisation: 'minéral réduit',
+    potentiel: 0.92, kMO: 0.015, vdtMax: 50, transition: { ans: 1, perte: 0 }, arbres: true,
+    cats: ['Céréales', 'Légumineuses', 'Oléagineux'], exclus: [],
+    texte: 'Lignes de noyers et de merisiers dans les champs (8 % de la surface). En grandissant, leur ombre retire jusqu’à 30 % de rendement aux cultures, mais adoucit les coups de chaleur, enrichit le sol et donne du bois coupé à 50 ans.' },
+  mar: { nom: 'Maraîchage', court: 'Maraîchage', echelle: 'planches', caseHa: 0.01,
+    labour: true, couvert: false, couverture: 0.5, erosion: 0.5, irrigation: 'goutte', fertilisation: 'fumier',
+    potentiel: 0.85, kMO: 0.018, vdtMax: 55, transition: { ans: 3, perte: 0.10 },
+    cats: ['Légumineuses', 'Racines et tubercules', 'Légumes-feuilles', 'Légumes-fruits'], exclus: ['betsucre', 'soja', 'feverole', 'lentille', 'poischiche', 'haricot'],
+    texte: 'Planches de 100 m² en bio : fumier, paillage, goutte-à-goutte. Une quarantaine de légumes ; les rendements bio sont environ 15 % sous le conventionnel, et trois ans de conversion au départ.' },
+};
+const cultureAutorisee = (mode, c) => (MODES[mode].cats.includes(c.cat) || (MODES[mode].plus || []).includes(c.id)) && !MODES[mode].exclus.includes(c.id);
