@@ -2,6 +2,8 @@
 // vérifier sans rien afficher. Le format est celui de l'app Mac (schemas.json), si bien qu'un
 // historique enregistré par l'app se relit tel quel.
 
+import * as Munsell from './munsell.js?v=20261029212717';
+
 // MARK: - Identifiants et dates
 
 export function uuid() {
@@ -188,6 +190,7 @@ export function ajouterHorizon(f, index) {
 export function supprimerHorizon(f, index) {
   if (f.horizons.length < 2 || !f.horizons[index]) return;
   const receveur = index + 1 < f.horizons.length ? index + 1 : index - 1;
+  liberer(f, f.horizons[index].id);
   f.horizons[receveur].epaisseur += f.horizons[index].epaisseur;
   f.horizons.splice(index, 1);
   renumeroter(f);
@@ -244,11 +247,12 @@ export function legende(s) {
   const libelles = new Map();
   for (const f of s.fosses) {
     for (const h of f.horizons) {
+      if (h.nonObserve) continue;
       const clef = String(h.couleur).toUpperCase();
       if (!vues.includes(clef)) vues.push(clef);
       if (!libelles.has(clef) || libelles.get(clef) == null) {
         const c = String(h.commentaire ?? '').trim();
-        libelles.set(clef, nomDeTeinte(clef) ?? (c ? c : null));
+        libelles.set(clef, nomDeTeinte(clef) ?? (c ? c : null) ?? (h.munsell || null));
       }
     }
   }
@@ -278,10 +282,164 @@ export function supprimerFosse(s, i) {
 export function dupliquerFosse(s, i) {
   if (!s.fosses[i]) return;
   const copie = structuredClone(s.fosses[i]);
-  copie.id = uuid();
-  copie.horizons.forEach((h) => { h.id = uuid(); });
+  renouvelerIds(copie);
   s.fosses.splice(i + 1, 0, copie);
   renommerFosses(s);
+}
+
+/// Une copie a besoin d'identifiants neufs ; les éléments rattachés à un horizon suivent la copie de cet horizon.
+export function renouvelerIds(f) {
+  const nouveaux = new Map();
+  f.id = uuid();
+  for (const h of f.horizons) { const n = uuid(); nouveaux.set(h.id, n); h.id = n; }
+  for (const e of entrees(f)) { e.id = uuid(); if (e.horizon) e.horizon = nouveaux.get(e.horizon) ?? e.horizon; }
+}
+
+// MARK: - Éléments grossiers, taches d'hydromorphie, nappe
+
+/// Classes de taille du Référentiel pédologique 2008 (chapitre Peyrosols, p. 249). Le rayon est celui du
+/// dessin, en points à 100 % : schématique, il ne dépend pas de l'échelle des profondeurs.
+export const taillesEG = [
+  { cle: 'graviers', nom: 'Graviers', plage: '0,2 à 2 cm', rayon: 2.2 },
+  { cle: 'cailloux', nom: 'Cailloux', plage: '2 à 7,5 cm', rayon: 3.7 },
+  { cle: 'pierres', nom: 'Pierres', plage: '7,5 à 20 cm', rayon: 6.6 },
+  { cle: 'blocs', nom: 'Blocs', plage: 'plus de 20 cm', rayon: 10.5 },
+];
+export const tailleEG = (cle) => taillesEG.find((t) => t.cle === cle) ?? taillesEG[1];
+
+/// Gris pour les éléments siliceux ou cristallins, blanc cassé pour les calcaires.
+export const teintesEG = { autre: '#9D9D98', calcaire: '#EDE7D7' };
+/// Les couleurs « normales » des taches, quand aucune notation Munsell n'est donnée.
+export const teintesTaches = { orange: '#D27F2C', gris: '#A9AEB1' };
+/// Repères d'abondance proposés pour les taches, et rapports gris / orange.
+export const abondancesTaches = [5, 40, 100];
+export const rapportsGris = [0, 10, 25, 50, 75, 90, 100];
+
+export function elementGrossier(o = {}) {
+  return { id: uuid(), abondance: 10, taille: 'cailloux', calcaire: false, ...o };
+}
+
+export function tache(o = {}) {
+  return { id: uuid(), abondance: 5, gris: 50, forme: 'marbrure', ...o };
+}
+
+/// Tous les éléments d'une fosse qui occupent une plage de profondeur.
+export const entrees = (f) => [...(f.elementsGrossiers ?? []), ...(f.taches ?? [])];
+
+/// La plage (en cm) d'un élément : celle de son horizon tant qu'il y est rattaché (elle suit alors les
+/// limites qu'on tire), sinon celle qu'on a saisie, bornée à la fosse.
+export function plage(f, e) {
+  const total = epaisseurTotale(f);
+  if (e.horizon) {
+    const i = f.horizons.findIndex((h) => h.id === e.horizon);
+    if (i >= 0) { const l = limites(f); return [l[i], l[i + 1]]; }
+  }
+  const borne = (v, d) => Math.max(0, Math.min(total, Number.isFinite(v) ? v : d));
+  const de = borne(e.de, 0), a = borne(e.a, total);
+  return [Math.min(de, a), Math.max(de, a)];
+}
+
+/// Ajoute des éléments grossiers (ou des taches) dans l'horizon `hi`, ou sur toute la fosse.
+export function ajouterEntree(f, liste, hi) {
+  const h = f.horizons[hi];
+  const o = h ? { horizon: h.id } : { de: 0, a: epaisseurTotale(f) };
+  const e = liste === 'taches' ? tache(o) : elementGrossier(o);
+  (f[liste] ??= []).push(e);
+  return e;
+}
+
+export function supprimerEntree(f, liste, id) {
+  if (!f[liste]) return;
+  f[liste] = f[liste].filter((e) => e.id !== id);
+  if (!f[liste].length) delete f[liste];
+}
+
+/// Saisir une profondeur détache l'élément de son horizon : sa plage devient libre (« de x à y cm »).
+export function fixerPlage(f, e, bord, valeur) {
+  const [de, a] = plage(f, e);
+  delete e.horizon;
+  e.de = de; e.a = a;
+  if (Number.isFinite(valeur)) e[bord] = Math.max(0, Math.min(epaisseurTotale(f), Math.round(valeur)));
+}
+
+/// Rattache de nouveau l'élément à l'horizon qui contient le milieu de sa plage.
+export function rattacher(f, e) {
+  const [de, a] = plage(f, e);
+  const l = limites(f), m = (de + a) / 2;
+  const i = f.horizons.findIndex((_, k) => m >= l[k] && m <= l[k + 1]);
+  if (i < 0) return;
+  e.horizon = f.horizons[i].id;
+  delete e.de; delete e.a;
+}
+
+/// Un horizon qui disparaît laisse ses éléments à leur place, en plage libre.
+function liberer(f, id) {
+  for (const e of entrees(f)) if (e.horizon === id) { const [de, a] = plage(f, e); delete e.horizon; e.de = de; e.a = a; }
+}
+
+/// Profondeur d'apparition de la nappe : vide (ou non numérique) = pas de nappe observée.
+export function fixerNappe(f, v) {
+  if (Number.isFinite(v)) f.nappe = Math.max(0, Math.min(profondeurMax, Math.round(v)));
+  else delete f.nappe;
+}
+
+/// Ce que le schéma dessine en plus des teintes : chaque symbole employé rejoint la légende.
+export function symboles(s) {
+  const out = [];
+  const eg = s.fosses.flatMap((f) => [...(f.elementsGrossiers ?? []), ...(f.surface ? [f.surface] : [])]).filter((e) => e.abondance > 0);
+  if (eg.some((e) => !e.calcaire)) out.push({ hex: 'EG', nom: 'Éléments grossiers' });
+  if (eg.some((e) => e.calcaire)) out.push({ hex: 'EG-CALCAIRE', nom: 'Éléments grossiers calcaires' });
+  const taches = s.fosses.flatMap((f) => f.taches ?? []).filter((t) => t.abondance > 0);
+  const orange = taches.find((t) => t.gris < 100), gris = taches.find((t) => t.gris > 0);
+  if (orange) out.push({ hex: 'TACHES-ORANGE', nom: 'Taches d’oxydation', couleur: couleurTache(orange, 'orange') });
+  if (gris) out.push({ hex: 'TACHES-GRISES', nom: 'Taches de réduction', couleur: couleurTache(gris, 'gris') });
+  if (s.fosses.some((f) => f.horizons.some((h) => h.noye))) out.push({ hex: 'NOYE', nom: 'Horizon quasi noyé' });
+  if (s.fosses.some((f) => Number.isFinite(f.nappe))) out.push({ hex: 'NAPPE', nom: 'Nappe' });
+  if (s.fosses.some((f) => f.horizons.some((h) => h.nonObserve))) out.push({ hex: 'NON-OBSERVE', nom: 'Non observé' });
+  return out;
+}
+
+// MARK: - Notations Munsell (taches, import)
+
+/// Le livret, indexé par notation « compacte » : « 10YR4/3 », « 10 YR 4/3 » et « 10yr 4/3 » se valent.
+let indexMunsell = null;
+export function cleMunsell(n) {
+  let k = String(n ?? '').toUpperCase().replace(/,/g, '.').replace(/\s+/g, '').replace(/^GLEY1?/, '');
+  const neutre = k.match(/^N(\d+(?:\.\d+)?)\/0?$/);
+  if (neutre) k = `N${neutre[1]}/`;
+  return k;
+}
+
+/// Une notation Munsell → la puce du livret ([notation, couleur]) ; à défaut, la puce de même teinte et de
+/// même valeur au chroma le plus proche (marquée `approchee`).
+export function trouverMunsell(notation, pages = Munsell.pages) {
+  if (!indexMunsell || indexMunsell.pages !== pages) {
+    const m = new Map();
+    for (const p of pages) for (const [, puces] of p.lignes) for (const x of puces) if (x) m.set(cleMunsell(x[0]), x);
+    indexMunsell = { pages, m };
+  }
+  const k = cleMunsell(notation);
+  if (!k) return null;
+  const exacte = indexMunsell.m.get(k);
+  if (exacte) return { notation: exacte[0], hex: exacte[1].toUpperCase(), approchee: false };
+  const p = k.match(/^(\d+(?:\.\d+)?[A-Z]+)(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)$/);
+  if (!p) return null;
+  const [, teinte, valeur, chroma] = p;
+  let meilleure = null;
+  for (const [cle, puce] of indexMunsell.m) {
+    const q = cle.match(/^(\d+(?:\.\d+)?[A-Z]+)(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)$/);
+    if (!q || q[1] !== teinte) continue;
+    const d = Math.abs(Number(q[2]) - Number(valeur)) * 10 + Math.abs(Number(q[3]) - Number(chroma));
+    if (!meilleure || d < meilleure.d) meilleure = { d, puce };
+  }
+  return meilleure ? { notation: meilleure.puce[0], hex: meilleure.puce[1].toUpperCase(), approchee: true } : null;
+}
+
+/// La couleur d'une tache : la puce Munsell saisie si on la reconnaît, sinon la couleur normale.
+export function couleurTache(t, part) {
+  const n = part === 'orange' ? t.munsellOrange : t.munsellGris;
+  const puce = n ? trouverMunsell(n) : null;
+  return puce ? puce.hex : teintesTaches[part];
 }
 
 export function ajouterFosse(s) {
@@ -387,11 +545,43 @@ export function relireSchema(o) {
         couleur: /^#[0-9a-fA-F]{6}$/.test(h.couleur) ? h.couleur.toUpperCase() : teintes[2].hex,
       });
       if (typeof h.munsell === 'string' && h.munsell) r.munsell = h.munsell;
+      if (h.noye === true) r.noye = true;
+      if (h.nonObserve === true) r.nonObserve = true;
       return r;
     }),
   }));
+  o.fosses.filter((f) => f && typeof f === 'object').forEach((f, i) => relireTraits(s.fosses[i], f));
   recaler(s);
   return s;
+}
+
+const nombre = (v) => (Number.isFinite(v) ? v : undefined);
+const borne = (v, a, b) => Math.max(a, Math.min(b, v));
+
+/// Éléments grossiers, taches, nappe et surface : facultatifs, absents des fichiers d'avant.
+function relireTraits(f, o) {
+  const plageDe = (e, r) => {
+    if (typeof e.horizon === 'string' && f.horizons.some((h) => h.id === e.horizon)) r.horizon = e.horizon;
+    else { r.de = Math.max(0, Math.round(nombre(e.de) ?? 0)); r.a = Math.max(0, Math.round(nombre(e.a) ?? epaisseurTotale(f))); }
+    return r;
+  };
+  const eg = (e) => ({ abondance: borne(nombre(e.abondance) ?? 10, 0, 100), taille: tailleEG(e.taille).cle, calcaire: e.calcaire === true });
+  if (Array.isArray(o.elementsGrossiers)) {
+    const l = o.elementsGrossiers.filter((e) => e && typeof e === 'object').map((e) => plageDe(e, { id: texte(e.id) || uuid(), ...eg(e) }));
+    if (l.length) f.elementsGrossiers = l;
+  }
+  if (Array.isArray(o.taches)) {
+    const l = o.taches.filter((e) => e && typeof e === 'object').map((e) => {
+      const r = plageDe(e, { id: texte(e.id) || uuid(), abondance: borne(nombre(e.abondance) ?? 5, 0, 100),
+        gris: borne(nombre(e.gris) ?? 50, 0, 100), forme: e.forme === 'tachete' ? 'tachete' : 'marbrure' });
+      if (texte(e.munsellOrange)) r.munsellOrange = e.munsellOrange;
+      if (texte(e.munsellGris)) r.munsellGris = e.munsellGris;
+      return r;
+    });
+    if (l.length) f.taches = l;
+  }
+  if (o.surface && typeof o.surface === 'object') f.surface = eg(o.surface);
+  if (Number.isFinite(o.nappe)) fixerNappe(f, o.nappe);
 }
 
 /// Un fichier ouvert : un schéma seul (enregistré par la page) ou l'historique entier de l'app Mac.
@@ -447,7 +637,7 @@ export class Bibliotheque {
     copie.id = uuid();
     copie.numeroSansTitre = this.prochainNumeroSansTitre();
     if (copie.titre) copie.titre += ' (copie)';
-    for (const f of copie.fosses) { f.id = uuid(); for (const h of f.horizons) h.id = uuid(); }
+    for (const f of copie.fosses) renouvelerIds(f);
     this.schemas.unshift(copie);
     this.courant = copie;
     this.enregistrer();

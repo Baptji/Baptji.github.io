@@ -114,6 +114,47 @@ body.tire, body.tire * { cursor: ns-resize !important; user-select: none; }
 .puce.choisie { border: 2px solid var(--accent); }
 .livret-pied { font-size: 9px; color: var(--texte-doux); margin: 0; }
 
+/* Motifs (cailloux, taches, eau) : dessinés par-dessus, jamais cliquables */
+.motifs { pointer-events: none; overflow: hidden; }
+.feuille.fiche { box-shadow: 0 3px 14px rgba(0, 0, 0, 0.16); }
+
+/* Schéma | Fiche légende */
+.barre .vues { flex: none; }
+.barre .vues button { padding: 2px 12px; white-space: nowrap; }
+.menu-titre { font-size: 10px; font-weight: 600; color: var(--texte-doux); text-transform: uppercase; letter-spacing: 0.02em; padding: 6px 10px 2px; }
+
+/* Éléments grossiers, taches : une petite fiche par couche */
+.entree { display: flex; flex-direction: column; gap: 6px; padding: 8px; border-radius: 8px; background: var(--carte); }
+.entree-tete { display: flex; align-items: center; justify-content: space-between; font-size: 10px; font-weight: 600; color: var(--texte-doux); }
+.entree .rangee { gap: 5px; }
+.entree .segmente { flex: 1; }
+.entree .segmente button { padding: 2px 6px; }
+input.nombre { width: 46px; padding: 2px 5px; font-size: 11px; border: 1px solid var(--bord); border-radius: 5px; background: var(--champ); text-align: right; font-variant-numeric: tabular-nums; }
+input.munsell { flex: 1; min-width: 0; padding: 2px 6px; font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; border: 1px solid var(--bord); border-radius: 5px; background: var(--champ); }
+select { font-size: 11px; padding: 2px 4px; border: 1px solid var(--bord); border-radius: 5px; background: var(--champ); max-width: 100%; }
+.plage .lien { font-size: 10px; color: var(--accent); padding: 1px 6px; border-radius: 99px; background: var(--choisi); }
+button.mini { border: 0; background: transparent; padding: 1px 4px; font-size: 10px; color: var(--texte-doux); display: inline-flex; align-items: center; }
+button.mini:hover { color: var(--texte); filter: none; }
+.pastille { width: 22px; height: 18px; padding: 0; border-radius: 4px; border: 1px solid var(--bord); flex: none; }
+.pastille.ouverte { border: 2px solid var(--accent); }
+.nom-couleur { min-width: 38px; }
+
+/* Import depuis Fiches sondages */
+.dialogue { border: 1px solid var(--bord); border-radius: 12px; padding: 0; background: var(--panneau); color: var(--texte); width: min(520px, calc(100vw - 32px)); box-shadow: 0 18px 50px rgba(0, 0, 0, 0.3); }
+.dialogue::backdrop { background: rgba(0, 0, 0, 0.28); }
+.dialogue form { display: flex; flex-direction: column; gap: 12px; padding: 18px; }
+.dialogue h2 { margin: 0; font-size: 15px; }
+.dialogue .doux { margin: -6px 0 0; }
+.dialogue .sondages { display: flex; flex-direction: column; max-height: 40vh; overflow: auto; border: 1px solid var(--bord); border-radius: 8px; }
+.dialogue .sondage { display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: 8px; padding: 6px 10px; font-size: 12px; border-bottom: 1px solid var(--bord); }
+.dialogue .sondage:last-child { border-bottom: 0; }
+.dialogue .sondage span { color: var(--texte-doux); font-size: 11px; text-align: right; }
+.dialogue .modes { display: flex; flex-direction: column; gap: 6px; }
+.dialogue .mode { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; }
+.dialogue .mode small { display: block; color: var(--texte-doux); font-size: 11px; }
+.dialogue .boutons { justify-content: flex-end; }
+.dialogue .principal { background: var(--accent); color: #fff; border-color: transparent; }
+
 /* Impression (PDF) : seule la figure part, à sa taille */
 .impression { display: none; }
 @media print {

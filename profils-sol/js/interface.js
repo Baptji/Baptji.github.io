@@ -1,9 +1,10 @@
 // L'interface : barre du haut, figure modifiable, panneau de droite. Tout l'état vit ici ;
 // les règles sont dans modele.js, la géométrie dans figure.js.
 
-import * as M from './modele.js?v=20261025203629';
-import * as F from './figure.js?v=20261025203629';
-import * as Munsell from './munsell.js?v=20261025203629';
+import * as M from './modele.js?v=20261029212717';
+import * as F from './figure.js?v=20261029212717';
+import * as Munsell from './munsell.js?v=20261029212717';
+import * as S from './sondages.js?v=20261029212717';
 
 const $ = (s) => document.querySelector(s);
 
@@ -47,7 +48,7 @@ const icone = (nom, taille, ep) => svg(ICONES[nom], taille, ep);
 let stockage = null;
 try { stockage = window.localStorage; } catch { stockage = null; }
 const biblio = new M.Bibliotheque(stockage);
-const vue = { horizonChoisi: null, fosseChoisie: null, zoom: 1, onglet: 0, page: 6 };
+const vue = { horizonChoisi: null, fosseChoisie: null, zoom: 1, onglet: 0, page: 6, feuille: 'schema', livretTache: null };
 let minuterie = null;
 
 const courant = () => biblio.courant;
@@ -122,11 +123,24 @@ function champFigure(t, dx, dy) {
   poser(input, t.x - dx - 2, t.y - dy, t.w + 4, t.h);
   Object.assign(input.style, { fontSize: px(t.taille), fontWeight: t.gras ? '700' : '400', color: t.couleur,
     textAlign: t.align === 'left' ? 'left' : 'center' });
+  if (t.halo) input.style.textShadow = [0, 90, 180, 270].map((a) => `${px(Math.cos(a * Math.PI / 180) * 0.9)} ${px(Math.sin(a * Math.PI / 180) * 0.9)} ${px(t.taille * 0.12)} ${t.halo}`).join(', ');
   return brancher(input, (v) => ecrireChamp(t.champ, v));
 }
 
+/// Cailloux, taches, eau : un petit SVG posé à l'endroit exact, en coordonnées de la figure.
+function svgMotifs(formes, x, y, w, h) {
+  const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  s.setAttribute('viewBox', `${x} ${y} ${w} ${h}`);
+  s.setAttribute('class', 'motifs');
+  s.setAttribute('aria-hidden', 'true');
+  s.innerHTML = formes.map(F.formeSVG).join('');
+  return s;
+}
+
 function rendreFeuille() {
-  const fig = F.composer(courant(), { z: vue.zoom, horizonChoisi: vue.horizonChoisi });
+  const fiche = vue.feuille === 'fiche';
+  const fig = fiche ? F.composerFiche(courant(), { z: vue.zoom }) : F.composer(courant(), { z: vue.zoom, horizonChoisi: vue.horizonChoisi });
+  $('#feuille').classList.toggle('fiche', fiche);
   const feuille = $('#feuille');
   feuille.style.width = px(fig.largeur);
   feuille.style.height = px(fig.hauteur);
@@ -152,8 +166,11 @@ function rendreFeuille() {
       if (e.champ) n = champFigure(e, dx, dy);
       else {
         n = poser(el('div', { class: 'f-texte' }, e.valeur), e.x - dx, e.y - dy, e.w, e.h);
-        Object.assign(n.style, { fontSize: px(e.taille), color: e.couleur, fontFamily: F.FONTE });
+        Object.assign(n.style, { fontSize: px(e.taille), color: e.couleur, fontFamily: F.FONTE, fontWeight: e.gras ? '700' : '400',
+          justifyContent: e.align === 'left' ? 'flex-start' : e.align === 'center' ? 'center' : 'flex-end' });
       }
+    } else if (e.type === 'motif') {
+      n = poser(svgMotifs(e.formes, e.x, e.y, e.w, e.h), e.x - dx, e.y - dy, e.w, e.h);
     } else if (e.type === 'horizon') {
       n = caseHorizon(e, dx, dy, fig);
     } else if (e.type === 'poignee') {
@@ -178,6 +195,7 @@ function rendreFeuille() {
 function caseHorizon(e, dx, dy) {
   const c = poser(el('div', { class: 'case', 'data-horizon': e.id }), e.x - dx, e.y - dy, e.w, e.h);
   c.style.background = e.couleur;
+  if (e.motifs?.length) c.append(poser(svgMotifs(e.motifs, e.x, e.y, e.w, e.h), 0, 0, e.w, e.h));
   c.append(el('div', { class: 'contour', style: { boxShadow: `inset 0 0 0 ${px(e.trait)} ${e.contour}` } }));
   for (const l of e.lignes) c.append(champFigure(l, e.x, e.y));
   if (e.choisi) c.append(el('div', { class: 'selection', style: { inset: px(e.p), boxShadow: `inset 0 0 0 ${px(2 * e.p)} var(--accent)` } }));
@@ -260,6 +278,8 @@ function construireBarre() {
   // le clic de l'utilisateur l'ouvre lui-même (Safari refuse un click() lancé par programme).
   const fichier = el('input', { type: 'file', class: 'champ-fichier', tabindex: '-1' });
   fichier.addEventListener('change', () => { lireFichier(fichier.files[0]); fichier.value = ''; });
+  const excel = el('input', { type: 'file', class: 'champ-fichier', tabindex: '-1' });
+  excel.addEventListener('change', () => { importerSondages(excel.files[0]); excel.value = ''; });
 
   const historique = menu('Historique', 'historique', (liste, fermer) => {
     liste.replaceChildren(
@@ -272,7 +292,10 @@ function construireBarre() {
       choix('Supprimer ce schéma', () => { biblio.supprimer(courant().id); vue.horizonChoisi = null; vue.fosseChoisie = null; rendre(); }, fermer),
       el('div', { class: 'menu-trait' }),
       el('label', { class: 'menu-choix', role: 'menuitem', onclick: () => setTimeout(fermer, 0) }, 'Ouvrir un fichier…', fichier),
-      choix('Enregistrer dans un fichier…', enregistrerFichier, fermer));
+      choix('Enregistrer dans un fichier…', enregistrerFichier, fermer),
+      el('div', { class: 'menu-trait' }),
+      el('label', { class: 'menu-choix', role: 'menuitem', title: 'L’Excel de Fiches sondages (.xlsx) ou son export .csv',
+        onclick: () => setTimeout(fermer, 0) }, 'Importer depuis Fiches sondages…', excel));
   });
 
   barre.profondeur = el('span', { class: 'valeur' });
@@ -281,8 +304,16 @@ function construireBarre() {
   barre.pourcent = el('button', { type: 'button', class: 'pourcent', title: 'Revenir à 100 %', onclick: () => zoomer(null) });
 
   const exporter = menu('Exporter', 'exporter', (liste, fermer) => {
-    liste.replaceChildren(choix('Image PNG…', exporterPNG, fermer), choix('Document PDF…', exporterPDF, fermer));
+    liste.replaceChildren(
+      el('div', { class: 'menu-titre' }, 'Schéma'),
+      choix('Image PNG…', () => exporterPNG('schema'), fermer), choix('Document PDF…', () => exporterPDF('schema'), fermer),
+      el('div', { class: 'menu-trait' }),
+      el('div', { class: 'menu-titre' }, 'Fiche légende'),
+      choix('Image PNG…', () => exporterPNG('fiche'), fermer), choix('Document PDF…', () => exporterPDF('fiche'), fermer));
   });
+  barre.vues = el('div', { class: 'segmente vues', role: 'group', 'aria-label': 'Page affichée' },
+    ...[['schema', 'Schéma'], ['fiche', 'Fiche légende']].map(([cle, texte]) => el('button', { type: 'button', 'data-vue': cle,
+      onclick: () => { if (vue.feuille !== cle) { vue.feuille = cle; rendre(); } } }, texte)));
 
   $('#barre').replaceChildren(
     el('button', { type: 'button', class: 'icone-texte', onclick: () => { biblio.nouveau(); vue.horizonChoisi = null; rendre(); } }, icone('nouveau'), 'Nouveau'),
@@ -293,6 +324,8 @@ function construireBarre() {
       el('button', { type: 'button', 'aria-label': 'Moins profond', onclick: () => changerProfondeur(-5) }, '−'),
       barre.profondeur,
       el('button', { type: 'button', 'aria-label': 'Plus profond', onclick: () => changerProfondeur(5) }, '+')),
+    el('div', { class: 'separateur' }),
+    barre.vues,
     el('div', { class: 'espace' }),
     el('div', { class: 'zoom' }, icone('loupeMoins', 12), barre.zoom, icone('loupePlus', 12), barre.pourcent),
     exporter);
@@ -302,6 +335,7 @@ function actualiserBarre() {
   barre.profondeur.textContent = `${courant().profondeur} cm`;
   if (document.activeElement !== barre.zoom) barre.zoom.value = vue.zoom;
   barre.pourcent.textContent = `${Math.round(vue.zoom * 100)} %`;
+  for (const b of barre.vues.children) b.classList.toggle('actif', b.dataset.vue === vue.feuille);
   document.title = `${M.nomAffiche(courant())} — Profils de sol`;
 }
 
@@ -356,12 +390,15 @@ function rendreInspecteur() {
     el('div', { class: 'doux' }, `${s.fosses.length} fosse(s) · ${s.profondeur} cm`))];
 
   if (f >= 0) {
+    const fosse = s.fosses[f];
     parties.push(carte('Fosse',
       champ('Nom', { cible: 'fosse', fi: f, clef: 'nom' }, 'Fosse'),
       champ('Sous-titre', { cible: 'fosse', fi: f, clef: 'sousTitre' }, 'Parking bitumé…'),
       champ('Note en dessous', { cible: 'fosse', fi: f, clef: 'note' }, '⚠ Ne pas prioriser'),
+      el('div', { class: 'rangee' }, el('span', { class: 'etiquette' }, 'Nappe apparue à'),
+        nombreChamp('Profondeur d’apparition de la nappe', fosse.nappe, (v) => M.fixerNappe(fosse, v), `insp:nappe:${fosse.id}`, 'aucune'),
+        el('span', { class: 'etiquette' }, 'cm')),
       el('div', { class: 'rangee' }, el('button', { type: 'button', onclick: () => {
-        const fosse = s.fosses[f];
         M.ajouterHorizon(fosse, h >= 0 ? h : fosse.horizons.length - 1);
         modifie();
       } }, 'Ajouter un horizon'))));
@@ -380,15 +417,130 @@ function rendreInspecteur() {
       champ('Commentaire', { cible: 'horizon', fi: f, hi: h, clef: 'commentaire' }, 'écarté, croissance…'),
       pas('Épaisseur', `${hz.epaisseur} cm`, (d) => { M.fixerEpaisseur(fosse, h, hz.epaisseur + d); modifie(); }, 'Plus mince', 'Plus épais'),
       couleur, onglets,
-      vue.onglet === 0 ? nuancier(hz) : livret(hz),
+      vue.onglet === 0 ? nuancier(hz) : livret(hz.couleur, (hex, n) => choisirCouleur(hz, hex, n)),
+      caseACocher('Horizon quasi noyé (traits d’eau)', hz.noye, (v) => { if (v) hz.noye = true; else delete hz.noye; }),
+      caseACocher('Non observé (hachures)', hz.nonObserve, (v) => { if (v) hz.nonObserve = true; else delete hz.nonObserve; }),
       el('div', { class: 'rangee' },
         el('button', { type: 'button', onclick: () => { M.ajouterHorizon(fosse, h); modifie(); } }, 'Ajouter en dessous'),
         el('button', { type: 'button', disabled: fosse.horizons.length < 2,
           onclick: () => { M.supprimerHorizon(fosse, h); vue.horizonChoisi = null; modifie(); } }, 'Supprimer'))));
+  }
+
+  if (f >= 0) {
+    parties.push(carteElementsGrossiers(s.fosses[f], h), carteTaches(s.fosses[f], h));
   } else {
     parties.push(el('p', { class: 'aide' }, 'Cliquez sur un horizon pour le modifier.\nTirez la limite entre deux horizons pour changer les épaisseurs, centimètre par centimètre.'));
   }
   $('#inspecteur').replaceChildren(...parties);
+}
+
+function caseACocher(texte, valeur, ecrire) {
+  const c = el('input', { type: 'checkbox' });
+  c.checked = !!valeur;
+  c.addEventListener('change', () => { ecrire(c.checked); modifie(); });
+  return el('label', { class: 'case-a-cocher' }, c, texte);
+}
+
+/// Un nombre saisi : la figure suit à chaque frappe, le panneau ne se redessine qu'à la validation
+/// (on peut donc vider la case pour retaper). Vide = valeur absente (NaN).
+function nombreChamp(etiquette, valeur, ecrire, cle, invite = '') {
+  const input = el('input', { type: 'text', inputmode: 'numeric', class: 'nombre', value: Number.isFinite(valeur) ? String(valeur) : '',
+    placeholder: invite, 'data-cle': cle, 'aria-label': etiquette, autocomplete: 'off' });
+  input.addEventListener('input', () => { ecrire(S.nombre(input.value)); planifier(); rendreFeuille(); });
+  input.addEventListener('change', () => rendre());
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });
+  return input;
+}
+
+function liste(etiquette, options, valeur, ecrire) {
+  const sel = el('select', { 'aria-label': etiquette }, ...options.map(([v, texte]) => el('option', { value: v }, texte)));
+  sel.value = String(valeur);
+  sel.addEventListener('change', () => { ecrire(sel.value); modifie(); });
+  return sel;
+}
+
+const optionsTaille = () => M.taillesEG.map((t) => [t.cle, `${t.nom} (${t.plage})`]);
+
+/// « De x à y cm » : rattaché à l'horizon tant qu'on n'y touche pas ; une saisie fixe la plage.
+function plageChamps(f, e) {
+  const [de, a] = M.plage(f, e);
+  const h = e.horizon ? f.horizons.find((x) => x.id === e.horizon) : null;
+  return el('div', { class: 'rangee plage' },
+    el('span', { class: 'etiquette' }, 'De'),
+    nombreChamp('Profondeur du haut', de, (v) => M.fixerPlage(f, e, 'de', v), `insp:${e.id}:de`),
+    el('span', { class: 'etiquette' }, 'à'),
+    nombreChamp('Profondeur du bas', a, (v) => M.fixerPlage(f, e, 'a', v), `insp:${e.id}:a`),
+    el('span', { class: 'etiquette' }, 'cm'),
+    h ? el('span', { class: 'lien', title: 'Suit les limites de l’horizon' }, String(h.libelle || h.nom))
+      : el('button', { type: 'button', class: 'mini', title: 'Suivre de nouveau les limites de l’horizon', onclick: () => { M.rattacher(f, e); modifie(); } }, '↺ horizon'));
+}
+
+function enTeteEntree(titre, supprimer) {
+  return el('div', { class: 'entree-tete' }, el('span', {}, titre),
+    el('button', { type: 'button', class: 'mini', title: 'Retirer', 'aria-label': 'Retirer', onclick: supprimer }, icone('corbeille', 12, 1.3)));
+}
+
+function carteElementsGrossiers(f, hi) {
+  const lignes = (f.elementsGrossiers ?? []).map((e, k) => el('div', { class: 'entree' },
+    enTeteEntree(`Couche ${k + 1}`, () => { M.supprimerEntree(f, 'elementsGrossiers', e.id); modifie(); }),
+    plageChamps(f, e),
+    el('div', { class: 'rangee' },
+      nombreChamp('Abondance', e.abondance, (v) => { if (Number.isFinite(v)) e.abondance = Math.max(0, Math.min(100, Math.round(v))); }, `insp:${e.id}:abondance`),
+      el('span', { class: 'etiquette' }, '%'),
+      liste('Taille', optionsTaille(), e.taille, (v) => { e.taille = v; })),
+    caseACocher('Calcaires (blanc cassé)', e.calcaire, (v) => { e.calcaire = v; })));
+  const surface = f.surface;
+  const blocSurface = el('div', { class: 'entree' },
+    caseACocher('En surface (à demi enterrés)', !!surface, (v) => { if (v) f.surface = { abondance: 10, taille: 'cailloux', calcaire: false }; else delete f.surface; }),
+    surface ? el('div', { class: 'rangee' },
+      nombreChamp('Abondance en surface', surface.abondance, (v) => { if (Number.isFinite(v)) surface.abondance = Math.max(0, Math.min(100, Math.round(v))); }, `insp:surface:${f.id}`),
+      el('span', { class: 'etiquette' }, '%'),
+      liste('Taille en surface', optionsTaille(), surface.taille, (v) => { surface.taille = v; })) : null,
+    surface ? caseACocher('Calcaires (blanc cassé)', surface.calcaire, (v) => { surface.calcaire = v; }) : null);
+  return carte('Éléments grossiers', ...lignes,
+    el('div', { class: 'rangee' }, el('button', { type: 'button', onclick: () => { M.ajouterEntree(f, 'elementsGrossiers', hi); modifie(); } },
+      hi >= 0 ? 'Ajouter dans cet horizon' : 'Ajouter sur toute la fosse')),
+    blocSurface);
+}
+
+function carteTaches(f, hi) {
+  const lignes = (f.taches ?? []).map((e, k) => {
+    const abondance = el('div', { class: 'segmente' }, ...M.abondancesTaches.map((v) => el('button', { type: 'button',
+      class: e.abondance === v ? 'actif' : null, onclick: () => { e.abondance = v; modifie(); } }, `${v} %`)));
+    const forme = el('div', { class: 'segmente' }, ...[['marbrure', 'Marbrures'], ['tachete', 'Tacheté']].map(([v, texte]) =>
+      el('button', { type: 'button', class: e.forme === v ? 'actif' : null, onclick: () => { e.forme = v; modifie(); } }, texte)));
+    const couleur = (part, nom) => {
+      const cleMunsell = part === 'orange' ? 'munsellOrange' : 'munsellGris';
+      const ouvert = vue.livretTache?.id === e.id && vue.livretTache.part === part;
+      const pastille = el('button', { type: 'button', class: `pastille${ouvert ? ' ouverte' : ''}`, title: 'Choisir dans le livret Munsell',
+        style: { background: M.couleurTache(e, part) },
+        onclick: () => { vue.livretTache = ouvert ? null : { id: e.id, part }; rendreInspecteur(); } });
+      const saisie = el('input', { type: 'text', class: 'munsell', value: e[cleMunsell] ?? '', placeholder: 'couleur normale',
+        'data-cle': `insp:${e.id}:${part}`, 'aria-label': `Notation Munsell des taches ${nom}`, autocomplete: 'off', spellcheck: 'false' });
+      saisie.addEventListener('input', () => {
+        const v = saisie.value.trim();
+        if (v) e[cleMunsell] = v; else delete e[cleMunsell];
+        pastille.style.background = M.couleurTache(e, part);
+        planifier(); rendreFeuille();
+      });
+      saisie.addEventListener('change', () => rendre());
+      return [el('div', { class: 'rangee' }, pastille, el('span', { class: 'etiquette nom-couleur' }, nom), saisie),
+        ouvert ? livret(M.couleurTache(e, part), (hex, n) => { e[cleMunsell] = n; vue.livretTache = null; modifie(); }) : null];
+    };
+    return el('div', { class: 'entree' },
+      enTeteEntree(`Taches ${k + 1}`, () => { M.supprimerEntree(f, 'taches', e.id); modifie(); }),
+      plageChamps(f, e),
+      el('div', { class: 'rangee' }, abondance,
+        nombreChamp('Abondance des taches', e.abondance, (v) => { if (Number.isFinite(v)) e.abondance = Math.max(0, Math.min(100, Math.round(v))); }, `insp:${e.id}:abondance`),
+        el('span', { class: 'etiquette' }, '%')),
+      el('div', { class: 'rangee' }, el('span', { class: 'etiquette' }, 'Gris / orange'),
+        liste('Rapport gris / orange', M.rapportsGris.map((g) => [g, `${g} / ${100 - g}`]), e.gris, (v) => { e.gris = Number(v); })),
+      forme,
+      ...couleur('orange', 'Orange'), ...couleur('gris', 'Gris'));
+  });
+  return carte('Taches d’hydromorphie', ...lignes,
+    el('div', { class: 'rangee' }, el('button', { type: 'button', onclick: () => { M.ajouterEntree(f, 'taches', hi); modifie(); } },
+      hi >= 0 ? 'Ajouter dans cet horizon' : 'Ajouter sur toute la fosse')));
 }
 
 function choisirCouleur(hz, hex, munsell) {
@@ -409,13 +561,13 @@ function nuancier(hz) {
     el('label', { class: 'autre-couleur' }, autre, 'Autre couleur…'));
 }
 
-/// Le livret Munsell : on le feuillette planche par planche, dans l'ordre du livre.
-function livret(hz) {
+/// Le livret Munsell : on le feuillette planche par planche, dans l'ordre du livre. `choisir(hex, notation)`.
+function livret(couleurActuelle, choisir) {
   const pages = Munsell.pages;
   const page = pages[vue.page];
   const gley = page.hue === 'Gley 1';
   const colonnes = gley ? Munsell.colonnesGley : Munsell.chromas.map((c) => `/${c}`);
-  const actuelle = hz.couleur.toUpperCase();
+  const actuelle = String(couleurActuelle).toUpperCase();
   const tourner = (d) => { vue.page = Math.max(0, Math.min(pages.length - 1, vue.page + d)); rendreInspecteur(); };
   const grille = el('div', { class: 'grille' }, el('span'), ...colonnes.map((c) => el('span', { class: 'tete' }, c)));
   for (const [valeur, puces] of page.lignes) {
@@ -423,7 +575,7 @@ function livret(hz) {
     for (const p of puces) {
       grille.append(p
         ? el('button', { type: 'button', title: p[0], 'aria-label': p[0], class: `puce${p[1].toUpperCase() === actuelle ? ' choisie' : ''}`,
-          style: { background: p[1] }, onclick: () => choisirCouleur(hz, p[1], p[0]) })
+          style: { background: p[1] }, onclick: () => choisir(p[1], p[0]) })
         : el('span'));
     }
   }
@@ -446,23 +598,24 @@ function telecharger(blob, nom) {
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 }
 
-const nomFichier = () => M.nomDeFichier(M.nomAffiche(courant()));
+const nomFichier = (quoi = 'schema') => M.nomDeFichier(`${M.nomAffiche(courant())}${quoi === 'fiche' ? ' - légende' : ''}`);
+const figureExport = (quoi) => (quoi === 'fiche' ? F.composerFiche(courant()) : F.composer(courant(), { export: true }));
 
-function exporterPNG() {
-  const c = F.versCanvas(F.composer(courant(), { export: true }), 2);
-  c.toBlob((b) => { if (b) telecharger(b, `${nomFichier()}.png`); }, 'image/png');
+function exporterPNG(quoi = vue.feuille) {
+  const c = F.versCanvas(figureExport(quoi), 2);
+  c.toBlob((b) => { if (b) telecharger(b, `${nomFichier(quoi)}.png`); }, 'image/png');
 }
 
 /// PDF vectoriel : la figure en SVG, seule sur la page, par l'impression du navigateur.
-function exporterPDF() {
-  const fig = F.composer(courant(), { export: true });
+function exporterPDF(quoi = vue.feuille) {
+  const fig = figureExport(quoi);
   const zone = $('#impression');
   zone.innerHTML = F.versSVG(fig);
   let page = document.getElementById('page-impression');
   if (!page) { page = el('style', { id: 'page-impression' }); document.head.append(page); }
   page.textContent = `@page { size: ${Math.ceil(fig.largeur)}px ${fig.hauteur}px; margin: 0; }`;
   const titre = document.title;
-  document.title = nomFichier();
+  document.title = nomFichier(quoi);
   const nettoyer = () => { document.title = titre; zone.innerHTML = ''; page.textContent = ''; window.removeEventListener('afterprint', nettoyer); };
   window.addEventListener('afterprint', nettoyer);
   window.print();
@@ -480,6 +633,68 @@ async function lireFichier(f) {
   if (!biblio.importer(liste)) { window.alert('Fichier illisible : il faut un schéma enregistré par Profils de sol.'); return; }
   vue.horizonChoisi = null; vue.fosseChoisie = null;
   rendre();
+}
+
+// MARK: - Import depuis Fiches sondages
+
+/// L'Excel (ou le .csv) de Fiches sondages : on montre les sondages trouvés, on choisit, on importe.
+async function importerSondages(fichier) {
+  if (!fichier) return;
+  let lu;
+  try { lu = await S.lireFichierSondages(fichier); } catch (e) {
+    window.alert(`Import impossible : ${e?.message ?? e}`);
+    return;
+  }
+  if (!lu.sondages.length) { window.alert('Aucun sondage dans ce fichier (une ligne par sondage, avec ID et EPAISSE_1…).'); return; }
+  dialogueImport(fichier.name, lu);
+}
+
+function dialogueImport(nomFichier, { feuille, sondages }) {
+  const coches = sondages.map(() => true);
+  let mode = 'fiches';
+  const bouton = el('button', { type: 'submit', class: 'principal' });
+  const actualiser = () => {
+    const n = coches.filter(Boolean).length;
+    bouton.textContent = mode === 'fiches' ? `Créer ${n} fiche${n > 1 ? 's' : ''}` : `Créer le schéma (${n} sondage${n > 1 ? 's' : ''})`;
+    bouton.disabled = !n;
+  };
+  const lignes = sondages.map((s, i) => {
+    const c = el('input', { type: 'checkbox' });
+    c.checked = true;
+    c.addEventListener('change', () => { coches[i] = c.checked; actualiser(); });
+    const details = [`${S.profondeurSondage(s)} cm`, `${s.horizons.length} horizon${s.horizons.length > 1 ? 's' : ''}`,
+      s.commune, Number.isFinite(s.nappe) ? `nappe ${s.nappe} cm` : ''].filter(Boolean).join(' · ');
+    return el('label', { class: 'sondage' }, c, el('strong', {}, S.nomSondage(s)), el('span', {}, details));
+  });
+  const choixMode = (valeur, texte, aide) => {
+    const r = el('input', { type: 'radio', name: 'mode-import', value: valeur });
+    r.checked = mode === valeur;
+    r.addEventListener('change', () => { mode = valeur; actualiser(); });
+    return el('label', { class: 'mode' }, r, el('span', {}, el('strong', {}, texte), el('small', {}, aide)));
+  };
+  const d = el('dialog', { class: 'dialogue', 'aria-label': 'Importer depuis Fiches sondages' },
+    el('form', { method: 'dialog' },
+      el('h2', {}, 'Importer depuis Fiches sondages'),
+      el('p', { class: 'doux' }, `${nomFichier} · feuille « ${feuille} » · ${sondages.length} sondage${sondages.length > 1 ? 's' : ''}`),
+      el('div', { class: 'sondages' }, ...lignes),
+      el('div', { class: 'modes' },
+        choixMode('fiches', 'Une fiche par sondage', 'Chaque sondage devient un schéma de l’historique.'),
+        choixMode('ensemble', 'Tous sur un même schéma', 'Une fosse par sondage, côte à côte, sur la profondeur du plus profond.')),
+      el('div', { class: 'rangee boutons' },
+        el('button', { type: 'button', onclick: () => d.close() }, 'Annuler'), bouton)));
+  d.querySelector('form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const choisis = sondages.filter((_, i) => coches[i]);
+    if (!choisis.length) return;
+    biblio.importer(S.schemasDepuisSondages(choisis, mode));
+    vue.horizonChoisi = null; vue.fosseChoisie = null; vue.feuille = 'schema';
+    d.close();
+    rendre();
+  });
+  d.addEventListener('close', () => d.remove());
+  actualiser();
+  document.body.append(d);
+  d.showModal();
 }
 
 // MARK: - Lancement
@@ -521,7 +736,8 @@ export function lancer() {
     const f = e.dataTransfer?.files?.[0];
     if (!f) return;
     e.preventDefault();
-    lireFichier(f);
+    if (/\.(xlsx|xlsm|csv|txt)$/i.test(f.name)) importerSondages(f);
+    else lireFichier(f);
   });
 
   window.addEventListener('pagehide', enregistrerTout);

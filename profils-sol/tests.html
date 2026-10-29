@@ -15,9 +15,9 @@
 <script type="module">
   // Le portage des 60 vérifications de l'autotest de l'app Mac (Application.swift), plus celles
   // propres au web (stockage refusé, fichier de l'app Mac relu, SVG du PDF bien formé).
-  import * as M from './js/modele.js?v=20261025203629';
-  import * as F from './js/figure.js?v=20261025203629';
-  import * as Munsell from './js/munsell.js?v=20261025203629';
+  import * as M from './js/modele.js?v=20261029212717';
+  import * as F from './js/figure.js?v=20261029212717';
+  import * as Munsell from './js/munsell.js?v=20261029212717';
 
   const sortie = document.getElementById('sortie');
   let echecs = 0, total = 0;
@@ -275,6 +275,228 @@
   verifier("le SVG garde tous les textes (vectoriel)", svg.includes('Valorisation des matériaux') && svg.includes('Hz développement') && svg.includes('⚠ Ne pas prioriser'));
   verifier("l'export n'a ni poignée, ni +, ni outils", !fig.elements.some((e) => ['poignee', 'outils'].includes(e.type) || e.plus));
   verifier('texte trop long : coupé avec des points de suspension', F.tronquer('Un commentaire beaucoup trop long pour la barre', 82, 7.5, false).endsWith('…'));
+
+  // 20. Éléments grossiers et taches : rattachés à un horizon, ou sur une plage libre « de x à y cm »
+  {
+    const f = M.fosseNeuve(1, 100);                          // [25, 75]
+    const eg = M.ajouterEntree(f, 'elementsGrossiers', 1);
+    verifier('éléments grossiers ajoutés dans un horizon : sa plage', M.plage(f, eg).join('-') === '25-100', M.plage(f, eg).join('-'));
+    M.deplacerLimite(f, 0, 10, f.horizons.map((h) => h.epaisseur));
+    verifier('la plage suit la limite tirée', M.plage(f, eg).join('-') === '35-100', M.plage(f, eg).join('-'));
+    M.fixerPlage(f, eg, 'de', 50);
+    verifier('une profondeur saisie détache de l’horizon', !eg.horizon && M.plage(f, eg).join('-') === '50-100', M.plage(f, eg).join('-'));
+    M.fixerPlage(f, eg, 'a', 900);
+    verifier('plage bornée à la fosse', M.plage(f, eg)[1] === 100);
+    M.rattacher(f, eg);
+    verifier('rattacher à l’horizon du milieu de la plage', eg.horizon === f.horizons[1].id && eg.de === undefined);
+    const t = M.ajouterEntree(f, 'taches', 0);
+    verifier('taches : 5 %, gris 50, marbrures par défaut', t.abondance === 5 && t.gris === 50 && t.forme === 'marbrure');
+    const avant = M.plage(f, t).join('-');
+    M.supprimerHorizon(f, 0);
+    verifier('horizon supprimé : ses taches restent en place, en plage libre', !t.horizon && M.plage(f, t).join('-') === avant, `${avant} → ${M.plage(f, t).join('-')}`);
+    const s = M.schema({ fosses: [f], profondeur: 100 });
+    M.dupliquerFosse(s, 0);
+    const copie = s.fosses[1];
+    verifier('fosse dupliquée : les éléments suivent les horizons de la copie',
+      copie.elementsGrossiers[0].horizon === copie.horizons[0].id && copie.elementsGrossiers[0].id !== f.elementsGrossiers[0].id);
+    M.supprimerEntree(copie, 'taches', copie.taches[0].id);
+    verifier('dernière tache retirée : plus de liste', copie.taches === undefined);
+  }
+
+  // 21. Enregistrement : les ajouts se relisent, les fichiers d'avant restent tels quels
+  {
+    const s = M.exemple();
+    const f = s.fosses[1];
+    f.elementsGrossiers = [M.elementGrossier({ horizon: f.horizons[1].id, abondance: 150, taille: 'menhirs', calcaire: true })];
+    f.taches = [M.tache({ de: 20, a: 60, abondance: 40, gris: 90, forme: 'tachete', munsellOrange: '7.5YR 5/8' })];
+    f.surface = { abondance: 30, taille: 'pierres', calcaire: false };
+    f.nappe = 65;
+    f.horizons[0].noye = true; f.horizons[1].nonObserve = true;
+    const r = M.relireSchema(JSON.parse(JSON.stringify(s))).fosses[1];
+    verifier('éléments grossiers relus, valeurs assainies', r.elementsGrossiers[0].abondance === 100 && r.elementsGrossiers[0].taille === 'cailloux'
+      && r.elementsGrossiers[0].calcaire === true && r.elementsGrossiers[0].horizon === r.horizons[1].id);
+    verifier('taches relues', r.taches[0].de === 20 && r.taches[0].a === 60 && r.taches[0].gris === 90 && r.taches[0].forme === 'tachete' && r.taches[0].munsellOrange === '7.5YR 5/8');
+    verifier('surface, nappe, quasi noyé, non observé relus', r.surface.taille === 'pierres' && r.nappe === 65 && r.horizons[0].noye && r.horizons[1].nonObserve);
+    const ancien = M.relireSchema(JSON.parse(JSON.stringify(M.exemple()))).fosses[1];
+    verifier('un schéma d’avant ne reçoit aucun champ nouveau', ['elementsGrossiers', 'taches', 'surface', 'nappe'].every((k) => ancien[k] === undefined));
+  }
+
+  // 22. Notations Munsell saisies à la main (taches, import)
+  verifier('Munsell : « 10YR4/3 » retrouvée dans le livret', M.trouverMunsell('10YR4/3')?.notation === '10YR 4/3');
+  verifier('Munsell : virgule décimale et minuscules', M.trouverMunsell('2,5y 6/2')?.notation === '2.5Y 6/2');
+  const voisine = M.trouverMunsell('10YR 4/5');
+  verifier('Munsell absente du livret : chroma voisin, signalé', voisine?.approchee && /^10YR 4\/[46]$/.test(voisine.notation), voisine?.notation);
+  verifier('Munsell : gris neutre « N5/0 »', M.trouverMunsell('N5/0')?.notation === 'N 5/');
+  verifier('Munsell illisible : rien', M.trouverMunsell('rouge') === null);
+  verifier('taches sans notation : couleurs normales', M.couleurTache(M.tache(), 'orange') === M.teintesTaches.orange
+    && M.couleurTache(M.tache({ munsellGris: '5GY 6/1' }), 'gris') === M.trouverMunsell('5GY 6/1').hex);
+
+  // 23. Le dessin : même hasard à chaque fois, abondance respectée, chaque chose à sa place
+  {
+    const une = (traits) => { const f = M.fosse({ horizons: [M.horizon({ nom: 'H1', epaisseur: 40, couleur: '#E0D8C8' }), M.horizon({ nom: 'H2', epaisseur: 60, couleur: '#E0D8C8' })], ...traits(M) });
+      const s = M.schema({ fosses: [f], legende: true }); M.recaler(s); return s; };
+    const formes = (s) => F.composer(s, { export: true }).elements.filter((e) => e.type === 'horizon').flatMap((e) => e.motifs);
+    const eg = (ab, calc = false) => une(() => ({ elementsGrossiers: [{ id: 'EG1', de: 0, a: 100, abondance: ab, taille: 'cailloux', calcaire: calc }] }));
+    verifier('dessin identique d’un rendu à l’autre (graine = identifiant)', JSON.stringify(formes(eg(20))) === JSON.stringify(formes(eg(20))));
+    const unique = (l) => new Set(l.map((x) => x.d)).size;
+    const n10 = unique(formes(eg(10))), n40 = unique(formes(eg(40)));
+    verifier('4 fois plus d’abondance, 4 fois plus de cailloux', Math.abs(n40 / n10 - 4) < 0.6, `${n10} → ${n40}`);
+    verifier('cailloux calcaires blanc cassé, les autres gris', formes(eg(20, true)).every((x) => M.luminance(x.fill) > 0.8) && formes(eg(20)).every((x) => M.luminance(x.fill) < 0.7));
+    const plage = une(() => ({ elementsGrossiers: [{ id: 'EG2', de: 30, a: 50, abondance: 30, taille: 'graviers', calcaire: false }] }));
+    const fig = F.composer(plage, { export: true });
+    const h0 = fig.elements.find((e) => e.type === 'horizon');
+    const y = (cm) => h0.y + cm * fig.echelle;
+    const centres = [...new Set(fig.elements.filter((e) => e.type === 'horizon').flatMap((e) => e.motifs))].map((x) => (x.y0 + x.y1) / 2);
+    verifier('cailloux posés entre 30 et 50 cm', centres.length > 5 && centres.every((c) => c >= y(30) && c <= y(50)), `${centres.length} cailloux`);
+
+    // Taches : part de la surface mesurée sur le rendu (pixels qui ne sont plus la teinte de l'horizon).
+    const couverture = (t) => {
+      const s = une(() => ({ taches: [{ id: 'T1', de: 0, a: 100, ...t }] }));
+      const fg = F.composer(s, { export: true });
+      const c = F.versCanvas(fg, 1);
+      const hz = fg.elements.filter((e) => e.type === 'horizon');
+      const x0 = Math.ceil(hz[0].x + 3), x1 = Math.floor(hz[0].x + hz[0].w - 3), y0 = Math.ceil(hz[0].y + 3), y1 = Math.floor(hz[1].y + hz[1].h - 3);
+      const px = c.getContext('2d').getImageData(x0, y0, x1 - x0, y1 - y0).data;
+      let autre = 0, n = 0;
+      for (let i = 0; i < px.length; i += 4) { n++; if (Math.abs(px[i] - 0xE0) + Math.abs(px[i + 1] - 0xD8) + Math.abs(px[i + 2] - 0xC8) > 24) autre++; }
+      return autre / n;
+    };
+    const c40 = couverture({ abondance: 40, gris: 50, forme: 'marbrure' });
+    verifier('taches à 40 % : environ 40 % de la surface', c40 > 0.28 && c40 < 0.55, `${Math.round(c40 * 100)} %`);
+    const c5 = couverture({ abondance: 5, gris: 50, forme: 'tachete' });
+    verifier('taches à 5 % : environ 5 % de la surface', c5 > 0.02 && c5 < 0.1, `${Math.round(c5 * 100)} %`);
+    const c100 = couverture({ abondance: 100, gris: 90, forme: 'marbrure' });
+    verifier('taches à 100 % : plus rien de la teinte de l’horizon', c100 > 0.99, `${Math.round(c100 * 100)} %`);
+
+    // Nappe, horizon quasi noyé, non observé.
+    const eau = une(() => ({ nappe: 60 }));
+    eau.fosses[0].horizons[0].noye = true;
+    const fe = F.composer(eau, { export: true });
+    const hs = fe.elements.filter((e) => e.type === 'horizon');
+    const yn = hs[0].y + 60 * fe.echelle;
+    const bulles = hs[1].motifs.filter((x) => x.fill?.startsWith('rgba'));
+    verifier('bulles de la nappe seulement sous son niveau', bulles.length > 5 && bulles.every((x) => x.y0 >= yn - 0.01), `${bulles.length} bulles`);
+    verifier('traits d’eau dans l’horizon quasi noyé seulement', hs[0].motifs.some((x) => x.cap === 'round') && !hs[1].motifs.some((x) => x.cap === 'round'));
+    verifier('profondeur de la nappe écrite en bleu sur la règle', fe.elements.some((e) => e.type === 'texte' && e.valeur === '60' && e.couleur === F.BLEU));
+    verifier('texte posé sur des motifs : liseré de la teinte de l’horizon', hs[1].lignes.every((l) => l.halo));
+    const cache = une(() => ({}));
+    cache.fosses[0].horizons[1].nonObserve = true;
+    verifier('non observé : hachuré, teinte neutre, hors légende des teintes',
+      F.composer(cache, { export: true }).elements.filter((e) => e.type === 'horizon')[1].couleur === '#F4F1EA' && M.legende(cache).length === 1);
+
+    // Surface : cailloux à demi enterrés, au-dessus de la barre.
+    const surf = une(() => ({ surface: { abondance: 40, taille: 'pierres', calcaire: true } }));
+    const fs = F.composer(surf, { export: true });
+    const motif = fs.elements.find((e) => e.type === 'motif' && e.fi === 0);
+    const haut = fs.elements.find((e) => e.type === 'horizon').y;
+    const bornes = motif.formes.map((x) => { const v = x.d.match(/-?\d+(\.\d+)?/g).map(Number); const ys = v.filter((_, i) => i % 2); return [Math.min(...ys), Math.max(...ys)]; });
+    verifier('cailloux de surface à cheval sur la ligne du sol', bornes.length >= 2 && bornes.every(([a, b]) => a < haut && b > haut), `${bornes.length} pierres`);
+    verifier('taille et abondance écrites au-dessus', fs.elements.some((e) => e.type === 'texte' && e.valeur === 'Pierres calcaires 40 %'));
+    const sy = M.symboles(M.schema({ fosses: [eg(10).fosses[0], surf.fosses[0], eau.fosses[0]] })).map((t) => t.hex).join(' ');
+    verifier('légende : un symbole par chose dessinée', sy === 'EG EG-CALCAIRE NOYE NAPPE', sy);
+    const svgEG = F.versSVG(F.composer(eg(20), { export: true }));
+    const docEG = new DOMParser().parseFromString(svgEG, 'image/svg+xml');
+    verifier('SVG (PDF) avec cailloux bien formé', !docEG.querySelector('parsererror') && docEG.querySelectorAll('path').length > 20);
+  }
+
+  // 24. La fiche légende et le Référentiel pédologique 2008
+  {
+    const R = await import('./js/referentiel.js?v=20261029212717');
+    const lecture = (d) => R.decoder(d).parties.filter((p) => p.type !== 'note').map((p) => p.code).join(' ');
+    verifier('Btg = BT + -g', lecture('Btg') === 'BT -g', lecture('Btg'));
+    verifier('Ztc = matériaux anthropiques technologiques', lecture('Ztc') === 'Ztc' && R.decoder('Ztc').parties[0].nom === 'Matériaux anthropiques technologiques');
+    verifier('LAci = L + Aci (relecture quand la plus longue échoue)', lecture('LAci') === 'L Aci', lecture('LAci'));
+    verifier('II C2 : discontinuité, C, sous-horizon', lecture('II C2') === 'C' && R.decoder('II C2').parties.filter((p) => p.type === 'note').length === 2);
+    verifier('E&BT : deux horizons', lecture('E&BT') === 'E BT');
+    verifier('Ap : ancienne notation expliquée', lecture('Ap') === 'A -p');
+    verifier('« Hz croissance » : désignation libre', !R.decoder('Hz croissance').reconnu);
+    const tous = [...Object.entries(R.horizons), ...Object.entries(R.suffixes)];
+    verifier('chaque code a un nom, une définition et une page', tous.every(([, [n, t, p]]) => n && t.length > 10 && Number.isInteger(p) && p > 0 && p < 436), `${tous.length} codes`);
+    verifier('aucun tiret de ponctuation dans les définitions', tous.every(([, [, t]]) => !/ [—–] /.test(t)));
+    const s = M.exemple();
+    s.fosses[0].horizons[0].libelle = 'Ztc';
+    const d = F.designations(s);
+    verifier('fiche : seules les désignations écrites (pas H1, H2…)', d.map((x) => x.designation).join(' ') === 'Ztc Btg', d.map((x) => x.designation).join(' '));
+    const fiche = F.composerFiche(s);
+    const textes = fiche.elements.filter((e) => e.type === 'texte').map((e) => e.valeur).join(' ');
+    verifier('fiche : définitions et source', textes.includes('Horizons argilluviaux') && textes.includes('Matériaux anthropiques technologiques') && textes.includes('Référentiel pédologique 2008'));
+    verifier('fiche : aucun texte ne déborde de la page', fiche.elements.filter((e) => e.type === 'texte').every((e) => F.mesurer(e.valeur, e.taille, e.gras) <= e.w + 1 && e.x + e.w <= fiche.largeur));
+    const docFiche = new DOMParser().parseFromString(F.versSVG(fiche), 'image/svg+xml');
+    verifier('fiche : SVG (PDF) bien formé', !docFiche.querySelector('parsererror'));
+    const pngFiche = await new Promise((ok) => F.versCanvas(fiche, 2).toBlob(ok, 'image/png'));
+    verifier('fiche : PNG à part du schéma', pngFiche && pngFiche.size > 5000, `${pngFiche?.size} octets`);
+  }
+
+  // 25. Import depuis Fiches sondages : un vrai .xlsx (ZIP, feuilles XML, chaînes partagées) fabriqué ici
+  {
+    const S = await import('./js/sondages.js?v=20261029212717');
+    const enc = new TextEncoder();
+    const deflate = async (b) => new Uint8Array(await new Response(new Blob([b]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer());
+    async function zip(fichiers) {
+      const parts = [], central = [];
+      let pos = 0;
+      for (const [nom, texte, compresser] of fichiers) {
+        const brut = enc.encode(texte), donnees = compresser ? await deflate(brut) : brut, n = enc.encode(nom);
+        const local = new DataView(new ArrayBuffer(30));
+        local.setUint32(0, 0x04034b50, true); local.setUint16(8, compresser ? 8 : 0, true);
+        local.setUint32(18, donnees.length, true); local.setUint32(22, brut.length, true); local.setUint16(26, n.length, true);
+        const c = new DataView(new ArrayBuffer(46));
+        c.setUint32(0, 0x02014b50, true); c.setUint16(10, compresser ? 8 : 0, true); c.setUint32(20, donnees.length, true);
+        c.setUint32(24, brut.length, true); c.setUint16(28, n.length, true); c.setUint32(42, pos, true);
+        parts.push(new Uint8Array(local.buffer), n, donnees); central.push(new Uint8Array(c.buffer), n);
+        pos += 30 + n.length + donnees.length;
+      }
+      const taille = central.reduce((t, x) => t + x.length, 0);
+      const fin = new DataView(new ArrayBuffer(22));
+      fin.setUint32(0, 0x06054b50, true); fin.setUint16(8, fichiers.length, true); fin.setUint16(10, fichiers.length, true);
+      fin.setUint32(12, taille, true); fin.setUint32(16, pos, true);
+      return new Uint8Array(await new Blob([...parts, ...central, new Uint8Array(fin.buffer)]).arrayBuffer());
+    }
+    const entetes = ['ID', 'Lot', 'PROJET', 'MISSION', 'DATE', 'COMMUNE', 'TYPE_OBS', 'ARRET_PROF', 'ARRET_CAUS', 'NAPPE_APPA', 'REDOX_deb', 'REDOX_fin', 'INT_TREDOX', 'REDUC_deb', 'REDUC_fin',
+      'EPAISSE_1', 'COULEUR_1', 'TEXTURE_1', 'EG_ABOND_1', 'EPAISSE_2', 'COULEUR_2', 'TEXTURE_2', 'EG_ABOND_2'];
+    const lignes = [entetes,
+      [1, '', 'Lèzan', 'Zones humides', 45425, 'Lèzan', 'Tarière manuelle', 80, 3, 65, 25, 80, 'OUI', 60, 80, 25, '10YR4/3', 'LS', 5, 35, '2,5Y6/2', 'LAS', ''],
+      [2, 'S2 bis', 'Lèzan', 'Zones humides', 45425, 'Lèzan', 'Fosse pédologique', 45, 2, '', '', '', '', '', '', 30, '7.5YR4/4', 'LA', '', 20, '10YR 4/5', '', 40]];
+    const partages = [];
+    const cellule = (v, j, i) => {
+      const ref = String.fromCharCode(65 + (j % 26)).padStart(j >= 26 ? 2 : 1, 'A') + (i + 1);
+      if (v === '') return '';
+      if (typeof v === 'number') return `<c r="${ref}"><v>${v}</v></c>`;
+      if (!partages.includes(v)) partages.push(v);
+      return `<c r="${ref}" t="s"><v>${partages.indexOf(v)}</v></c>`;
+    };
+    const NS = 'xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"';
+    const feuille = `<worksheet ${NS}><sheetData>${lignes.map((l, i) => `<row r="${i + 1}">${l.map((v, j) => cellule(v, j, i)).join('')}</row>`).join('')}</sheetData></worksheet>`;
+    const octets = await zip([
+      ['xl/workbook.xml', `<workbook ${NS} xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Notice" sheetId="1" r:id="rId2"/><sheet name="Sondages" sheetId="2" r:id="rId1"/></sheets></workbook>`, false],
+      ['xl/_rels/workbook.xml.rels', '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Target="worksheets/sheet2.xml"/></Relationships>', false],
+      ['xl/worksheets/sheet1.xml', feuille, true],
+      ['xl/worksheets/sheet2.xml', `<worksheet ${NS}><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>Lisez-moi</t></is></c></row></sheetData></worksheet>`, true],
+      ['xl/sharedStrings.xml', `<sst ${NS}>${partages.map((p) => `<si><t>${p}</t></si>`).join('')}</sst>`, true],
+    ]);
+    const feuilles = await S.lireXLSX(octets);
+    const choisie = S.choisirFeuille(feuilles);
+    verifier('xlsx lu (ZIP + DEFLATE), la bonne feuille choisie', feuilles.length === 2 && choisie?.nom === 'Sondages', feuilles.map((f) => f.nom).join(', '));
+    const sondages = S.lireSondages(choisie);
+    verifier('deux sondages, leurs horizons', sondages.length === 2 && sondages[0].horizons.map((h) => h.epaisseur).join(',') === '25,35' && sondages[1].lot === 'S2 bis');
+    verifier('date Excel et cause d’arrêt traduites', sondages[0].date === '13/05/2024' && sondages[0].cause === 'Nappe atteinte' && sondages[1].cause === 'Horizon M, R ou D atteint');
+    const [a, b] = S.schemasDepuisSondages(sondages, 'fiches');
+    const fa = a.fosses[0], fb = b.fosses[0];
+    verifier('une fiche par sondage, à la profondeur d’arrêt', a.profondeur === 80 && b.profondeur === 50 && fa.nom === 'Sondage 1' && fb.nom === 'S2 bis');
+    verifier('couleurs Munsell du livret', fa.horizons[0].munsell === '10YR 4/3' && fa.horizons[0].couleur === M.trouverMunsell('10YR 4/3').hex
+      && fa.horizons[1].munsell === '2.5Y 6/2' && fb.horizons[1].munsell !== undefined);
+    verifier('arrêt plus bas que les horizons décrits : non observé', fa.horizons.length === 3 && fa.horizons[2].nonObserve && fa.horizons[2].epaisseur === 20);
+    verifier('épaisseurs plus profondes que l’arrêt : la fiche suit les horizons', b.profondeur === 50 && M.epaisseurTotale(fb) === 50);
+    verifier('éléments grossiers repris (EG_ABOND_n)', fa.elementsGrossiers?.[0].abondance === 5 && fa.elementsGrossiers[0].horizon === fa.horizons[0].id && fb.elementsGrossiers?.[0].abondance === 40);
+    verifier('traits rédoxiques (intensifiés) et horizon réductique', fa.taches?.length === 2 && fa.taches[0].abondance === 40 && fa.taches[1].abondance === 100 && fa.taches[1].gris === 90);
+    verifier('nappe reprise', fa.nappe === 65 && fb.nappe === undefined);
+    const [ens] = S.schemasDepuisSondages(sondages, 'ensemble');
+    verifier('tous sur un schéma : la profondeur du plus profond', ens.fosses.length === 2 && ens.profondeur === 80 && ens.fosses.every((f) => M.epaisseurTotale(f) === 80));
+    verifier('sous l’arrêt : la cause écrite dans la partie non observée', ens.fosses[1].horizons.at(-1).nonObserve && ens.fosses[1].horizons.at(-1).commentaire === 'horizon m, r ou d atteint');
+    const csv = 'ID;EPAISSE_1;COULEUR_1;TEXTURE_1;ARRET_PROF\r\n7;"30";"10YR 5/4";"limon ; sableux";45\r\n';
+    const sc = S.lireSondages(S.choisirFeuille(S.lireCSV(csv)));
+    verifier('export .csv lu aussi (point-virgule, guillemets)', sc.length === 1 && sc[0].horizons[0].texture === 'limon ; sableux' && sc[0].arret === 45);
+  }
 
   const fin = document.createElement('p');
   fin.className = echecs ? 'echec' : 'ok';
