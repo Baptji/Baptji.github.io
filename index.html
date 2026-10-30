@@ -65,6 +65,8 @@ h1, h2 { margin: 0; line-height: 1.15; text-wrap: balance; }
 .points { display: flex; gap: 8px; }
 .points button { width: 10px; height: 10px; padding: 0; border-radius: 50%; border: 0; cursor: pointer; background: var(--muted); opacity: .45; }
 .points button[aria-current="true"] { background: var(--accent); opacity: 1; }
+.corps p.maj { grid-column: 1 / -1; height: auto; margin-top: 10px; font-size: .78rem; color: var(--muted); }
+.corps p.maj:empty { display: none; }
 .points button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .ecran video { transition: none; } }
 @media (max-width: 520px) { main { padding: 28px 16px 40px; } }
@@ -80,7 +82,7 @@ footer a { color: inherit; }
   <header class="site"><h1>Squid</h1></header>
 
   <div class="bureau">
-    <section class="fenetre" aria-labelledby="atlas">
+    <section class="fenetre" data-app="atlas" aria-labelledby="atlas">
       <div class="barre"><span class="feux" aria-hidden="true"><i></i><i></i><i></i></span></div>
       <div class="ecran defile">
         <video src="medias/formation.mp4" poster="medias/formation.jpg" muted playsinline preload="auto" class="actif" aria-label="Formation du granite, étape par étape"></video>
@@ -99,10 +101,11 @@ footer a { color: inherit; }
             <button type="button" aria-label="Cristal en 3D"></button>
           </div>
         </div>
+        <p class="maj"></p>
       </div>
     </section>
 
-    <section class="fenetre" aria-labelledby="acoustique">
+    <section class="fenetre" data-app="acoustique" aria-labelledby="acoustique">
       <div class="barre"><span class="feux" aria-hidden="true"><i></i><i></i><i></i></span></div>
       <div class="ecran defile">
         <video src="medias/acoustique-impulsion.mp4" poster="medias/acoustique-impulsion.jpg" muted playsinline preload="auto" class="actif" aria-label="L'impulsion part de l'enceinte et rebondit sur les murs d'une pièce en L"></video>
@@ -121,10 +124,11 @@ footer a { color: inherit; }
             <button type="button" aria-label="Tour de la pièce"></button>
           </div>
         </div>
+        <p class="maj"></p>
       </div>
     </section>
 
-    <section class="fenetre travaux" aria-labelledby="climat">
+    <section class="fenetre travaux" data-app="climat" aria-labelledby="climat">
       <div class="barre"><span class="feux" aria-hidden="true"><i></i><i></i><i></i></span></div>
       <div class="ecran">
         <img src="medias/climat.jpg" alt="Une maille de 8 km en Loir-et-Cher : température, pluie et évapotranspiration de 1960 à aujourd'hui" loading="lazy">
@@ -135,11 +139,12 @@ footer a { color: inherit; }
         <h2 id="climat">Climat</h2>
         <p>Le climat de chaque lieu, jour par jour depuis 1959.</p>
         <div class="actions"><a class="ouvrir" href="climat/">Ouvrir</a></div>
+        <p class="maj"></p>
       </div>
     </section>
 
 
-    <section class="fenetre travaux" aria-labelledby="ferme">
+    <section class="fenetre travaux" data-app="squid-ferme" aria-labelledby="ferme">
       <div class="barre"><span class="feux" aria-hidden="true"><i></i><i></i><i></i></span></div>
       <div class="ecran">
         <img src="medias/ferme.jpg" alt="La ferme en pixels : parcelles, maison et grange, liste des semences" loading="lazy">
@@ -150,10 +155,11 @@ footer a { color: inherit; }
         <h2 id="ferme">Squid Ferme</h2>
         <p>Une ferme en pixels, aux rendements réels.</p>
         <div class="actions"><a class="ouvrir" href="squid-ferme/">Ouvrir</a></div>
+        <p class="maj"></p>
       </div>
     </section>
 
-    <section class="fenetre" aria-labelledby="profils-sol">
+    <section class="fenetre" data-app="profils-sol" aria-labelledby="profils-sol">
       <div class="barre"><span class="feux" aria-hidden="true"><i></i><i></i><i></i></span></div>
       <div class="ecran">
         <img src="medias/profils-sol.jpg" alt="Six fosses pédologiques côte à côte : horizons colorés, règle des profondeurs et livret Munsell" loading="lazy">
@@ -163,9 +169,25 @@ footer a { color: inherit; }
         <h2 id="profils-sol">Profils de sol</h2>
         <p>Les fosses et leurs horizons, dessinés à la main.</p>
         <div class="actions"><a class="ouvrir" href="profils-sol/">Ouvrir</a></div>
+        <p class="maj"></p>
       </div>
     </section>
   </div>
+  <script src="versions.js"></script>
+  <script>
+    // fenêtres classées de la dernière mise à jour à la plus ancienne (versions.js, écrit à chaque publication), avant le premier affichage
+    (function () {
+      var V = window.VERSIONS || {}, bureau = document.querySelector(".bureau");
+      var fen = Array.prototype.slice.call(bureau.querySelectorAll(".fenetre[data-app]"));
+      fen.sort(function (a, b) { return (Date.parse((V[b.dataset.app] || {}).date) || 0) - (Date.parse((V[a.dataset.app] || {}).date) || 0); });
+      fen.forEach(function (f) {
+        bureau.appendChild(f);
+        var v = V[f.dataset.app]; if (!v) return;
+        var jour = new Date(v.date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+        f.querySelector(".maj").textContent = "Version " + v.version + " · mise à jour le " + jour;
+      });
+    })();
+  </script>
 
   <footer>
     <p><a href="https://creativecommons.org/licenses/by-nc/4.0/deed.fr" rel="license">Licence CC BY-NC 4.0</a></p>

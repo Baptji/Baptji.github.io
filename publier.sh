@@ -18,6 +18,8 @@ rsync -a --delete \
   --exclude 'perso' --exclude 'sources' --exclude 'SOURCES.md' \
   "$LEGER/" atlas/
 git add -A
+outils/versions.py   # numéro de version et date sur l'accueil (dossiers indexés)
+git add versions.js
 if git diff --cached --quiet; then echo "Rien de nouveau à publier."; exit 0; fi
 git commit -q -m "${1:-Mise à jour de l'Atlas}"
 git push -q
