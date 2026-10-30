@@ -139,6 +139,34 @@ button.mini:hover { color: var(--texte); filter: none; }
 .pastille.ouverte { border: 2px solid var(--accent); }
 .nom-couleur { min-width: 38px; }
 
+/* Curseurs de pourcentage : piste en deux couleurs coupée sous le bouton, valeur en pastille, repères dessous */
+.curseur { --f: 0; --plein: linear-gradient(var(--accent), var(--accent)); --vide: rgba(128, 128, 128, 0.22); display: flex; flex-direction: column; gap: 3px; }
+.curseur-tete { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.curseur-valeur { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 44px; padding: 1px 8px; border-radius: 99px;
+  font: 600 11px/16px ui-rounded, -apple-system, BlinkMacSystemFont, system-ui, sans-serif; font-variant-numeric: tabular-nums;
+  background: var(--champ); box-shadow: inset 0 0 0 0.5px var(--bord); }
+.curseur-valeur .point { width: 7px; height: 7px; border-radius: 50%; box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.25); }
+.curseur-valeur .point + .point, .curseur-valeur .point:not(:first-child) { margin-left: 4px; }
+.curseur input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 20px; margin: 0; padding: 0; background: transparent; cursor: pointer; }
+.curseur input[type=range]:focus-visible { outline: none; }
+.curseur input[type=range]::-webkit-slider-runnable-track { height: 6px; border-radius: 99px;
+  background: var(--plein) no-repeat left center / calc(9px + (100% - 18px) * var(--f)) 100%, var(--vide);
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.14); }
+.curseur input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; margin-top: -6px; border: 0; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 0.5px rgba(0, 0, 0, 0.18); transition: transform 0.12s ease; }
+.curseur input[type=range]:active::-webkit-slider-thumb { transform: scale(1.14); }
+.curseur input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--choisi), 0 1px 3px rgba(0, 0, 0, 0.3); }
+.curseur input[type=range]::-moz-range-track { height: 6px; border-radius: 99px; background: var(--vide); }
+.curseur input[type=range]::-moz-range-progress { height: 6px; border-radius: 99px; background: var(--plein); }
+.curseur input[type=range]::-moz-range-thumb { width: 18px; height: 18px; border: 0; border-radius: 50%; background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 0.5px rgba(0, 0, 0, 0.18); }
+.curseur-reperes { position: relative; height: 15px; }
+.curseur-reperes button { position: absolute; top: 2px; transform: translateX(-50%); border: 0; background: transparent; padding: 0 3px;
+  font-size: 9px; line-height: 13px; color: var(--texte-doux); border-radius: 4px; font-variant-numeric: tabular-nums; }
+.curseur-reperes button::before { content: ''; position: absolute; left: 50%; top: -3px; width: 1px; height: 3px; background: var(--bord); }
+.curseur-reperes button:hover { color: var(--texte); background: var(--choisi); filter: none; }
+.curseur-reperes button.actif { color: var(--texte); font-weight: 700; }
+
 /* Import depuis Fiches sondages */
 .dialogue { border: 1px solid var(--bord); border-radius: 12px; padding: 0; background: var(--panneau); color: var(--texte); width: min(520px, calc(100vw - 32px)); box-shadow: 0 18px 50px rgba(0, 0, 0, 0.3); }
 .dialogue::backdrop { background: rgba(0, 0, 0, 0.28); }

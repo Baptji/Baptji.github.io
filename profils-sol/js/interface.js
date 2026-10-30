@@ -1,10 +1,10 @@
 // L'interface : barre du haut, figure modifiable, panneau de droite. Tout l'état vit ici ;
 // les règles sont dans modele.js, la géométrie dans figure.js.
 
-import * as M from './modele.js?v=20261030095040';
-import * as F from './figure.js?v=20261030095040';
-import * as Munsell from './munsell.js?v=20261030095040';
-import * as S from './sondages.js?v=20261030095040';
+import * as M from './modele.js?v=20261030100711';
+import * as F from './figure.js?v=20261030100711';
+import * as Munsell from './munsell.js?v=20261030100711';
+import * as S from './sondages.js?v=20261030100711';
 
 const $ = (s) => document.querySelector(s);
 
@@ -452,6 +452,35 @@ function nombreChamp(etiquette, valeur, ecrire, cle, invite = '') {
   return input;
 }
 
+/// Un curseur de pourcentage : piste en deux couleurs (la part choisie, le reste), valeur dans une pastille,
+/// repères cliquables dessous. La figure suit le curseur en direct ; le panneau se redessine au lâcher.
+function curseur({ etiquette, valeur, ecrire, cle, plein, vide = null, reperes = [], affiche = (v) => `${v} %` }) {
+  const input = el('input', { type: 'range', min: 0, max: 100, step: 1, value: Math.round(valeur), 'data-cle': cle, 'aria-label': etiquette });
+  const pastille = el('span', { class: 'curseur-valeur' });
+  const boutons = reperes.map((r) => el('button', { type: 'button', 'data-v': r, title: `${r} %`,
+    style: { left: `calc(9px + (100% - 18px) * ${r / 100})` }, onclick: () => { input.value = r; regler(r); rendre(); } }, String(r)));
+  const boite = el('div', { class: 'curseur' },
+    el('div', { class: 'curseur-tete' }, el('span', { class: 'etiquette' }, etiquette), pastille),
+    input,
+    boutons.length ? el('div', { class: 'curseur-reperes' }, ...boutons) : null);
+  // La part choisie est peinte par une image (aplat ou dégradé) coupée à la position du curseur.
+  boite.style.setProperty('--plein', plein.startsWith('linear-gradient') ? plein : `linear-gradient(${plein}, ${plein})`);
+  if (vide) boite.style.setProperty('--vide', vide);
+  const peindre = (v) => {
+    boite.style.setProperty('--f', v / 100);
+    pastille.replaceChildren(...[].concat(affiche(v)));
+    for (const b of boutons) b.classList.toggle('actif', Number(b.dataset.v) === v);
+  };
+  const regler = (v) => { v = Math.max(0, Math.min(100, Math.round(v))); ecrire(v); peindre(v); planifier(); rendreFeuille(); };
+  input.addEventListener('input', () => regler(Number(input.value)));
+  input.addEventListener('change', () => rendre());
+  peindre(Math.round(valeur));
+  return boite;
+}
+
+const point = (couleur) => el('span', { class: 'point', style: { background: couleur } });
+const teinteEG = (e) => (e.calcaire ? '#CDBF9F' : M.teintesEG.autre);
+
 function liste(etiquette, options, valeur, ecrire) {
   const sel = el('select', { 'aria-label': etiquette }, ...options.map(([v, texte]) => el('option', { value: v }, texte)));
   sel.value = String(valeur);
@@ -484,18 +513,15 @@ function carteElementsGrossiers(f, hi) {
   const lignes = (f.elementsGrossiers ?? []).map((e, k) => el('div', { class: 'entree' },
     enTeteEntree(`Couche ${k + 1}`, () => { M.supprimerEntree(f, 'elementsGrossiers', e.id); modifie(); }),
     plageChamps(f, e),
-    el('div', { class: 'rangee' },
-      nombreChamp('Abondance', e.abondance, (v) => { if (Number.isFinite(v)) e.abondance = Math.max(0, Math.min(100, Math.round(v))); }, `insp:${e.id}:abondance`),
-      el('span', { class: 'etiquette' }, '%'),
-      liste('Taille', optionsTaille(), e.taille, (v) => { e.taille = v; })),
+    curseur({ etiquette: 'Abondance', valeur: e.abondance, cle: `insp:${e.id}:abondance`, plein: teinteEG(e), ecrire: (v) => { e.abondance = v; } }),
+    el('div', { class: 'rangee' }, el('span', { class: 'etiquette' }, 'Taille'), liste('Taille', optionsTaille(), e.taille, (v) => { e.taille = v; })),
     caseACocher('Calcaires (blanc cassé)', e.calcaire, (v) => { e.calcaire = v; })));
   const surface = f.surface;
   const blocSurface = el('div', { class: 'entree' },
     caseACocher('En surface (à demi enterrés)', !!surface, (v) => { if (v) f.surface = { abondance: 10, taille: 'cailloux', calcaire: false }; else delete f.surface; }),
-    surface ? el('div', { class: 'rangee' },
-      nombreChamp('Abondance en surface', surface.abondance, (v) => { if (Number.isFinite(v)) surface.abondance = Math.max(0, Math.min(100, Math.round(v))); }, `insp:surface:${f.id}`),
-      el('span', { class: 'etiquette' }, '%'),
-      liste('Taille en surface', optionsTaille(), surface.taille, (v) => { surface.taille = v; })) : null,
+    surface ? curseur({ etiquette: 'Abondance en surface', valeur: surface.abondance, cle: `insp:surface:${f.id}`, plein: teinteEG(surface),
+      ecrire: (v) => { surface.abondance = v; } }) : null,
+    surface ? el('div', { class: 'rangee' }, el('span', { class: 'etiquette' }, 'Taille'), liste('Taille en surface', optionsTaille(), surface.taille, (v) => { surface.taille = v; })) : null,
     surface ? caseACocher('Calcaires (blanc cassé)', surface.calcaire, (v) => { surface.calcaire = v; }) : null);
   return carte('Éléments grossiers', ...lignes,
     el('div', { class: 'rangee' }, el('button', { type: 'button', onclick: () => { M.ajouterEntree(f, 'elementsGrossiers', hi); modifie(); } },
@@ -505,9 +531,12 @@ function carteElementsGrossiers(f, hi) {
 
 function carteTaches(f, hi) {
   const lignes = (f.taches ?? []).map((e, k) => {
-    const abondance = el('div', { class: 'segmente' }, ...M.abondancesTaches.map((v) => el('button', { type: 'button',
-      class: e.abondance === v ? 'actif' : null, onclick: () => { e.abondance = v; modifie(); } }, `${v} %`)));
-    const forme = el('div', { class: 'segmente' }, ...[['marbrure', 'Marbrures'], ['tachete', 'Tacheté']].map(([v, texte]) =>
+    const orange = M.couleurTache(e, 'orange'), gris = M.couleurTache(e, 'gris');
+    const abondance = curseur({ etiquette: 'Abondance', valeur: e.abondance, cle: `insp:${e.id}:abondance`, reperes: M.abondancesTaches,
+      plein: `linear-gradient(to right, ${gris}, ${orange})`, ecrire: (v) => { e.abondance = v; } });
+    const rapport = curseur({ etiquette: 'Gris / orange', valeur: e.gris, cle: `insp:${e.id}:gris`, reperes: [10, 50, 90], plein: gris, vide: orange,
+      affiche: (v) => [point(gris), `${v}`, point(orange), `${100 - v}`], ecrire: (v) => { e.gris = v; } });
+    const forme = el('div', { class: 'segmente' }, ...M.formesDeTaches.map(([v, texte]) =>
       el('button', { type: 'button', class: e.forme === v ? 'actif' : null, onclick: () => { e.forme = v; modifie(); } }, texte)));
     const couleur = (part, nom) => {
       const cleMunsell = part === 'orange' ? 'munsellOrange' : 'munsellGris';
@@ -530,11 +559,8 @@ function carteTaches(f, hi) {
     return el('div', { class: 'entree' },
       enTeteEntree(`Taches ${k + 1}`, () => { M.supprimerEntree(f, 'taches', e.id); modifie(); }),
       plageChamps(f, e),
-      el('div', { class: 'rangee' }, abondance,
-        nombreChamp('Abondance des taches', e.abondance, (v) => { if (Number.isFinite(v)) e.abondance = Math.max(0, Math.min(100, Math.round(v))); }, `insp:${e.id}:abondance`),
-        el('span', { class: 'etiquette' }, '%')),
-      el('div', { class: 'rangee' }, el('span', { class: 'etiquette' }, 'Gris / orange'),
-        liste('Rapport gris / orange', M.rapportsGris.map((g) => [g, `${g} / ${100 - g}`]), e.gris, (v) => { e.gris = Number(v); })),
+      abondance,
+      rapport,
       forme,
       ...couleur('orange', 'Orange'), ...couleur('gris', 'Gris'));
   });

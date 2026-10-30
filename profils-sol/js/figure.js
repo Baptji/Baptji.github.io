@@ -4,8 +4,8 @@
 // Le zoom agrandit la MISE EN PAGE : toutes les longueurs et polices sont multipliées,
 // chaque texte est composé à sa taille finale et reste net.
 
-import * as M from './modele.js?v=20261030095040';
-import * as R from './referentiel.js?v=20261030095040';
+import * as M from './modele.js?v=20261030100711';
+import * as R from './referentiel.js?v=20261030100711';
 
 export const FONTE = '-apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
 export const PAPIER = '#F8F6F1';
@@ -573,13 +573,15 @@ function onduler(a, b, z, rnd) {
 const borner = (pts) => { const ys = pts.map((p) => p[1]); return [Math.min(...ys), Math.max(...ys)]; };
 
 /// Taches d'hydromorphie. Abondance = part de la plage occupée par les taches (gris + orange) ; `gris` = part
-/// grise des taches. Marbrures : traînées le long des fissures entre agrégats et des racines ; tacheté : taches
-/// concentriques. Chaque forme garde sa plage (p0, p1) : elle ne déborde jamais sur l'horizon voisin.
+/// grise des taches. Trois dessins : marbrures (traînées le long des fissures entre agrégats et des racines),
+/// concentriques (cœur gris, couronne orange), tacheté (mouchetures de tailles inégales, bords flous).
+/// Chaque forme garde sa plage (p0, p1) : elle ne déborde jamais sur l'horizon voisin.
 function formesTaches(t, R, z, rnd) {
   const c = Math.min(1, t.abondance / 100), g = t.gris / 100;
   if (c <= 0 || R.h <= 0) return [];
   const orange = M.couleurTache(t, 'orange'), gris = M.couleurTache(t, 'gris');
-  const marbrure = t.forme !== 'tachete';
+  const forme = t.forme === 'concentrique' || t.forme === 'tachete' ? t.forme : 'marbrure';
+  const marbrure = forme === 'marbrure';
   const A = R.w * R.h;
   const plage = { p0: R.y, p1: R.y + R.h };
   const halo = [], liseres = [], coeurs = [], fond = [];
@@ -589,6 +591,7 @@ function formesTaches(t, R, z, rnd) {
     pousser(halo, l.pts, ruban(l.pts, l.demi.map((x) => x * w * 2)), orange, 0.16);
     pousser(halo, l.pts, ruban(l.pts, l.demi.map((x) => x * w * 1.45)), orange, 0.34);
   };
+  if (forme === 'tachete') return mouchetures(c, g, gris, orange, R, z, rnd, plage);
 
   if (c >= 0.999 && g >= 0.5) {
     // Horizon gris (réductique temporairement réoxydé) : la rouille ne reste qu'en liserés autour des
@@ -602,7 +605,7 @@ function formesTaches(t, R, z, rnd) {
         pousser(coeurs, l.pts, ruban(l.pts, l.demi.map((w) => w * 0.28)), canal, 0.8);
       }
     } else {
-      const rp = 2.2 * z;
+      const rp = 2.9 * z;
       for (const [x, y] of semis(R, Math.max(1, Math.round(aireOrange / (Math.PI * rp * rp * 0.75 * 1.9))), rnd)) {
         const r = rp * (0.6 + rnd() * 0.8), a = rnd() * 3, pts = [[x - r, y - r], [x + r, y + r]];
         pousser(halo, pts, tacheForme(x, y, r * 1.9, r * 1.7, a, 0.4, rnd, 8), orange, 0.16);
@@ -625,7 +628,7 @@ function formesTaches(t, R, z, rnd) {
         pousser(coeurs, l.pts, ruban(l.pts, l.demi), gris, 0.96);
       }
     } else {
-      const rp = 2.6 * z;
+      const rp = 3.4 * z;
       for (const [x, y] of semis(R, Math.max(1, Math.round(aireGris / (Math.PI * rp * rp * 0.8))), rnd)) {
         const r = rp * (0.55 + rnd() * 0.9), a = rnd() * 3, pts = [[x - r, y - r], [x + r, y + r]];
         pousser(halo, pts, tacheForme(x, y, r + 2.4 * z, (r + 2.4 * z) * 0.9, a, 0.35, rnd, 8), rouille, 0.25);
@@ -640,7 +643,7 @@ function formesTaches(t, R, z, rnd) {
   // Demi-largeurs : cœur gris h, liseré orange l ; h / (h + l) = part grise (même rapport en surface).
   // Liseré d'au moins lMin : quand le gris domine, les traînées s'élargissent (langues grises) plutôt que de
   // perdre leur bordure.
-  const T0 = (marbrure ? 3.4 : 3.2) * z, lMin = 1.1 * z, hMin = 0.6 * z;
+  const T0 = (marbrure ? 3.4 : 4.3) * z, lMin = 1.1 * z, hMin = 0.6 * z;
   const T = g >= 1 || g <= 0 ? T0 : Math.min(14 * z, Math.max(T0, lMin / (1 - g), hMin / g));
   const aireTaches = c * A;
   if (marbrure) {
@@ -652,9 +655,9 @@ function formesTaches(t, R, z, rnd) {
       if (g > 0) pousser(coeurs, l.pts, ruban(l.pts, l.demi.map((w) => w * g)), gris, 0.96);
     }
   } else {
-    // Tacheté : taches concentriques (cœur gris, couronne orange estompée), et quelques points rouille tout près.
-    // Couronne d'au moins lMin : plus le gris domine, plus les taches sont larges (dans la limite de 8 pt).
-    const rp = g > 0 && g < 1 ? Math.min(8 * z, Math.max(T0, lMin / (1 - Math.sqrt(g)))) : T0;
+    // Concentriques : cœur gris, couronne orange estompée, et quelques points rouille tout près.
+    // Couronne d'au moins lMin : plus le gris domine, plus les taches sont larges (dans la limite de 10 pt).
+    const rp = g > 0 && g < 1 ? Math.min(10 * z, Math.max(T0, lMin / (1 - Math.sqrt(g)))) : T0;
     const unite = Math.PI * rp * rp * 0.8 * 1.8;
     const zone = { x: R.x, y: R.y + Math.min(rp, R.h / 2), w: R.w, h: Math.max(0, R.h - 2 * Math.min(rp, R.h / 2)) };
     for (const [x, y] of semis(zone, Math.max(1, Math.round(aireTaches / unite)), rnd)) {
@@ -675,6 +678,55 @@ function formesTaches(t, R, z, rnd) {
     }
   }
   return [...halo, ...liseres, ...coeurs];
+}
+
+/// Tacheté : mouchetures de tailles très inégales (beaucoup de petites, quelques grosses), aux bords flous, sans
+/// auréole (rouille dans une matrice grise, ou petites taches claires dans une matrice ocre). Une moucheture
+/// grise a toujours de la rouille contre elle ; il y a aussi des mouchetures rouille isolées.
+function mouchetures(c, g, gris, orange, R, z, rnd, plage) {
+  const A = R.w * R.h;
+  const fond = [], dessous = [], dessus = [];
+  const rayon = () => (0.7 + 3.6 * Math.pow(rnd(), 2.4)) * z;
+  const poser = (liste, x, y, r, teinte) => {
+    const e = 0.6 + rnd() * 0.4, a = rnd() * 3.2, bornes = { y0: y - r * 1.4, y1: y + r * 1.4, ...plage };
+    if (r > 1.3 * z) liste.push({ d: tacheForme(x, y, r * 1.35, r * 1.35 * e, a, 0.6, rnd, 7), fill: teinte, op: 0.2, ...bornes });
+    liste.push({ d: tacheForme(x, y, r, r * e, a, 0.6, rnd, 7), fill: teinte, op: 0.93, ...bornes });
+    return Math.PI * r * r * e * 0.85;
+  };
+  const places = (cible) => semis(R, Math.min(6000, Math.ceil(cible / (Math.PI * 1.3 * z * z))), rnd);
+
+  if (c >= 0.999) {
+    // Tout l'horizon est taché : la couleur dominante fait la matrice, l'autre se pose en mouchetures.
+    const fondGris = g >= 0.5, teinte = fondGris ? orange : gris;
+    fond.push({ d: rectD(R), fill: fondGris ? gris : orange, y0: R.y, y1: R.y + R.h, ...plage });
+    const cible = (fondGris ? 1 - g : g) * A;
+    let aire = 0;
+    for (const [x, y] of places(cible)) { if (aire >= cible) break; aire += poser(dessus, x, y, rayon(), teinte); }
+    return [...fond, ...dessus];
+  }
+
+  // Grappes : une moucheture grise et une à trois mouchetures rouille contre elle (posées dessous), ou une
+  // moucheture rouille seule, selon la couleur qui manque le plus pour tenir le rapport gris / orange.
+  const cibleGris = c * g * A, cibleOrange = c * (1 - g) * A;
+  let aireGris = 0, aireOrange = 0;
+  for (const [x, y] of places(c * A)) {
+    if (aireGris + aireOrange >= c * A) break;
+    const manqueGris = cibleGris > 0 ? 1 - aireGris / cibleGris : -1, manqueOrange = cibleOrange > 0 ? 1 - aireOrange / cibleOrange : -1;
+    if (manqueGris >= manqueOrange && manqueGris > 0) {
+      const rg = rayon(), ag = poser(dessus, x, y, rg, gris);
+      aireGris += ag;
+      if (g < 1) {
+        const k = 1 + Math.floor(rnd() * 3), ao = (ag * (1 - g)) / g / k;
+        for (let i = 0; i < k; i++) {
+          const ro = Math.min(6 * z, Math.sqrt(ao / (Math.PI * 0.68))), b = rnd() * 6.3, d = rg * (0.6 + rnd() * 0.4) + ro * 0.35;
+          aireOrange += poser(dessous, x + Math.cos(b) * d, y + Math.sin(b) * d, ro, orange) * 0.75;
+        }
+      }
+    } else if (manqueOrange > 0) {
+      aireOrange += poser(dessous, x, y, rayon(), orange);
+    }
+  }
+  return [...dessous, ...dessus];
 }
 
 /// Horizon quasi noyé : petits traits d'eau verticaux, en quinconce.
@@ -840,7 +892,8 @@ export function resumeFosse(f) {
     const [de, a] = M.plage(f, t);
     if (!(a > de && t.abondance > 0)) continue;
     const couleurs = [t.munsellOrange && `orange ${t.munsellOrange}`, t.munsellGris && `gris ${t.munsellGris}`].filter(Boolean).join(', ');
-    out.push(`Taches ${plageTexte(de, a)} : ${t.forme === 'tachete' ? 'tacheté' : 'marbrures'}, ${t.abondance} % (gris ${t.gris} / orange ${100 - t.gris})${couleurs ? ` ; ${couleurs}` : ''}.`);
+    const forme = (M.formesDeTaches.find(([f]) => f === t.forme) ?? M.formesDeTaches[0])[1].toLowerCase();
+    out.push(`Taches ${plageTexte(de, a)} : ${forme}, ${t.abondance} % (gris ${t.gris} / orange ${100 - t.gris})${couleurs ? ` ; ${couleurs}` : ''}.`);
   }
   const noyes = f.horizons.filter((h) => h.noye).map((h) => String(h.libelle || h.nom).trim());
   if (noyes.length) out.push(`${noyes.length > 1 ? 'Horizons quasi noyés' : 'Horizon quasi noyé'} : ${noyes.join(', ')}.`);

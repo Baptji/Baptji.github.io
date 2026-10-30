@@ -2,7 +2,7 @@
 // vérifier sans rien afficher. Le format est celui de l'app Mac (schemas.json), si bien qu'un
 // historique enregistré par l'app se relit tel quel.
 
-import * as Munsell from './munsell.js?v=20261030095040';
+import * as Munsell from './munsell.js?v=20261030100711';
 
 // MARK: - Identifiants et dates
 
@@ -314,6 +314,9 @@ export const teintesTaches = { orange: '#D27F2C', gris: '#A9AEB1' };
 /// Repères d'abondance proposés pour les taches, et rapports gris / orange.
 export const abondancesTaches = [5, 40, 100];
 export const rapportsGris = [0, 10, 25, 50, 75, 90, 100];
+/// Les trois dessins de taches : traînées en réseau, taches concentriques (cœur gris, couronne orange),
+/// mouchetures de tailles inégales à bords flous.
+export const formesDeTaches = [['marbrure', 'Marbrures'], ['concentrique', 'Concentriques'], ['tachete', 'Tacheté']];
 
 export function elementGrossier(o = {}) {
   return { id: uuid(), abondance: 10, taille: 'cailloux', calcaire: false, ...o };
@@ -573,7 +576,7 @@ function relireTraits(f, o) {
   if (Array.isArray(o.taches)) {
     const l = o.taches.filter((e) => e && typeof e === 'object').map((e) => {
       const r = plageDe(e, { id: texte(e.id) || uuid(), abondance: borne(nombre(e.abondance) ?? 5, 0, 100),
-        gris: borne(nombre(e.gris) ?? 50, 0, 100), forme: e.forme === 'tachete' ? 'tachete' : 'marbrure' });
+        gris: borne(nombre(e.gris) ?? 50, 0, 100), forme: formesDeTaches.some(([f]) => f === e.forme) ? e.forme : 'marbrure' });
       if (texte(e.munsellOrange)) r.munsellOrange = e.munsellOrange;
       if (texte(e.munsellGris)) r.munsellGris = e.munsellGris;
       return r;
