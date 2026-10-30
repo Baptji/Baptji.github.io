@@ -1,0 +1,112 @@
+/* Concentration, version web : l'app Mac refaite à l'identique (écran de choix, pastille, animation de fin).
+   Couleurs du système d'Apple, clair et sombre ; polices du système, aucune ressource extérieure. */
+:root {
+  --fond: #ececec; --texte: #1d1d1f; --second: rgba(0, 0, 0, .5); --tiers: rgba(0, 0, 0, .3);
+  --accent: #007aff; --tuile: rgba(0, 0, 0, .06); --bord: rgba(0, 0, 0, .09); --encart: rgba(0, 0, 0, .05);
+  --pastille: rgba(246, 246, 246, .86); --voile: rgba(236, 236, 236, .78);
+  --arrondi: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --fond: #1e1e1e; --texte: #f5f5f7; --second: rgba(255, 255, 255, .55); --tiers: rgba(255, 255, 255, .3);
+    --accent: #0a84ff; --tuile: rgba(255, 255, 255, .07); --bord: rgba(255, 255, 255, .1); --encart: rgba(255, 255, 255, .06);
+    --pastille: rgba(44, 44, 46, .86); --voile: rgba(30, 30, 30, .78); color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--fond); color: var(--texte); -webkit-font-smoothing: antialiased;
+  font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+[hidden] { display: none !important; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ——— écran de choix ——— */
+.vue { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 16px 40px; }
+#choix { gap: 22px; }
+#choix header { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 7px; }
+.symbole { width: 34px; height: 34px; fill: none; stroke: var(--accent); stroke-width: 1.6; stroke-linecap: round; }
+h1 { margin: 0; font: 600 25px/1.15 var(--arrondi); }
+.consigne { margin: 0; font-size: 12px; color: var(--second); }
+.durees { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 404px; }
+.ligne { display: flex; justify-content: center; gap: 12px; }
+.duree { flex: 0 1 92px; height: 68px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  border-radius: 15px; border: 1px solid var(--bord); background: var(--tuile);
+  transition: transform .14s ease-out, background .14s ease-out, border-color .14s ease-out; }
+.duree b { font: 600 30px/1 var(--arrondi); font-variant-numeric: tabular-nums; }
+.duree span { font-size: 11px; font-weight: 500; color: var(--second); }
+.duree:hover { background: color-mix(in srgb, var(--accent) 18%, transparent); border-color: color-mix(in srgb, var(--accent) 55%, transparent); transform: scale(1.035); }
+.duree:active { transform: scale(.98); }
+.autre { width: 100%; max-width: 400px; padding: 10px 14px; border-radius: 10px; background: var(--encart); }
+.entete { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.entete label { font-size: 11px; color: var(--second); }
+.entete output { font: 600 12px var(--arrondi); font-variant-numeric: tabular-nums; }
+.reglage { display: flex; align-items: center; gap: 10px; }
+.reglage input { flex: 1; min-width: 0; accent-color: var(--accent); margin: 0; }
+#lancer { border: 0; background: none; padding: 4px 2px; font-size: 11px; font-weight: 600; color: var(--accent); }
+
+/* ——— la pastille (dans la page, ou seule dans la fenêtre flottante) ——— */
+.pastille { --h: 44px; display: flex; align-items: center; gap: 11px; width: 208px; height: var(--h); padding: 0 9px 0 13px;
+  border-radius: calc(var(--h) / 2); background: var(--pastille); -webkit-backdrop-filter: blur(24px) saturate(1.6); backdrop-filter: blur(24px) saturate(1.6);
+  border: .5px solid rgba(255, 255, 255, .12); box-shadow: 0 0 0 .5px rgba(0, 0, 0, .12), 0 8px 24px rgba(0, 0, 0, .18);
+  animation: arrivee .42s cubic-bezier(.3, 1.4, .5, 1) both; }
+@keyframes arrivee { from { opacity: 0; transform: translateY(-14px); } }
+.anneau { width: 22px; height: 22px; flex: none; fill: none; stroke-width: 3; }
+.anneau .fond { stroke: color-mix(in srgb, var(--texte) 16%, transparent); }
+.anneau .plein { stroke: var(--accent); stroke-linecap: round; transform: rotate(-90deg); transform-origin: center; transition: stroke-dasharray .2s linear; }
+.anneau .pause-gel { stroke: var(--second); stroke-width: 2; stroke-linecap: round; display: none; }
+.temps { font: 500 20px/1 var(--arrondi); font-variant-numeric: tabular-nums; }
+.vide { flex: 1; }
+.boutons { display: flex; gap: 4px; opacity: .45; transition: opacity .15s ease-out; }
+.pastille:hover .boutons, .pastille:focus-within .boutons { opacity: 1; }
+@media (hover: none) { .boutons { opacity: 1; } }
+.boutons button { width: 22px; height: 22px; padding: 0; border: 0; border-radius: 50%; display: grid; place-items: center;
+  background: color-mix(in srgb, var(--texte) 10%, transparent); }
+.boutons svg { width: 10px; height: 10px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.boutons .i-lecture { display: none; fill: currentColor; stroke: none; }
+.en-pause .anneau .pause-gel { display: block; }
+.en-pause .temps { color: var(--second); }
+.en-pause .i-pause { display: none; }
+.en-pause .i-lecture { display: block; }
+/* dans la page, la pastille est seule : on l'agrandit au centre */
+#course .pastille { transform: scale(1.5); }
+@media (max-width: 400px) { #course .pastille { transform: scale(1.3); } }
+
+/* fenêtre flottante (Picture in Picture) : la pastille la remplit */
+body.flottant { display: grid; place-items: center; overflow: hidden; background: var(--fond); }
+body.flottant .pastille { width: 100%; height: 100%; border-radius: 0; border: 0; box-shadow: none; background: none; }
+
+/* ——— la fin ——— */
+#fin { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; overflow: hidden; cursor: default;
+  background: var(--voile); -webkit-backdrop-filter: blur(30px); backdrop-filter: blur(30px); animation: voile .5s ease-out both; }
+#fin.sortie { opacity: 0; transition: opacity .45s ease; }
+@keyframes voile { from { opacity: 0; } }
+.halo { position: absolute; inset: -20%; background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 38%, transparent), transparent);
+  animation: souffle 2.6s ease-in-out infinite alternate; }
+@keyframes souffle { from { transform: scale(.88); } to { transform: scale(1.12); } }
+.ondes { position: absolute; inset: 0; display: grid; place-items: center; }
+.ondes i { grid-area: 1 / 1; width: 240px; height: 240px; border-radius: 50%; border: 3px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  opacity: 0; animation: onde 3.4s ease-out infinite; }
+.ondes i:nth-child(2) { animation-delay: .68s; } .ondes i:nth-child(3) { animation-delay: 1.36s; }
+.ondes i:nth-child(4) { animation-delay: 2.04s; } .ondes i:nth-child(5) { animation-delay: 2.72s; }
+@keyframes onde { from { transform: scale(.32); opacity: .8; } to { transform: scale(5); opacity: 0; } }
+.message { position: relative; display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; padding: 0 16px; }
+.coche { width: 92px; height: 92px; animation: coche .6s cubic-bezier(.3, 1.6, .5, 1) .15s both; }
+.coche circle { fill: var(--accent); }
+.coche path { fill: none; stroke: #fff; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+@keyframes coche { from { transform: scale(.5); opacity: 0; } }
+#fin h2 { margin: 0; font: 700 58px/1.05 var(--arrondi); }
+#fin .detail { margin: 0; font-size: 19px; font-weight: 500; color: var(--second); }
+#fin .aide { margin: 26px 0 0; font-size: 12px; color: var(--tiers); }
+@media (max-width: 520px) { #fin h2 { font-size: 40px; } #fin .detail { font-size: 16px; } }
+/* la fin dans la fenêtre flottante : la même, en petit */
+body.flottant #fin { background: var(--fond); -webkit-backdrop-filter: none; backdrop-filter: none; }
+body.flottant .message { flex-direction: row; gap: 10px; }
+body.flottant .coche { width: 26px; height: 26px; }
+body.flottant #fin h2 { font-size: 20px; }
+body.flottant #fin .detail, body.flottant #fin .aide { display: none; }
+body.flottant .ondes i { width: 40px; height: 40px; border-width: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .halo, .ondes { display: none; }
+  .pastille, .coche, #fin { animation: none; }
+}

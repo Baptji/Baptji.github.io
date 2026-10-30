@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Concentration</title>
+<meta name="description" content="Un minuteur pour se mettre au travail.">
+<link rel="icon" href="favicon.png">
+<link rel="apple-touch-icon" href="icone.png">
+<link rel="stylesheet" href="style.css?v=20261030094611">
+</head>
+<body>
+
+<!-- L'écran d'accueil : sept durées, rien d'autre. Une seule décision à prendre. -->
+<main id="choix" class="vue">
+  <header>
+    <svg class="symbole" viewBox="0 0 34 34" aria-hidden="true">
+      <circle cx="17" cy="19" r="12.5"/><path d="M13 3.5h8M17 3.5v3M17 19v-7"/>
+    </svg>
+    <h1>Concentration</h1>
+    <p class="consigne">Choisissez une durée.<span class="si-flottant"><br>Le minuteur reste visible par-dessus vos fenêtres.</span></p>
+  </header>
+
+  <div class="durees">
+    <div class="ligne">
+      <button class="duree" data-minutes="5"><b>5</b><span>min</span></button>
+      <button class="duree" data-minutes="10"><b>10</b><span>min</span></button>
+      <button class="duree" data-minutes="15"><b>15</b><span>min</span></button>
+      <button class="duree" data-minutes="25"><b>25</b><span>min</span></button>
+    </div>
+    <div class="ligne">
+      <button class="duree" data-minutes="30"><b>30</b><span>min</span></button>
+      <button class="duree" data-minutes="45"><b>45</b><span>min</span></button>
+      <button class="duree" data-minutes="60"><b>1</b><span>heure</span></button>
+    </div>
+  </div>
+
+  <div class="autre">
+    <div class="entete"><label for="curseur">Autre durée</label><output id="valeur" for="curseur">20 min</output></div>
+    <div class="reglage">
+      <input id="curseur" type="range" min="1" max="120" step="1" value="20">
+      <button id="lancer">Lancer</button>
+    </div>
+  </div>
+</main>
+
+<!-- Pendant le minuteur : la pastille, seule. -->
+<main id="course" class="vue" hidden></main>
+
+<template id="modele-pastille">
+  <div class="pastille">
+    <svg class="anneau" viewBox="0 0 22 22" aria-hidden="true">
+      <circle class="fond" cx="11" cy="11" r="9.5"/>
+      <circle class="plein" cx="11" cy="11" r="9.5" pathLength="1"/>
+      <path class="pause-gel" d="M9 8v6M13 8v6"/>
+    </svg>
+    <span class="temps" role="timer">0:00</span>
+    <span class="vide"></span>
+    <span class="boutons">
+      <button class="basculer" title="Mettre en pause" aria-label="Mettre en pause">
+        <svg viewBox="0 0 10 10" aria-hidden="true"><path class="i-pause" d="M3 2v6M7 2v6"/><path class="i-lecture" d="M3 1.6 8.4 5 3 8.4Z"/></svg>
+      </button>
+      <button class="arreter" title="Arrêter" aria-label="Arrêter">
+        <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 2.5l5 5M7.5 2.5l-5 5"/></svg>
+      </button>
+    </span>
+  </div>
+</template>
+
+<!-- La fin : l'écran se voile, des ondes partent du centre. Volontairement lente et continue, sans clignotement. -->
+<div id="fin" hidden>
+  <div class="halo"></div>
+  <div class="ondes" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="message" role="alert">
+    <svg class="coche" viewBox="0 0 92 92" aria-hidden="true"><circle cx="46" cy="46" r="44"/><path d="M27 47.5 40 60 66 33"/></svg>
+    <h2>C'est terminé</h2>
+    <p class="detail"></p>
+    <p class="aide">Cliquez ou appuyez sur une touche pour fermer</p>
+  </div>
+</div>
+
+<script type="module" src="js/app.js?v=20261030094611"></script>
+</body>
+</html>

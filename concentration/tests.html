@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Concentration — vérifications</title>
+<style>
+  body { font: 13px/1.5 ui-monospace, Menlo, monospace; margin: 20px; background: #fafaf8; color: #1d1d1f; }
+  .ok { color: #1b7d33; } .echec { color: #c2001b; font-weight: 700; } h1 { font: 600 16px -apple-system, sans-serif; }
+</style>
+</head>
+<body>
+<h1>Concentration — vérifications</h1>
+<div id="sortie"></div>
+<script type="module">
+  // Le portage des vérifications de l'autotest de l'app Mac (Application.swift) qui ont un sens dans le navigateur,
+  // avec une horloge factice : rien n'attend, rien ne sonne.
+  import { Minuteur, texte, libelle, libelleCurseur } from './js/modele.js?v=20261030094611';
+
+  const sortie = document.getElementById('sortie');
+  let echecs = 0, total = 0;
+  const verifier = (nom, ok, detail = '') => {
+    total++;
+    if (!ok) echecs++;
+    sortie.insertAdjacentHTML('beforeend', `<div class="${ok ? 'ok' : 'echec'}">${ok ? 'ok   ' : 'ÉCHEC'} ${nom}${detail ? ' — ' + detail : ''}</div>`);
+  };
+
+  let maintenant = 1e9;
+  const horloge = () => maintenant;
+  const avancer = (s) => { maintenant += s * 1000; };
+
+  // format
+  verifier('format du temps', texte(2) === '0:02', texte(2));
+  verifier('arrondi à la seconde supérieure', texte(1.2) === '0:02' && texte(0.01) === '0:01', `${texte(1.2)} ${texte(0.01)}`);
+  verifier('zéro', texte(0) === '0:00');
+  verifier('25 minutes', texte(25 * 60) === '25:00' && texte(25 * 60 - 1) === '24:59');
+  verifier('au-delà de l\'heure', texte(3899) === '1:04:59', texte(3899));
+  verifier('libellés', libelle(60) === '1 heure' && libelle(25) === '25 minutes' && libelle(1) === '1 minute');
+  verifier('curseur', libelleCurseur(20) === '20 min' && libelleCurseur(60) === '1 h' && libelleCurseur(90) === '1 h 30' && libelleCurseur(120) === '2 h',
+    [20, 60, 90, 120].map(libelleCurseur).join(' · '));
+
+  // décompte, pause, reprise, fin
+  const m = new Minuteur(2, horloge);
+  verifier('départ', m.restant() === 2 && m.progression() === 0 && !m.termine);
+  avancer(0.5);
+  m.basculerPause();
+  const gele = m.restant();
+  avancer(10);
+  verifier('la pause gèle le compte', Math.abs(m.restant() - gele) < 1e-9 && !m.termine, `${m.restant()}`);
+  m.basculerPause();
+  verifier('la reprise repart', !m.enPause && Math.abs(m.restant() - 1.5) < 1e-9, `${m.restant()}`);
+  avancer(0.7);
+  verifier('le compte à rebours descend', m.restant() < 1.5 && Math.abs(m.progression() - 0.6) < 1e-9, `progression ${m.progression()}`);
+  avancer(5);
+  verifier('le minuteur atteint zéro', m.restant() === 0 && m.termine && m.progression() === 1);
+  verifier('pas de temps négatif', texte(m.restant()) === '0:00');
+
+  // échéance absolue : une mise en veille de 10 min ne décale rien
+  const v = new Minuteur(25 * 60, horloge);
+  avancer(10 * 60);
+  verifier('échéance absolue (veille)', texte(v.restant()) === '15:00', texte(v.restant()));
+
+  // la page elle-même : sept durées, et la cloche bien là
+  const page = await fetch('index.html').then((r) => r.text());
+  const doc = new DOMParser().parseFromString(page, 'text/html');
+  const durees = [...doc.querySelectorAll('.duree')].map((b) => Number(b.dataset.minutes));
+  verifier('sept durées', durees.join(',') === '5,10,15,25,30,45,60', durees.join(','));
+  const son = await fetch('cloche.mp3').then((r) => (r.ok ? r.arrayBuffer() : null)).catch(() => null);
+  verifier('cloche embarquée', !!son && son.byteLength > 50000, son ? `${Math.round(son.byteLength / 1024)} Ko` : 'absente');
+  if (son) {
+    try {
+      const t = await new OfflineAudioContext(1, 44100, 44100).decodeAudioData(son);
+      verifier('cloche lisible et longue de 5 s', Math.abs(t.duration - 5) < 0.06, `${t.duration.toFixed(2)} s`);
+    } catch (e) { verifier('cloche lisible et longue de 5 s', false, String(e)); }
+  }
+
+  sortie.insertAdjacentHTML('beforeend', `<p class="${echecs ? 'echec' : 'ok'}">${echecs ? `${echecs} ÉCHEC(S) sur ${total}` : `TOUT EST BON (${total})`}</p>`);
+  document.title = echecs ? `ÉCHEC ${echecs}/${total}` : `OK ${total}`;
+</script>
+</body>
+</html>
