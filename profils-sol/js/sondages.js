@@ -2,7 +2,7 @@
 // COULEUR_1… décrites dans son Regles.json) est lu tel quel, sans bibliothèque : le .xlsx est un ZIP
 // de fichiers XML, décompressé par le navigateur (DecompressionStream). Un export .csv convient aussi.
 
-import * as M from './modele.js?v=20261029212717';
+import * as M from './modele.js?v=20261030095040';
 
 // MARK: - ZIP et XML
 

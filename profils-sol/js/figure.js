@@ -4,8 +4,8 @@
 // Le zoom agrandit la MISE EN PAGE : toutes les longueurs et polices sont multipliées,
 // chaque texte est composé à sa taille finale et reste net.
 
-import * as M from './modele.js?v=20261029212717';
-import * as R from './referentiel.js?v=20261029212717';
+import * as M from './modele.js?v=20261030095040';
+import * as R from './referentiel.js?v=20261030095040';
 
 export const FONTE = '-apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
 export const PAPIER = '#F8F6F1';
@@ -134,7 +134,8 @@ export function composer(s, options = {}) {
         const place = m.lignesTenant(hh);
         const visibles = lignesVisibles(h, place, { export: exp, choisi });
         const total = visibles.reduce((t, l) => t + lh(l.taille), 0);
-        const motifs = formes.filter((o) => o.y1 > hy && o.y0 < hy + hh);
+        // Une forme qui a sa plage (taches) ne passe pas dans l'horizon voisin ; les cailloux, eux, peuvent déborder.
+        const motifs = formes.filter((o) => o.y1 > hy && o.y0 < hy + hh && (o.p0 == null || (o.p1 > hy + 0.5 && o.p0 < hy + hh - 0.5)));
         let ly = hy + (hh - total) / 2;
         const lignes = visibles.map((l) => {
           const o = { clef: l.clef, x: bx + m.p(5), y: ly, w: m.barre - m.p(10), h: lh(l.taille), taille: m.t(l.taille),
@@ -382,18 +383,49 @@ function semis(R, n, rnd) {
   return cellules.slice(0, n).map(([i, j]) => [R.x + (i + rnd()) * cw, R.y + (j + rnd()) * ch]);
 }
 
-/// Un caillou : polygone irrégulier de 6 à 9 sommets, un peu aplati (couché dans le sol).
-function caillou(cx, cy, r, rnd) {
-  const n = 6 + Math.floor(rnd() * 4), a0 = rnd() * Math.PI * 2, aplati = 0.72 + rnd() * 0.3;
-  let d = '';
-  for (let i = 0; i < n; i++) {
-    const a = a0 + (i / n) * Math.PI * 2 + (rnd() - 0.5) * 0.5, rr = r * (0.74 + rnd() * 0.28);
-    d += `${i ? 'L' : 'M'}${f2(cx + Math.cos(a) * rr)} ${f2(cy + Math.sin(a) * rr * aplati)}`;
-  }
+/// Contour fermé lissé : la courbe passe par les milieux des côtés, les sommets la tirent.
+function courbeFermee(pts) {
+  const k = pts.length;
+  const mil = (p, q) => `${f2((p[0] + q[0]) / 2)} ${f2((p[1] + q[1]) / 2)}`;
+  let d = `M${mil(pts[k - 1], pts[0])}`;
+  for (let i = 0; i < k; i++) d += `Q${f2(pts[i][0])} ${f2(pts[i][1])} ${mil(pts[i], pts[(i + 1) % k])}`;
   return d + 'Z';
 }
+const polygone = (pts) => pts.map(([x, y], i) => `${i ? 'L' : 'M'}${f2(x)} ${f2(y)}`).join('') + 'Z';
+const aireDe = (pts) => Math.abs(pts.reduce((s, [x, y], i) => { const [u, v] = pts[(i + 1) % pts.length]; return s + x * v - u * y; }, 0)) / 2;
 
-/// Une tache aux bords adoucis : la courbe passe par les milieux de k points tirés autour d'une ellipse.
+/// Plus un élément grossier est gros, plus sa forme s'écarte du rond : plus de faces, inégales, plus allongé,
+/// plus cabossé (creux compris). Les graviers restent des grains émoussés ; dès les cailloux, les faces sont droites.
+const FORMES_EG = [
+  { sommets: [7, 9], allonge: [0.7, 1], bosses: 0.06, aleas: 0.1, lisse: true, tourne: Math.PI },
+  { sommets: [5, 9], allonge: [0.55, 0.95], bosses: 0.14, aleas: 0.17, lisse: false, tourne: 1.2 },
+  { sommets: [6, 11], allonge: [0.5, 0.92], bosses: 0.18, aleas: 0.2, lisse: false, tourne: 1.8 },
+  { sommets: [8, 13], allonge: [0.5, 0.9], bosses: 0.2, aleas: 0.22, lisse: false, tourne: 2.4 },
+];
+
+/// Un élément grossier (`niveau` : 0 graviers, 1 cailloux, 2 pierres, 3 blocs) → ses sommets et son contour.
+export function caillou(cx, cy, r, rnd, niveau = 1) {
+  const F = FORMES_EG[niveau] ?? FORMES_EG[1];
+  const n = F.sommets[0] + Math.floor(rnd() * (F.sommets[1] - F.sommets[0] + 1));
+  const allonge = F.allonge[0] + rnd() * (F.allonge[1] - F.allonge[0]);
+  const rot = (rnd() - 0.5) * F.tourne, cr = Math.cos(rot), sr = Math.sin(rot);
+  // Écarts d'angle inégaux : des faces longues et des faces courtes, jamais un polygone régulier.
+  const ecarts = Array.from({ length: n }, () => 0.35 + rnd() * 1.3);
+  const somme = ecarts.reduce((u, v) => u + v, 0);
+  const ph1 = rnd() * 6.3, ph2 = rnd() * 6.3;
+  const pts = [];
+  let a = rnd() * 6.3;
+  for (let i = 0; i < n; i++) {
+    // Jamais moins de 0,6 r : des creux et des bosses, pas des éclats en aiguille.
+    const f = 0.9 * Math.max(0.66, 1 + F.bosses * Math.sin(2 * a + ph1) + F.bosses * 0.7 * Math.sin(3 * a + ph2) + (rnd() - 0.5) * 2 * F.aleas);
+    const x = Math.cos(a) * r * f, y = Math.sin(a) * r * f * allonge;
+    pts.push([cx + x * cr - y * sr, cy + x * sr + y * cr]);
+    a += (ecarts[i] / somme) * Math.PI * 2;
+  }
+  return { pts, d: F.lisse ? courbeFermee(pts) : polygone(pts) };
+}
+
+/// Une tache aux bords adoucis, tirée autour d'une ellipse.
 function tacheForme(cx, cy, rx, ry, angle, irregulier, rnd, k = 8) {
   const c = Math.cos(angle), s = Math.sin(angle), pts = [];
   for (let i = 0; i < k; i++) {
@@ -401,10 +433,7 @@ function tacheForme(cx, cy, rx, ry, angle, irregulier, rnd, k = 8) {
     const x = Math.cos(a) * rx * f, y = Math.sin(a) * ry * f;
     pts.push([cx + x * c - y * s, cy + x * s + y * c]);
   }
-  const mil = (p, q) => `${f2((p[0] + q[0]) / 2)} ${f2((p[1] + q[1]) / 2)}`;
-  let d = `M${mil(pts[k - 1], pts[0])}`;
-  for (let i = 0; i < k; i++) d += `Q${f2(pts[i][0])} ${f2(pts[i][1])} ${mil(pts[i], pts[(i + 1) % k])}`;
-  return d + 'Z';
+  return courbeFermee(pts);
 }
 
 /// Une teinte un peu plus claire (d > 0) ou plus sombre (d < 0), pour que les cailloux ne soient pas tous pareils.
@@ -413,46 +442,239 @@ function nuancer(hex, d) {
 }
 
 function formesEG(e, R, z, rnd) {
+  const niveau = Math.max(0, M.taillesEG.findIndex((t) => t.cle === e.taille));
   const r = M.tailleEG(e.taille).rayon * z;
-  // Abondance = part de la surface couverte. Aire moyenne d'un caillou ≈ 0,62 π r² (sommets à 0,74–1,02 r, aplati).
-  const n = Math.min(4000, Math.round((e.abondance / 100) * R.w * R.h / (Math.PI * r * r * 0.62)));
+  // Abondance = part de la surface couverte : on pose des cailloux (aux places d'un semis) jusqu'à l'atteindre.
+  const cible = (e.abondance / 100) * R.w * R.h;
   const fond = e.calcaire ? M.teintesEG.calcaire : M.teintesEG.autre;
   // Les centres restent dans la plage : un caillou peut en déborder un peu, comme dans le sol.
   const marge = Math.min(r * 0.6, R.h / 2);
-  return semis({ x: R.x, y: R.y + marge, w: R.w, h: R.h - 2 * marge }, n, rnd).map(([x, y]) => {
+  const places = semis({ x: R.x, y: R.y + marge, w: R.w, h: R.h - 2 * marge }, Math.min(4000, Math.ceil(1.6 * cible / (Math.PI * r * r * 0.5))), rnd);
+  const out = [];
+  let aire = 0;
+  for (const [x, y] of places) {
+    if (aire >= cible) break;
     const rr = r * (0.75 + rnd() * 0.5), teinte = nuancer(fond, (rnd() - 0.5) * 0.14);
-    return { d: caillou(x, y, rr, rnd), fill: teinte, stroke: M.contour(teinte), sw: 0.6 * z, y0: y - rr, y1: y + rr };
+    const { pts, d } = caillou(x, y, rr, rnd, niveau);
+    aire += aireDe(pts);
+    out.push({ d, fill: teinte, stroke: M.contour(teinte), sw: (niveau >= 2 ? 0.7 : 0.6) * z, y0: y - rr, y1: y + rr });
+    if (niveau >= 2) out.push(...reliefCaillou(pts, teinte, z, rnd, y - rr, y + rr));
+  }
+  return out;
+}
+
+/// Pierres et blocs : une face plus claire et une arête, pour qu'on les lise comme des volumes et non comme des pastilles.
+function reliefCaillou(pts, teinte, z, rnd, y0, y1) {
+  const n = pts.length;
+  const cx = pts.reduce((s, p) => s + p[0], 0) / n, cy = pts.reduce((s, p) => s + p[1], 0) / n;
+  const face = pts.map(([x, y]) => [cx + (x - cx) * 0.55 - (y1 - y0) * 0.06, cy + (y - cy) * 0.5 - (y1 - y0) * 0.08]);
+  const i = Math.floor(rnd() * n), j = (i + Math.floor(n / 2) + (rnd() < 0.5 ? 0 : 1)) % n;
+  const t = 0.45 + rnd() * 0.25;
+  const arete = `M${f2(pts[i][0])} ${f2(pts[i][1])}L${f2(pts[i][0] + (pts[j][0] - pts[i][0]) * t + (rnd() - 0.5) * 2 * z)} ${f2(pts[i][1] + (pts[j][1] - pts[i][1]) * t)}`;
+  return [
+    { d: polygone(face), fill: nuancer(teinte, 0.16), op: 0.55, y0, y1 },
+    { d: arete, stroke: M.contour(teinte), sw: 0.5 * z, op: 0.6, cap: 'round', y0, y1 },
+  ];
+}
+
+// MARK: - Taches d'hydromorphie
+// D'après le Référentiel pédologique 2008 (annexe 2, p. 359), Baize et Ducommun (2014, figure 4) et
+// Vepraskas (NC State, TB-301, figures 1, 4, 5, 6B, 9) — voir references/taches-hydromorphie.md :
+// • horizon rédoxique : le gris (fer parti) suit les fissures, les faces des agrégats et les anciennes racines ;
+//   le fer se reprécipite juste à côté, dans les agrégats : le gris est donc toujours bordé d'orange, qui
+//   s'estompe vers la matrice (motif concentrique) ;
+// • horizon presque tout gris (réductique Go) : la rouille ne reste qu'en liserés autour des pores et des racines ;
+// • horizon presque tout orange : des traînées grises le traversent, bordées d'un orange plus soutenu.
+
+/// Un ruban le long d'une ligne, de demi-largeur variable, bouts arrondis : une fissure, une racine morte.
+function ruban(pts, demi) {
+  const n = pts.length;
+  if (n < 2) return '';
+  const tangente = (i) => {
+    const p = pts[Math.max(0, i - 1)], q = pts[Math.min(n - 1, i + 1)];
+    const l = Math.hypot(q[0] - p[0], q[1] - p[1]) || 1;
+    return [(q[0] - p[0]) / l, (q[1] - p[1]) / l];
+  };
+  const gauche = [], droite = [];
+  for (let i = 0; i < n; i++) {
+    const [tx, ty] = tangente(i), w = demi[i];
+    gauche.push([pts[i][0] - ty * w, pts[i][1] + tx * w]);
+    droite.push([pts[i][0] + ty * w, pts[i][1] - tx * w]);
+  }
+  const [ax, ay] = tangente(0), [bx, by] = tangente(n - 1);
+  const debut = [pts[0][0] - ax * demi[0], pts[0][1] - ay * demi[0]];
+  const fin = [pts[n - 1][0] + bx * demi[n - 1], pts[n - 1][1] + by * demi[n - 1]];
+  return courbeFermee([debut, ...gauche, fin, ...droite.reverse()]);
+}
+
+/// Profil de largeur le long d'une ligne : fin aux bouts, renflé et irrégulier au milieu.
+function profil(n, largeur, rnd, bout = 0.35) {
+  const ph = rnd() * 6.3, fq = 1.5 + rnd() * 2;
+  return Array.from({ length: n }, (_, i) => {
+    const u = n > 1 ? i / (n - 1) : 0.5;
+    return largeur * (bout + (1 - bout) * Math.pow(Math.sin(Math.PI * u), 0.5)) * (0.82 + 0.3 * Math.sin(fq * Math.PI * u + ph));
   });
 }
 
-/// Taches d'hydromorphie. Abondance = part de la plage occupée par les taches ; `gris` = part grise des taches.
-/// Marbrures : grandes plages irrégulières, plutôt verticales ; tacheté : petites taches arrondies.
+const longueurDe = (pts) => pts.slice(1).reduce((s, p, i) => s + Math.hypot(p[0] - pts[i][0], p[1] - pts[i][1]), 0);
+
+/// Le réseau des fissures entre agrégats (structure prismatique : cellules plus hautes que larges, en quinconce),
+/// sur lequel courent les traînées. On en garde des tronçons, les verticaux de préférence, jusqu'à couvrir
+/// `aireCible` (aire des rubans de demi-largeur `largeur`) ; quelques fissures secondaires partent dans les agrégats.
+function reseau(R, aireCible, largeur, z, rnd, { verticales = 0.75, cellule = 1 } = {}) {
+  const cw = (12 + rnd() * 5) * z * cellule, ch = (24 + rnd() * 10) * z * cellule;
+  const nx = Math.ceil(R.w / cw) + 2, ny = Math.ceil(R.h / ch) + 2;
+  const x0 = R.x - cw, y0 = R.y - ch;
+  const S = [];
+  for (let j = 0; j <= ny; j++) {
+    S.push([]);
+    for (let i = 0; i <= nx; i++) S[j].push([x0 + (i + (j % 2) * 0.5 + (rnd() - 0.5) * 0.7) * cw, y0 + (j + (rnd() - 0.5) * 0.55) * ch]);
+  }
+  const aretes = [];
+  for (let j = 0; j < ny; j++) for (let i = 0; i <= nx; i++) aretes.push({ a: S[j][i], b: S[j + 1][i], poids: 1 });
+  for (let j = 0; j <= ny; j++) for (let i = 0; i < nx; i++) aretes.push({ a: S[j][i], b: S[j][i + 1], poids: 1 - verticales });
+  // Tirage pondéré sans remise (clé u^(1/poids)) : les fissures verticales passent devant.
+  for (const e of aretes) e.cle = e.poids > 0 ? Math.pow(rnd(), 1 / e.poids) : -1;
+  aretes.sort((u, v) => v.cle - u.cle);
+  const dans = ([x, y]) => y >= R.y && y <= R.y + R.h && x >= R.x - largeur && x <= R.x + R.w + largeur;
+  const lignes = [];
+  let aire = 0;
+  for (const e of aretes) {
+    if (aire >= aireCible || e.cle < 0) break;
+    const pts = onduler(e.a, e.b, z, rnd).filter(dans);
+    if (pts.length < 2 || longueurDe(pts) < 2 * z) continue;
+    const w = largeur * (0.75 + rnd() * 0.5);
+    lignes.push({ pts, demi: profil(pts.length, w, rnd, 0.8) });
+    aire += longueurDe(pts) * 2 * w * 0.95;
+    if (rnd() < 0.3) {
+      // Fissure secondaire, en biais, qui meurt dans l'agrégat.
+      const k = Math.floor(rnd() * pts.length), m = pts[k];
+      const ang = Math.atan2(e.b[1] - e.a[1], e.b[0] - e.a[0]) + (rnd() < 0.5 ? -1 : 1) * (0.6 + rnd() * 0.6);
+      const l = (0.25 + rnd() * 0.3) * ch;
+      const br = onduler(m, [m[0] + Math.cos(ang) * l, m[1] + Math.sin(ang) * l], z, rnd).filter(dans);
+      if (br.length >= 2) { const wb = w * 0.6; lignes.push({ pts: br, demi: profil(br.length, wb, rnd, 0.3) }); aire += longueurDe(br) * 2 * wb * 0.7; }
+    }
+  }
+  return lignes;
+}
+
+/// Un tronçon de fissure : la droite de a à b, ondulée (deux ondes au hasard) et un peu bousculée.
+function onduler(a, b, z, rnd) {
+  const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1;
+  const n = Math.max(3, Math.round(l / (3 * z)));
+  const nx = -dy / l, ny = dx / l, amp = l * (0.06 + rnd() * 0.08);
+  const p1 = rnd() * 6.3, p2 = rnd() * 6.3;
+  return Array.from({ length: n + 1 }, (_, i) => {
+    const u = i / n, o = Math.sin(Math.PI * u) * (amp * Math.sin(2 * Math.PI * u + p1) + amp * 0.5 * Math.sin(5 * Math.PI * u + p2)) + (rnd() - 0.5) * 0.8 * z;
+    return [a[0] + dx * u + nx * o, a[1] + dy * u + ny * o];
+  });
+}
+
+const borner = (pts) => { const ys = pts.map((p) => p[1]); return [Math.min(...ys), Math.max(...ys)]; };
+
+/// Taches d'hydromorphie. Abondance = part de la plage occupée par les taches (gris + orange) ; `gris` = part
+/// grise des taches. Marbrures : traînées le long des fissures entre agrégats et des racines ; tacheté : taches
+/// concentriques. Chaque forme garde sa plage (p0, p1) : elle ne déborde jamais sur l'horizon voisin.
 function formesTaches(t, R, z, rnd) {
   const c = Math.min(1, t.abondance / 100), g = t.gris / 100;
   if (c <= 0 || R.h <= 0) return [];
   const orange = M.couleurTache(t, 'orange'), gris = M.couleurTache(t, 'gris');
-  const out = [];
-  let partGris = c * g, partOrange = c * (1 - g);
-  if (c >= 0.999) {
-    // L'horizon entier est taché : la couleur dominante fait le fond, l'autre dessine les taches.
-    const fondGris = g >= 0.5;
-    out.push({ d: rectD(R), fill: fondGris ? gris : orange, y0: R.y, y1: R.y + R.h });
-    [partGris, partOrange] = fondGris ? [0, 1 - g] : [g, 0];
-  }
   const marbrure = t.forme !== 'tachete';
-  const base = (marbrure ? 5.2 : 2.3) * z;
-  const aire = base * base * (marbrure ? 7 : 3.8);
-  // Les taches se chevauchent : il en faut un peu plus que la part visée (couverture de Poisson).
-  const combien = (part) => (part > 0 ? Math.max(1, Math.min(3000, Math.round(-Math.log(1 - Math.min(0.93, part)) * R.w * R.h / aire))) : 0);
-  const teintes = [...Array(combien(partGris)).fill(gris), ...Array(combien(partOrange)).fill(orange)];
-  for (let i = teintes.length - 1; i > 0; i--) { const k = Math.floor(rnd() * (i + 1)); [teintes[i], teintes[k]] = [teintes[k], teintes[i]]; }
-  semis(R, teintes.length, rnd).forEach(([x, y], i) => {
-    const rx = base * (0.7 + rnd() * 0.6), ry = rx * (marbrure ? 1.6 + rnd() * 1.6 : 1 + rnd() * 0.5);
-    const angle = marbrure ? (rnd() - 0.5) * 1.1 : rnd() * Math.PI;
-    out.push({ d: tacheForme(x, y, rx, ry, angle, marbrure ? 0.8 : 0.45, rnd, marbrure ? 9 : 7), fill: teintes[i], op: 0.94,
-      y0: y - ry * 1.4, y1: y + ry * 1.4 });
-  });
-  return out;
+  const A = R.w * R.h;
+  const plage = { p0: R.y, p1: R.y + R.h };
+  const halo = [], liseres = [], coeurs = [], fond = [];
+  const pousser = (liste, pts, d, fill, op) => { const [y0, y1] = borner(pts); liste.push({ d, fill, op, y0: y0 - 3 * z, y1: y1 + 3 * z, ...plage }); };
+  // L'orange s'estompe vers la matrice : deux voiles de plus en plus larges et pâles autour du liseré.
+  const estomper = (l, w) => {
+    pousser(halo, l.pts, ruban(l.pts, l.demi.map((x) => x * w * 2)), orange, 0.16);
+    pousser(halo, l.pts, ruban(l.pts, l.demi.map((x) => x * w * 1.45)), orange, 0.34);
+  };
+
+  if (c >= 0.999 && g >= 0.5) {
+    // Horizon gris (réductique temporairement réoxydé) : la rouille ne reste qu'en liserés autour des
+    // racines et des pores, dont on voit le canal plus sombre au milieu.
+    fond.push({ d: rectD(R), fill: gris, y0: R.y, y1: R.y + R.h, ...plage });
+    const aireOrange = (1 - g) * A, canal = nuancer(gris, -0.3);
+    if (marbrure) {
+      for (const l of reseau(R, aireOrange / 1.45, 1.4 * z, z, rnd, { verticales: 1, cellule: 0.9 })) {
+        estomper(l, 1);
+        pousser(liseres, l.pts, ruban(l.pts, l.demi), orange, 0.92);
+        pousser(coeurs, l.pts, ruban(l.pts, l.demi.map((w) => w * 0.28)), canal, 0.8);
+      }
+    } else {
+      const rp = 2.2 * z;
+      for (const [x, y] of semis(R, Math.max(1, Math.round(aireOrange / (Math.PI * rp * rp * 0.75 * 1.9))), rnd)) {
+        const r = rp * (0.6 + rnd() * 0.8), a = rnd() * 3, pts = [[x - r, y - r], [x + r, y + r]];
+        pousser(halo, pts, tacheForme(x, y, r * 1.9, r * 1.7, a, 0.4, rnd, 8), orange, 0.16);
+        pousser(halo, pts, tacheForme(x, y, r * 1.4, r * 1.25, a, 0.4, rnd, 8), orange, 0.34);
+        pousser(liseres, pts, tacheForme(x, y, r, r * 0.9, a, 0.35, rnd, 8), orange, 0.92);
+        pousser(coeurs, pts, tacheForme(x, y, r * 0.42, r * 0.38, a, 0.3, rnd, 6), canal, 0.8);
+      }
+    }
+    return [...fond, ...halo, ...liseres, ...coeurs];
+  }
+
+  if (c >= 0.999) {
+    // Horizon presque tout orange : des traînées grises le traversent, bordées d'une rouille plus soutenue.
+    fond.push({ d: rectD(R), fill: orange, y0: R.y, y1: R.y + R.h, ...plage });
+    const rouille = nuancer(orange, -0.2), aireGris = g * A;
+    if (marbrure) {
+      for (const l of reseau(R, aireGris, 2.6 * z, z, rnd, { verticales: 0.85 })) {
+        pousser(halo, l.pts, ruban(l.pts, l.demi.map((w) => w + 2.4 * z)), rouille, 0.25);
+        pousser(liseres, l.pts, ruban(l.pts, l.demi.map((w) => w + 1.1 * z)), rouille, 0.75);
+        pousser(coeurs, l.pts, ruban(l.pts, l.demi), gris, 0.96);
+      }
+    } else {
+      const rp = 2.6 * z;
+      for (const [x, y] of semis(R, Math.max(1, Math.round(aireGris / (Math.PI * rp * rp * 0.8))), rnd)) {
+        const r = rp * (0.55 + rnd() * 0.9), a = rnd() * 3, pts = [[x - r, y - r], [x + r, y + r]];
+        pousser(halo, pts, tacheForme(x, y, r + 2.4 * z, (r + 2.4 * z) * 0.9, a, 0.35, rnd, 8), rouille, 0.25);
+        pousser(liseres, pts, tacheForme(x, y, r + 1.1 * z, (r + 1.1 * z) * 0.9, a, 0.35, rnd, 8), rouille, 0.75);
+        pousser(coeurs, pts, tacheForme(x, y, r, r * 0.9, a, 0.4, rnd, 8), gris, 0.96);
+      }
+    }
+    return [...fond, ...halo, ...liseres, ...coeurs];
+  }
+
+  // Horizon rédoxique (moins de 100 %) : chaque plage grise est bordée d'orange, qui s'estompe vers la matrice.
+  // Demi-largeurs : cœur gris h, liseré orange l ; h / (h + l) = part grise (même rapport en surface).
+  // Liseré d'au moins lMin : quand le gris domine, les traînées s'élargissent (langues grises) plutôt que de
+  // perdre leur bordure.
+  const T0 = (marbrure ? 3.4 : 3.2) * z, lMin = 1.1 * z, hMin = 0.6 * z;
+  const T = g >= 1 || g <= 0 ? T0 : Math.min(14 * z, Math.max(T0, lMin / (1 - g), hMin / g));
+  const aireTaches = c * A;
+  if (marbrure) {
+    for (const l of reseau(R, aireTaches / 1.12, T, z, rnd)) {
+      if (g < 1) {
+        estomper(l, 1);
+        pousser(liseres, l.pts, ruban(l.pts, l.demi), orange, 0.92);
+      }
+      if (g > 0) pousser(coeurs, l.pts, ruban(l.pts, l.demi.map((w) => w * g)), gris, 0.96);
+    }
+  } else {
+    // Tacheté : taches concentriques (cœur gris, couronne orange estompée), et quelques points rouille tout près.
+    // Couronne d'au moins lMin : plus le gris domine, plus les taches sont larges (dans la limite de 8 pt).
+    const rp = g > 0 && g < 1 ? Math.min(8 * z, Math.max(T0, lMin / (1 - Math.sqrt(g)))) : T0;
+    const unite = Math.PI * rp * rp * 0.8 * 1.8;
+    const zone = { x: R.x, y: R.y + Math.min(rp, R.h / 2), w: R.w, h: Math.max(0, R.h - 2 * Math.min(rp, R.h / 2)) };
+    for (const [x, y] of semis(zone, Math.max(1, Math.round(aireTaches / unite)), rnd)) {
+      const r = rp * (0.55 + rnd() * 0.9), a = rnd() * 3, e = 0.65 + rnd() * 0.4, pts = [[x - r, y - r], [x + r, y + r]];
+      if (g < 1) {
+        pousser(halo, pts, tacheForme(x, y, r * 1.8, r * 1.8 * e, a, 0.45, rnd, 8), orange, 0.16);
+        pousser(halo, pts, tacheForme(x, y, r * 1.35, r * 1.35 * e, a, 0.4, rnd, 8), orange, 0.34);
+        pousser(liseres, pts, tacheForme(x, y, r, r * e, a, 0.4, rnd, 8), orange, 0.92);
+        if (rnd() < 0.3) {
+          const b = rnd() * 6.3, dd = r * (1.7 + rnd() * 0.6), rs = r * (0.2 + rnd() * 0.15);
+          pousser(liseres, pts, tacheForme(x + Math.cos(b) * dd, y + Math.sin(b) * dd, rs, rs, 0, 0.4, rnd, 6), orange, 0.88);
+        }
+      }
+      if (g > 0) {
+        const rg = g >= 1 ? r : Math.max(hMin, Math.min(r * Math.sqrt(g), r - lMin)), dx = (rnd() - 0.5) * (r - rg) * 0.6, dy = (rnd() - 0.5) * (r - rg) * 0.6;
+        pousser(coeurs, pts, tacheForme(x + dx, y + dy, rg, rg * e, a, 0.4, rnd, 7), gris, 0.96);
+      }
+    }
+  }
+  return [...halo, ...liseres, ...coeurs];
 }
 
 /// Horizon quasi noyé : petits traits d'eau verticaux, en quinconce.
@@ -521,6 +743,7 @@ export function formesFosse(f, B) {
 export function formesSurface(f, B, z) {
   const e = f.surface;
   const r = M.tailleEG(e.taille).rayon * z;
+  const niveau = Math.max(0, M.taillesEG.findIndex((x) => x.cle === e.taille));
   const rnd = hasard(`${f.id}:surface`);
   // Abondance = part de la longueur de sol couverte.
   const n = Math.max(1, Math.round((e.abondance / 100) * B.w / (1.7 * r)));
@@ -530,7 +753,9 @@ export function formesSurface(f, B, z) {
   for (let i = 0; i < n; i++) {
     const rr = r * (0.8 + rnd() * 0.35), cx = x0 + (i + 0.5) * pas + (rnd() - 0.5) * pas * 0.5;
     const teinte = nuancer(fond, (rnd() - 0.5) * 0.14);
-    out.push({ d: caillou(cx, B.y + rr * 0.12, rr, rnd), fill: teinte, stroke: M.contour(teinte), sw: 0.7 * z });
+    const { pts, d } = caillou(cx, B.y + rr * 0.12, rr, rnd, niveau);
+    out.push({ d, fill: teinte, stroke: M.contour(teinte), sw: 0.7 * z });
+    if (niveau >= 2) out.push(...reliefCaillou(pts, teinte, z, rnd, B.y - rr, B.y + rr));
   }
   return out;
 }
@@ -543,11 +768,16 @@ export function formesSymbole(t, R, z) {
   const cx = R.x + R.w / 2, cy = R.y + R.h / 2;
   if (t.hex === 'EG' || t.hex === 'EG-CALCAIRE') {
     const fond = t.hex === 'EG' ? M.teintesEG.autre : M.teintesEG.calcaire;
-    const c = (x, y, r) => { const teinte = nuancer(fond, (rnd() - 0.5) * 0.1); return { d: caillou(R.x + x * z, R.y + y * z, r * z, rnd), fill: teinte, stroke: M.contour(teinte), sw: 0.6 * z }; };
+    const c = (x, y, r) => { const teinte = nuancer(fond, (rnd() - 0.5) * 0.1); return { d: caillou(R.x + x * z, R.y + y * z, r * z, rnd, 1).d, fill: teinte, stroke: M.contour(teinte), sw: 0.6 * z }; };
     return [cadre('#C9B48F'), c(4, 4, 2.9), c(9.3, 6.2, 3.3), c(4.6, 10, 2.4), c(10.2, 11.2, 1.6), bord];
   }
-  if (t.hex === 'TACHES-ORANGE' || t.hex === 'TACHES-GRISES') {
-    return [cadre('#B59A74'), { d: tacheForme(cx, cy, 3.4 * z, 5.6 * z, 0.35, 0.6, rnd, 9), fill: t.couleur }, bord];
+  if (t.hex === 'TACHES-ORANGE') {
+    return [cadre('#B59A74'), { d: tacheForme(cx, cy, 4.2 * z, 5.8 * z, 0.35, 0.5, rnd, 9), fill: t.couleur, op: 0.92 }, bord];
+  }
+  if (t.hex === 'TACHES-GRISES') {
+    // Le gris n'est jamais seul : une couronne orange le borde.
+    return [cadre('#B59A74'), { d: tacheForme(cx, cy, 4.6 * z, 6 * z, 0.35, 0.4, rnd, 9), fill: t.orange ?? M.teintesTaches.orange, op: 0.92 },
+      { d: tacheForme(cx, cy, 2.7 * z, 4 * z, 0.35, 0.4, rnd, 8), fill: t.couleur, op: 0.96 }, bord];
   }
   if (t.hex === 'NOYE') return [cadre('#D8CDB6'), ...formesNoye({ x: R.x, y: R.y, w: R.w, h: R.h }, z * 0.9, rnd), bord];
   if (t.hex === 'NAPPE') {

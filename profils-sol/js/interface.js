@@ -1,10 +1,10 @@
 // L'interface : barre du haut, figure modifiable, panneau de droite. Tout l'état vit ici ;
 // les règles sont dans modele.js, la géométrie dans figure.js.
 
-import * as M from './modele.js?v=20261029212717';
-import * as F from './figure.js?v=20261029212717';
-import * as Munsell from './munsell.js?v=20261029212717';
-import * as S from './sondages.js?v=20261029212717';
+import * as M from './modele.js?v=20261030095040';
+import * as F from './figure.js?v=20261030095040';
+import * as Munsell from './munsell.js?v=20261030095040';
+import * as S from './sondages.js?v=20261030095040';
 
 const $ = (s) => document.querySelector(s);
 

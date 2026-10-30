@@ -2,7 +2,7 @@
 // vérifier sans rien afficher. Le format est celui de l'app Mac (schemas.json), si bien qu'un
 // historique enregistré par l'app se relit tel quel.
 
-import * as Munsell from './munsell.js?v=20261029212717';
+import * as Munsell from './munsell.js?v=20261030095040';
 
 // MARK: - Identifiants et dates
 
@@ -392,7 +392,7 @@ export function symboles(s) {
   const taches = s.fosses.flatMap((f) => f.taches ?? []).filter((t) => t.abondance > 0);
   const orange = taches.find((t) => t.gris < 100), gris = taches.find((t) => t.gris > 0);
   if (orange) out.push({ hex: 'TACHES-ORANGE', nom: 'Taches d’oxydation', couleur: couleurTache(orange, 'orange') });
-  if (gris) out.push({ hex: 'TACHES-GRISES', nom: 'Taches de réduction', couleur: couleurTache(gris, 'gris') });
+  if (gris) out.push({ hex: 'TACHES-GRISES', nom: 'Taches de réduction', couleur: couleurTache(gris, 'gris'), orange: couleurTache(gris, 'orange') });
   if (s.fosses.some((f) => f.horizons.some((h) => h.noye))) out.push({ hex: 'NOYE', nom: 'Horizon quasi noyé' });
   if (s.fosses.some((f) => Number.isFinite(f.nappe))) out.push({ hex: 'NAPPE', nom: 'Nappe' });
   if (s.fosses.some((f) => f.horizons.some((h) => h.nonObserve))) out.push({ hex: 'NON-OBSERVE', nom: 'Non observé' });
