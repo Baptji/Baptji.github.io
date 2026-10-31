@@ -3,11 +3,14 @@
 pour que le navigateur les anime sur la carte graphique (montée à l'ouverture, décalage au défilement) sans jamais les redessiner.
 Détails : herbe et racines en surface, galets, une ammonite, un calmar fossile (le « Squid » du site) et des améthystes.
 Chaque couche descend sous la suivante (chevauchement) : au défilement, les couches hautes glissent derrière les basses sans trou.
+Le dessin est très large (L) : à l'écran, la coupe reste une bande mince au-dessus de la grille des apps (l'accueil lui donne
+une hauteur de 420/L de la largeur de la fenêtre, et la recadre au centre sur téléphone).
 Réécrit le bloc compris entre <!-- strates --> et <!-- /strates --> d'index.html.   Usage : outils/strates.py"""
 import math, pathlib, random, re
 
 SITE = pathlib.Path(__file__).resolve().parent.parent
-L, H = 2400, 420                      # boîte de dessin, recadrée au centre selon la largeur de l'écran (xMidYMax slice)
+L, H = 3600, 420                      # boîte de dessin, recadrée au centre selon la largeur de l'écran (xMidYMax slice)
+C = L // 2                            # milieu : les fossiles s'y regroupent, seule partie visible sur téléphone
 CHEVAUCHEMENT = 80
 rnd = random.Random(7)                # même dessin à chaque passage
 
@@ -122,10 +125,10 @@ COULEURS = ["--s1", "--s2", "--s3", "--s4", "--s5", "--fond"]
 DECALAGE = [110, 84, 60, 38, 18, 0]          # px parcourus au défilement de l'en-tête : les couches hautes s'éloignent davantage
 DETAILS = {
     0: lambda: surface(),
-    1: lambda: galets(1, 16) + ammonite(1000, (limite(1, 1000) + limite(2, 1000)) / 2),
-    2: lambda: galets(2, 14) + calmar(1470, (limite(2, 1470) + limite(3, 1470)) / 2),
-    3: lambda: galets(3, 12) + amethystes(1235, limite(4, 1235) - 9),
-    4: lambda: galets(4, 8),
+    1: lambda: galets(1, 24) + ammonite(C - 200, (limite(1, C - 200) + limite(2, C - 200)) / 2),
+    2: lambda: galets(2, 21) + calmar(C + 270, (limite(2, C + 270) + limite(3, C + 270)) / 2),
+    3: lambda: galets(3, 18) + amethystes(C + 35, limite(4, C + 35) - 9),
+    4: lambda: galets(4, 12),
 }
 
 couches = []
