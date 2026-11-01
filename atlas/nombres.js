@@ -55,7 +55,7 @@
     stabilite: {
       champ: "stabilite", min: 1, max: 10, echelle: "lin", ticks: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
       bouts: ["s'altère en premier", "quasi inaltérable"], pas: 1, vert: true,
-      texte: (v) => `${v}/10 — ${v <= 2 ? "s'altère en premier" : v <= 5 ? "s'altère assez vite" : v <= 8 ? "résistant" : "quasi inaltérable"}`,
+      texte: (v) => `${v}/10 : ${v <= 2 ? "s'altère en premier" : v <= 5 ? "s'altère assez vite" : v <= 8 ? "résistant" : "quasi inaltérable"}`,
       // série de Goldich (1938) : les minéraux courants des roches, avec la note que leur donne l'atlas
       reps: () => ["olivine", "pyroxenes", "amphiboles", "biotite", "plagioclases", "orthose", "muscovite", "quartz"]
         .filter((id) => MINERAUX[id]).map((id) => ({ id, v: MINERAUX[id].stabilite, nom: nomCourt(id) })),
@@ -124,7 +124,7 @@
     let n, unite, legende;
     if (G.champ === "densite") {
       n = Math.max(1, Math.ceil(v));
-      legende = `1 carré = 1 g/cm³, soit 1 kg par litre (la masse d'un litre d'eau) : ${fmt(v)} carrés.`;
+      legende = `Valeur : ${fmt(v)} carrés, à raison de 1 g/cm³ pour 1 carré, soit 1 kg par litre (masse d'un litre d'eau).`;
     } else {
       n = 10;
       legende = G.champ === "durete" ? `${fmt(v)} carrés sur 10 (échelle de Mohs).` : `${v} carrés sur 10 (série de Goldich).`;
@@ -152,8 +152,8 @@
       const le = (r) => `${ARTICLE[r[0]]} (${r[1]})`;
       const ph = egal ? (egal[0] === id
           ? `C'est le repère n° ${egal[1]} de l'échelle de Mohs : il raye ${dessous ? le(dessous) : "tous les autres"} et il est rayé par ${dessus ? le(dessus) : "aucun autre"}.`
-          : `Aussi dur que ${le(egal)}, repère n° ${egal[1]} de l'échelle de Mohs.`)
-        : `Sur l'échelle de Mohs, entre ${dessous ? le(dessous) : "le bas de l'échelle"} et ${dessus ? le(dessus) : "le haut de l'échelle"}.`;
+          : `D'une dureté égale à celle de ${le(egal)}, soit le repère n° ${egal[1]} de l'échelle de Mohs.`)
+        : `Situé entre ${dessous ? le(dessous) : "le bas de l'échelle"} et ${dessus ? le(dessus) : "le haut de l'échelle"} sur l'échelle de Mohs.`;
       return `<div class="nb-pastilles">${pastilles.join("")}</div><p class="nb-note">${ph}</p>`;
     }
     if (G.champ === "densite") {
@@ -164,7 +164,7 @@
       const barres = lignes.map((l) => `<div class="nb-litre${l.lui ? " nb-lui-l" : ""}"><span>${esc(l.nom)}</span>
         <i><b style="width:${(l.v / max * 100).toFixed(1)}%"></b></i><span>${fmt(l.v)} kg</span></div>`).join("");
       const balle = Math.round(157 * v / 10) * 10;
-      const ph = `Un caillou de ${esc(nom.toLowerCase())} de la taille d'une balle de tennis (≈ 157 cm³) pèserait ≈ ${fmt(balle, 0)} g${v < 1 ? " — et flotterait sur l'eau" : ""}.`;
+      const ph = `Avec un volume de 157 cm³, comparable à une balle de tennis, un échantillon de ${esc(nom.toLowerCase())} pèserait ≈ ${fmt(balle, 0)} g${v < 1 ? ", et flotterait sur l'eau" : ""}.`;
       return `<p class="nb-titre">Masse d'un litre</p><div class="nb-litres">${barres}</div><p class="nb-note">${ph}</p>`;
     }
     // résistance à l'altération : place dans la série de Goldich
@@ -179,7 +179,7 @@
     if (!pose) chaine.push({ nom, lui: true });
     const html = chaine.map((c) => `<span class="nb-pas${c.lui ? " nb-lui-p" : ""}">${esc(c.nom)}</span>`).join(`<span class="nb-fleche">→</span>`);
     return `<div class="nb-pastilles nb-chaine">${html}</div>
-      <p class="nb-note">Dans une roche exposée à la pluie, ces minéraux disparaissent de gauche à droite (série de Goldich).</p>`;
+      <p class="nb-note">Sous la pluie, une roche perd ces minéraux de gauche à droite (série de Goldich).</p>`;
   }
 
   // ─────────── D · sa place parmi les minéraux de l'atlas ───────────
@@ -223,7 +223,7 @@
     s += "</svg>";
     const moins = vals.filter((x) => x < v).length;
     const pc = Math.round(moins / vals.length * 100);
-    return s + `<p class="nb-note">${G.plusQue} ${pc} % des ${vals.length} ${G.population || "minéraux de l'atlas"} dont la valeur est connue.</p>`;
+    return s + `<p class="nb-note">La valeur est connue pour ${G.plusQue} ${pc} % des ${vals.length} ${G.population || "minéraux de l'atlas"}.</p>`;
   }
 
   // ─────────── rendu ───────────

@@ -156,19 +156,19 @@
     if (k === "eau") {
       e.push(suite(depart(), {
         titre: "Le bord d'une marche du cristal",
-        texte: `${T.debut || `Chaque ${nom} tient six oxygènes, pris à six carbonates différents.`} Au bord, celui qu'on suit (cerclé) en a déjà perdu deux : l'eau occupe leur place.`,
+        texte: `${T.debut || `Chaque ${nom} est entouré de six oxygènes, appartenant chacun à un carbonate différent.`} se situe au bord : celui que l'on suit (cerclé) a déjà perdu deux de ses voisins, remplacés par de l'eau.`,
       }));
       const m1 = { x: M0[0] + 10, y: M0[1] - 14 };
       e.push(suite(e[0], {
         titre: "L'eau prend la place des oxygènes",
-        texte: `Une molécule d'eau se glisse : un oxygène du cristal lâche, celui de l'eau le remplace, puis un autre. L'eau tourne son oxygène vers ${le} : c'est le côté de la molécule qui porte une charge partielle négative. ${T.eauLent || `C'est l'étape lente : ${le} garde longtemps chacun de ses voisins.`}`,
+        texte: `Une molécule d'eau s'insinue : un oxygène du cristal se détache, celui de l'eau prend sa place, puis un autre suit. L'eau oriente son oxygène vers ${le} : c'est la face de la molécule qui porte une charge partielle négative. ${T.eauLent || `Il s'agit de l'étape lente : ${le} conserve pendant longtemps chacun de ses voisins.`}`,
         A: { M: m1, halo: Object.assign({}, m1, { o: 0 }), Wu: { x: m1.x, y: m1.y - LMO, a: -90 }, Wr: Object.assign(versO(m1, -25, LMO), { a: -25 }), Wa: Object.assign(versO(m1, 40, LMO), { a: 40 }) },
         B: Object.assign({ mB: 0, mA: 0, wa: we("Wa") }, a2({ mB2: 0 })), g: V.bi ? [4, 5] : [2, 4], h: Object.assign({ cours: true }, H),
       }));
       const m2 = { x: 452, y: 90 }, rep = d.repere;
       e.push(suite(e[1], {
         titre: `${majuscule(le)} s'en va, habillé d'eau`,
-        texte: `Le dernier oxygène du cristal a lâché. ${majuscule(le)} part ${T.hydrateTxt || "entouré de six molécules d'eau"} : ${d.hydrate}.`
+        texte: `Le dernier oxygène du cristal vient de céder sa place. ${majuscule(le)} quitte ${T.hydrateTxt || "entouré de six molécules d'eau"} : ${d.hydrate}.`
           + (rep && rep.eau ? ` Un ${O.nomEl(rep.cation)} de ${rep.la} part, lui, en ${O.quelques(rep.eau.t)}.` : ""),
         A: autour(m2.x, m2.y, [["Wu", "h"], ["Wr", "d"], ["Wa", "b"], ["Wb", "g"]]),
         B: Object.assign({ mT: 0, mV: 0, wb: we("Wb") }, a2({ mT2: 0, mV2: 0 })), g: [0, 6], h: H,
@@ -176,34 +176,34 @@
       }));
       e.push(suite(e[2], {
         titre: "Le carbonate part entier",
-        texte: "Privé de son voisin, le carbonate du bord part à son tour, dans la foulée. Ses trois liaisons C–O n'ont pas bougé : l'eau ne sait pas les casser.",
+        texte: "Privé de son voisin, le carbonate du bord s'en va à son tour, aussitôt. Ses trois liaisons C-O restent intactes : l'eau est incapable de les rompre.",
         A: posT(250, 96, 20), B: { m4: 0, m15: 0, tA: 0, tV: 0 },
         L: { lT: { x: 290, y: 104, t: "CO₃²⁻" } },
       }));
       const T2 = posT(250, 96, 20).T2;
       e.push(suite(e[3], {
         titre: "Le CO₂ dissous le change en bicarbonate",
-        texte: "Le CO₂ de l'air ou du sol, dissous dans l'eau, lui cède presque aussitôt un H⁺ : HCO₃⁻. Le bicarbonate ne se raccroche plus au cristal ; c'est pourquoi une eau chargée de CO₂ dissout davantage." + (T.eauFin ? " " + T.eauFin : ""),
+        texte: "Une fois dissous, le CO₂ de l'air ou du sol cède presque aussitôt un H⁺ : il en résulte HCO₃⁻. Ce bicarbonate ne reste pas accroché au cristal, et c'est pour cette raison qu'une eau chargée de CO₂ dissout davantage." + (T.eauFin ? " " + T.eauFin : ""),
         A: { Ha: Object.assign(versO(T2, 260, 14), { o: 1 }) }, B: { h1: { a: "T2", b: "Ha", k: "oh" } },
         L: { lT: { x: 290, y: 104, t: "HCO₃⁻" } },
       }));
     } else {
       e.push(suite(depart(), {
         titre: "Le même bord, dans l'acide",
-        texte: "L'acide chlorhydrique libère dans l'eau des ions H⁺ (en vert ; chacun est porté par une molécule d'eau, H₃O⁺) et des ions chlorure Cl⁻ (en gris), qui, eux, ne réagissent pas. Les H⁺ sont attirés par les oxygènes des carbonates, chargés négativement. On suit le carbonate cerclé.",
+        texte: "Dans l'eau, l'acide chlorhydrique fournit des ions H⁺ (en vert, portés chacun par une molécule d'eau, H₃O⁺) et des ions chlorure Cl⁻ (en gris), inertes ici. Les H⁺ sont attirés par les oxygènes des carbonates, de charge négative. Le carbonate entouré est celui que l'on suit.",
       }));
       const m1 = { x: M0[0] + 6, y: M0[1] - 4 }, t0d = posT(TC0[0], TC0[1], V.angle(...TS));
       const versH = (q) => ({ x: q.x + 15 * (q.y - TC0[1]) / RCO, y: q.y - 15 * (q.x - TC0[0]) / RCO });   // H posé au-delà de l'oxygène, de côté
       e.push(suite(e[0], {
         titre: "Un H⁺ se pose sur un oxygène",
-        texte: `Lié au H, cet oxygène n'a presque plus besoin ${du} : leur liaison lâche. Cela se fait presque aussitôt.`,
+        texte: `Lié à un H, cet oxygène ne retient presque plus ${du} : leur liaison se relâche. Cela se produit presque aussitôt.`,
         A: { Ha: Object.assign(versH(t0d.T0), { t: "h" }), halo: { o: 0 }, M: m1, Wu: { x: m1.x, y: m1.y - LMO, a: -90 }, Wr: { x: m1.x + LMO, y: m1.y, a: 0 } },
         B: { h1: { a: "T0", b: "Ha", k: "oh" }, mT: 0 }, g: [cristal - 1, 2],
       }));
       const t2 = posT(282, 92, 180);
       e.push(suite(e[1], {
         titre: "Le carbonate se détache",
-        texte: `${T.acideLent || `Il doit encore attendre que les autres ${nom}s lâchent ses oxygènes : c'est l'étape lente, car ${le} garde longtemps ses voisins.`} Une fois libre, un deuxième H⁺ s'y pose : c'est de l'acide carbonique, H₂CO₃.`,
+        texte: `${T.acideLent || `L'étape est lente : tant que les autres ${nom}s n'ont pas relâché leurs liaisons avec ses oxygènes, ${le} conserve ses voisins pendant longtemps.`} Une fois libéré, un second H⁺ s'y fixe : il s'agit alors d'acide carbonique, H₂CO₃.`,
         A: Object.assign({}, t2, { Ha: versO(t2.T0, 215), Hb: Object.assign(versO(t2.T2, 60), { t: "h" }), Wa: { x: m1.x - LMO, y: m1.y, a: 180 } }),
         B: Object.assign({ m4: 0, m15: 0, tA: 0, tV: 0, h2: { a: "T2", b: "Hb", k: "oh" }, wa: we("Wa") }, a2({ mT2: 0 })), g: [cristal - (V.bi ? 2 : 1), 3],
         h: Object.assign({ cours: true }, H),
@@ -211,8 +211,8 @@
       }));
       const w = { x: 222, y: 126 };
       e.push(suite(e[2], {
-        titre: "Une liaison C–O cède : la bulle",
-        texte: "Les deux H se retrouvent sur un même oxygène et l'emportent : une molécule d'eau part, il reste du CO₂. C'est la seule liaison C–O qui casse, et le CO₂ fait les bulles de l'effervescence.",
+        titre: "Une liaison C-O cède : la bulle",
+        texte: "Les deux H se retrouvent sur un même oxygène, qui s'en va avec eux : une molécule d'eau part, et il reste du CO₂. C'est la seule liaison C-O à se rompre, et le CO₂ forme les bulles de l'effervescence.",
         A: {
           TC: { x: 320, y: 58 }, T1: { x: 300, y: 58 }, T2: { x: 340, y: 58 },
           T0: Object.assign({}, w, { el: "Ow" }), Ha: Object.assign(versO(w, 128, 13), { t: "h" }), Hb: Object.assign(versO(w, 232, 13), { t: "h" }),
@@ -225,7 +225,7 @@
       const m4 = { x: 470, y: 112 };
       e.push(suite(e[3], {
         titre: `${majuscule(le)} part à son tour`,
-        texte: `Privé de ses carbonates, il est pris par l'eau. ${T.acideFin || `Chaque carbonate de la surface attend en moyenne ${o.lettres} avant de partir.`}`,
+        texte: `Dépourvu de ses carbonates, il est emporté par l'eau. ${T.acideFin || `Un carbonate de surface patiente en moyenne ${o.lettres} avant de s'éloigner.`}`,
         A: Object.assign(autour(m4.x, m4.y, [["Wu", "h"], ["Wr", "d"], ["Wa", "b"], ["Wb", "g"]]), { TC: { x: 320, y: 46 }, T1: { x: 300, y: 46 }, T2: { x: 340, y: 46 }, bulle: { x: 320, y: 46 } }),
         B: Object.assign({ mB: 0, mA: 0, mV: 0, wb: we("Wb") }, a2({ mB2: 0, mV2: 0 })), g: [0, 6], h: H,
         L: { lM: { x: 524, y: 119, t: d.hydrate }, lT: { x: 362, y: 51, t: "CO₂" } },
@@ -244,14 +244,14 @@
     const que = /^[aeiouy]/i.test(part) ? `qu'${part}` : `que ${part}`;
     const duo = [
       { titre: "C–O", sous: "liaison covalente (électrons partagés)",
-        schema: { type: "partage", a: "C", b: "O", aria: "Carbone et oxygène partagent deux électrons" },
-        li: [`Le carbone et l'oxygène gardent leurs électrons en commun, entre eux deux : ionique ${O.fraction(O.ionicite("C", "O"))} (Pauling).`,
-          `L'eau ne sait pas la remplacer. Elle cède à l'acide, qui en fait du CO₂${f ? `, ou au four dès ${f.debut} : ${f.equation}, ${f.produit}` : ""}.`] },
+        schema: { type: "partage", a: "C", b: "O", aria: "Le carbone et l'oxygène se partagent deux électrons" },
+        li: [`Le carbone et l'oxygène mettent leurs électrons en commun : liaison à caractère ionique ${O.fraction(O.ionicite("C", "O"))} (Pauling).`,
+          `L'eau échoue à en prendre la place. C'est l'acide qui transforme ce carbonate en CO₂${f ? `, ou au four dès ${f.debut} : ${f.equation}, ${f.produit}` : ""}.`] },
       { titre: `${M}–O`, sous: `liaison ${O.nature(`${M}–O`)} (électrons cédés)`,
         schema: { type: "don", a: M, la: `${M}²⁺`, ra: 17, fa: 12, b: "O", aria: `${majuscule(le)} cède ses électrons au carbonate` },
-        li: [`${majuscule(le)} a cédé ses deux électrons au carbonate, dont les trois oxygènes se partagent la charge 2−. ${M}²⁺ et ces oxygènes s'attirent comme + et −.`,
-          `Ionique ${O.fraction(O.ionicite(M, "O"))} (Pauling). Et sa charge se répartit sur ${O.lettres(n)} oxygènes : chaque liaison ${M}–O ne vaut ${que} de liaison simple, ${O.lettres(ratio, true)} fois moins qu'une liaison C–O.`,
-          "Dans l'eau, l'oxygène d'une molécule d'eau peut prendre la place de celui du cristal."] },
+        li: [`Venant de ${majuscule(le)}, deux électrons rejoignent le carbonate, dont les trois oxygènes se partagent une charge 2−. ${M}²⁺ et ces oxygènes s'attirent à la façon de charges + et −.`,
+          `Caractère ionique ${O.fraction(O.ionicite(M, "O"))} selon Pauling. La charge se disperse sur ${O.lettres(n)} oxygènes : une liaison ${M}-O ne représente que ${que} de liaison simple, soit ${O.lettres(ratio, true)} fois moins qu'une liaison C-O.`,
+          "En milieu aqueux, un atome d'oxygène issu d'une molécule d'eau peut se substituer à celui du cristal."] },
     ];
     let barres = null;
     if (E.co && E.reseau && E.dHdiss != null) {
@@ -260,12 +260,12 @@
         titre: "Énergie pour casser une liaison", unite: "kJ/mol", max: 800, graduations: [0, 200, 400, 600, 800],
         onglets: [{ k: "sec", nom: "À sec" }, { k: "eau", nom: "Dans l'eau" }],
         rangs: [
-          { nom: "C–O du carbonate", el: "C", hachure: true, val: { sec: E.co, eau: E.co }, txt: { sec: `${E.co[0]} à ≈ ${E.co[1]} kJ/mol`, eau: `${E.co[0]} à ≈ ${E.co[1]} kJ/mol` } },
+          { nom: "C-O du carbonate", el: "C", hachure: true, val: { sec: E.co, eau: E.co }, txt: { sec: `${E.co[0]} à ≈ ${E.co[1]} kJ/mol`, eau: `${E.co[0]} à ≈ ${E.co[1]} kJ/mol` } },
           { nom: `${M}–O`, el: M, val: { sec: [0, sec], eau: [0, Math.abs(eau)] }, txt: { sec: `≈ ${O.sp(Math.round(sec / 10) * 10)} kJ/mol`, eau: `≈ ${Math.round(eau)} kJ/mol`.replace("-", "−") } },
         ],
         explic: {
-          sec: `À sec, séparer les ions d'une unité ${d.formule} coûte environ ${O.sp(Math.round(E.reseau / 100) * 100)} kJ/mol, soit environ ${O.sp(Math.round(sec / 10) * 10)} par liaison ${M}–O : autant qu'une liaison C–O.`,
-          eau: `Dans l'eau, chaque oxygène perdu par ${le} est remplacé par celui d'une molécule d'eau. Pour toute l'unité, soit ${n} liaisons ${M}–O, le bilan est de ${Math.round(E.dHdiss)} kJ/mol, environ ${Math.round(eau)} par liaison. Le signe moins veut dire que l'eau rend un peu plus d'énergie qu'il n'en faut : la dissolution dégage même un peu de chaleur. La liaison C–O ne change pas, car l'eau ne sait pas la remplacer.`.replace(/-(\d)/g, "−$1"),
+          sec: `À sec, arracher les ions d'une unité ${d.formule} demande environ ${O.sp(Math.round(E.reseau / 100) * 100)} kJ/mol, soit à peu près ${O.sp(Math.round(sec / 10) * 10)} par liaison ${M}-O : autant qu'une liaison C-O.`,
+          eau: `Dans l'eau, chaque oxygène quittant ${le} est remplacé par celui d'une molécule d'eau. Pour l'ensemble de l'unité, soit ${n} liaisons ${M}-O, le bilan s'élève à ${Math.round(E.dHdiss)} kJ/mol, soit environ ${Math.round(eau)} par liaison. Le signe moins signifie que l'eau restitue un peu plus d'énergie qu'elle n'en consomme : la dissolution dégage même un peu de chaleur. La liaison C-O demeure, l'eau étant incapable de la rompre.`.replace(/-(\d)/g, "−$1"),
         },
       };
     }
@@ -282,7 +282,7 @@
           const [a, b] = iv(E[c]), plage = a !== b;
           return { nom: majuscule(nom), el: M, hachure: plage, val: { ea: plage ? [a, b] : [0, b] }, txt: { ea: plage ? `${fr1(a)} à ${fr1(b)} kJ/mol` : `${fr1(b)} kJ/mol` } };
         }),
-        explic: { ea: `L'énergie qu'il faut fournir pour que la réaction se fasse : plus elle est grande, plus la chaleur accélère la dissolution. De 25 à 35 °C, la vitesse est multipliée par ${facs.join(", ")}.${T.eaExplic ? " " + T.eaExplic : ""}` },
+        explic: { ea: `Plus cette énergie d'activation est élevée, plus la chaleur accélère la dissolution : elle conditionne l'effet de la température. Entre 25 et 35 °C, la vitesse est multipliée par ${facs.join(", ")}.${T.eaExplic ? " " + T.eaExplic : ""}` },
       };
     }
     let temps = null;
@@ -293,7 +293,7 @@
       const fDep = O.rond2(lent ? d.onglets.eau.t / rep.eau.t : rep.eau.t / d.onglets.eau.t);
       temps = {
         titre: `Pourquoi ${d.la} fond si ${lent ? "lentement" : "vite"}`,
-        explic: `${T.tempsExplic || `Pour changer de voisin, ${le} doit en lâcher un avant de tenir le suivant.`} Le ${O.nomEl(R)} de ${rep.la} sert de repère. Barres : écart entre les valeurs publiées.`,
+        explic: `${T.tempsExplic || `Afin de passer au voisin suivant, ${le} commence par lâcher l'un des siens, puis rattrape le suivant.`} sert ici de comparaison, avec le ${O.nomEl(R)} de ${rep.la}. Les barres indiquent l'écart entre les valeurs publiées.`,
         rangees: [
           ech && { titre: "Une molécule d'eau reste collée à l'ion, dans l'eau", fois: `au moins ${nb(fEch, O)} fois ${lentE ? "plus" : "moins"} longtemps pour ${M}²⁺`,
             pts: [{ el: R, min: rep.echange.min, max: rep.echange.max, v: rep.echange.v, et: `${R}²⁺ · ${rep.echange.court}`, ou: "haut" },
@@ -312,7 +312,7 @@
     decor: (k, d, O) => decor(k, d, O, V), etapes: (k, d, O) => etapes(k, d, O, V), energie,
     jauge: (d) => ({ titre: `voisins du ${Liaisons.outils.nomEl(d.cation)} suivi`, n: V.n, classes: ["lp-j-o", "lp-j-ow"] }),
     legende: () => ({ "e:O": "oxygène du cristal", "i:Cl−": "Cl⁻, ne réagit pas",
-      "t:avant": "ion juste devant le plan du dessin (en contour)", "t:arriere": "ion juste derrière le plan du dessin (plus petit, pâle)" }),
-    aria: (d) => `Coupe du bord d'un cristal de ${d.nom}, étape par étape`,
+      "t:avant": "ion placé en avant du plan de la figure, dessiné en contour", "t:arriere": "ion placé derrière le plan de la figure, plus réduit et plus clair" }),
+    aria: (d) => `Vue en coupe du bord d'un cristal de ${d.nom}, étape après étape`,
   });
 })();

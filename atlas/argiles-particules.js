@@ -248,15 +248,15 @@
   }
   const nm = (x) => (x / 10).toLocaleString("fr-FR", { maximumFractionDigits: 1 });
   const VRAI = {
-    kaolin: "Un vrai cristal de kaolinite mesure 0,1 à 2 µm de large, soit des centaines de fois plus.",
-    serp: "Les vrais cristaux mesurent de 0,1 à quelques µm.",
-    talc: "Les vraies plaquettes mesurent du µm au mm.",
-    mica: "Un vrai cristal de mica mesure du mm au dm : des millions de fois plus de feuillets.",
-    chlorite: "Les vrais cristaux mesurent du µm au mm.",
-    smectite: "Les vrais feuillets mesurent 0,1 à 1 µm de large pour 1 nm d'épaisseur.",
-    vermiculite: "Les vraies paillettes mesurent du mm au cm.",
-    illite: "Les vraies particules mesurent 0,1 à 1 µm de large et 2 à 20 feuillets d'épaisseur.",
-    inter: "Les vrais cristaux sont des plaquettes de 0,1 à 1 µm.",
+    kaolin: "La kaolinite forme en réalité des cristaux de 0,1 à 2 µm de large, soit des centaines de fois davantage.",
+    serp: "Les cristaux réels mesurent de 0,1 à quelques µm.",
+    talc: "Les plaquettes réelles mesurent de quelques µm à quelques mm.",
+    mica: "Un cristal de mica réel mesure du millimètre au décimètre et compte des millions de fois plus de feuillets.",
+    chlorite: "Les cristaux réels mesurent de quelques µm à quelques mm.",
+    smectite: "Chaque feuillet réel n'a que 1 nm d'épaisseur pour 0,1 à 1 µm de largeur.",
+    vermiculite: "Les paillettes réelles mesurent de quelques mm à quelques cm.",
+    illite: "Les particules réelles ont 0,1 à 1 µm de large et empilent 2 à 20 feuillets.",
+    inter: "Les cristaux réels se présentent sous forme de plaquettes de 0,1 à 1 µm.",
   };
 
   function construire(cle, i) {
@@ -271,32 +271,32 @@
       const et = etatsDe(E.halloysite, i), P = prep("kaolinite");
       const at = spirale(P, { r0: 50, tours: 1.5, d: et.d, dRef: 7.2, largeur: 8.94, axeTube: "y", sgn: -1, eau: et.eau === 1 });
       return emballer(at, { donnees: Object.assign(src, { vue: { axe: "a", inclinaison: [16, -22] },
-        info: `Modèle construit : un tube d'halloysite de ${at.length} atomes`,
-        note: `Le feuillet 1:1 de la kaolinite (Bish 1993) enroulé en spirale, une tranche d'une maille de long (8,9 Å) : un tour et demi à
-          partir d'un canal de 10 nm, le plus étroit observé. Couche tétraédrique DEHORS, couche d'aluminium DEDANS : c'est l'inverse du
-          chrysotile. Tours espacés de ${String(et.d).replace(".", ",")} Å${et.eau === 1 ? ", une couche d'eau entre eux (halloysite à 10 Å)" : " (halloysite séchée)"}.
-          Enroulement calculé par l'atlas : aucune structure courbe n'a été affinée. Un vrai tube compte 15 à 20 tours et mesure 0,5 à plusieurs µm de long.` }) });
+        info: `Modèle construit : un tube d'halloysite totalisant ${at.length} atomes`,
+        note: `La kaolinite (Bish 1993) forme un feuillet 1:1 qui s'enroule en spirale sur une tranche d'une maille (8,9 Å) : un tour et demi
+          autour d'un canal de 10 nm, le plus étroit observé. L'extérieur porte la couche tétraédrique, l'intérieur la couche d'aluminium, à
+          l'inverse du chrysotile. Les tours sont espacés de ${String(et.d).replace(".", ",")} Å${et.eau === 1 ? ", avec une couche d'eau interposée (halloysite à 10 Å)" : " (halloysite séchée)"}.
+          Enroulement calculé par l'atlas, aucune structure courbe n'ayant été affinée. Un tube réel compte 15 à 20 tours et mesure 0,5 à plusieurs µm de long.` }) });
     }
     // chrysotile : feuillet de lizardite enroulé, couche de magnésium dehors, fibre le long de a
     if (s === "chrysotile") {
       const P = prep("lizardite");
       const at = spirale(P, { r0: 37, tours: 1.5, d: 7.3, largeur: 10.66, axeTube: "x", sgn: 1 });
       return emballer(at, { donnees: Object.assign(src, { vue: { axe: "a", inclinaison: [16, -22] },
-        info: `Modèle construit : une fibrille de chrysotile de ${at.length} atomes`,
-        note: `Le feuillet 1:1 de la lizardite (Mellini 1982) enroulé en spirale autour de l'axe a, sur deux mailles de long (10,7 Å) : un tour
-          et demi à partir d'un canal de 7,5 nm (Yada 1971). Couche de magnésium DEHORS, plus large que la couche tétraédrique : c'est ce
-          décalage de taille qui fait rouler le feuillet. Enroulement calculé par l'atlas. Une vraie fibrille compte ≈ 12 tours (25 nm de
-          diamètre) et mesure des µm à des cm de long.` }) });
+        info: `Modèle bâti par l'atlas : ${at.length} atomes pour une fibrille de chrysotile.`,
+        note: `La lizardite (Mellini 1982) forme un feuillet 1:1 qui s'enroule autour de l'axe a, sur deux mailles (10,7 Å) : un tour et demi
+          depuis un canal de 7,5 nm (Yada 1971). La couche de magnésium, plus large que la couche tétraédrique, se trouve à l'extérieur : c'est cet
+          écart de taille qui fait rouler le feuillet. Enroulement calculé par l'atlas. Une fibrille réelle compte ≈ 12 tours (25 nm de
+          diamètre) et mesure de quelques µm à quelques cm de long.` }) });
     }
     // hisingérite : feuillets de kaolinite ferrique posés sur des sphères emboîtées (morceau de paroi)
     if (f === "hisingerite") {
       const P = prep("hisingerite");
       const at = ajuste((r) => calotte(P, { R: 56, rayon: r, n: 2, d: 7.1, sgn: -1 }), 26).at;
       return emballer(at, { donnees: Object.assign(src, { vue: { axe: "a", inclinaison: [12, -20] },
-        info: `Modèle construit : un morceau de paroi de ${at.length} atomes`,
-        note: `Un morceau de la paroi d'une sphère d'hisingérite de 11 à 13 nm : deux feuillets 1:1 ferriques concentriques, espacés de 7,1 Å
-          (Eggleton et Tilley 1998). Sens de courbure non établi : dessiné comme l'halloysite, couche tétraédrique dehors. Courbure
-          calculée par l'atlas.` }) });
+        info: `Morceau de paroi bâti par l'atlas, soit ${at.length} atomes.`,
+        note: `Une paroi d'hisingérite, sphère de 11 à 13 nm, est faite de deux feuillets 1:1 ferriques concentriques espacés de 7,1 Å
+          (Eggleton et Tilley 1998). Le sens de la courbure n'est pas établi ; on le dessine comme pour l'halloysite, avec la couche tétraédrique à l'extérieur. La courbure
+          est calculée par l'atlas.` }) });
     }
     // antigorite : la vraie structure modulée, plusieurs ondes
     if (f === "antigorite") {
@@ -308,10 +308,10 @@
       // trois ondes le long de a, une maille le long de b, trois feuillets (les cations dans la boîte, puis leurs anions)
       const at = tailler(cands, (q) => q.p[0] >= 0 && q.p[0] < 3 * B[0][0] && q.p[1] >= 0 && q.p[1] < B[1][1] && q.p[2] >= 0.5 && q.p[2] < 3 * B[2][2] + 0.5);
       return emballer(at, { donnees: Object.assign(src, { vue: { axe: "b", inclinaison: [0, 0] }, rotationAxe: "normale",
-        info: `Lamelle taillée dans la structure publiée : ${at.length} atomes`,
-        note: `Trois ondes (13 nm) sur trois feuillets, dans la vraie structure modulée de l'antigorite (Capitani et Mellini 2004, polysome
-          m = 17) : la couche de magnésium, continue, ondule ; la couche tétraédrique passe d'un côté à l'autre à chaque demi-onde, par
-          des anneaux de 4 et 8 tétraèdres. Vue le long de b pour voir les ondes de profil. Les vrais cristaux sont des lamelles de
+        info: `Lamelle découpée dans la structure publiée, comptant ${at.length} atomes`,
+        note: `Sur trois feuillets, trois ondes (13 nm) apparaissent dans la structure modulée réelle de l'antigorite (Capitani et Mellini 2004, polysome
+          m = 17) : la couche de magnésium reste continue et ondule, tandis que la couche tétraédrique bascule d'un côté à l'autre à chaque demi-onde, en formant
+          des anneaux de 4 et 8 tétraèdres. La vue est prise selon b pour rendre visibles les ondes de profil. Les cristaux réels sont des lamelles de
           quelques µm.` }) });
     }
     // imogolite : faisceau de 7 tubes (la vraie structure du tube, répétée)
@@ -320,7 +320,7 @@
       [[0, 0]].concat([0, 1, 2, 3, 4, 5].map((k) => [23 * Math.cos(rad(60 * k)), 23 * Math.sin(rad(60 * k))])).forEach(([ox, oy]) =>
         T.atomes.forEach((a) => at.push({ el: a[0], p: [(a[1] - 0.5) * L + ox, (a[2] - 0.5) * L + oy, a[3] * cz], lab: a[4] })));
       return emballer(at, { periode: cz, particule: "tube", donnees: Object.assign(src, { vue: { axe: "c", inclinaison: [-22, 0] }, rotationAxe: "b",
-        info: `Modèle construit : 7 tubes, ${at.length} atomes par période de 8,4 Å`,
+        info: `Modèle construit : 7 tubes totalisant ${at.length} atomes par période de 8,4 Å`,
         note: "Un faisceau de 7 tubes d'imogolite, rangés en hexagone à 23 Å d'axe à axe (Cradwick et al. 1972). Les vrais faisceaux comptent des dizaines à des centaines de tubes." }) });
     }
     // fibres : un morceau de fibre taillé dans la maille publiée, vu le long des canaux
@@ -338,8 +338,8 @@
       const at = tailler(cands, (q) => Math.abs(q.p[0] - cx - B[2][0] * nc / 2) <= haut && Math.abs(q.p[1] - cy) <= larg && q.p[2] >= 0.3 && q.p[2] <= nc * B[2][2] - 0.3);
       return emballer(at, { particule: "objet", donnees: Object.assign(src, { vue: { axe: "c", inclinaison: [-14, 22] }, rotationAxe: "b",
         info: `Morceau de fibre : ${at.length} atomes`,
-        note: `Un bout de fibre de ${sep ? "sépiolite" : "palygorskite"} taillé dans la structure publiée, ${nm(2 * haut)} × ${nm(2 * larg)} nm de section, ${nm(nc * B[2][2])} nm de long,
-          vu le long des canaux : les rubans de feuillets 2:1 en damier, et les canaux ouverts sur les bords de la fibre. Une vraie fibre
+        note: `Découpé dans la structure publiée, un fragment de fibre de ${sep ? "sépiolite" : "palygorskite"} mesure ${nm(2 * haut)} × ${nm(2 * larg)} nm de section pour ${nm(nc * B[2][2])} nm de long ;
+          observé le long des canaux, il montre des rubans de feuillets 2:1 en damier, et des canaux ouverts sur les bords. Une fibre réelle
           mesure 10 à 30 nm de large et 1 à 10 µm de long.` }) });
     }
     // interstratifiés : pile des deux feuillets, dans l'ordre de l'espèce
@@ -355,9 +355,9 @@
       };
       const { at, R } = pileFixe(cle, faire, 22, liste, i);
       return emballer(at, { donnees: Object.assign(src, { vue: { axe: "a", inclinaison: [18, -24] },
-        info: `Modèle construit : une plaquette de ${at.length} atomes`,
-        note: `Une plaquette de ${nm(2 * R)} nm, quatre feuillets : ${seq.split("").map((t) => X.noms[t === "A" ? 0 : 1]).join(", ")} (de bas en haut).
-          ${X.regulier ? "Alternance stricte." : "Suite tirée au hasard."} Espaces de ${X.noms[1]} : ${String(et.d).replace(".", ",")} Å dans l'état choisi${et.eau === "liquide" ? " (eau liquide : molécules placées au hasard, à la densité de l'eau)" : ""}.
+        info: `Modèle construit : une plaquette comptant ${at.length} atomes`,
+        note: `Plaquette de ${nm(2 * R)} nm, quatre feuillets empilés de bas en haut : ${seq.split("").map((t) => X.noms[t === "A" ? 0 : 1]).join(", ")}.
+          ${X.regulier ? "Alternance stricte." : "Suite tirée au hasard."} Chacun des espaces, ${X.noms[1]} au total, mesure ${String(et.d).replace(".", ",")} Å dans l'état retenu${et.eau === "liquide" ? " (eau liquide figurée par des molécules tirées au hasard, à la densité réelle de l'eau)" : ""}.
           ${VRAI.inter}` }) });
     }
     // smectites : trois feuillets tournés au hasard (empilement turbostratique), espace selon l'état
@@ -371,8 +371,8 @@
       const { at, R } = pileFixe(cle, faire, 20, E.smectite, i);
       return emballer(at, { donnees: Object.assign(src, { vue: { axe: "a", inclinaison: [22, -24] },
         info: `Modèle construit : trois feuillets, ${at.length} atomes`,
-        note: `Trois feuillets de ${nm(2 * R)} nm, chacun tourné au hasard par rapport au suivant (empilement turbostratique : rien ne les
-          tient en registre, seulement les cations et l'eau). ${String(et.d).replace(".", ",")} Å d'un feuillet au suivant dans l'état choisi${et.eau === "liquide" ? " ; eau liquide : molécules placées au hasard, à la densité de l'eau, Na⁺ entourés de six molécules" : ""}.
+        note: `Trois feuillets de ${nm(2 * R)} nm, chacun orienté au hasard par rapport à son voisin (empilement turbostratique : aucun lien ne les
+          maintient en registre, seuls les cations et l'eau les lient). ${String(et.d).replace(".", ",")} Å séparent chaque feuillet du suivant dans l'état retenu${et.eau === "liquide" ? " ; eau liquide figurée par des molécules tirées au hasard à la densité de l'eau, avec des Na⁺ entourés de six molécules d'eau" : ""}.
           ${VRAI.smectite}` }) });
     }
     // vermiculite, illite, glauconite : pile ordonnée, espace selon l'état
@@ -391,8 +391,8 @@
       return emballer(at, { donnees: Object.assign(src, { vue: { axe: "a", inclinaison: [18, -24] },
         info: `Modèle construit : trois feuillets, ${at.length} atomes`,
         note: verm ? `Trois feuillets de vermiculite (Shirozu et Bailey 1966) en plaquette de ${nm(2 * R)} nm : Mg²⁺ et eau entre eux, ${String(et.d).replace(".", ",")} Å dans l'état choisi. ${VRAI.vermiculite}`
-          : `Trois feuillets ${f === "illite" ? "d'illite en latte" : "de glauconite"} de ${nm(2 * R)} nm : en bas et en haut, espaces verrouillés par K⁺ ; au milieu, un espace qui a perdu son
-            potassium et prend l'eau (${String(et.d).replace(".", ",")} Å dans l'état choisi). ${VRAI.illite}` }) });
+          : `Trois feuillets ${f === "illite" ? "d'illite en latte" : "de glauconite"}, de ${nm(2 * R)} nm chacun : les espaces du bas et du haut sont verrouillés par K⁺, celui du milieu a perdu son
+            potassium et reçoit l'eau (${String(et.d).replace(".", ",")} Å selon l'état choisi). ${VRAI.illite}` }) });
     }
     // cristaux ordinaires : la maille publiée taillée en plaquette
     const T = { kaolinite: ["kaolin", 3, "hexa"], dickite: ["kaolin", 4, "hexa"], nacrite: ["kaolin", 4, "hexa"], hisingerite: ["kaolin", 3, "hexa"],
@@ -403,9 +403,9 @@
       const { at, R } = ajuste((rr) => cristal(D[f], c, { n, forme, R: rr }), 22);
       const quoi = { kaolin: "feuillets 1:1", serp: "feuillets 1:1", talc: "feuillets 2:1 neutres", mica: "feuillets 2:1 et leurs cations", chlorite: "feuillets 2:1 et leur feuillet d'hydroxyde" }[vrai];
       return emballer(at, { donnees: Object.assign(src, { vue: { axe: "a", inclinaison: [22, -26] },
-        info: `Cristal taillé dans la structure publiée : ${at.length} atomes`,
-        note: `Une plaquette hexagonale de ${nm(2 * R)} nm, ${n} ${quoi}, taillée dans la structure publiée : l'empilement est le vrai (chaque
-          feuillet décalé sur le précédent comme dans le cristal), les bords sont coupés entre les polyèdres. ${VRAI[vrai]}` }) });
+        info: `Cristal découpé dans la structure publiée, comptant ${at.length} atomes`,
+        note: `Plaquette hexagonale de ${nm(2 * R)} nm, ${n} ${quoi}, découpée dans la structure publiée : l'empilement est celui du cristal (chaque
+          feuillet décalé sur le précédent), les bords sont coupés entre les polyèdres. ${VRAI[vrai]}` }) });
     }
     return null;
   }
@@ -550,7 +550,7 @@
     const quoi = meta.type === "spirale" ? "sur la paroi extérieure et dans le canal"
       : F.bords ? "sur les bords seulement (faces neutres, hydrophobes)" : "sur les faces et les bords";
     const plus = ` Autour : ${nF === 1 ? "une couche" : "deux couches"} de molécules d'eau fixées ${quoi}.`
-      + (i === 3 && F.cation && meta.type !== "spirale" ? ` Couche diffuse : ${F.cation === "Na" ? "Na⁺" : F.cation === "Mg" ? "Mg²⁺" : "Ca²⁺"} entourés de six molécules d'eau, serrés contre les faces et de plus en plus rares en s'éloignant (profil de Gouy-Chapman, coupé à ${(EAU.DEBYE[F.cation] / 10).toFixed(1).replace(".", ",")} nm, longueur de Debye d'une eau douce à 10 mmol/L)${F.faible ? " ; charge des faces faible : peu de cations, nombre schématique" : ""} ; l'eau libre autour n'est pas dessinée.` : "");
+      + (i === 3 && F.cation && meta.type !== "spirale" ? ` Couche diffuse : ${F.cation === "Na" ? "Na⁺" : F.cation === "Mg" ? "Mg²⁺" : "Ca²⁺"} entourés de six molécules d'eau, serrés contre les faces et de plus en plus rares en s'éloignant (profil de Gouy-Chapman, coupé à ${(EAU.DEBYE[F.cation] / 10).toFixed(1).replace(".", ",")} nm, longueur de Debye d'une eau douce à 10 mmol/L)${F.faible ? " ; charge modeste des faces, cations peu nombreux, nombre schématique" : ""} ; l'eau libre autour n'est pas dessinée.` : "");
     const emb = Object.assign({}, S.emb, { donnees: Object.assign({}, S.emb.donnees, { note: (S.emb.donnees.note || "") + plus }) });
     return emballer(tout, emb);
   }

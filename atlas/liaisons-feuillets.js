@@ -151,23 +151,23 @@
     const T = d.textes || {}, L0 = { lD: { x: m.un1 ? 444 : m.chl || m.sm ? 604 : 470, y: m.un1 ? 136 : m.chl || m.sm ? 214 : 164, t: T.espace || "≈ 10 Å", m: 1 } };
     e.push({ A, B, L: L0, h: { v: hv === null ? null : 0 },
       titre: k !== "acide" ? "Le bord d'un paquet de feuillets" : "Le même bord, dans l'acide",   // eslint-disable-line
-      texte: m.sm ? (k === "eau" ? (T.debut || "") : "Des ions H⁺ (en vert) dans l'eau. Les faces des feuillets ne réagissent presque pas : tout se passe au bord.")
+      texte: m.sm ? (k === "eau" ? (T.debut || "") : "Dans l'eau, les H⁺ (en vert) se répandent. Les faces des feuillets réagissent à peine : la réaction se concentre sur les bords.")
       : m.sk ? (k === "eau" && m.un1
-        ? `Chaque feuillet : une seule couche de tétraèdres SiO₄, collée à une couche d'octaèdres ${m.oc === "Al" ? "d'aluminium (deux sites sur trois occupés)" : "de magnésium"} dont l'autre face n'est faite que d'OH. D'un feuillet au suivant, ces OH s'accrochent aux oxygènes des tétraèdres par des liaisons hydrogène, ${(T.espace || "≈ 7 Å").replace("≈", "à environ")} l'un du suivant.${T.toucher ? " " + T.toucher : ""}`
+        ? `Chaque feuillet : une seule couche de tétraèdres SiO₄, collée à une couche d'octaèdres ${m.oc === "Al" ? "occupant l'aluminium, avec deux sites sur trois remplis" : "de magnésium"} dont l'autre face n'est faite que d'OH. D'un feuillet au suivant, ces OH s'accrochent aux oxygènes des tétraèdres par des liaisons hydrogène, ${(T.espace || "≈ 7 Å").replace("≈", "à environ")} l'un du suivant.${T.toucher ? " " + T.toucher : ""}`
         : k === "eau"
-        ? `Chaque feuillet : deux couches de tétraèdres SiO₄ autour d'une couche d'octaèdres ${m.oc === "Al" ? "d'aluminium (deux sites sur trois occupés)" : "de magnésium"}, avec des OH. Aucun ion entre les feuillets : seules de faibles forces de van der Waals les tiennent, ${(T.espace || "≈ 10 Å").replace("≈", "à environ")} l'un du suivant. ${T.toucher || "D'où le toucher savonneux et la dureté 1."}`
-        : "Des ions H⁺ (en vert) dans l'eau. Les faces des feuillets ne réagissent presque pas : tout se passe au bord.")
+        ? `Chaque feuillet : deux couches de tétraèdres SiO₄ autour d'une couche d'octaèdres ${m.oc === "Al" ? "occupant l'aluminium, avec deux sites sur trois remplis" : "de magnésium"}, avec des OH. Aucun ion entre les feuillets : seules de faibles forces de van der Waals les tiennent, ${(T.espace || "≈ 10 Å").replace("≈", "à environ")} l'un du suivant. ${T.toucher || "D'où son toucher savonneux et sa dureté de 1."}`
+        : "Dans l'eau, les H⁺ (en vert) se répandent. Les faces des feuillets réagissent à peine : la réaction se concentre sur les bords.")
       : m.chl
         ? (k === "eau"
           ? `Chaque feuillet : deux couches de tétraèdres (SiO₄, et un AlO₄ sur quatre) autour d'une couche d'octaèdres de magnésium et de fer, avec des OH. Entre deux feuillets, pas d'ions isolés mais une deuxième couche d'octaèdres, de magnésium et d'aluminium entourés d'OH (une couche « brucite »), accrochée aux feuillets par des liaisons hydrogène, ${(T.espace || "≈ 14 Å").replace("≈", "à environ")} d'un feuillet au suivant.`
-          : "Des ions H⁺ (en vert) dans l'eau. Les faces des feuillets ne réagissent presque pas : tout se passe au bord.")
+          : "Dans l'eau, les H⁺ (en vert) se répandent. Les faces des feuillets réagissent à peine : la réaction se concentre sur les bords.")
       : m.bl
         ? (k === "eau"
-          ? `Chaque feuillet : deux couches de tétraèdres (SiO₄, et un AlO₄ sur quatre) autour d'une couche d'octaèdres ${T.fer3 ? "de fer (Fe³⁺, avec un peu d'aluminium et de magnésium ; deux sites sur trois occupés)" : "d'aluminium (deux sites sur trois occupés)"}, avec des OH. Entre deux feuillets, des ions ${m.ion} sans eau les tiennent serrés. L'eau ne mord qu'au bord du paquet.`
-          : "Des ions H⁺ (en vert) dans l'eau. Les faces des feuillets ne réagissent presque pas : tout se passe au bord.")
+          ? `Chaque feuillet : deux couches de tétraèdres (SiO₄, et un AlO₄ sur quatre) autour d'une couche d'octaèdres ${T.fer3 ? "de fer (Fe³⁺ ; un peu d'aluminium et de magnésium s'y ajoutent, et deux sites sur trois sont remplis)" : "occupant l'aluminium, avec deux sites sur trois remplis"}, avec des OH. Entre deux feuillets, des ions ${m.ion} sans eau les tiennent serrés. L'eau ne mord qu'au bord du paquet.`
+          : "Dans l'eau, les H⁺ (en vert) se répandent. Les faces des feuillets réagissent à peine : la réaction se concentre sur les bords.")
       : k === "sol"
         ? `Chaque feuillet : deux couches de tétraèdres (SiO₄, et un AlO₄ sur quatre) autour d'une couche d'octaèdres de magnésium${m.sf ? "" : " et de fer"}, avec des OH. Entre deux feuillets, des ions K⁺ sans eau les tiennent serrés, à 10 Å d'un feuillet au suivant.`
-        : "Des ions H⁺ (en vert) dans l'eau. Les faces des feuillets ne réagissent presque pas : tout se passe au bord, cent vingt fois plus réactif.",
+        : "Les H⁺ (en vert) se répandent dans l'eau. Les faces des feuillets réagissent à peine : l'essentiel se déroule sur les bords, cent vingt fois plus réactifs.",
     });
     if (m.sk) {
       // talc (Heřmanská et al. 2023) : le Mg–O lâche d'abord, puis les Si–O du bord (étape lente) ; ni K à échanger ni Al
@@ -179,15 +179,15 @@
       R0(Bc, "Ac_11"); R0(Bs, "At1_11"); R0(Bs, "At2_11");
       e.push(suite(e[0], {
         titre: m.oc === "Al" ? "L'aluminium part le premier" : "Le magnésium part le premier",
-        texte: `Des H⁺ se fixent sur les oxygènes et les OH du bord${k === "eau" ? " (dans le sol, ils viennent du CO₂ dissous)" : ""} : ${m.oc === "Al"
-          ? (k === "eau" ? `l'aluminium des octaèdres se détache. ${T.alSol || "Dans le sol, il ne va pas loin : il se redépose en kaolinite avec une partie de la silice."}` : "l'Al³⁺ des octaèdres s'en va, entouré d'eau.") + " Ses liaisons Al–O cèdent avant celles du silicium."
-          : "le Mg²⁺ des octaèdres s'en va, entouré d'eau. Ses liaisons sont les plus fragiles du feuillet."}`,
+        texte: `Les oxygènes et les OH du bord captent des H⁺${k === "eau" ? " (en sol, leur origine est le CO₂ dissous)" : ""} : ${m.oc === "Al"
+          ? (k === "eau" ? `l'aluminium des octaèdres se détache. ${T.alSol || "En sol, il s'éloigne peu : une part de la silice l'accompagne et il reprécipite sous forme de kaolinite."}` : "l'Al³⁺ des octaèdres s'éloigne, entouré d'eau.") + " Les Al-O cèdent plus tôt que les Si-O."
+          : "le Mg²⁺ des octaèdres quitte le feuillet, entouré d'eau. Ses liaisons comptent parmi les plus fragiles du feuillet."}`,
         A: { Ac_11: { x: 520, y: 70 }, halo: { x: 520, y: 70, o: 0 } }, B: Bc,
         L: { lC: { x: 520, y: 100, t: m.oc === "Al" ? (k === "eau" ? "Al(OH)₃" : "Al³⁺") : "Mg²⁺", m: 1 } },
       }));
       e.push(suite(e[1], {
         titre: "La silice part : le bord recule",
-        texte: `Privés ${m.oc === "Al" ? "de l'aluminium" : "du magnésium"}, les tétraèdres du bord ne tiennent plus que par leurs ponts Si–O–Si : l'eau les casse un à un, et le silicium part en silice dissoute, H₄SiO₄. C'est l'étape lente : ${o.lettres || "durée non mesurée"} en moyenne par groupe ${d.formule} de la surface. Le bord a reculé d'un cran.`,
+        texte: `Dès lors qu'ils sont dépourvus ${m.oc === "Al" ? "de l'aluminium" : "du magnésium"}, les tétraèdres de bordure ne s'appuient plus que sur leurs ponts Si-O-Si ; l'eau les dissout pas à pas, et le silicium rejoint la solution en silice, H₄SiO₄. Étape lente : ${o.lettres || "durée non mesurée"} en moyenne par groupe ${d.formule} de la surface. La bordure a reculé d'un cran.`,
         A: Object.assign({ At1_11: { x: 600, y: 120 } }, m.un1 ? {} : { At2_11: { x: 565, y: 288 } }), B: Bs, h: Object.assign({ cours: true }, H),
         L: Object.assign({ lS: { x: 600, y: 150, t: "H₄SiO₄", m: 1 } }, m.un1 ? {} : { lS2: { x: 565, y: 318, t: "H₄SiO₄", m: 1 } }),
       }));
@@ -195,7 +195,7 @@
       const sortie = { K11: [480, 110], K9: [560, 140], K7: [600, 60], K5: [600, 300], K3: [500, 330], K1: [430, 20] };
       e.push(suite(e[0], {
         titre: "Le potassium sort par le bord",
-        texte: "Le K⁺ le plus près du bord quitte l'espace entre les feuillets. Les suivants le font de proche en proche : leur sortie suit la diffusion, de plus en plus lente à mesure que le front s'enfonce. Aucune vitesse publiée ne la chiffre.",
+        texte: "Le K⁺ le plus proche du bord sort de l'espace inter-feuillets. Les suivants lui emboîtent le pas proche par proche : leur départ obéit à la diffusion, de plus en plus lente à mesure que le front pénètre. Aucune vitesse publiée ne permet de la chiffrer.",
         A: { K11: { x: sortie.K11[0], y: sortie.K11[1] }, halo: { x: sortie.K11[0], y: sortie.K11[1], o: 0 } }, B: { kA11: 0, kB11: 0 }, L: {},
       }));
       const Ab = {}, Bb = {};
@@ -210,20 +210,20 @@
       });
       e.push(suite(e[1], {
         titre: "Le magnésium et l'eau entrent : le paquet s'ouvre",
-        texte: "Depuis le bord, des ions de l'eau du sol entourés d'eau, ici Mg²⁺, prennent la place du potassium : un Mg²⁺ pour deux K⁺. Trop gros avec leur eau, ils écartent les feuillets.",
+        texte: "Depuis le bord, des ions de l'eau du sol, entourés de leur eau d'hydratation (ici Mg²⁺), se substituent au potassium : un Mg²⁺ pour deux K⁺. Trop volumineux avec leur eau, ils écartent les feuillets.",
         A: Ab, B: Bb, L: { lD: { x: 470, y: yi + 4, t: "≈ 14 Å", m: 1 } },
       }));
       const fe = m.A.at.Ac_9;
       if (!m.sf) e.push(suite(e[2], {
         titre: "Le fer du feuillet s'oxyde",
-        texte: "Au contact de l'eau aérée, le fer des octaèdres perd un électron : Fe²⁺ devient Fe³⁺. Le feuillet perd un H⁺ d'un de ses OH, et sa charge négative baisse.",
+        texte: "Quand l'eau aérée entre en contact, le fer des octaèdres perd un électron : Fe²⁺ devient Fe³⁺. Le feuillet abandonne alors un H⁺ issu de l'un de ses OH, et sa charge négative diminue.",
         A: { AH2_8: { t: "hp", x: 470, y: 30 }, halo: { x: fe.x, y: fe.y, o: 1 } }, B: { "Ah2_8-AH2_8": 0 },
         L: { lF: { x: fe.x, y: 24, t: "Fe²⁺ → Fe³⁺", m: 1 } },
       }));
       const avant = e[e.length - 1];
       e.push(suite(avant, {
         titre: "Une vermiculite",
-        texte: `Le paquet s'est ouvert jusqu'à 14 Å environ : c'est une vermiculite${m.sf ? "" : ", au fer oxydé"}. Ses Mg²⁺ entourés d'eau s'échangent facilement avec ceux de l'eau du sol : sa capacité d'échange (CEC) a beaucoup augmenté.`,
+        texte: `Le paquet s'est dilaté jusqu'à environ 14 Å : il s'agit d'une vermiculite${m.sf ? "" : ", au fer oxydé"}. Ses Mg²⁺ entourés d'eau s'échangent aisément avec ceux de l'eau du sol : sa capacité d'échange (CEC) a fortement augmenté.`,
         A: { halo: { o: 0 } }, L: { ...(avant.L.lF ? { lF: avant.L.lF } : {}), lD: { x: 470, y: (Y.bB + Y.bT + DB + OUV) / 2 + 4, t: "≈ 14 Å", m: 1 } },
       }));
     } else {
@@ -237,7 +237,7 @@
         for (const [p, q, kk] of m.Z.li) if (kk !== "oh" && (p === "Zc_11" || q === "Zc_11" || ZANIM.includes(q))) Bz["z" + p + "-" + q] = 0;
         e.push(suite(e[0], {
           titre: "La couche brucite part la première",
-          texte: `Des H⁺ se fixent sur les OH du bord de la couche entre les feuillets${k === "eau" ? " (dans le sol, ils viennent du CO₂ dissous)" : ""} : ils deviennent de l'eau, et ${O.art(m.zEl, "le")} qu'ils tenaient part, entouré d'eau. Cette couche, sans silicium, ne tient que par des liaisons ${m.zEl}–O et Al–O, les plus fragiles du cristal.${k === "eau" && T.zEau ? " " + T.zEau : ""}`,
+          texte: `Des protons venus de l'acide s'accrochent aux OH du bord de la couche intercalée${k === "eau" ? " (en sol, leur origine est le CO₂ dissous)" : ""} ; transformés en eau, ils libèrent ${O.art(m.zEl, "le")} qu'ils tenaient, lequel s'éloigne entouré d'eau. Dépourvue de silicium, cette couche ne repose que sur des liaisons ${m.zEl}-O et Al-O, parmi les plus faibles du cristal.${k === "eau" && T.zEau ? " " + T.zEau : ""}`,
           A: { Zc_11: { x: z0[0], y: z0[1] }, Zu_12: { t: "eau", x: z0[0] - 28, y: z0[1], a: 180 }, ZHu_12: { x: z0[0] - 28, y: z0[1], o: 0 },
             Zd_12: { t: "eau", x: z0[0] + 28, y: z0[1], a: 0 }, ZHd_12: { x: z0[0] + 28, y: z0[1], o: 0 } },
           B: Object.assign(Bz, { ["zZc_11-Zu_12"]: { a: "Zc_11", b: "Zu_12", k: "eau", v: m.vM, p: `${m.zEl}–O` }, ["zZc_11-Zd_12"]: { a: "Zc_11", b: "Zd_12", k: "eau", v: m.vM, p: `${m.zEl}–O` } }),
@@ -245,8 +245,8 @@
         }));
       }
       e.push(suite(e[e.length - 1], {
-        titre: m.chl ? "Puis le magnésium et le fer du feuillet" : m.bl ? `Le ${m.ki === "Na" ? "sodium" : "potassium"} et ${T.fer3 ? "le fer" : "l'aluminium"} des octaèdres partent d'abord` : "Le magnésium et le fer partent d'abord",
-        texte: m.chl ? `Privés de la couche voisine, les octaèdres du bord du feuillet lâchent à leur tour : ${T.octaTexte || "le Mg²⁺ et le Fe²⁺"} s'en vont, entourés d'eau${k === "eau" ? " ; dans le sol, le fer rouille aussitôt en goethite" : ""}.` : m.bl ? `${k === "eau" ? "Des H⁺ se fixent sur les oxygènes du bord (dans le sol, ils viennent du CO₂ dissous)" : "Les H⁺ se fixent sur les oxygènes du bord"} : le ${m.ion} voisin s'en va, échangé contre un H⁺, puis les liaisons ${T.fer3 ? "Fe" : "Al"}–O des octaèdres cèdent${T.fer3 ? (k === "eau" ? ". Le fer ne va pas loin : il rouille sur place en goethite." : " et le Fe³⁺ part, entouré d'eau.") : k === "eau" ? ". L'aluminium ne va pas loin : il se redépose en kaolinite avec une partie de la silice." : " et l'Al³⁺ part, entouré d'eau."}` : `Les H⁺ se fixent sur les oxygènes du bord ; les cations des octaèdres${m.sf ? ", Mg²⁺," : ", Mg²⁺ et Fe²⁺,"} et le K⁺ voisin s'en vont les premiers.`,
+        titre: m.chl ? "Puis le magnésium et le fer du feuillet" : m.bl ? `Le ${m.ki === "Na" ? "sodium" : "potassium"} et ${T.fer3 ? "le fer" : "l'aluminium"} des octaèdres partent d'abord` : "Le magnésium et le fer s'en vont d'abord",
+        texte: m.chl ? `Privés de la couche voisine, les octaèdres du bord du feuillet lâchent à leur tour : ${T.octaTexte || "le Mg²⁺ et le Fe²⁺"} s'en vont, entourés d'eau${k === "eau" ? " ; en sol, le fer se transforme sur-le-champ en goethite" : ""}.` : m.bl ? `${k === "eau" ? "Les oxygènes du bord captent des H⁺ (dans le sol, ces derniers proviennent du CO₂ dissous)" : "Les oxygènes du bord captent des H⁺"} : le ${m.ion} voisin s'en va, échangé contre un H⁺, puis les liaisons ${T.fer3 ? "Fe" : "Al"}–O des octaèdres cèdent${T.fer3 ? (k === "eau" ? ". Le fer ne s'éloigne guère : il s'oxyde sur place en goethite." : " et le Fe³⁺ part, entouré d'eau.") : k === "eau" ? ". L'aluminium ne s'éloigne guère : il se reprécipite en kaolinite avec une partie de la silice." : " et l'Al³⁺ part, entouré d'eau."}` : `Les oxygènes du bord captent des H⁺ ; les cations des octaèdres${m.sf ? ", Mg²⁺," : ", Mg²⁺ et Fe²⁺,"} et le K⁺ voisin s'éloignent les premiers.`,
         A: Object.assign({ Ac_11: { x: 520, y: 70 } }, m.kp ? { K11: { x: 560, y: 230 } } : {}), B: Bc,
         L: Object.assign({ lC: { x: 520, y: 100, t: m.bl ? (T.fer3 ? (k === "eau" ? "FeO(OH)" : "Fe³⁺") : k === "eau" ? "Al(OH)₃" : "Al³⁺") : `${m.A.at.Ac_11.el}²⁺`, m: 1 } }, m.kp ? { lK: { x: 560, y: 263, t: m.ion, m: 1 } } : {}),
       }));
@@ -255,7 +255,7 @@
       R0(Ba, "At2_11");
       e.push(suite(e[e.length - 1], {
         titre: m.bl ? "Puis l'aluminium des tétraèdres" : "Puis l'aluminium",
-        texte: k === "eau" ? "Privé de ses voisins, le tétraèdre d'aluminium du bord lâche à son tour ; son aluminium se redépose lui aussi." : "Privé de ses voisins, le tétraèdre d'aluminium du bord lâche à son tour : Al³⁺ part dans l'eau acide.",
+        texte: k === "eau" ? "Privé de ses voisins, le tétraèdre d'aluminium du bord lâche à son tour ; son aluminium se redépose lui aussi." : "Dépourvu de ses voisins, le tétraèdre d'aluminium de la bordure s'effondre à son tour : Al³⁺ gagne l'eau acide.",
         A: { At2_11: { x: 470, y: 250 } }, B: Ba,
         L: { lA: { x: 470, y: 280, t: k === "eau" ? "Al(OH)₃" : "Al³⁺", m: 1 } },
       }));
@@ -264,7 +264,7 @@
       R0(Bs, "At1_11");
       e.push(suite(e[e.length - 1], {
         titre: "La silice part en dernier",
-        texte: "Le silicium tient le plus longtemps : ses liaisons Si–O cèdent les dernières, et il part en silice dissoute, H₄SiO₄. C'est l'étape lente ; le bord recule ensuite d'un cran." + (k === "eau" && T.fin ? " " + T.fin : ""),
+        texte: "Le silicium résiste le plus : ses liaisons Si-O se défont en dernier, et il gagne la solution en silice dissoute, H₄SiO₄. Étape lente ; ensuite, la bordure régresse d'un cran." + (k === "eau" && T.fin ? " " + T.fin : ""),
         A: { At1_11: { x: 600, y: 120 } }, B: Bs, h: Object.assign({ cours: true }, H),
         L: { lS: { x: 600, y: 150, t: "H₄SiO₄", m: 1 } },
       }));
@@ -284,16 +284,16 @@
     const T = d.textes || {}, ki = T.inter || "K", nomK = ki === "Na" ? "sodium" : "potassium";
     return [
       { titre: "Si–O", sous: `liaison ${O.nature("Si–O")} (électrons en partie partagés)`,
-        schema: { type: "partage", a: "Si", b: "O", aria: "Silicium et oxygène partagent des électrons" },
-        li: [`Ionique ${O.fraction(O.ionicite("Si", "O"))} seulement (Pauling). Elle tient chaque feuillet : c'est la dernière à céder.`] },
+        schema: { type: "partage", a: "Si", b: "O", aria: "Silicium et oxygène mettent en commun une partie de leurs électrons" },
+        li: [`À caractère ionique ${O.fraction(O.ionicite("Si", "O"))} seulement (Pauling). Elle maintient chaque feuillet : c'est la dernière à se rompre.`] },
       T.blanc ? { titre: `${ki}–O`, sous: `liaison ${O.nature(`${ki}–O`)} (électron cédé)`,
-        schema: { type: "don", a: ki, la: ki + "⁺", ra: 19, fa: 12, b: "O", aria: `Le ${nomK} cède son électron au feuillet` },
-        li: [`Ionique ${O.fraction(O.ionicite(ki, "O"))} (Pauling). Le ${ki}⁺ partage sa seule charge entre ${T.voisinsK || "douze oxygènes"} : chaque liaison ne vaut qu'une petite fraction de liaison simple.`,
-          "Ce sont les liaisons les plus faibles du cristal, entre les feuillets : d'où le clivage parfait des micas."] }
+        schema: { type: "don", a: ki, la: ki + "⁺", ra: 19, fa: 12, b: "O", aria: `Le feuillet reçoit l'électron cédé par le ${nomK}` },
+        li: [`À caractère ionique ${O.fraction(O.ionicite(ki, "O"))} (Pauling). Le ${ki}⁺ répartit sa charge unique entre ${T.voisinsK || "douze oxygènes"} : chaque liaison ne représente qu'une faible fraction de liaison simple.`,
+          "Il s'agit des liaisons les plus fragiles du cristal, situées entre les feuillets : d'où le clivage parfait des micas."] }
       : { titre: "K–O", sous: `liaison ${O.nature("K–O")} (électron cédé)`,
-        schema: { type: "don", a: "K", la: "K⁺", ra: 19, fa: 12, b: "O", aria: "Le potassium cède son électron au feuillet" },
-        li: [`Ionique ${O.fraction(O.ionicite("K", "O"))} (Pauling). Le K⁺ partage sa charge entre douze oxygènes : chaque liaison ne vaut qu'un douzième de liaison simple.`,
-          "Ce sont ces liaisons, entre les feuillets, que l'eau défait d'abord : d'où le clivage parfait des micas, et la vermiculite."] },
+        schema: { type: "don", a: "K", la: "K⁺", ra: 19, fa: 12, b: "O", aria: "Le feuillet reçoit l'électron cédé par le potassium" },
+        li: [`Liaison à dominante ionique ${O.fraction(O.ionicite("K", "O"))} (Pauling) ; la charge du K⁺ se dilue sur douze oxygènes, et chaque lien n'atteint qu'un douzième de liaison simple.`,
+          "Ce sont ces liaisons inter-feuillets que l'eau défait en premier : d'où le clivage parfait des micas, et la naissance de la vermiculite."] },
     ];
   }
 
@@ -302,12 +302,12 @@
     const E = d.energie || {}, C = (d.textes && d.textes.octa) || "Mg", fr1 = (x) => String(Math.round(x * 10) / 10).replace(".", ",");
     const duo = [
       { titre: "Si–O", sous: `liaison ${O.nature("Si–O")} (électrons en partie partagés)`,
-        schema: { type: "partage", a: "Si", b: "O", aria: "Silicium et oxygène partagent des électrons" },
-        li: [`Ionique ${O.fraction(O.ionicite("Si", "O"))} seulement (Pauling). Elle tient chaque feuillet : c'est la dernière à céder.`,
-          (d.textes && d.textes.entre) ? d.textes.entre : (d.textes && d.textes.un1) ? "Entre deux feuillets, des liaisons hydrogène : les OH de l'un s'accrochent aux oxygènes de l'autre. Bien plus faibles que les liaisons du feuillet, elles cèdent au clivage." : `Entre deux feuillets, aucune liaison : de faibles forces de van der Waals seulement. D'où le clivage parfait et la faible dureté ${d.la.startsWith("le ") ? "du " + d.la.slice(3) : "de " + d.la}.`] },
+        schema: { type: "partage", a: "Si", b: "O", aria: "Silicium et oxygène mettent en commun une partie de leurs électrons" },
+        li: [`À caractère ionique ${O.fraction(O.ionicite("Si", "O"))} seulement (Pauling). Elle maintient chaque feuillet : c'est la dernière à se rompre.`,
+          (d.textes && d.textes.entre) ? d.textes.entre : (d.textes && d.textes.un1) ? "Entre deux feuillets, des liaisons hydrogène : les OH de l'un s'accrochent aux oxygènes de l'autre. Bien plus faibles que les liaisons du feuillet, elles cèdent au clivage." : `Aucune liaison chimique ne lie deux feuillets : seules de faibles forces de van der Waals les retiennent. D'où un clivage parfait et une faible dureté ${d.la.startsWith("le ") ? "du " + d.la.slice(3) : "de " + d.la}.`] },
       { titre: `${C}–O`, sous: `liaison ${O.nature(`${C}–O`)} (électrons ${/mi-/.test(O.nature(`${C}–O`)) ? "en partie " : ""}cédés)`,
         schema: { type: "don", a: C, la: C === "Al" || (d.textes && d.textes.fer3) ? `${C}³⁺` : `${C}²⁺`, ra: 18, fa: 12, b: "O", aria: `${majuscule(O.art(C, "le"))} cède ses électrons au feuillet` },
-        li: [`Ionique ${O.fraction(O.ionicite(C, "O"))} (Pauling). Sa charge se répartit sur six oxygènes et OH : chaque liaison ${C}–O ne vaut qu'${C === "Al" || (d.textes && d.textes.fer3) ? "une demi-liaison" : "un tiers de liaison"} simple. C'est elle qui lâche d'abord.`] },
+        li: [`Caractère ionique ${O.fraction(O.ionicite(C, "O"))} (Pauling). La charge se disperse sur six oxygènes et OH : chaque liaison ${C}-O n'équivaut qu'à ${C === "Al" || (d.textes && d.textes.fer3) ? "une demi-liaison" : "un tiers de liaison"} de liaison simple. Elle se rompt la première.`] },
     ];
     const EA = [["eaAcide", "Dans l'acide (H⁺)", "dans l'acide"], ["eaNeutre", "Vers la neutralité", "vers la neutralité"]].filter(([c]) => E[c] != null);
     let barres = null;
@@ -315,13 +315,13 @@
       const fac = (x) => fr1(Math.exp((x * 1000) / 8.314 * (1 / 298.15 - 1 / 308.15)));
       barres = { titre: "Énergie d'activation de la dissolution", unite: "kJ/mol", max: 100, graduations: [0, 25, 50, 75, 100], onglets: [{ k: "ea", nom: "Mesurée" }],
         rangs: EA.map(([c, nom]) => { const [a, b] = E[c]; return { nom, el: C, hachure: true, val: { ea: [a, b] }, txt: { ea: a === b ? `${fr1(a)} kJ/mol` : `${fr1(a)} à ${fr1(b)} kJ/mol` } }; }),
-        explic: { ea: `L'énergie qu'il faut fournir pour que la réaction se fasse : plus elle est grande, plus la chaleur accélère la dissolution. De 25 à 35 °C, la vitesse est multipliée par ${EA.map(([c, , dans]) => E[c][0] === E[c][1] ? `${fac(E[c][0])} ${dans}` : `${fac(E[c][0])} à ${fac(E[c][1])} ${dans}`).join(", ")}.` } };
+        explic: { ea: `Cette énergie à fournir pour déclencher la réaction, à un niveau élevé, fait que la chaleur accélère fortement la dissolution. Entre 25 et 35 °C, la vitesse est multipliée par ${EA.map(([c, , dans]) => E[c][0] === E[c][1] ? `${fac(E[c][0])} ${dans}` : `${fac(E[c][0])} à ${fac(E[c][1])} ${dans}`).join(", ")}.` } };
     }
     const rep = d.repere, ce = d.onglets.eau;
     let temps = null;
     if (rep && rep.eau && rep.eau.t && ce && ce.t) {
       const f = O.rond2(ce.t / rep.eau.t), nb = (x) => (x < 10 ? fr1(x) : O.sp(Math.round(x)));
-      temps = { titre: (d.textes && d.textes.tempsTitre) || "Ce que change la couche d'octaèdres", explic: `${(d.textes && d.textes.tempsExplic) || ""} ${majuscule(rep.la)} sert de repère. Barres : écart entre les valeurs publiées.`.trim(),
+      temps = { titre: (d.textes && d.textes.tempsTitre) || "Ce qu'apporte la couche d'octaèdres", explic: `Le repère est ${(d.textes && d.textes.tempsExplic) || ""} ${majuscule(rep.la)} ; les barres traduisent l'écart entre valeurs publiées.`.trim(),
         rangees: [{ titre: "Une unité de la surface quitte le cristal, dans l'eau du sol à 25 °C",
           fois: f >= 1 ? `environ ${nb(f)} fois plus lent pour ${d.la}` : `environ ${nb(O.rond2(1 / f))} fois plus rapide pour ${d.la}`,
           pts: [{ el: rep.cation, min: rep.eau.tmin, max: rep.eau.tmax, v: rep.eau.t, et: `${rep.nom} · ${rep.eau.court}`, ou: "haut" },
@@ -333,8 +333,8 @@
   Liaisons.scene("feuillets", {
     onglets: (d) => d.textes && (d.textes.sansK || d.textes.blanc || d.textes.chlorite) ? [{ k: "eau", nom: "Dans l'eau du sol" }, { k: "acide", nom: "Dans l'acide" }] : [{ k: "sol", nom: "Sol tempéré" }, { k: "acide", nom: "Dans l'acide" }],
     decor, etapes, energie,
-    legende: (d) => Object.assign({ "e:O": "oxygène du cristal", "i:Ca2+": "autre ion du sol (Ca²⁺)", "t:avant": "atome juste devant le plan du dessin (en contour)", "t:arriere": "couche juste derrière le plan du dessin (plus petite, pâle)" },
-      d.textes && d.textes.octa === "Al" && !d.textes.sansK ? { "l:Al–O:cov": "liaison Al–O des tétraèdres, mi-ionique, mi-covalente", "l:Al–O:ion": "liaison Al–O des octaèdres, mi-ionique, mi-covalente" } : {}),
-    aria: (d) => `Coupe du bord d'un paquet de feuillets de ${d.nom}, étape par étape`,
+    legende: (d) => Object.assign({ "e:O": "oxygène du cristal", "i:Ca2+": "autre ion du sol (Ca²⁺)", "t:avant": "atome placé en avant du plan de la figure, figuré en contour", "t:arriere": "couche située derrière le plan de la figure, plus petite et plus claire" },
+      d.textes && d.textes.octa === "Al" && !d.textes.sansK ? { "l:Al–O:cov": "liaison Al-O des tétraèdres, à mi-chemin entre ionique et covalente", "l:Al–O:ion": "liaison Al-O des octaèdres, à mi-chemin entre ionique et covalente" } : {}),
+    aria: (d) => `Vue en coupe de la bordure d'un paquet de feuillets de ${d.nom}, étape après étape`,
   });
 })();

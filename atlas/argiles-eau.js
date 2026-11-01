@@ -35,17 +35,17 @@
   const aire = (x) => 46.6 / x;
   const FAMILLES = {
     smectite: { sExt: 60, sSrc: "surface externe ≈ 60 m²/g (azote, montmorillonite : Macht et al. 2011)", cation: "Na", aire: aire(0.33) },
-    vermiculite: { sExt: 8, sSrc: "surface externe ≈ 8 m²/g (plaquette de 0,1 µm d'épaisseur : 2 ÷ (densité × épaisseur))", cation: "Mg", aire: aire(0.7) },
+    vermiculite: { sExt: 8, sSrc: "soit ≈ 8 m²/g pour une plaquette de 0,1 µm d'épaisseur, calculé par 2 ÷ (densité × épaisseur)", cation: "Mg", aire: aire(0.7) },
     illite: { sExt: 100, sSrc: "surface ≈ 100 m²/g, toute externe (fiche illite : 80 à 120 m²/g)", cation: "Ca", aire: aire(0.65), fraction: 0.1 },
     glauconite: { sExt: 80, sSrc: "surface ≈ 80 m²/g, toute externe (fiche glauconite : 60 à 100 m²/g)", cation: "Ca", aire: aire(0.8), fraction: 0.1 },
-    inter: { sExt: 100, sSrc: "surface externe ≈ 100 m²/g, comme une illite (ordre de grandeur)", cation: "Ca", aire: aire(0.65) },
+    inter: { sExt: 100, sSrc: "soit ≈ 100 m²/g, l'ordre de grandeur de l'illite", cation: "Ca", aire: aire(0.65) },
     kaolin: { sExt: 20, sSrc: "surface ≈ 20 m²/g, toute externe (fiche kaolinite : 10 à 30 m²/g)", cation: "Ca", aire: 900, faible: true },
     serp: { sExt: 25, sSrc: "surface ≈ 25 m²/g, toute externe (fiche serpentines : 10 à 40 m²/g)", cation: "Ca", aire: 900, faible: true },
-    talc: { sExt: 10, sSrc: "surface ≈ 10 m²/g (fiche talc : 3 à 20 m²/g), dont seuls les bords se mouillent (≈ 1/6 pour des plaquettes dix fois plus larges qu'épaisses)", bords: 1 / 6 },
-    mica: { sExt: 7, sSrc: "surface ≈ 7 m²/g (paillette de 0,1 µm d'épaisseur : 2 ÷ (densité × épaisseur))", cation: "Ca", aire: aire(1) },
+    talc: { sExt: 10, sSrc: "soit ≈ 10 m²/g (3 à 20 m²/g dans la fiche du talc) ; seuls les bords se mouillent, ce qui vaut ≈ 1/6 pour des plaquettes dix fois plus larges qu'épaisses", bords: 1 / 6 },
+    mica: { sExt: 7, sSrc: "soit ≈ 7 m²/g pour une paillette de 0,1 µm d'épaisseur, par 2 ÷ (densité × épaisseur)", cation: "Ca", aire: aire(1) },
     chlorite: { sExt: 50, sSrc: "surface ≈ 50 m²/g, toute externe (fiche chlorite : 20 à 80 m²/g)", cation: "Ca", aire: 900, faible: true },
-    halloysite: { sExt: 45, sSrc: "surface ≈ 45 m²/g (tube de 50 nm de diamètre et canal de 15 nm : 2 ÷ (densité × épaisseur de paroi))" },
-    chrysotile: { sExt: 90, sSrc: "surface ≈ 90 m²/g (fibrille de 25 nm, canal de 7,5 nm : 2 ÷ (densité × épaisseur de paroi))" },
+    halloysite: { sExt: 45, sSrc: "soit ≈ 45 m²/g pour un tube de 50 nm de diamètre et un canal de 15 nm, calculé par 2 ÷ (densité × épaisseur de paroi)" },
+    chrysotile: { sExt: 90, sSrc: "soit ≈ 90 m²/g pour une fibrille de 25 nm et un canal de 7,5 nm, calculé par 2 ÷ (densité × épaisseur de paroi)" },
     fibre: { sExt: 235, sSrc: "surface ≈ 235 m²/g (fiche sépiolite : 150 à 320 m²/g)" },
   };
   // eau des canaux des fibres (eau zéolitique, formules idéales) : sépiolite 8 H₂O pour Mg₈Si₁₂O₃₀(OH)₄(OH₂)₄, palygorskite
@@ -148,15 +148,15 @@
     if (!b) return "";
     const F = FAMILLES[b.fam];
     const r = [];
-    r.push("Compteur : eau retenue par l'argile elle-même, pas celle des pores entre les grains (c'est pourquoi il reste bien en dessous de la rétention d'eau d'un matériau argileux donnée plus bas).");
-    if (b.fam === "smectite" || b.fam === "vermiculite") r.push("Entre les feuillets : molécules du modèle ÷ masse du feuillet et de ses cations.");
-    if (b.fam === "illite" || b.fam === "glauconite") r.push("Entre les feuillets : si un espace sur dix a perdu son potassium et prend l'eau comme une smectite.");
-    if (b.fam === "inter") r.push("Entre les feuillets : un espace gonflant pour deux feuillets, molécules du modèle.");
+    r.push("Compteur : eau retenue par l'argile elle-même, et non celle des pores entre les grains (d'où un chiffre nettement inférieur à la rétention d'eau d'un matériau argileux donnée plus bas).");
+    if (b.fam === "smectite" || b.fam === "vermiculite") r.push("Entre les feuillets : on divise le nombre de molécules du modèle par la masse du feuillet et de ses cations.");
+    if (b.fam === "illite" || b.fam === "glauconite") r.push("Entre les feuillets : lorsqu'un espace sur dix a perdu son potassium, il absorbe l'eau comme une smectite.");
+    if (b.fam === "inter") r.push("Dans l'espace intercalaire, un seul espace gonflant par paire de feuillets, peuplé des molécules du modèle.");
     if (b.fam === "halloysite") r.push("Entre les feuillets : deux H₂O par Al₂Si₂O₅(OH)₄ dans l'halloysite à 10 Å (Joussein et al. 2005).");
-    if (b.fam === "fibre") r.push("Dans les canaux : eau zéolitique de la formule idéale (sépiolite 8 H₂O, palygorskite 4 H₂O), partie quand on la chauffe vers 100 °C.");
-    r.push(`En surface : ${F.sSrc} × nombre de couches de molécules × 0,28 mg/m² (une couche de molécules ≈ 2,8 Å d'épaisseur).`);
-    if (F.cation) r.push(`Couche diffuse (« Dans l'eau ») : l'eau à moins d'une longueur de Debye de la surface, ${(DEBYE[F.cation] / 10).toFixed(1).replace(".", ",")} nm pour ${F.cation === "Na" ? "Na⁺" : F.cation === "Mg" ? "Mg²⁺" : "Ca²⁺"} dans une eau douce à 10 mmol/L.`);
-    if (b.fam === "smectite") r.push("Une montmorillonite sodique en pâte retient bien plus quand ses feuillets se séparent tout à fait : sa limite de liquidité atteint ≈ 700 %, soit 7 g d'eau par g (Mitchell et Soga 2005).");
+    if (b.fam === "fibre") r.push("Eau zéolitique logée dans les canaux, telle que la formule idéale la donne (sépiolite 8 H₂O, palygorskite 4 H₂O) : elle part dès qu'on chauffe vers 100 °C.");
+    r.push(`En surface, la masse vaut ${F.sSrc} × couches de molécules × 0,28 mg/m² (une couche fait ≈ 2,8 Å d'épaisseur).`);
+    if (F.cation) r.push(`Couche diffuse (« Dans l'eau ») : eau comprise dans une longueur de Debye depuis la surface, soit ${(DEBYE[F.cation] / 10).toFixed(1).replace(".", ",")} nm pour ${F.cation === "Na" ? "Na⁺" : F.cation === "Mg" ? "Mg²⁺" : "Ca²⁺"} dans une eau douce à 10 mmol/L.`);
+    if (b.fam === "smectite") r.push("En pâte, une montmorillonite sodique retient d'autant plus d'eau que ses feuillets se séparent complètement : sa limite de liquidité atteint ≈ 700 %, soit 7 g d'eau par gramme (Mitchell et Soga 2005).");
     return r.join(" ");
   }
 

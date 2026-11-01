@@ -197,15 +197,15 @@
     const cub = repere([1, 1, 1, 90, 90, 90]), m3m = groupe("m-3m");
     const a = 28 * Math.PI / 180;
     const def = [
-      ["aucun", "Aucun", null, "pas de clivage : cassure quelconque ou courbe (conchoïdale)"],
-      ["basal", "Basal", [[0, 0, 1]], "une seule direction : il se débite en feuillets"],
-      ["prisme90", "Prisma­tique à 90°", [[1, 0, 0], [0, 1, 0]], "deux directions à peu près perpendiculaires : baguettes à section carrée ou rectangulaire"],
-      ["prisme", "Prisma­tique oblique", [[Math.cos(a), Math.sin(a), 0], [Math.cos(a), -Math.sin(a), 0]], "deux directions (ou plus) parallèles à un même axe, qui se coupent en biais : baguettes à section en losange ou en hexagone"],
-      ["cube", "Cubique", directions(cub, m3m, [1, 0, 0]), "trois directions à angle droit : cubes ou pavés"],
-      ["rhombo", "Rhombo­édrique", directions(repere([4.99, 4.99, 17.06, 90, 90, 120]), groupe("-3m"), [1, 0, 4]), "trois directions qui ne sont pas à angle droit : rhomboèdres ou parallélépipèdes"],
+      ["aucun", "Aucun", null, "absence de clivage : cassure irrégulière ou courbe (conchoïdale)"],
+      ["basal", "Basal", [[0, 0, 1]], "une seule direction de clivage : il se détache en feuillets"],
+      ["prisme90", "Prisma­tique à 90°", [[1, 0, 0], [0, 1, 0]], "deux directions presque perpendiculaires donnent des baguettes à section carrée ou rectangulaire"],
+      ["prisme", "Prisma­tique oblique", [[Math.cos(a), Math.sin(a), 0], [Math.cos(a), -Math.sin(a), 0]], "plusieurs directions parallèles à un même axe, se recoupant en biais : baguettes à section losangée ou hexagonale"],
+      ["cube", "Cubique", directions(cub, m3m, [1, 0, 0]), "trois directions orthogonales : cubes ou pavés"],
+      ["rhombo", "Rhombo­édrique", directions(repere([4.99, 4.99, 17.06, 90, 90, 120]), groupe("-3m"), [1, 0, 4]), "trois directions obliques entre elles : rhomboèdres ou parallélépipèdes"],
       ["octa", "Octa­édrique", directions(cub, m3m, [1, 1, 1]), "quatre directions : octaèdres"],
       ["dodeca", "Dodéca­édrique", directions(cub, m3m, [1, 1, 0]), "six directions : dodécaèdres"],
-      ["liquide", "Liquide", "flaque", "pas de cristal à la température ordinaire, donc pas de clivage : il coule et forme des gouttes"],
+      ["liquide", "Liquide", "flaque", "À température ordinaire, aucun cristal : donc aucun clivage, et le minéral s'écoule en gouttes."],
     ];
     TYPES = def.map(([k, nom, dirs, regle]) => ({ k, nom, regle, svg: dirs === "flaque" ? FLAQUE : dirs ? icone(solide({ fam: [{ dirs }] })) : ECLAT }));
     return TYPES;
@@ -228,7 +228,7 @@
     let F = null, S = null, on = null, note;
     if (/liquide/i.test((m.clivage || "") + " " + (m.systeme || ""))) {
       on = "liquide";
-      note = "<b>Liquide</b> : pas de cristal à la température ordinaire, donc pas de clivage ; il coule et se rassemble en gouttes et en flaques.";
+      note = "<b>Liquide</b> : à température ambiante, il n'est pas cristallisé, donc sans clivage ; il s'écoule et forme gouttes et flaques.";
     } else {
       try {
         F = familles(id);
@@ -237,16 +237,16 @@
       if (F) on = typeDe(F, S);
       else note = /non (disponible|mesur|observ)|^—|indetermin/i.test(m.clivage || "")
         ? "Clivage non décrit pour ce minéral (cristaux trop petits ou trop rares) : aucun type n'est allumé."
-        : "La fiche ne dit pas selon quels plans le minéral se clive (seulement « " + esc(m.clivage || "") + " ») : le type ne peut pas être déterminé, aucun n'est allumé.";
+        : "La fiche ne précise pas les plans de clivage (seulement « " + esc(m.clivage || "") + "  ») : impossible de fixer le type, aucun ne s'allume.";
     }
     const cases = T.map((t) => `<div class="id-sys cl-type${t.k === on ? " on" : ""}">${t.svg}<span>${t.nom}</span></div>`).join("");
     if (note) return { rangee: `<div class="id-systemes cl-types">${cases}</div>`, note };
-    if (!S) note = F.conch ? "<b>Aucun</b> : il casse en surfaces courbes, comme le verre (cassure conchoïdale)." : "<b>Aucun</b> clivage net : il casse sans direction privilégiée.";
+    if (!S) note = F.conch ? "<b>Aucun</b> : il casse en surfaces courbes, comme le verre (cassure conchoïdale)." : "<b>Aucun</b> clivage franc : la cassure n'obéit à aucune direction préférentielle.";
     else {
       const nb = S.N.length, ang = nb > 1 ? angles(S.N) : [];
       const t = T.find((x) => x.k === on);
       const fam = F.fam.map((f) => `${esc(f.nom)}${f.qualite ? " " + esc(f.qualite) : ""} (${f.dirs.length} direction${f.dirs.length > 1 ? "s" : ""})`).join(", ");
-      note = `${t ? `<b>${t.nom.replace(/­/g, "")}</b> : ${t.regle}. ` : "<b>Clivage composé</b>, qui ne correspond à aucun des types simples : "}${nb === 1 ? "Une direction" : nb + " directions"} de clivage${ang.length ? `, angles entre plans : ${ang.map(fmtA).join(" ; ")}` : ""} — ${fam}.${F.type === "texte" ? " Type déduit de la description du clivage." : ""}`;
+      note = `${t ? `<b>${t.nom.replace(/­/g, "")}</b> : ${t.regle}. ` : "<b>Clivage composé</b>, ne se rattachant à aucun type simple : "}${nb === 1 ? "Une direction" : nb + " directions"} de clivage${ang.length ? `, angles entre plans : ${ang.map(fmtA).join(" ; ")}` : ""} : ${fam}.${F.type === "texte" ? " Ce type se déduit de la description du clivage." : ""}`;
     }
     return { rangee: `<div class="id-systemes cl-types">${cases}</div>`, note };
   }

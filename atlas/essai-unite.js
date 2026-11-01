@@ -46,13 +46,13 @@
     const dCO = O.reduce((x, o) => x + o.p.d, 0) / O.length;
     return Object.assign({}, s, {
       atomes, particule: "unite", repetition: [1, 1, 1],
-      info: `Une unité MgCO₃ : 1 magnésium, 1 carbone, 3 oxygènes · C–O ${dCO.toFixed(2).replace(".", ",")} Å · Mg–O ${mg.p.d.toFixed(2).replace(".", ",")} Å`,
+      info: `MgCO₃ en maille : 1 magnésium, 1 carbone, 3 oxygènes · C-O ${dCO.toFixed(2).replace(".", ",")} Å · Mg-O ${mg.p.d.toFixed(2).replace(".", ",")} Å`,
     });
   }
-  const NOTE_UNITE = "Il n'existe pas de molécule de magnésite : le cristal est un empilement d'ions Mg²⁺ et de groupes carbonate CO₃²⁻. "
-        + "Le groupe CO₃ est un vrai petit ensemble soudé (le carbone au centre d'un triangle de trois oxygènes) ; le magnésium, lui, "
-        + "n'appartient à aucun groupe : dans le cristal, il touche six oxygènes de six carbonates différents, et chaque oxygène touche "
-        + "deux magnésiums. C'est ce réseau qui donne les « chaînes » des vues « 1 maille » et « 2 × 2 × 2 ». Positions de la structure publiée.";
+  const NOTE_UNITE = "La magnésite n'existe pas en molécules : le cristal se compose d'ions Mg²⁺ et de groupes carbonate CO₃²⁻."
+        + "Le groupe CO₃ forme un petit ensemble soudé (carbone au centre d'un triangle d'oxygènes) ; le magnésium, lui,"
+        + "n'appartient à aucun groupe : dans le cristal, il est entouré de six oxygènes provenant de six carbonates distincts, et chaque oxygène est lié à"
+        + "deux magnésiums. Ce réseau fournit les « chaînes » visibles en vues « 1 maille » et « 2 × 2 × 2 ». Positions de la structure publiée.";
 
   Structure3D.completer("magnesite", {
     unite: { nom: "1 unité", construire: (s) => unite(s), note: NOTE_UNITE },

@@ -211,54 +211,54 @@
   // calc : { x (charge par O₁₀(OH)₂), formule, M (g/mol) } → CEC calculée, à comparer à la fourchette mesurée de la fiche
   const TXT = {
     gonflante: {
-      legende: "Montmorillonite : une partie des Al³⁺ du feuillet octaédrique est remplacée par du Mg²⁺, qui a une charge de moins ; chaque remplacement laisse une charge négative (−). L'eau entre entre les feuillets : les cations y restent entourés d'eau et peuvent s'échanger, sur les faces internes comme sur les faces externes. Dans la beidellite et la saponite, les remplacements sont dans les feuillets tétraédriques (Al³⁺ à la place de Si⁴⁺).",
+      legende: "Montmorillonite : dans le feuillet octaédrique, une partie des Al³⁺ cède sa place à des Mg²⁺, qui portent une charge de moins ; chaque substitution laisse une charge négative (−). L'eau pénètre entre les feuillets, où les cations restent entourés de molécules et peuvent s'échanger, aussi bien sur les faces internes que sur les faces externes. Dans la beidellite et la saponite, les substitutions touchent les feuillets tétraédriques, où Al³⁺ prend la place de Si⁴⁺.",
       calc: { x: 0.33, formule: "Na₀,₃₃(Al₁,₆₇Mg₀,₃₃)Si₄O₁₀(OH)₂", M: 367, nom: "montmorillonite" },
-      verdict: "Toutes ces charges sont accessibles, faces internes comprises : le calcul tombe dans les mesures.",
+      verdict: "Ces charges sont toutes accessibles, y compris celles des faces internes : le calcul concorde avec les mesures.",
     },
     vermiculite: {
-      legende: "Vermiculite : les charges viennent des feuillets tétraédriques (Al³⁺ à la place de Si⁴⁺), plus nombreuses que dans une smectite. Entre les feuillets, des Mg²⁺ entourés de deux couches d'eau, échangeables.",
+      legende: "Vermiculite : ses charges proviennent des feuillets tétraédriques, où Al³⁺ remplace Si⁴⁺, et sont plus nombreuses que dans une smectite. Entre les feuillets se logent des Mg²⁺ enveloppés de deux couches d'eau, qui s'échangent.",
       calc: { x: 0.6, formule: "Mg₀,₃(Mg₃)(Si₃,₄Al₀,₆)O₁₀(OH)₂", M: 386, nom: "vermiculite peu chargée", x2: 0.9, M2: 389 },
-      verdict: "Le calcul dépasse les mesures : dans les sols acides, de l'aluminium s'installe entre les feuillets et bloque une partie des sites (Baize 2000).",
+      verdict: "Le calcul excède les mesures, car, dans les sols acides, l'aluminium se loge entre les feuillets et obstrue une partie des sites (Baize 2000).",
     },
     interstratifie: {
-      legende: "Interstratifié illite-smectite : des intervalles d'illite, où le K⁺ est fixé et ne s'échange pas, alternent avec des intervalles de smectite, hydratés et échangeables. La CEC dépend de la part des feuillets de smectite.",
-      verdict: "Entre la smectite (≈ 90) et l'illite (10 à 40) : d'où 30 à 90 selon la proportion des deux.",
+      legende: "Interstratifié illite-smectite : des intervalles d'illite, où le K⁺ fixé ne s'échange pas, se succèdent à des intervalles de smectite, hydratés et échangeables. La CEC dépend donc de la proportion de feuillets gonflants.",
+      verdict: "Située entre la smectite (≈ 90) et l'illite (10 à 40), elle affiche 30 à 90 selon la proportion des deux minéraux.",
     },
     kfixe: {
-      legende: "Illite : les feuillets sont très chargés (Al³⁺ à la place de Si⁴⁺), mais la charge entre deux feuillets est tenue par des K⁺ sans eau, logés dans les creux des feuillets : ils ne s'échangent pas dans le sol (Baize 2000). Seules les faces externes et les bordures échangent. Une vraie particule empile bien plus de feuillets que ce dessin : la part des faces externes y est encore plus faible.",
+      legende: "Illite : les feuillets sont fortement chargés (Al³⁺ remplaçant Si⁴⁺), mais cette charge est compensée par des K⁺ dépourvus d'eau, logés dans les cavités des feuillets, qui ne s'échangent pas dans le sol (Baize 2000). Seules les faces externes et les bordures participent à l'échange. Une particule réelle empile bien davantage de feuillets que ce dessin, si bien que la part des faces externes y est encore plus réduite.",
       calc: { x: 0.75, formule: "K₀,₇₅(Al₁,₇₅Mg₀,₂₅)(Si₃,₅Al₀,₅)O₁₀(OH)₂", M: 388, nom: "illite" },
-      verdict: "On mesure 10 à 40 : presque toute la charge est tenue par le potassium fixé, qui ne compte pas.",
+      verdict: "La mesure donne 10 à 40 : presque toute la charge est retenue par le potassium fixé, qui ne compte pas dans l'échange.",
     },
     tO: {
-      legende: "Kaolinite : aucun remplacement dans les feuillets, qui sont neutres et tenus entre eux par des liaisons hydrogène (pointillés). Les seules charges sont sur les bordures, là où le feuillet est cassé : des –OH qui perdent leur H⁺. Leur nombre dépend du pH (Baize 2000).",
+      legende: "Kaolinite : les feuillets ne comportent aucune substitution et restent neutres ; des liaisons hydrogène (pointillés) les unissent. Les charges se concentrent sur les bords rompus, où des OH perdent leur H⁺, et leur nombre varie avec le pH (Baize 2000).",
       calc: { x: 0, formule: "Al₂Si₂O₅(OH)₄", M: 258, nom: "kaolinite", zero: true },
-      verdict: "Le calcul donne zéro : les 3 à 15 cmol⁺/kg mesurés viennent tous des bordures.",
+      verdict: "Le modèle théorique aboutit à zéro ; or les 3 à 15 cmol⁺/kg mesurés viennent entièrement des bordures.",
     },
     chlorite: {
-      legende: "Chlorite : les feuillets sont chargés, mais entre eux s'intercale un feuillet brucitique, chargé positivement (+), qui compense ces charges. Il ne reste que les bordures et les faces externes pour retenir des cations échangeables.",
-      verdict: "D'où une CEC faible, comme celle d'une illite.",
+      legende: "Chlorite : les feuillets sont chargés, mais un feuillet brucitique, porteur de charges positives (+), s'intercale entre eux et compense ces charges. Seules les bordures et les faces externes retiennent encore des cations échangeables.",
+      verdict: "Sa CEC est donc faible, à l'image de celle d'une illite.",
     },
     neutre: {
-      legende: "Talc et pyrophyllite : feuillets sans aucun remplacement, donc neutres, et rien entre eux. Seules quelques liaisons cassées en bordure retiennent des cations.",
+      legende: "Talc et pyrophyllite : leurs feuillets ne subissent aucune substitution, donc restent neutres, et rien ne les sépare. Quelques liaisons rompues en bordure retiennent seules des cations.",
       calc: { x: 0, formule: "Mg₃Si₄O₁₀(OH)₂", M: 379, nom: "talc", zero: true },
-      verdict: "Le calcul donne zéro : les 1 à 5 cmol⁺/kg mesurés viennent des bordures.",
+      verdict: "Le modèle théorique aboutit à zéro ; or les 1 à 5 cmol⁺/kg mesurés viennent des bordures.",
     },
     rubans: {
-      legende: "Sépiolite et palygorskite : des rubans de feuillets 2:1, assemblés en damier, laissent des canaux remplis d'eau. Peu de remplacements dans les rubans : les charges sont surtout à la surface des fibres et au bord des rubans.",
+      legende: "Chez la sépiolite et la palygorskite, des rubans 2:1 disposés en damier délimitent des canaux pleins d'eau. Peu de substitutions affectent les rubans : les charges se trouvent avant tout en surface des fibres et sur leurs bords.",
       verdict: "",
     },
     spheres: {
-      legende: "Allophane : pas de feuillets empilés mais des sphérules creuses de 3,5 à 5 nm, à paroi d'aluminium (dehors) et de silicium (dedans). Les charges sont des –OH de surface : ils perdent leur H⁺ quand le pH monte (−) et en gagnent un quand il baisse (+). Les sites positifs retiennent des anions, comme le phosphate.",
-      verdict: "Mesurée au pH du sol, elle est modeste ; mesurée à pH 7 ou plus, elle monte à 100 à 200 cmol⁺/kg (Baize 2000).",
+      legende: "Allophane : aucun empilement de feuillets, mais de petites sphères creuses de 3,5 à 5 nm, dont la paroi est faite d'aluminium à l'extérieur et de silicium à l'intérieur. Des groupes OH en surface portent les charges : ils libèrent leur H⁺ lorsque le pH s'élève (−), et en fixent un lorsqu'il baisse (+). Les sites positifs captent des anions, tel le phosphate.",
+      verdict: "Au pH du sol, sa valeur reste modeste ; mesurée à pH 7 ou au-delà, elle atteint 100 à 200 cmol⁺/kg (Baize 2000).",
     },
   };
 
   // ─────────── garniture d'un vrai sol : planosol de Champagne humide, profil de Héry (Baize 2000, p. 116) ───────────
   // milliéquivalents pour 100 g = cmol⁺/kg ; le « reste » = T − (Ca + Mg + K + Na + Al) : surtout des H⁺, non dosés
   const GARNITURES = [
-    { id: "A1", nom: "En surface, sous l'herbe (A₁, 0–5 cm)", T: 18.1, Ca: 3.90, Mg: 1.47, K: 0.47, Na: 0.04, Al: 1.6 },
-    { id: "B", nom: "Horizon acide et argileux ((B), 60–75 cm)", T: 23.0, Ca: 4.80, Mg: 1.99, K: 0.76, Na: 0.29, Al: 15.0 },
-    { id: "C2", nom: "En profondeur (C₂, 180–190 cm)", T: 13.2, Ca: 7.50, Mg: 1.93, K: 0.36, Na: 0.39, Al: 1.7 },
+    { id: "A1", nom: "En surface, sous l'herbe (A₁, 0 à 5 cm)", T: 18.1, Ca: 3.90, Mg: 1.47, K: 0.47, Na: 0.04, Al: 1.6 },
+    { id: "B", nom: "Horizon acide et argileux ((B), 60 à 75 cm)", T: 23.0, Ca: 4.80, Mg: 1.99, K: 0.76, Na: 0.29, Al: 15.0 },
+    { id: "C2", nom: "En profondeur (C₂, 180 à 190 cm)", T: 13.2, Ca: 7.50, Mg: 1.93, K: 0.36, Na: 0.39, Al: 1.7 },
   ];
   const partsDe = (g) => {
     const p = {}; ["Ca", "Mg", "K", "Na", "Al"].forEach((k) => { p[k] = g[k] / g.T; });
@@ -287,29 +287,29 @@
     // repliées des fiches roches (.replie-travaux)
     return `<details class="card cec-carte replie-travaux" data-cec='${JSON.stringify(d)}'>
       <summary><h2>Ce que retient une argile : la CEC</h2></summary>
-      <p class="sub">Une argile porte des charges négatives. Elles retiennent des cations de l'eau du sol (Ca²⁺, Mg²⁺, K⁺, Na⁺, H⁺, Al³⁺) sans les fixer : un autre cation peut prendre leur place, à charges égales. La capacité d'échange cationique (CEC) compte ces charges : environ ${lisible} centimoles de charges par kilogramme de ${esc(nom.toLowerCase())}.</p>
-      <h3>Au microscope</h3>
+      <p class="sub">Ces charges négatives attirent des cations de l'eau du sol (Ca²⁺, Mg²⁺, K⁺, Na⁺, H⁺, Al³⁺) sans les immobiliser : à charge égale, un autre cation peut les occuper. La CEC chiffre ces charges, soit environ ${lisible} centimoles par kilogramme de ${esc(nom.toLowerCase())}.</p>
+      <h3>À l'échelle microscopique</h3>
       <div class="cec-scene"><svg viewBox="0 0 ${W} ${m.H}" role="img" aria-label="Schéma : cations échangeables autour des feuillets de ${esc(nom)}">${sceneSVG(m)}</svg></div>
       <div class="cec-info"><p class="cec-etape" aria-live="polite"></p><button type="button" class="fa-lecture cec-lecture"></button></div>
       <div class="struct-legend cec-legende">${legendeIons}</div>
-      <p class="pl-note">${insec(T.legende)} Échelle : la barre fait 1 nanomètre (un millionième de millimètre).</p>
+      <p class="pl-note">${insec(T.legende)} Barre d'échelle : 1 nanomètre, soit un millionième de millimètre.</p>
 
-      <h3>Que veut dire « ${lisible} cmol⁺/kg » ?</h3>
+      <h3>Que signifie « ${lisible} cmol⁺/kg » ?</h3>
       ${sensHTML(d, m, T)}
 
-      <h3>Quels cations, et lesquels tiennent le mieux ?</h3>
+      <h3>Quels cations, et lesquels sont les mieux retenus ?</h3>
       ${cationsHTML()}
       ${autresHTML()}
 
       <h3>Floculer ou disperser</h3>
       ${floculationHTML(d)}
 
-      <h3>Dans un champ : combien de kilos par hectare ?</h3>
+      <h3>Sur un champ : combien de kilos par hectare ?</h3>
       ${hectareHTML(d)}
 
-      <details class="pl-pli cec-pli"><summary>Comment mesure-t-on la CEC ?</summary>
-        <p>On se sert justement de l'échange. L'échantillon est lavé par une solution qui ne contient qu'un seul cation, en grand excès : de l'ammonium (NH₄⁺) à pH 7 dans la méthode la plus courante en France (méthode Metson, norme NF X 31-130), ou de la cobaltihexammine, qui travaille au pH du sol. Ce cation chasse tous les autres et prend toutes les places. On mesure ensuite combien il en a pris : c'est la CEC. Les cations chassés, dosés dans la solution, donnent la garniture du sol.</p>
-        <p>Les résultats s'écrivaient en milliéquivalents pour 100 grammes (mé/100 g) ; 1 mé/100 g vaut exactement 1 cmol⁺/kg. Mesurée à pH 7, la CEC d'un sol acide est surestimée : les charges qui dépendent du pH apparaissent pendant la mesure (Baize 2000).</p>
+      <details class="pl-pli cec-pli"><summary>Méthodes de mesure de la CEC</summary>
+        <p>On mesure la CEC par échange : un lavage à l'aide d'une solution ne contenant qu'un seul cation, en large excès, déplace tous les cations présents. Le réactif le plus employé en France est l'ammonium (NH₄⁺) à pH 7 (méthode Metson, norme NF X 31‑130) ; la cobaltihexammine, elle, agit au pH du sol. On dose ensuite les cations expulsés, qui donnent la garniture du sol.</p>
+        <p>Autrefois exprimés en milliéquivalents pour 100 g (mé/100 g), les résultats valent exactement 1 cmol⁺/kg pour 1 mé/100 g. Mesurée à pH 7, la CEC d'un sol acide est trop élevée : les charges liées au pH se révèlent pendant la mesure (Baize 2000).</p>
       </details>
     </details>`;
   }
@@ -357,15 +357,15 @@
     m.fixes.forEach(([k, x, y, h]) => { s += ionHTML(k, x, y, { hydrate: h }); });
     s += ionHTML("K", m.k1[0], m.k1[1], { id: "k1", hydrate: m.hydrate }) + ionHTML("K", m.k2[0], m.k2[1], { id: "k2", hydrate: m.hydrate });
     s += ionHTML("Ca", tr.dep[0], tr.dep[1], { id: "ca", hydrate: true });
-    if (m.bordure) s += etiquette(X1 - 4, 30, "bordure cassée : les charges sont là", "end");
-    if (m.kFixes) s += etiquette(X0, m.H - 34, "K⁺ sans eau entre les feuillets : fixés, pas échangeables");
-    if (m.canaux) s += etiquette(X0, 188, "canaux remplis d'eau entre les rubans");
+    if (m.bordure) s += etiquette(X1 - 4, 30, "bordure rompue : c'est là que se trouvent les charges", "end");
+    if (m.kFixes) s += etiquette(X0, m.H - 34, "K⁺ déshydraté entre les feuillets : il est retenu et ne s'échange pas");
+    if (m.canaux) s += etiquette(X0, 188, "canaux pleins d'eau entre les rubans");
     // barre d'échelle : 1 nm = 50 px
     s += `<path d="M${X0} ${m.H - 14}h50" stroke="#3a2a24" stroke-width="1.6"/><path d="M${X0} ${m.H - 18}v8M${X0 + 50} ${m.H - 18}v8" stroke="#3a2a24" stroke-width="1"/>`;
     s += `<text x="${X0 + 58}" y="${m.H - 10}" class="fa-lab fa-petit cec-etq">1 nm</text>`;
     // bilan des charges échangeables
     const plus = m.fixes.reduce((t, [k]) => t + ION[k].z, 0) + 2;
-    s += `<text x="${SOL.x + SOL.w}" y="${m.H - 10}" text-anchor="end" class="fa-lab fa-petit cec-etq cec-bilan">sites d'échange dessinés : ${m.sites} charges − · cations échangeables : ${plus} charges +</text>`;
+    s += `<text x="${SOL.x + SOL.w}" y="${m.H - 10}" text-anchor="end" class="fa-lab fa-petit cec-etq cec-bilan">sites d'échange représentés : ${m.sites} charges − · cations échangeables : ${plus} charges +</text>`;
     return s;
   }
 
@@ -384,40 +384,40 @@
       const v = k.x / k.M * 1e5;
       calc = k.zero
         ? `<p><b>D'où vient ce nombre ?</b> Dans une argile, la CEC « de base » se calcule à partir des remplacements dans les feuillets : charge par formule ÷ masse molaire × 100 000. Pour la ${k.nom}, ${k.formule}, il n'y a aucun remplacement : la charge vaut 0. ${insec(T.verdict)}</p>`
-        : `<p><b>D'où vient ce nombre ?</b> On peut le calculer à partir des remplacements dans les feuillets : CEC = charge par formule ÷ masse molaire × 100 000. Pour une ${k.nom}, ${k.formule} : ${fr(k.x, 2)} charge pour ${fr(k.M, 0)} g/mol, soit ${fr(k.x, 2)} ÷ ${fr(k.M, 0)} × 100 000 ≈ <b>${fr(v, 0)} cmol⁺/kg</b>${k.x2 ? ` (≈ ${fr(k.x2 / k.M2 * 1e5, 0)} avec ${fr(k.x2, 1)} charge, le haut de la fourchette)` : ""}. Mesuré sur la fiche : ${fr(d.cmin, 0)} à ${fr(d.cmax, 0)}. ${insec(T.verdict)}</p>`;
+        : `<p><b>D'où vient ce nombre :</b> il se calcule à partir des substitutions dans les feuillets : CEC = charge par formule ÷ masse molaire × 100 000. Pour une ${k.nom}, ${k.formule} : ${fr(k.x, 2)} charge pour ${fr(k.M, 0)} g/mol, soit ${fr(k.x, 2)} ÷ ${fr(k.M, 0)} × 100 000 ≈ <b>${fr(v, 0)} cmol⁺/kg</b>${k.x2 ? ` (≈ ${fr(k.x2 / k.M2 * 1e5, 0)} avec ${fr(k.x2, 1)} charge, valeur haute de la fourchette)` : ""}. Valeur mesurée sur la fiche : ${fr(d.cmin, 0)} à ${fr(d.cmax, 0)}. ${insec(T.verdict)}</p>`;
     } else if (T.verdict) calc = `<p><b>D'où vient ce nombre ?</b> ${insec(T.verdict)}</p>`;
     return `<div class="tiles cec-tuiles">
-        <div class="tile"><div class="lab">Charges négatives dans 1 kg de ${nom}</div><div class="val">${insec(fr2(charges))} <small>milliards de milliards</small></div></div>
-        <div class="tile"><div class="lab">« cmol⁺ » = centimole de charges positives</div><div class="val">${fr(c / 100, 3)} <small>mole de charges par kg</small></div></div>
-        ${parNm2 ? `<div class="tile"><div class="lab">Sur ses faces, une charge tous les</div><div class="val">≈ ${fr(parNm2, 1)} <small>nm² (un carré d'≈ ${fr(Math.sqrt(parNm2), 1)} nm de côté)</small></div></div>` : ""}
+        <div class="tile"><div class="lab">Nombre de charges négatives dans 1 kg de ${nom}</div><div class="val">${insec(fr2(charges))} <small>milliards de milliards</small></div></div>
+        <div class="tile"><div class="lab">« cmol⁺ » : un centième de mole de charges positives</div><div class="val">${fr(c / 100, 3)} <small>mole de charges par kg</small></div></div>
+        ${parNm2 ? `<div class="tile"><div class="lab">Une charge sur ses faces tous les</div><div class="val">≈ ${fr(parNm2, 1)} <small>nm² (soit un carré d'environ ${fr(Math.sqrt(parNm2), 1)} nm de côté)</small></div></div>` : ""}
       </div>
-      <p class="nb-titre">Ce que 1 kg de ${nom} retiendrait si toutes ses places portaient le même cation</p>
+      <p class="nb-titre">Quantité retenue par 1 kg de ${nom} si chaque place accueillait le même cation</p>
       <div class="nb-litres cec-grammes">${grammes}</div>
-      <p class="pl-note">Une place, c'est une charge : un Ca²⁺ (deux charges) occupe deux places, un K⁺ une seule. C'est pour cela que la CEC compte des charges et non des ions. 1 cmol⁺ de calcium pèse 0,20 g, de potassium 0,39 g, d'aluminium 0,09 g (Baize 2000).</p>
+      <p class="pl-note">Chaque place équivaut à une charge : un Ca²⁺, à deux charges, occupe deux places, un K⁺ n'en occupe qu'une. D'où le fait que la CEC compte des charges, et non des ions. 1 cmol⁺ de calcium pèse 0,20 g, de potassium 0,39 g, d'aluminium 0,09 g (Baize 2000).</p>
       ${calc}`;
   }
 
   // ordre de rétention : à charge égale, l'ion le moins entouré d'eau s'approche le plus près de la surface
   function cationsHTML() {
     const L = [
-      ["Al", "3 charges : le plus retenu. Il vient de l'argile elle-même, attaquée quand le sol s'acidifie. Sous pH 5 (mesuré dans l'eau), l'aluminium échangeable devient toxique pour le blé, l'orge, le maïs ou la luzerne (Baize 2000)."],
-      ["Ca", "2 charges. Le plus abondant dans les sols non acides : il vient du calcaire, des plagioclases, des pyroxènes, et du chaulage des champs (Baize 2000)."],
-      ["Mg", "2 charges, mais plus entouré d'eau que Ca²⁺, donc un peu moins retenu. Il vient de la dolomie, de l'olivine, des pyroxènes, de la biotite ; il peut égaler le calcium sur les roches riches en fer et magnésium (serpentines, amphibolites) (Baize 2000)."],
-      ["K", "1 charge. Nutriment majeur des plantes : il vient des feldspaths potassiques, des micas et des engrais. Quelques % de la CEC seulement (2 à 3 % dans le profil de Héry), mais c'est par lui que l'on juge le potassium « assimilable »."],
-      ["Na", "1 charge, très entouré d'eau : le moins retenu. Il vient de l'albite, des embruns et du sel. Il ne domine que dans les sols salés (sols salsodiques)."],
-      ["H", "Cas à part : apporté par la pluie chargée de CO₂, par les racines et par l'humus, il se lie directement aux oxygènes de l'argile et de la matière organique, qui le retiennent fortement (Baize 2000)."],
+      ["Al", "L'aluminium, avec 3 charges, est le cation le plus solidement fixé. Il se libère de l'argile lorsque celle-ci s'acidifie. Dès qu'un sol descend sous pH 5 (mesuré dans l'eau), cet aluminium échangeable devient toxique pour le blé, l'orge, le maïs ou la luzerne (Baize 2000)."],
+      ["Ca", "2 charges ; il domine dans les sols non acides et provient du calcaire, des plagioclases, des pyroxènes et du chaulage des champs (Baize 2000)."],
+      ["Mg", "Porteur également de 2 charges, mais entouré de davantage d'eau que Ca²⁺ et donc un peu moins retenu : il provient de la dolomie, de l'olivine, des pyroxènes ou de la biotite, et peut rivaliser avec le calcium dans les roches riches en fer et en magnésium (serpentines, amphibolites) (Baize 2000)."],
+      ["K", "1 charge. Nutriment majeur des plantes, il provient des feldspaths potassiques, des micas et des engrais. Il ne représente que quelques pour cent de la CEC (2 à 3 % dans le profil de Héry), mais c'est lui qui permet de juger le potassium « assimilable »."],
+      ["Na", "C'est le cation le moins fermement retenu : 1 charge seulement, et une forte enveloppe d'eau. Il vient de l'albite, des embruns et du sel marin ; il ne prend le dessus que dans les sols salés (sols salsodiques)."],
+      ["H", "L'hydrogène se distingue : fourni par la pluie chargée de CO₂, par les racines et par l'humus, il s'accroche directement aux oxygènes de l'argile et de la matière organique, qui le maintiennent avec fermeté (Baize 2000)."],
     ];
-    return `<p class="cec-serie"><b>Al³⁺ &gt; Ca²⁺ &gt; Mg²⁺ &gt; K⁺ ≈ NH₄⁺ &gt; Na⁺</b> : plus un cation est chargé, plus il est retenu ; à charge égale, celui qui garde le moins d'eau autour de lui s'approche plus près de la surface et tient mieux.</p>
+    return `<p class="cec-serie"><b>Al³⁺ &gt; Ca²⁺ &gt; Mg²⁺ &gt; K⁺ ≈ NH₄⁺ &gt; Na⁺</b> : un cation est d'autant mieux retenu qu'il est chargé ; à charge égale, celui qui s'entoure de moins d'eau approche davantage la surface et s'y maintient mieux.</p>
       <ul class="cec-ions">${L.map(([k, t]) => `<li><i class="cec-pastille" style="background:${ION[k].c}"></i><b>${ION[k].lab}</b> ${insec(t)}</li>`).join("")}</ul>
-      <p class="pl-note">Les anions, comme le nitrate NO₃⁻, sont négatifs comme l'argile : ils ne sont pas retenus et partent avec l'eau qui s'infiltre. L'ordre ci-dessus ne dit pas qui gagne : un cation très concentré dans l'eau du sol finit par prendre les places d'un cation mieux retenu mais rare. C'est ce que fait le chaulage (Ca²⁺) dans un sol acide.</p>`;
+      <p class="pl-note">Les anions, tel le nitrate NO₃⁻, portent une charge négative comme l'argile : ils ne sont pas retenus et s'en vont avec l'eau d'infiltration. Cet ordre ne dit pas à lui seul qui l'emporte : un cation très concentré dans la solution du sol peut déloger un cation mieux retenu mais rare. C'est ce qu'obtient le chaulage (Ca²⁺) dans un sol acide.</p>`;
   }
 
   // les autres cations (07/10/2026, sa question : « y a-t-il d'autres ions que Ca²⁺ etc. ? »)
   function autresHTML() {
     const L = [
-      ["NH₄⁺", "Retenu comme K⁺, au même rang. Il vient des engrais azotés et de la matière organique qui se décompose, avant que des bactéries ne le changent en nitrate."],
-      ["Mn²⁺, Fe²⁺", "Dans un sol engorgé, privé d'oxygène, le manganèse et le fer réduits passent en solution et prennent place sur l'argile ; on les compte dans la CEC effective (Baize 2000)."],
-      ["Cu²⁺, Zn²⁺, Cd²⁺, Pb²⁺, Ni²⁺", "Des métaux en traces, retenus en très petites quantités, d'autant plus fortement que le pH monte : le sol retient le cadmium de plus en plus vite quand le pH augmente, et très fortement au-delà de 6,5 (Baize 2000)."],
+      ["NH₄⁺", "Il est retenu au même rang que K⁺. Il provient des engrais azotés et de la décomposition de la matière organique, jusqu'à ce que des bactéries le transforment en nitrate."],
+      ["Mn²⁺, Fe²⁺", "Dans un sol engorgé, dépourvu d'oxygène, le manganèse et le fer réduits passent en solution et se fixent sur l'argile ; ils entrent alors dans la CEC effective (Baize 2000)."],
+      ["Cu²⁺, Zn²⁺, Cd²⁺, Pb²⁺, Ni²⁺", "Des métaux à l'état de traces sont retenus en quantités infimes, d'autant plus fermement que le pH s'élève : au-delà de 6,5, la rétention du cadmium s'accentue fortement (Baize 2000)."],
       ["Cs⁺", "Le césium radioactif rejeté par Tchernobyl a été piégé dans les sols par les bords écartés des feuillets d'illite, où il se loge comme le potassium (Cremers et al. 1988)."],
     ];
     return `<p class="cec-serie" style="margin-top:12px"><b>D'autres cations aussi</b>, en quantités bien plus faibles :</p>
@@ -434,10 +434,10 @@
     const kao = d.type === "tO";
     const choix = (cle, opts) => `<div class="cec-floc-ligne" role="group">${opts.map(([v, t], i) =>
       `<button type="button" class="chip${i === 0 ? " on" : ""}" data-floc-${cle}="${v}">${t}</button>`).join("")}</div>`;
-    const kaoTexte = `<p>Oui, elle se disperse aussi. C'est même ce que fait chaque laboratoire avant une analyse granulométrique : la terre est dispersée à l'hexamétaphosphate de sodium, et la kaolinite s'y sépare en cristaux isolés, alors que les illites, les vermiculites et surtout les smectites restent en petits paquets (Baize 2000). Les céramistes font de même pour couler une barbotine de kaolin fluide avec peu d'eau.</p>
-        <p>Pour se disperser, une argile n'a pas besoin d'ouvrir ses feuillets : ce sont les particules entières qui se repoussent ou se collent. Les feuillets d'une kaolinite restent tenus entre eux par leurs liaisons hydrogène ; ce qui se sépare, ce sont ses cristaux.</p>
-        <p>Mais elle le fait mal. Ses faces ne portent presque pas de charges ; ses bords, environ 20 % de sa surface, en portent, et elles changent de signe avec le pH (Jmal Ayadi et al. 2011). Au-dessous de pH 6 à 6,5 environ, les bords deviennent positifs et se collent aux faces des voisines, en château de cartes (Tombácz et Szekeres 2006). Et son nuage d'ions est si faible qu'un rien de sel l'écrase : une suspension de kaolin flocule dès 0,6 millimole de NaCl par litre (0,04 g par litre), et dès 0,04 millimole de CaCl₂, quinze fois moins — souvent moins de sel qu'il n'y en a dans l'eau du robinet (Rommelfanger et al. 2022). Pour la tenir dispersée, il faut un dispersant (phosphates, polyacrylates) qui se fixe sur ses bords (Jmal Ayadi et al. 2011). Dans la nature, une kaolinite est presque toujours floculée.</p>`;
-    return `<p class="sub">Autour d'une particule, les cations ne restent pas tous collés à la surface : attirés par ses charges négatives mais agités par la chaleur, ils forment un nuage qui s'éclaircit en s'éloignant (la couche diffuse). Quand deux particules s'approchent, leurs nuages se repoussent ; tout près, une autre force, l'attraction de van der Waals, les colle l'une à l'autre. Nuage épais : elles restent à distance, elles sont <b>dispersées</b>. Nuage mince : elles se collent, elles <b>floculent</b>.</p>
+    const kaoTexte = `<p>Elle peut donc se disperser : c'est la méthode même des laboratoires avant toute analyse granulométrique, avec de l'hexamétaphosphate de sodium, qui isole les cristaux de kaolinite, tandis que les illites, les vermiculites et surtout les smectites restent en petits paquets (Baize 2000). Les céramistes emploient le même principe pour fluidifier une barbotine de kaolin avec peu d'eau.</p>
+        <p>Une argile n'a pas besoin d'écarter ses feuillets pour se disperser : ce sont les particules entières qui se repoussent ou se collent. Les feuillets d'une kaolinite restent unis par des liaisons hydrogène ; ce qui se sépare, ce sont ses cristaux.</p>
+        <p>Elle le fait toutefois mal. Ses faces portent presque aucune charge ; ses bords, environ 20 % de sa surface, en portent, et leur signe change avec le pH (Jmal Ayadi et al. 2011). Sous pH 6 à 6,5 environ, les bords deviennent positifs et viennent se coller sur les faces des voisines, en château de cartes (Tombácz et Szekeres 2006). Son nuage d'ions étant si ténu, un peu de sel suffit à la floculer : une suspension de kaolin flocule dès 0,6 millimole de NaCl par litre (0,04 g par litre), et dès 0,04 millimole de CaCl₂, quinze fois moins. C'est souvent moins de sel qu'il n'en contient, l'eau du robinet comprise (Rommelfanger et al. 2022). Pour la maintenir dispersée, il faut un dispersant (phosphates, polyacrylates) qui se fixe sur ses bords (Jmal Ayadi et al. 2011). Dans la nature, une kaolinite est presque toujours floculée.</p>`;
+    return `<p class="sub">Les cations ne demeurent pas tous collés à la surface d'une particule : attirés par ses charges négatives mais brassés par l'agitation thermique, ils constituent un nuage dont la densité décroît avec la distance (couche diffuse). Lorsque deux particules se rapprochent, leurs nuages se repoussent ; à très courte distance, l'attraction de van der Waals l'emporte et les réunit. Nuage épais, elles restent écartées et sont <b>dispersées</b> ; nuage mince, elles s'agglomèrent et <b>floculent</b>.</p>
       <div class="cec-floc-ctrl">
         <span>Cation qui garnit l'argile</span>${choix("c", [["Na", "Na⁺ (sodium)"], ["Ca", "Ca²⁺ (calcium)"]])}
         <span>Eau</span>${choix("e", [["douce", "eau de pluie, peu salée"], ["mer", "eau de mer"]])}
@@ -445,11 +445,11 @@
       </div>
       <div class="cec-scene cec-floc-scene"><svg viewBox="0 0 640 214" role="img" aria-label="Deux particules d'argile et leur nuage de cations ; à droite, un bécher"></svg></div>
       <p class="cec-floc-verdict" aria-live="polite"></p>
-      <p class="pl-note">Schéma : deux particules vues par la tranche, avec leur nuage de cations ; épaisseurs des nuages exagérées (une vraie plaquette est des centaines de fois plus longue que son nuage). Une charge 1+ donne un nuage épais, une charge 2+ un nuage mince (UBC SoilWeb) ; le sel l'amincit encore. Mêmes réglages pour toutes les argiles : seule la kaolinite a ses chiffres propres, ci-dessous.</p>
-      <p><b>Dans un champ.</b> Une argile floculée forme des agrégats entre lesquels l'eau et l'air circulent. Une argile dispersée bouche les pores : la surface se referme en croûte et l'eau ne s'infiltre plus. C'est le défaut des sols sodiques : un horizon est dit « sodique » quand le Na⁺ dépasse 15 % de sa CEC, et « à alcali » quand, en plus, sa structure se dégrade et que son pH dépasse 8,8 (Baize 2000). En France : polders, marais littoraux, estuaires, et loin de la mer la vallée de la Seille près de Nancy et les « selins » de Limagne près de Clermont-Ferrand, où remontent des eaux salées (Baize 2000). On les corrige au gypse : chaque charge de son Ca²⁺ chasse une charge de Na⁺, que l'on évacue ensuite par lessivage (Dellavalle et Walworth 2020).</p>
-      ${AVEC_EAU_ENTRE[d.type] ? `<p>Une smectite sodique va plus loin : l'eau entre entre ses feuillets jusqu'à les séparer un à un (plus de 40 Å d'écart) ; une smectite calcique s'arrête vers 19 Å et reste en paquets (Norrish 1954 ; voir l'état « Dans l'eau » de sa structure 3D).</p>` : ""}
-      ${kao ? `<h4 class="cec-kao-titre">Et une kaolinite, qui n'a de cations que sur ses bords ?</h4>${kaoTexte}`
-        : `<details class="pl-pli cec-pli"><summary>Et une kaolinite, qui n'a de cations que sur ses bords ?</summary>${kaoTexte}</details>`}`;
+      <p class="pl-note">Schéma : deux particules vues par la tranche, avec leur nuage de cations (épaisseurs exagérées : une plaquette réelle est des centaines de fois plus longue que son nuage). Une charge 1+ donne un nuage épais, une charge 2+ un nuage mince (UBC SoilWeb) ; le sel l'amincit davantage. Tous les réglages sont communs aux argiles, sauf pour la kaolinite, dont les chiffres figurent plus bas.</p>
+      <p><b>En plein champ.</b> Une argile floculée crée des agrégats qui laissent circuler l'eau et l'air ; dispersée, elle colmate les pores, la surface durcit en croûte et l'eau ne pénètre plus. Le problème touche les sols sodiques : on parle d'horizon « sodique » quand le Na⁺ dépasse 15 % de la CEC, et d'horizon « à alcali » quand sa structure se dégrade et que le pH passe au-delà de 8,8 (Baize 2000). Ces sols se rencontrent en France dans les polders, les marais littoraux, les estuaires, mais aussi, loin de la mer, dans la vallée de la Seille près de Nancy et dans les « selins » de Limagne près de Clermont-Ferrand, où des eaux salées remontent (Baize 2000). Le remède est le gypse : chaque charge du Ca²⁺ chasse une charge de Na⁺, que la pluie entraîne ensuite (Dellavalle et Walworth 2020).</p>
+      ${AVEC_EAU_ENTRE[d.type] ? `<p>Chez une smectite sodique, l'eau écarte les feuillets jusqu'à les isoler un à un (plus de 40 Å d'écart) ; une smectite calcique, elle, plafonne vers 19 Å et reste en paquets (Norrish 1954 ; voir l'état « Dans l'eau » de la structure 3D).</p>` : ""}
+      ${kao ? `<h4 class="cec-kao-titre">Qu'en est-il d'une kaolinite, qui ne porte de cations que sur ses bords ?</h4>${kaoTexte}`
+        : `<details class="pl-pli cec-pli"><summary>Qu'en est-il d'une kaolinite, qui ne porte de cations que sur ses bords ?</summary>${kaoTexte}</details>`}`;
   }
 
   // dessin : deux plaquettes (position, angle), leur nuage, du sel dans l'eau, un bécher
@@ -505,7 +505,7 @@
       s += `<g opacity="${op}" stroke="#3a2a24" stroke-width="1.3" fill="none"><path d="M150 97 V84 M144 90 L150 83 L156 90"/><path d="M150 107 V120 M144 114 L150 121 L156 114"/></g>`;
       s += `<text x="162" y="105" class="fa-lab fa-petit cec-etq" opacity="${op}">les nuages se repoussent</text>`;
     } else if (v.plusBord < 0.3) {
-      s += `<text x="300" y="${r1(v.a[1] - 6 - v.L - 6)}" class="fa-lab fa-petit cec-etq" opacity="${r1((0.6 - v.trouble) / 0.6 * 10) / 10}">nuages minces : les particules se collent</text>`;
+      s += `<text x="300" y="${r1(v.a[1] - 6 - v.L - 6)}" class="fa-lab fa-petit cec-etq" opacity="${r1((0.6 - v.trouble) / 0.6 * 10) / 10}">nuages minces : les particules s'agglomèrent</text>`;
     } else {
       s += `<text x="216" y="130" class="fa-lab fa-petit cec-etq" opacity="${r1(v.plusBord * 10) / 10}">bord + collé contre la face −</text>`;
     }
@@ -522,7 +522,7 @@
     }
     s += `<path d="M${bx - 4} ${by} V${by + bh} H${bx + bw} V${by}" fill="none" stroke="#5b4a3c" stroke-width="1.6"/>`;
     s += `<text x="${bx + bw / 2}" y="${by + bh + 16}" text-anchor="middle" class="fa-lab fa-petit cec-etq">${v.trouble > 0.5 ? "reste trouble" : "s'éclaircit, dépôt au fond"}</text>`;
-    s += `<text x="16" y="206" class="fa-lab fa-petit cec-etq">cations du nuage : ${ION[o.cation].lab}${v.sel > 0.5 ? " · ions du sel de mer en petit" : ""}</text>`;
+    s += `<text x="16" y="206" class="fa-lab fa-petit cec-etq">cations du nuage : ${ION[o.cation].lab}${v.sel > 0.5 ? " · ions de l'eau de mer, en petit nombre" : ""}</text>`;
     return s;
   }
   function brancherFloc(carteEl, d) {
@@ -532,10 +532,10 @@
     const st = { c: "Na", e: "douce", p: "neutre" };
     const etat = () => st.e === "mer" ? "flocMer" : st.p === "acide" ? "cartes" : st.c === "Ca" ? "flocCa" : "disperse";
     const TXT_FLOC = {
-      disperse: `<b>Dispersées.</b> Les Na⁺, une seule charge chacun et très entourés d'eau, s'écartent loin de la surface : le nuage est épais. Deux particules qui s'approchent sont repoussées avant de pouvoir se coller ; elles restent en suspension et l'eau reste trouble.${kao ? " Pour une kaolinite, seulement dans une eau presque pure : elle flocule dès 0,6 millimole de NaCl par litre (Rommelfanger et al. 2022)." : ""}`,
-      flocCa: `<b>Floculées.</b> Les Ca²⁺, deux charges chacun, restent près de la surface : le nuage est mince, les particules s'approchent assez pour que l'attraction de van der Waals les colle, et un même Ca²⁺ peut tenir deux faces à la fois. Elles forment des flocons qui tombent : l'eau s'éclaircit.${kao ? " Pour une kaolinite, 0,04 millimole de CaCl₂ par litre suffit, quinze fois moins qu'avec le sodium (Rommelfanger et al. 2022)." : ""}`,
-      flocMer: `<b>Floculées.</b> Dans l'eau de mer, les ions du sel sont si nombreux que le nuage n'a plus que quelques dixièmes de nanomètre, même avec Na⁺ : toutes les argiles floculent. C'est pourquoi les argiles apportées par les fleuves se déposent dans les estuaires, en vases.`,
-      cartes: `<b>Floculées en château de cartes.</b> En milieu acide, les bords de la particule, là où le feuillet est cassé, gagnent des H⁺ et deviennent positifs, alors que les faces restent négatives : le bord de l'une se colle à la face de l'autre${kao ? ", au-dessous de pH 6 à 6,5 environ pour une kaolinite (Tombácz et Szekeres 2006)" : ""}. Dans un sol acide, l'Al³⁺ qui garnit l'argile, avec ses trois charges, la flocule aussi.`,
+      disperse: `<b>Dispersées.</b> Les Na⁺, qui ne portent qu'une charge et s'entourent de beaucoup d'eau, s'éloignent de la surface : le nuage est épais. Deux particules qui s'approchent sont repoussées avant de pouvoir se coller ; elles restent en suspension et l'eau demeure trouble.${kao ? " Pour une kaolinite, seulement dans une eau presque pure : elle flocule dès 0,6 millimole de NaCl par litre (Rommelfanger et al. 2022)." : ""}`,
+      flocCa: `<b>Floculées.</b> Les Ca²⁺, qui portent deux charges, demeurent près de la surface : le nuage est mince et les particules se rapprochent assez pour que l'attraction de van der Waals les réunisse ; un même Ca²⁺ peut même retenir deux faces à la fois. Les flocons tombent et l'eau s'éclaircit.${kao ? " Pour une kaolinite, 0,04 millimole de CaCl₂ par litre suffit, quinze fois moins qu'avec le sodium (Rommelfanger et al. 2022)." : ""}`,
+      flocMer: `<b>Floculées.</b> Dans l'eau de mer, la quantité d'ions est telle que le nuage ne dépasse pas quelques dixièmes de nanomètre, même avec Na⁺ : toutes les argiles s'agglomèrent. Voilà pourquoi celles qu'apportent les fleuves se déposent en vases dans les estuaires.`,
+      cartes: `<b>Floculées en château de cartes.</b> En milieu acide, les bords, là où le feuillet est rompu, se chargent de H⁺ et deviennent positifs, alors que les faces demeurent négatives : le bord d'une particule s'accroche à la face d'une autre${kao ? ", seuil d'environ pH 6 à 6,5 pour une kaolinite (Tombácz et Szekeres 2006)" : ""}. Dans un sol acide, l'Al³⁺ de l'argile, porteur de trois charges, contribue lui aussi à cette floculation.`,
     };
     let cur = Object.assign({}, FLOC[etat()]), raf = 0;
     const o = () => ({ cation: st.c, tO: kao });
@@ -576,13 +576,13 @@
         <input type="range" min="${min}" max="${max}" step="${pas}" value="${val}" data-cec-${k} aria-label="${esc(lib)}">
         <div class="cec-regle">${bande ? `<i class="cec-bande" style="left:${pos(bande[0])};width:calc((100% - 16px) * ${((bande[1] - bande[0]) / (max - min)).toFixed(4)})" title="fourchette de la fiche"></i>` : ""}
           ${ticks.map((t) => `<span style="left:${pos(t)}">${fr(t, 0)}${unite}</span>`).join("")}</div>
-        ${bande ? `<p class="cec-c-note">en couleur : la fourchette de la fiche (${fr(bande[0], bande[0] < 10 ? 1 : 0)} à ${fr(bande[1], 0)} cmol⁺/kg)</p>` : ""}
+        ${bande ? `<p class="cec-c-note">en couleur : la plage indiquée par la fiche (${fr(bande[0], bande[0] < 10 ? 1 : 0)} à ${fr(bande[1], 0)} cmol⁺/kg)</p>` : ""}
       </div>`;
   }
   // kg par hectare : terre fine = 10 000 m² × épaisseur × densité apparente (1,35 t/m³)
   function hectareHTML(d) {
     const boutons = GARNITURES.map((g, i) => `<button type="button" class="chip${i === 2 ? " on" : ""}" data-garn="${g.id}">${g.nom}</button>`).join("");
-    return `<p class="sub">Un champ de 1 hectare (100 m × 100 m), labouré sur 30 cm : environ 4 000 tonnes de terre fine (densité apparente 1,35 t/m³). La garniture est celle d'un vrai sol, le planosol de Héry en Champagne humide (Baize 2000), appliquée à cette argile.</p>
+    return `<p class="sub">Sur 1 hectare (100 m × 100 m) labouré à 30 cm de profondeur, on dispose d'environ 4 000 tonnes de terre fine (densité apparente : 1,35 t/m³). La garniture est celle du planosol de Héry en Champagne humide (Baize 2000), transposée à cette argile.</p>
       <div class="cec-curseurs">
         ${curseur("CEC de l'argile", "v", 0, 200, 0.5, d.cec, [0, 50, 100, 150, 200], "", [d.cmin, d.cmax])}
         ${curseur("Argile dans la terre", "a", 0, 100, 1, 20, [0, 25, 50, 75, 100], " %")}
@@ -613,10 +613,10 @@
   };
   // chronologie (ms) : approche, échange, état échangé, échange inverse (engrais potassique), retour
   const ETAPES = [
-    [0, "Un ion Ca²⁺ de l'eau du sol s'approche de l'argile."],
-    [2600, "Il prend la place de deux K⁺ : une charge 2+ pour deux charges 1+. Les deux K⁺ partent dans l'eau du sol."],
-    [4900, "Les charges restent équilibrées : le Ca²⁺ n'est pas fixé, il est seulement retenu, et pourra être échangé à son tour."],
-    [7000, "Après un engrais potassique, l'eau du sol est riche en K⁺ : deux K⁺ reprennent la place du Ca²⁺, qui repart."],
+    [0, "Dans l'eau du sol, un Ca²⁺ arrive près de l'argile."],
+    [2600, "Il prend la place de deux K⁺ : deux charges 1+ remplacées par une seule 2+. Les deux K⁺ libérés repartent dans la solution."],
+    [4900, "L'équilibre des charges est préservé : le Ca²⁺ n'est pas fixé de façon définitive, il est seulement retenu et pourra à son tour être échangé."],
+    [7000, "Après un apport d'engrais potassique, la solution du sol s'enrichit en K⁺ : deux K⁺ reprennent la place du Ca²⁺, qui repart dans l'eau."],
   ];
   const CYCLE = 11400;
   function monterUne(carteEl) {
@@ -704,11 +704,11 @@
       const p = partsDe(garn);
       const L = ORDRE_IONS.map((k) => ({ k, mol: charges * p[k], kg: charges * p[k] * ION[k].g / 1000 }));
       const max = Math.max(...L.map((l) => l.kg)) || 1;
-      q("[data-cec-eq]").innerHTML = insec(`terre fine : 10 000 m² × ${fr(e, 2)} m × 1,35 t/m³ = ${fr(terre, 0)} t · argile : ${fr(a * 100, 0)} % = ${fr(argile, 0)} t · charges : ${fr(argile * 1000, 0)} kg × ${fr(cec / 100, 3)} mol/kg = <b>${fr2(charges / 1000)} milliers de moles de charges</b> par hectare`);
+      q("[data-cec-eq]").innerHTML = insec(`Pour un hectare, la terre fine pèse 10 000 m² × ${fr(e, 2)} m × 1,35 t/m³, soit ${fr(terre, 0)} t ; sa fraction argileuse (${fr(a * 100, 0)} %) représente ${fr(argile, 0)} t ; ces ${fr(argile * 1000, 0)} kg portent ${fr(cec / 100, 3)} mol/kg de charges, ce qui fait <b>${fr2(charges / 1000)} milliers de moles de charges</b> par hectare`);
       q("[data-cec-ha]").innerHTML = L.map(({ k, kg }) => `<div class="nb-litre"><span><i class="cec-pastille" style="background:${ION[k].c}"></i>${ION[k].lab}${k === "H" ? " (reste)" : ""} · ${fr(p[k] * 100, 0)} %</span>
           <i><b style="width:${(kg / max * 100).toFixed(1)}%;background:${ION[k].c}"></b></i><span>${insec(masse(kg))}</span></div>`).join("");
       const kK = L.find((l) => l.k === "K").kg;
-      q("[data-cec-note]").innerHTML = insec(`Potassium : ${masse(kK)} par hectare, soit ${masse(kK * 1.2046)} de K₂O, l'unité des analyses de terre (Baize 2000, tableau 10). Garniture « ${esc(garn.nom)} » : T = ${fr(garn.T, 1)} cmol⁺/kg dont Ca²⁺ ${fr(garn.Ca, 2)}, Mg²⁺ ${fr(garn.Mg, 2)}, K⁺ ${fr(garn.K, 2)}, Na⁺ ${fr(garn.Na, 2)}, Al³⁺ ${fr(garn.Al, 1)} ; le reste, non dosé, est surtout fait de H⁺. Le calcul ne compte que l'argile : l'humus en retient bien plus par kilogramme (150 à 300 cmol⁺/kg, Baize 2000).`);
+      q("[data-cec-note]").innerHTML = insec(`Le potassium représente ${masse(kK)} par hectare, soit ${masse(kK * 1.2046)} de K₂O, unité des analyses de terre (Baize 2000, tableau 10). Pour la garniture « ${esc(garn.nom)} » : T = ${fr(garn.T, 1)} cmol⁺/kg, dont Ca²⁺ ${fr(garn.Ca, 2)}, Mg²⁺ ${fr(garn.Mg, 2)}, K⁺ ${fr(garn.K, 2)}, Na⁺ ${fr(garn.Na, 2)} et Al³⁺ ${fr(garn.Al, 1)} ; la part non dosée est surtout constituée de H⁺. Le calcul ne porte que sur l'argile : l'humus retient bien davantage par kilogramme (150 à 300 cmol⁺/kg, Baize 2000).`);
     }
     carteEl.querySelectorAll("[data-garn]").forEach((b) => b.addEventListener("click", () => {
       garn = GARNITURES.find((x) => x.id === b.dataset.garn);
@@ -723,11 +723,11 @@
     (racine || document).querySelectorAll(".cec-carte").forEach(monterUne);
   }
   function sourcesLi() {
-    return `<li><b>Capacité d'échange (schéma de la CEC)</b> — Baize D. (2000), <i>Guide des analyses en pédologie</i>, 2ᵉ éd., INRA Éditions, chap. 11 à 13 : définition et unités (1 mé/100 g = 1 cmol⁺/kg), origine des charges (remplacements dans les feuillets, charges de bordure qui dépendent du pH, potassium non échangeable des micas), CEC des argiles d'après Dejou et al. (kaolinites 3–15, illites et chlorites 10–40, smectites 80–150, vermiculites 100–150), des matières organiques (150–300) et des allophanes (100–200), masse d'un milliéquivalent de chaque cation, garniture du planosol de Héry (p. 116), seuil de pH 5 pour l'aluminium.</li>
-      <li><b>Ordre de rétention des cations</b> — University of British Columbia, <i>LFS:SoilWeb</i>, « Interactions Among Soil Components : Adsorption of Ions » (série Ca²⁺ &gt; Mg²⁺ &gt; K⁺ ≈ NH₄⁺ &gt; Na⁺ ; rôle de la charge et de l'eau autour de l'ion).</li>
-      <li><b>Floculer ou disperser</b> — Baize D. (2000), ouvr. cité, chap. 7 (dispersion à l'hexamétaphosphate de sodium avant l'analyse granulométrique ; kaolinites en cristaux isolés, illites, vermiculites et smectites en microdomaines, d'après Tessier) et chap. 22 (sodicité = Na⁺ ÷ T ; horizon sodique au-delà de 15 %, « à alcali » si la structure se dégrade et que le pH dépasse 8,8 ; Seille et selins de Limagne) ; Tombácz E. et Szekeres M. (2006), <i>Applied Clay Science</i> 34, 105 (bords de la kaolinite positifs sous pH ≈ 6–6,5, agrégats bord contre face) ; Rommelfanger N. et al. (2022), « A simple criterion and experiments for onset of flocculation in kaolin clay suspensions », arXiv 2203.15545 (kaolin floculé dès 0,6 mmol/L de NaCl et 0,04 mmol/L de CaCl₂) ; Jmal Ayadi A., Pagnoux C. et Baklouti S. (2011), <i>Comptes Rendus Chimie</i> 14, 456 (bords ≈ 20 % de la surface de la kaolinite, charges qui dépendent du pH, dispersant fixé sur les bords) ; Dellavalle N. B. et Walworth J. (2020), « Determining the gypsum requirement for reclamation of sodic and sodium-impacted soils », <i>Crops &amp; Soils</i> 53 (une charge de Ca²⁺ remplace une charge de Na⁺) ; Norrish K. (1954), <i>Discussions of the Faraday Society</i> 18, 120 (gonflement des smectites sodiques et calciques).</li>
-      <li><b>Autres cations</b> — Baize D. (2000), chap. 11–12 (Mn²⁺ et Fe²⁺ dans la CEC effective ; rétention du cadmium selon le pH ; capacité d'échange anionique) ; Cremers A. et al. (1988), « Quantitative analysis of radiocaesium retention in soils », <i>Nature</i> 335, 247.</li>
-      <li><b>CEC calculée</b> — charge par O₁₀(OH)₂ ÷ masse molaire × 100 000 ; masses molaires recalculées pour les formules idéales indiquées (montmorillonite 367 g/mol, vermiculite 386–389, illite 388, kaolinite 258, talc 379). Kilos par hectare : 10 000 m² × épaisseur × 1,35 t/m³.</li>`;
+    return `<li><b>Calcul de la CEC</b> : charge par O₁₀(OH)₂ ÷ masse molaire × 100 000 ; masses molaires recalculées pour les formules idéales (montmorillonite 367 g/mol, vermiculite 386 à 389, illite 388, kaolinite 258, talc 379). Kilos par hectare : 10 000 m² × épaisseur × 1,35 t/m³.</li>
+      <li><b>Autres cations</b> : Baize D. (2000), chapitres 11 et 12 (Mn²⁺ et Fe²⁺ dans la CEC effective ; rétention du cadmium selon le pH ; CEC anionique) ; Cremers A. et al. (1988), « Quantitative analysis of radiocaesium retention in soils », <i>Nature</i> 335, 247.</li>
+      <li><b>Floculation et dispersion</b> : Baize D. (2000), ouvr. cité, chapitre 7 (dispersion à l'hexamétaphosphate de sodium avant l'analyse granulométrique ; kaolinites isolées, illites, vermiculites et smectites en microdomaines, selon Tessier) et chapitre 22 (sodicité = Na⁺ ÷ T ; horizon sodique au-delà de 15 %, « à alcali » si la structure se dégrade et que le pH dépasse 8,8 ; Seille, selins de Limagne) ; Tombácz E. et Szekeres M. (2006), <i>Applied Clay Science</i> 34, 105 (bords de la kaolinite positifs sous pH 6 à 6,5, agrégats bord contre face) ; Rommelfanger N. et al. (2022), « A simple criterion and experiments for onset of flocculation in kaolin clay suspensions », arXiv 2203.15545 (floculation à partir de 0,6 mmol/L de NaCl et 0,04 mmol/L de CaCl₂) ; Jmal Ayadi A., Pagnoux C. et Baklouti S. (2011), <i>Comptes Rendus Chimie</i> 14, 456 (bords ≈ 20 % de la surface de la kaolinite, charges fonction du pH, dispersant fixé sur les bords) ; Dellavalle N. B. et Walworth J. (2020), « Determining the gypsum requirement for reclamation of sodic and sodium-impacted soils », <i>Crops &amp; Soils</i> 53 (une charge de Ca²⁺ remplace une charge de Na⁺) ; Norrish K. (1954), <i>Discussions of the Faraday Society</i> 18, 120 (gonflement des smectites sodiques et calciques).</li>
+      <li><b>Hiérarchie de rétention</b> : University of British Columbia, <i>LFS:SoilWeb</i>, « Interactions Among Soil Components : Adsorption of Ions » ; la série Ca²⁺ &gt; Mg²⁺ &gt; K⁺ ≈ NH₄⁺ &gt; Na⁺ y est expliquée par la charge et par l'eau qui entoure chaque ion.</li>
+      <li><b>Schéma de la CEC</b> : sources principales, Baize D. (2000), <i>Guide des analyses en pédologie</i>, 2ᵉ éd., INRA Éditions, chapitres 11 à 13 ; on y trouve la définition, les unités (1 mé/100 g = 1 cmol⁺/kg), l'origine des charges (substitutions dans les feuillets, charges de bordure liées au pH, potassium des micas non échangeable), la CEC des argiles d'après Dejou et al. (kaolinites 3 à 15, illites et chlorites 10 à 40, smectites 80 à 150, vermiculites 100 à 150), celle de l'humus (150 à 300) et des allophanes (100 à 200), la masse d'un milliéquivalent de chaque cation, la garniture du planosol de Héry (p. 116) et le seuil de pH 5 pour l'aluminium.</li>`;
   }
   // contrôle : sur chaque schéma, charges des sites = charges des cations échangeables
   function controle() {

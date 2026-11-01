@@ -50,8 +50,8 @@
     return `<div class="as-ligne">${fois(n)}${bulle(e)}${txt(e.nom, "", note || "")}</div>`;
   }
   // ce qui accompagne le minéral : précision sur son origine
-  const NOTE_REACTIF = { H2CO3: "le CO₂ dissous dans l'eau de pluie et du sol", O2: "dissous dans l'eau", "Mg2+": "apporté par l'eau du sol",
-    H4SiO4: "silice dissoute de l'eau du sol", "Cl-": "eau salée", H2S: "traces dans l'air", "Ca2+": "dissous dans l'eau",
+  const NOTE_REACTIF = { H2CO3: "le CO₂ apporté en solution par la pluie et le sol", O2: "dissous dans l'eau", "Mg2+": "apporté par l'eau du sol",
+    H4SiO4: "silice dissoute présente dans l'eau du sol", "Cl-": "eau salée", H2S: "traces dans l'air", "Ca2+": "dissous dans l'eau",
     "H2PO4-": "dissous dans l'eau", "SO4_2-": "dissous dans l'eau" };
   const FLECHE = `<div class="as-fleche" aria-hidden="true"><svg viewBox="0 0 40 20"><path d="M2 10 H30" stroke="currentColor" stroke-width="2.5"/><path d="M28 3 L38 10 L28 17 Z" fill="currentColor"/></svg></div>`;
   const groupe = (cls, titre, corps) => `<div class="as-groupe as-${cls}"><div class="as-titre">${titre}</div>${corps}</div>`;
@@ -103,7 +103,7 @@
   }
 
   // carte à part, au-dessus de « Pour aller plus loin » (02/10/2026, sa demande) ; le panneau d'altération n'a plus qu'un bouton
-  const SOURCE = "Altération : réactions équilibrées par l'atlas (chaque élément et la charge conservés) ; conditions de climat d'après l'échelle de l'atlas (température moyenne annuelle, pluie rapportée à l'ETP) et les grands types d'altération de G. Pedro (1968), « Distribution des principaux types d'altération chimique à la surface du globe », Revue de géographie physique et de géologie dynamique, 10 (5), p. 457-470 : smectites quand l'eau s'écoule peu, kaolinite en climat chaud et humide, gibbsite en climat tropical très humide.";
+  const SOURCE = "Chaque réaction est équilibrée par l'atlas, élément par élément et pour la charge. Le climat est décrit selon l'échelle de l'atlas (température moyenne annuelle, pluie rapportée à l'évapotranspiration potentielle) et selon la classification des types d'altération chimique de G. Pedro (1968), « Distribution des principaux types d'altération chimique à la surface du globe », Revue de géographie physique et de géologie dynamique, 10 (5), p. 457 à 470. Les smectites l'emportent là où l'eau s'écoule peu, la kaolinite en climat chaud et humide, la gibbsite en climat tropical très humide.";
   const existe = (id) => !!(R()[id] && R()[id].voies && R()[id].voies.length);
 
   // « D'où vient-il ? » (02/10/2026, sa demande) : les réactions de l'atlas dont un produit est ce minéral, rangées par
@@ -153,19 +153,19 @@
     let corps = "";
     if (L.length) {
       const reste = L.slice(PREMIERS);
-      corps += `<div data-as-premiers><p class="as-cond">Les minéraux de l'atlas qui en donnent (le produit est encadré), du plus répandu dans les roches au plus rare.</p>
+      corps += `<div data-as-premiers><p class="as-cond">Ci-dessous, par fréquence décroissante dans les roches, les minéraux qui le produisent (le produit figure dans un cadre).</p>
       ${L.slice(0, PREMIERS).map((o, j) => origineHTML(o, j, id)).join(OU)}</div>
       ${reste.length ? `<div class="as-autres-ligne">
-        <button class="as-voir" data-as-autres aria-expanded="false">Voir les ${reste.length} autres façons de le former</button>
-        <input type="search" class="as-cherche" data-as-cherche placeholder="Rechercher un minéral, un milieu…" aria-label="Rechercher parmi les façons de le former">
+        <button class="as-voir" data-as-autres aria-expanded="false">Déplier les ${reste.length} autres voies de formation</button>
+        <input type="search" class="as-cherche" data-as-cherche placeholder="Chercher un minéral ou un milieu…" aria-label="Filtrer les voies de formation">
       </div><p class="as-trouve" data-as-trouve hidden></p><div data-as-suite></div>` : ""}`;
     }
     if (M.length) {
-      corps += `<h3 class="as-sous">${L.length ? "Il se forme aussi directement" : "Il ne naît pas de l'altération d'un autre minéral"}</h3>
-      <p class="as-cond">${L.length ? "Sans minéral de départ, dans l'un de ces milieux :" : "Il se forme directement (ou se concentre), dans l'un de ces milieux :"}</p>
+      corps += `<h3 class="as-sous">${L.length ? "Il se forme aussi directement" : "Aucun minéral parent n'est nécessaire à sa formation."}</h3>
+      <p class="as-cond">${L.length ? "En l'absence de minéral de départ, dans l'un de ces milieux :" : "Il naît directement d'une précipitation ou d'une concentration dans l'un de ces milieux :"}</p>
       ${M.map((sc, j) => milieuHTML(sc, j + (L.length ? Math.min(L.length, PREMIERS) : 0))).join(OU)}`;
     } else if (!L.length && m.contexte) {
-      corps += `<section class="as-voie as-teinte as-milieu as-o0"><h5 class="as-voie-titre">Où et comment il se forme</h5><p class="as-cond">${m.contexte}</p></section>`;
+      corps += `<section class="as-voie as-teinte as-milieu as-o0"><h5 class="as-voie-titre">Lieu et mode de formation</h5><p class="as-cond">${m.contexte}</p></section>`;
     }
     return corps ? `<div class="card min-alt-origine" data-as-origine="${id}"><h2>D'où vient-il ?</h2>${corps}</div>` : "";
   }
@@ -191,7 +191,7 @@
       const ouvert = btn.dataset.ouvert === "1";
       box.innerHTML = ouvert ? L.slice(PREMIERS).map((o, j) => origineHTML(o, j + PREMIERS, id)).join(OU_) : "";
       btn.setAttribute("aria-expanded", ouvert ? "true" : "false");
-      btn.textContent = ouvert ? "Masquer les autres façons de le former" : `Voir les ${L.length - PREMIERS} autres façons de le former`;
+      btn.textContent = ouvert ? "Masquer les autres façons de le former" : `Les ${L.length - PREMIERS} autres façons de le former`;
     }
   }
   document.addEventListener("click", (e) => {
@@ -228,8 +228,8 @@
   function ailleursHTML(id, apres) {
     const L = R()[id] ? devenirs(id) : [];
     if (!L.length) return "";
-    return `${apres ? `<h3 class="as-sous">Hors du sol, il peut aussi devenir</h3>` : ""}
-      <p class="as-cond">Dans d'autres milieux que le sol : en profondeur, dans l'eau d'un gîte ou d'une vase, avec un apport extérieur.</p>
+    return `${apres ? `<h3 class="as-sous">Hors du sol, il peut aussi se transformer</h3>` : ""}
+      <p class="as-cond">Hors des sols, il se forme en profondeur, dans l'eau d'un gisement ou d'une vase, grâce à un apport venu de l'extérieur.</p>
       ${L.map((d, j) => devenirHTML(id, d, j)).join(OU_)}`;
   }
 

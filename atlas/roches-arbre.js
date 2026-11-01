@@ -10,70 +10,47 @@
 const ROCHES_ARBRE = [
   {
     id: "magmatique", nom: "Roches magmatiques",
-    desc: "Roches issues du refroidissement d'un magma. Le lexique du BRGM les divise d'abord selon la profondeur de mise en place (plutoniques, volcaniques, hypovolcaniques), puis selon leur chimie, des roches acides riches en silice aux roches ultrabasiques.",
-    plus: `<p>La profondeur commande la texture. Un magma qui refroidit lentement, à plusieurs kilomètres sous la surface, laisse
-      aux cristaux le temps de grandir : la roche est <b>grenue</b> (granite, gabbro). Épanché en surface, il se fige en quelques
-      heures ou jours : cristaux microscopiques ou verre (basalte, obsidienne). Entre les deux, les filons et petits massifs
-      donnent des textures <b>microgrenues</b> ou <b>porphyriques</b>.</p>
-      <p>La chimie commande les minéraux. Les géologues classent la teneur en silice (SiO₂) en quatre domaines : <b>acide</b>
-      (plus de 63 % environ), <b>intermédiaire</b> (52–63 %), <b>basique</b> (45–52 %), <b>ultrabasique</b> (moins de 45 %).
-      Un second axe distingue les roches <b>sursaturées</b> (quartz libre), <b>saturées</b> et <b>sous-saturées</b>, où la silice
-      manque et où les feldspathoïdes (néphéline, leucite) remplacent le quartz.</p>
-      <p>Les deux axes se croisent : le granite et la rhyolite ont la même composition, l'un cristallisé en profondeur, l'autre en
-      surface ; de même pour le gabbro et le basalte. Les plutoniques sont nommées d'après le diagramme QAPF de Streckeisen
-      (proportions de quartz, feldspaths alcalins, plagioclases, feldspathoïdes), les volcaniques d'après le diagramme TAS
-      (silice contre alcalins), tous deux adoptés par l'Union internationale des sciences géologiques (IUGS).</p>`,
+    desc: "Le BRGM répartit d'abord les roches magmatiques selon la profondeur de mise en place (plutoniques, volcaniques, hypovolcaniques), puis selon leur chimie : depuis les termes acides, riches en silice, jusqu'aux termes ultrabasiques. Toutes proviennent de la solidification d'un magma.",
+    plus: `<p>C'est la profondeur qui fixe la texture. Lorsqu'un magma refroidit lentement, à plusieurs kilomètres sous la surface, les cristaux disposent d'assez de temps pour grossir : la roche est <b>grenue</b> (granite, gabbro). Une lave émise en surface, au contraire, se fige en quelques heures ou quelques jours, et il en résulte des cristaux microscopiques ou du verre (basalte, obsidienne). Les filons et les petits massifs, situés entre ces deux niveaux, présentent des textures <b>microgrenues</b> ou <b>porphyriques</b>.</p>
+      <p>Ce sont les minéraux qui dépendent de la chimie. Les géologues découpent la teneur en silice (SiO₂) en quatre domaines : <b>acide</b> (au-delà de 63 % environ), <b>intermédiaire</b> (de 52 à 63 %), <b>basique</b> (de 45 à 52 %) et <b>ultrabasique</b> (sous 45 %). Un second critère oppose les roches <b>sursaturées</b> (quartz libre), <b>saturées</b> et <b>sous-saturées</b>, pauvres en silice, où feldspathoïdes (néphéline, leucite) occupent la place du quartz.</p>
+      <p>Ces deux critères se combinent : granite et rhyolite partagent une même composition, le premier cristallisé en profondeur, la seconde en surface ; il en va de même pour gabbro et basalte. Les plutoniques sont nommées à l'aide du diagramme QAPF de Streckeisen (proportions de quartz, de feldspaths alcalins, de plagioclases et de feldspathoïdes), les volcaniques à l'aide du diagramme TAS (silice en fonction des alcalins). L'Union internationale des sciences géologiques (IUGS) a retenu ces deux diagrammes.</p>`,
     branches: [
       {
         code: "M.1", nom: "Roches plutoniques", brgm: "Roche plutonique",
-        note: "Cristallisées lentement en profondeur : les cristaux sont visibles à l'œil nu (texture grenue). Elles sont rangées par teneur en silice et par minéraux dominants.",
-        plus: `<p>Les massifs plutoniques affleurent là où l'érosion a enlevé plusieurs kilomètres de roches : Massif armoricain,
-          Massif central, Vosges, Corse, cœur des Pyrénées et des Alpes. Leur nom se lit dans le diagramme QAPF : un granite
-          contient 20 à 60 % de quartz parmi les minéraux clairs, une diorite presque pas, une syénite foïdique des
-          feldspathoïdes à la place du quartz. Les roches ultramafiques, faites à plus de 90 % de minéraux sombres, échappent à
-          ce diagramme et sont nommées d'après l'olivine, les pyroxènes et l'amphibole.</p>`,
+        note: "Cristallisées lentement en profondeur, elles présentent des cristaux visibles à l'œil nu (texture grenue). Elles sont classées selon leur teneur en silice et selon leurs minéraux dominants.",
+        plus: `<p>On observe les massifs plutoniques là où l'érosion a mis à nu plusieurs kilomètres de roches : Massif armoricain, Massif central, Vosges, Corse, cœur des Pyrénées et des Alpes. Le diagramme QAPF permet de les nommer : un granite comporte entre 20 et 60 % de quartz parmi ses minéraux clairs, une diorite en contient presque pas, et une syénite foïdique remplace le quartz par des feldspathoïdes. Les roches ultramafiques, composées à plus de 90 % de minéraux sombres, sortent de ce cadre et reçoivent un nom tiré de l'olivine, des pyroxènes ou de l'amphibole.</p>`,
         groupes: [
-          { nom: "Granitoïdes", brgm: "Granitoïde", note: "Roches acides riches en quartz et en feldspaths. Du granite à la trondhjémite, la part de plagioclase augmente aux dépens du feldspath potassique.",
+          { nom: "Granitoïdes", brgm: "Granitoïde", note: "Roches acides où quartz et feldspaths dominent. En passant du granite à la trondhjémite, le plagioclase gagne du terrain sur le feldspath potassique.",
             roches: ["granite", "granodiorite", "tonalite", "trondhjemite", "charnockite"] },
-          { nom: "Roches intermédiaires", brgm: "Roche magmatique intermédiaire", note: "Peu ou pas de quartz ; les feldspaths dominent. La syénite foïdique contient des feldspathoïdes à la place du quartz.",
+          { nom: "Roches intermédiaires", brgm: "Roche magmatique intermédiaire", note: "Quartz rare ou absent, les feldspaths étant dominants. La syénite foïdique renferme des feldspathoïdes en lieu et place du quartz.",
             roches: ["diorite", "monzodiorite", "monzonite", "syenite", "syenite_nephelinique"] },
-          { nom: "Gabbroïdes", brgm: "Gabbroïde", note: "Roches basiques à plagioclase calcique et pyroxène. L'essexite et la foïdolite sont les termes sous-saturés, à feldspathoïdes.",
+          { nom: "Gabbroïdes", brgm: "Gabbroïde", note: "Le plagioclase calcique et le pyroxène caractérisent ces roches basiques. Les termes sous-saturés renferment des feldspathoïdes : l'essexite à côté de ses feldspaths, la foïdolite presque sans feldspath.",
             roches: ["gabbro", "essexite", "foidolite"] },
-          { nom: "Roches ultramafiques", brgm: "Roche ultramafique", note: "Plus de 90 % de minéraux ferromagnésiens (olivine, pyroxènes, amphibole). La péridotite constitue l'essentiel du manteau terrestre.",
+          { nom: "Roches ultramafiques", brgm: "Roche ultramafique", note: "Les minéraux ferromagnésiens (olivine, pyroxènes, amphibole) représentent plus de 90 % de la roche. La péridotite forme l'essentiel du manteau terrestre.",
             roches: ["peridotite", "pyroxenite", "hornblendite"] },
         ],
       },
       {
         code: "M.2", nom: "Roches volcaniques", brgm: "Roche volcanique",
-        note: "Refroidies rapidement en surface : cristaux microscopiques ou verre. Le lexique distingue les laves, épanchées en coulées, et les roches pyroclastiques, projetées par les éruptions.",
-        plus: `<p>La France métropolitaine compte deux grands ensembles volcaniques récents : le Massif central (Cantal, Mont-Dore,
-          chaîne des Puys, Velay, Aubrac, Devès) et, plus ancien, l'Esterel et ses rhyolites permiennes. La viscosité d'une lave
-          croît avec sa teneur en silice : les basaltes coulent sur des kilomètres, les trachytes et phonolites forment des dômes
-          et des aiguilles (puy de Dôme, Gerbier de Jonc), les magmas acides chargés de gaz explosent en ponces et en cendres.
-          Les roches pyroclastiques ne sont pas nommées d'après leur chimie mais d'après la taille des fragments :
-          cendres (moins de 2 mm), lapilli (2 à 64 mm), blocs et bombes (au-delà).</p>`,
+        note: "Refroidies rapidement en surface, elles présentent des cristaux microscopiques ou du verre. Le lexique distingue les laves, épanchées en coulées, des roches pyroclastiques, projetées lors des éruptions.",
+        plus: `<p>Deux grands ensembles volcaniques récents marquent la France métropolitaine : le Massif central (Cantal, Mont-Dore, chaîne des Puys, Velay, Aubrac, Devès) et, plus ancien, l'Esterel avec ses rhyolites permiennes. Plus une lave est riche en silice, plus elle est visqueuse : les basaltes s'étalent sur des kilomètres, tandis que trachytes et phonolites bâtissent des dômes et des aiguilles (puy de Dôme, Gerbier de Jonc). Les magmas acides, chargés de gaz, explosent en ponces et en cendres. Les pyroclastes se désignent d'après la taille de leurs fragments, non d'après leur chimie : cendres (moins de 2 mm), lapilli (2 à 64 mm), blocs et bombes (au-delà).</p>`,
         groupes: [
-          { nom: "Laves acides", brgm: "Roche volcanique acide", note: "Laves riches en silice, visqueuses, souvent liées à des éruptions explosives. Le lexique range le trachyte avec les acides ; la classification de l'IUGS le place parmi les intermédiaires.",
+          { nom: "Laves acides", brgm: "Roche volcanique acide", note: "Laves riches en silice et visqueuses, souvent associées à des éruptions explosives. Le lexique classe le trachyte parmi les acides, alors que la classification de l'IUGS le rattache aux intermédiaires.",
             roches: ["rhyolite", "dacite", "trachyte", "obsidienne"] },
-          { nom: "Laves intermédiaires", brgm: "Roche volcanique intermédiaire", note: "52 à 63 % de silice environ. La phonolite en est le terme sous-saturé, à néphéline.",
+          { nom: "Laves intermédiaires", brgm: "Roche volcanique intermédiaire", note: "Environ 52 à 63 % de silice. La phonolite en constitue le terme sous-saturé, riche en néphéline.",
             roches: ["andesite", "trachyandesite", "latite", "phonolite"] },
-          { nom: "Laves basiques", brgm: "Roche volcanique basique", note: "45 à 52 % de silice environ ; laves fluides. Le basalte est la roche volcanique la plus répandue sur Terre : il forme les planchers océaniques.",
+          { nom: "Laves basiques", brgm: "Roche volcanique basique", note: "Environ 45 à 52 % de silice ; laves fluides. Le basalte est la roche volcanique la plus répandue à la surface de la Terre, puisqu'il constitue les planchers océaniques.",
             roches: ["basalte", "trachybasalte", "basanite"] },
-          { nom: "Laves ultrabasiques et exotiques", brgm: "Roche volcanique ultrabasique et exotique", note: "Laves pauvres en silice et riches en magnésium : très chaudes (komatiites archéennes) ou venues de grande profondeur (kimberlites, porteuses de diamants).",
+          { nom: "Laves ultrabasiques et exotiques", brgm: "Roche volcanique ultrabasique et exotique", note: "Magnésiennes et pauvres en silice, ces laves atteignent des températures très élevées (komatiites archéennes) ou proviennent de grandes profondeurs (kimberlites, qui transportent des diamants).",
             roches: ["picrite", "komatiite", "kimberlite"] },
-          { nom: "Roches pyroclastiques", brgm: "Roche pyroclastique consolidée", note: "Fragments projetés par les éruptions : cendres consolidées (tuf), ponces soudées à chaud (ignimbrite), blocs (brèche), scories restées meubles (pouzzolane).",
+          { nom: "Roches pyroclastiques et téphras", brgm: "Roche pyroclastique consolidée", note: "Les éruptions éjectent des fragments : cendres cimentées (tuf), ponces soudées à chaud (ignimbrite), gros blocs (brèche), scories restées friables (pouzzolane, qui relève des téphras pour le lexique).",
             roches: ["tuf_volcanique", "ignimbrite", "breche_volcanique", "pouzzolane"] },
         ],
       },
       {
         code: "M.3", nom: "Roches hypovolcaniques", brgm: "Roche hypovolcanique",
-        note: "Mises en place à faible profondeur, en filons ou en petits massifs. Leur texture est intermédiaire entre celle des plutoniques et celle des volcaniques, souvent porphyrique.",
-        plus: `<p>Un magma qui s'injecte dans une fracture refroidit plus vite qu'au cœur d'un pluton, mais plus lentement qu'en
-          surface. Il en résulte des roches à grain fin, souvent parsemées de gros cristaux formés plus tôt en profondeur
-          (texture porphyrique). Les noms reprennent ceux des plutoniques avec le préfixe « micro- » (microgranite,
-          microdiorite). Aplites et pegmatites sont des filons tardifs des granites, l'une à grain très fin, l'autre à cristaux
-          géants. Les dolérites forment des essaims de filons dans le Massif armoricain ; les lamprophyres, riches en mica ou
-          en amphibole, recoupent les massifs granitiques du Limousin et des Vosges.</p>`,
+        note: "Mises en place à faible profondeur, sous forme de filons ou de petits massifs. Leur texture se situe entre celle des plutoniques et celle des volcaniques, et elle est souvent porphyrique.",
+        plus: `<p>Un magma injecté dans une fracture perd sa chaleur plus vite qu'au cœur d'un pluton, mais plus lentement qu'à l'air libre. Elle donne des roches au grain fin, qui renferment fréquemment de gros cristaux formés plus tôt en profondeur (texture porphyrique). Leurs noms reprennent ceux des plutoniques, précédés de la mention « micro » (microgranite, microdiorite). Filons tardifs des granites, les aplites ont un grain très fin et les pegmatites des cristaux géants. Dans le Massif armoricain, les dolérites s'organisent en essaims de filons ; les lamprophyres, riches en mica ou en amphibole, traversent les massifs granitiques du Limousin et des Vosges.</p>`,
         groupes: [
           { nom: "Roches filoniennes", brgm: "Roche hypovolcanique", note: "",
             roches: ["microgranite", "microdiorite", "dolerite", "aplite", "pegmatite", "lamprophyre", "porphyre"] },
@@ -81,12 +58,8 @@ const ROCHES_ARBRE = [
       },
       {
         code: "M.4", nom: "Carbonatites", brgm: "Carbonatite",
-        note: "Roches magmatiques composées à plus de 50 % de carbonates. Rares, elles sont liées au magmatisme alcalin des rifts continentaux ; le lexique en fait une branche distincte.",
-        plus: `<p>Longtemps, l'idée d'un magma fait de carbonates a paru impossible. L'éruption de l'Ol Doinyo Lengai (Tanzanie),
-          seul volcan actif à émettre des natrocarbonatites, l'a confirmée : sa lave sort vers 500–600 °C, bien moins chaude
-          qu'un basalte (1 100–1 200 °C). Les carbonatites sont associées aux roches alcalines sous-saturées (foïdolites,
-          syénites foïdiques) et aux fénites de leur auréole. Elles concentrent les terres rares et le niobium, ce qui en fait
-          des gisements recherchés. La France métropolitaine n'en possède pas d'affleurement notable.</p>`,
+        note: "Roches magmatiques dont plus de 50 % est constitué de carbonates. Peu répandues, elles se rattachent au magmatisme alcalin des rifts continentaux, et le lexique les isole dans une branche distincte.",
+        plus: `<p>Pendant longtemps, un magma de carbonates a paru irréalisable. L'Ol Doinyo Lengai (Tanzanie), seul volcan actif à émettre des natrocarbonatites, en a apporté la preuve : sa lave sort vers 500 à 600 °C, nettement plus froide qu'un basalte (1 100 à 1 200 °C). Ces carbonatites accompagnent des roches alcalines sous-saturées (foïdolites, syénites foïdiques) et les fénites de leur auréole. Elles concentrent terres rares et niobium, ce qui en fait des gisements convoités. Aucun affleurement notable n'en existe en France métropolitaine.</p>`,
         groupes: [
           { nom: "Carbonatites", brgm: "Carbonatite", note: "", roches: ["carbonatite"] },
         ],
@@ -95,53 +68,34 @@ const ROCHES_ARBRE = [
   },
   {
     id: "sedimentaire", nom: "Roches sédimentaires",
-    desc: "Roches formées à la surface de la Terre par dépôt de particules, précipitation chimique ou accumulation d'organismes. Le lexique du BRGM les classe par mode de formation ; l'atlas y ajoute les formations superficielles, qui recouvrent le substratum.",
-    plus: `<p>Les roches sédimentaires couvrent environ les deux tiers de la surface de la France, dans les grands bassins
-      (Bassin parisien, Bassin aquitain, fossé rhénan, couloir rhodanien) et dans les chaînes alpine et pyrénéenne. Elles se
-      forment en deux temps : le <b>dépôt</b> d'un sédiment meuble, puis la <b>diagenèse</b> — compaction, circulation de
-      fluides, cimentation — qui le transforme en roche. Un sable devient grès, une boue calcaire devient calcaire.</p>
-      <p>Le mode de formation fonde la classification. Les roches <b>silicoclastiques</b> sont faites de débris d'autres roches,
-      triés par taille de grain. Les roches <b>carbonatées</b> proviennent surtout de coquilles et de boues marines. Les
-      roches <b>chimiques</b> précipitent d'une eau saturée (sel, gypse, silex). Les roches <b>organiques</b> accumulent de la
-      matière végétale ou planctonique (charbons, schistes bitumineux).</p>
-      <p>Les <b>roches d'altération</b> naissent en place de la décomposition d'autres roches sous climat tropical humide (≥ 22 °C, pluie > ETP)
-      (bauxite, cuirasses). Les <b>formations superficielles</b> — alluvions, moraines, lœss, altérites — ne sont pas des
-      roches au sens strict : ce sont des dépôts meubles récents, matériaux parentaux de la plupart des sols.</p>`,
+    desc: "À la surface du globe, ces roches naissent de trois voies : dépôt de particules, précipitation chimique ou accumulation d'organismes. Le BRGM les range d'après leur mode de formation. L'atlas leur associe les formations superficielles, qui coiffent le substratum.",
+    plus: `<p>Les roches sédimentaires occupent environ les deux tiers du territoire français, au sein des grands bassins (bassin parisien, bassin aquitain, fossé rhénan, couloir rhodanien) ainsi que dans les chaînes alpine et pyrénéenne. Leur genèse comporte deux étapes : le <b>dépôt</b> d'un sédiment meuble, puis la <b>diagenèse</b> (compaction, circulation de fluides, cimentation), qui le convertit en roche. Un sable devient ainsi grès, et une boue calcaire devient calcaire.</p>
+      <p>C'est le mode de formation qui structure la classification. Les roches <b>silicoclastiques</b> regroupent des débris d'autres roches, triés selon la taille des grains. Les roches <b>carbonatées</b> naissent surtout de coquilles et de boues marines. Les roches <b>chimiques</b> cristallisent à partir d'une eau saturée (sel, gypse, silex). Les roches <b>organiques</b>, enfin, accumulent des matières végétales ou planctoniques (charbons, schistes bitumineux).</p>
+      <p>Les <b>roches d'altération</b> se forment sur place, par décomposition d'autres roches sous un climat tropical humide (≥ 22 °C, pluie > ETP) : bauxites et cuirasses en sont les exemples. Les <b>formations superficielles</b> (alluvions, moraines, lœss, altérites) ne relèvent pas strictement des roches : ce sont des dépôts meubles récents, qui constituent le matériau parental de la plupart des sols.</p>`,
     branches: [
       {
         code: "S.1", nom: "Roches silicoclastiques", brgm: "Roche silicoclastique",
-        note: "Débris de roches et de minéraux silicatés (quartz, feldspaths, argiles) transportés puis déposés. Elles sont classées par taille de grain.",
-        plus: `<p>L'échelle granulométrique usuelle (Wentworth) sépare les rudites (grains de plus de 2 mm : conglomérats,
-          brèches), les arénites (de 2 mm à 63 µm : sables et grès) et les lutites (moins de 63 µm : silts et argiles). La
-          forme des grains renseigne sur le transport : arrondis dans un conglomérat (galets roulés par une rivière ou la mer),
-          anguleux dans une brèche (peu de transport). La composition renseigne sur la source : une arkose, riche en
-          feldspaths, provient de l'érosion rapide d'un granite voisin ; un grès quartzeux pur a subi un long tri. La molasse
-          et le flysch ne sont pas des roches mais des successions : ils enregistrent l'érosion d'une chaîne de montagnes,
-          en mer profonde pendant sa formation (flysch), puis dans les bassins de piémont (molasse).</p>`,
+        note: "Ces roches proviennent de débris de roches et de minéraux silicatés (quartz, feldspaths, argiles), transportés avant d'être déposés. Leur classement repose sur le calibre des grains.",
+        plus: `<p>L'échelle granulométrique habituelle (Wentworth) répartit les rudites (grains de plus de 2 mm : conglomérats et brèches), les arénites (de 2 mm à 63 µm : sables et grès) et les lutites (moins de 63 µm : silts et argiles). La forme des grains trahit le transport : arrondis dans un conglomérat, où l'eau d'une rivière ou de la mer les a roulés, ils restent anguleux dans une brèche, peu transportée. La composition, elle, révèle la source : une arkose, riche en feldspaths, dérive de l'érosion rapide d'un granite proche, alors qu'un grès quartzeux pur a subi un tri prolongé. La molasse et le flysch désignent davantage des successions que des roches : ils consignent l'érosion d'une chaîne, déposée en mer profonde (flysch) durant sa formation, puis dans les bassins de piémont (molasse).</p>`,
         groupes: [
-          { nom: "Roches grossières", brgm: "Conglomérat", note: "Grains de plus de 2 mm. La tillite, dépôt glaciaire consolidé, mêle blocs et particules fines sans tri.",
+          { nom: "Roches grossières", brgm: "Conglomérat", note: "Calibre supérieur à 2 mm. La tillite, issue d'un dépôt glaciaire cimenté, associe blocs et fines particules sans trace de classement.",
             roches: ["conglomerat", "breche_sedimentaire", "tillite"] },
-          { nom: "Grès et sables", brgm: "Grès", note: "Grains de 63 µm à 2 mm, meubles (sable) ou cimentés (grès). Arkose et grauwacke se distinguent par leur richesse en feldspaths ou en matrice fine.",
+          { nom: "Grès et sables", brgm: "Grès", note: "Calibre compris entre 63 µm et 2 mm : meubles, ces grains forment le sable ; cimentés, ils donnent le grès. Feldspaths abondants ou matrice fine distinguent respectivement arkose et grauwacke.",
             roches: ["gres", "arkose", "grauwacke", "sable"] },
-          { nom: "Roches fines", brgm: "Roche silicoclastique", note: "Grains de moins de 63 µm : silts (siltite) et argiles (argilite).",
+          { nom: "Roches fines", brgm: "Roche silicoclastique", note: "Grains inférieurs à 63 µm : silts (siltite) et argiles (argilite).",
             roches: ["siltite", "argile"] },
-          { nom: "Ensembles de bassin", brgm: null, note: "Successions de grès, marnes et conglomérats liées à l'érosion d'une chaîne de montagnes. Ce ne sont pas des lithologies du lexique, qui en décrit séparément chaque roche.",
+          { nom: "Ensembles de bassin", brgm: null, note: "Successions de grès, de marnes et de conglomérats issues de l'érosion d'une chaîne de montagnes. Il ne s'agit pas de lithologies du lexique, qui décrit séparément chacune de ces roches.",
             roches: ["molasse", "flysch"] },
         ],
       },
       {
         code: "S.2", nom: "Roches carbonatées", brgm: "Roche carbonatée",
-        note: "Roches riches en carbonates (calcite, dolomite), le plus souvent d'origine marine et biologique : coquilles, squelettes, boues carbonatées.",
-        plus: `<p>La plupart des calcaires se forment dans des mers chaudes et peu profondes, où les organismes fixent le carbonate
-          de calcium dissous. La craie du Bassin parisien est ainsi faite de coccolithes, plaques calcaires d'algues
-          planctoniques mesurant quelques millièmes de millimètre. La dolomie résulte le plus souvent du remplacement d'un
-          calcaire par une dolomite riche en magnésium, au cours de la diagenèse. La marne mêle argile et carbonate dans des
-          proportions voisines (environ 35 à 65 % de carbonate). Soluble dans l'eau chargée de CO₂, le calcaire donne les
-          paysages karstiques : causses, gorges, grottes et gouffres.</p>`,
+        note: "Carbonates (calcite, dolomite) en proportion élevée : ces roches tirent leur origine de la mer et du vivant, à partir de coquilles, de squelettes et de boues carbonatées.",
+        plus: `<p>La plupart des calcaires naissent dans des mers chaudes et peu profondes, où des organismes fixent le carbonate de calcium dissous. La craie du Bassin parisien s'est ainsi bâtie avec des coccolithes, plaques calcaires d'algues planctoniques de quelques millièmes de millimètre. La dolomie provient le plus souvent d'un calcaire transformé en dolomite, riche en magnésium, pendant la diagenèse. La marne associe argile et carbonate, dans des proportions voisines (environ 35 à 65 % de carbonate). Dissous par une eau chargée de CO₂, le calcaire façonne les paysages karstiques : causses, gorges, grottes et gouffres.</p>`,
         groupes: [
-          { nom: "Calcaires", brgm: "Calcaire", note: "Roches faites principalement de calcite. Craie, tuffeau et falun en sont des variétés d'origine et de texture différentes.",
+          { nom: "Calcaires", brgm: "Calcaire", note: "Calcite en majorité. Craie, tuffeau et falun constituent autant de variétés, distinctes par leur origine comme par leur texture.",
             roches: ["calcaire", "craie", "tuffeau", "falun"] },
-          { nom: "Roches dolomitiques", brgm: "Roche carbonatée", note: "Roches à dolomite. La cargneule est une brèche dolomitique cellulaire du Trias alpin.",
+          { nom: "Roches dolomitiques", brgm: "Roche carbonatée", note: "Roches riches en dolomite. La cargneule, brèche dolomitique à structure cellulaire, date du Trias alpin.",
             roches: ["dolomie", "cargneule"] },
           { nom: "Roches mixtes", brgm: "Roche carbonatée", note: "Argile et carbonate en proportions voisines.",
             roches: ["marne"] },
@@ -149,36 +103,25 @@ const ROCHES_ARBRE = [
       },
       {
         code: "S.3", nom: "Roches chimiques et biochimiques", brgm: "Roche chimique",
-        note: "Roches précipitées à partir d'une eau saturée, avec ou sans intervention d'organismes : silice, sels, phosphates, fer.",
-        plus: `<p>Une substance dissoute précipite quand sa concentration dépasse sa solubilité. Dans une lagune ou un lac salé qui
-          s'évapore, les sels se déposent dans l'ordre inverse de leur solubilité : carbonates, puis gypse (environ 2,4 g/L),
-          puis halite (environ 360 g/L), et en fin de séquence les sels potassiques. Les roches siliceuses sont souvent
-          biochimiques : squelettes de radiolaires (radiolarite), de diatomées (diatomite) ou d'éponges (gaize, spongolite) ;
-          le silex, lui, se forme par précipitation de silice dans la craie pendant la diagenèse. Les phosphorites et les
-          roches ferrifères (minette de Lorraine) ont été exploitées comme minerais. Le travertin précipite autour des sources
-          carbonatées, quand l'eau perd son CO₂.</p>`,
+        note: "Elles se déposent par précipitation depuis une eau saturée, avec ou sans l'aide d'organismes. Elles portent sur la silice, les sels, les phosphates et le fer.",
+        plus: `<p>Dès que sa concentration dépasse sa solubilité, une substance dissoute précipite. Lorsqu'une lagune ou un lac salé s'évapore, les sels se séparent selon l'ordre inverse de leur solubilité : d'abord les carbonates, puis le gypse (environ 2,4 g/L), ensuite la halite (environ 360 g/L) et, en dernier lieu, les sels potassiques. Les roches siliceuses relèvent fréquemment du biochimique : squelettes de radiolaires (radiolarite), de diatomées (diatomite) ou d'éponges (gaize, spongolite). Quant au silex, il résulte d'une précipitation de silice dans la craie, au cours de la diagenèse. Phosphorites et roches ferrifères (minette de Lorraine) ont été exploitées comme minerais. Le travertin, enfin, se dépose près des sources carbonatées, une fois l'eau dégazée de son CO₂.</p>`,
         groupes: [
-          { nom: "Roches siliceuses", brgm: "Roche siliceuse", note: "Silice amorphe ou microcristalline, d'origine biologique ou chimique.",
+          { nom: "Roches siliceuses", brgm: "Roche siliceuse", note: "Silice d'origine biologique ou chimique, amorphe ou à cristallisation très fine.",
             roches: ["silex", "radiolarite", "diatomite", "gaize"] },
-          { nom: "Évaporites", brgm: "Évaporite", note: "Sels déposés par évaporation d'eaux marines ou lacustres.",
+          { nom: "Évaporites", brgm: "Évaporite", note: "Sels issus de l'évaporation d'eaux marines ou lacustres.",
             roches: ["gypse", "anhydrite", "sel", "sylvinite"] },
-          { nom: "Roches phosphatées et ferrifères", brgm: "Roche phosphatée", note: "Roches enrichies en phosphate ou en fer, anciens minerais.",
+          { nom: "Roches phosphatées et ferrifères", brgm: "Roche phosphatée", note: "Roches enrichies en phosphate ou en fer, autrefois exploitées comme minerais.",
             roches: ["phosphorite", "roche_ferrifere"] },
-          { nom: "Concrétions", brgm: "Concrétion", note: "Dépôts carbonatés des sources et des cours d'eau.",
+          { nom: "Concrétions", brgm: "Concrétion", note: "Carbonates précipités aux sources et dans les cours d'eau.",
             roches: ["travertin"] },
         ],
       },
       {
         code: "S.4", nom: "Roches organiques", brgm: "Roche organique",
-        note: "Roches formées par l'accumulation de matière organique végétale ou planctonique, conservée à l'abri de l'oxygène.",
-        plus: `<p>Enfouie, la matière végétale perd progressivement son eau et ses composés volatils, et s'enrichit en carbone :
-          tourbe (environ 55 % de carbone), lignite (65–75 %), houille (75–90 %), anthracite (plus de 90 %). Cette
-          « houillification » dépend surtout de la température atteinte et de la durée d'enfouissement. Les bassins houillers
-          français (Nord–Pas-de-Calais, Lorraine, Saint-Étienne) datent du Carbonifère. Les schistes bitumineux, riches en
-          matière organique planctonique, sont les roches mères du pétrole : chauffés à 60–120 °C environ, ils produisent des
-          hydrocarbures qui migrent vers les roches réservoirs.</p>`,
+        note: "Roches issues de l'accumulation de matière organique végétale ou planctonique, préservée à l'abri de l'oxygène.",
+        plus: `<p>Enfouie, la matière végétale perd peu à peu son eau et ses composés volatils, en s'enrichissant en carbone : tourbe (environ 55 % de carbone), lignite (65 à 75 %), houille (75 à 90 %), anthracite (plus de 90 %). Ce processus, la « houillification », répond surtout à la température atteinte et à la durée de l'enfouissement. Les bassins houillers français (Nord-Pas-de-Calais, Lorraine, Saint-Étienne) remontent au Carbonifère. Les schistes bitumineux, riches en matière organique planctonique, forment les roches mères du pétrole : vers 60 à 120 °C, ils libèrent des hydrocarbures qui migrent jusqu'aux roches réservoirs.</p>`,
         groupes: [
-          { nom: "Charbons et tourbe", brgm: "Charbon", note: "De la tourbe à l'anthracite, maturation croissante de la matière végétale.",
+          { nom: "Charbons et tourbe", brgm: "Charbon", note: "Maturation croissante de la matière végétale, de la tourbe à l'anthracite.",
             roches: ["tourbe", "lignite", "houille", "anthracite"] },
           { nom: "Roches bitumineuses", brgm: "Roche organique", note: "Roches à matière organique planctonique, sources d'hydrocarbures.",
             roches: ["schiste_bitumineux"] },
@@ -186,34 +129,23 @@ const ROCHES_ARBRE = [
       },
       {
         code: "S.5", nom: "Roches d'altération", brgm: "Roche d'altération",
-        note: "Roches indurées nées en place de l'altération d'autres roches, par lessivage des éléments solubles ou par concentration d'éléments apportés par l'eau.",
-        plus: `<p>Sous climat tropical humide (≥ 22 °C, pluie > ETP), l'eau emporte la silice et les bases (calcium, magnésium, potassium, sodium) et laisse
-          sur place les éléments peu mobiles : aluminium (bauxite) et fer (cuirasse latéritique). Le terme « bauxite » vient
-          des Baux-de-Provence, où ce minerai d'aluminium a été décrit en 1821. La meulière du Bassin parisien est un calcaire
-          lacustre dont le carbonate a été dissous et remplacé par de la silice. À l'inverse, en climat semi-aride (pluie entre 20 et 50 % de l'ETP, moins de 760 mm/an), l'eau
-          remonte par capillarité et dépose du carbonate dans le sol : c'est la calcrète, qui peut former des dalles de
-          plusieurs mètres.</p>`,
+        note: "Roches indurées formées sur place par l'altération d'autres roches, soit par lessivage des éléments solubles, soit par concentration d'éléments apportés par l'eau.",
+        plus: `<p>En climat tropical humide (≥ 22 °C, pluie > ETP), silice et bases (calcium, magnésium, potassium, sodium) sont entraînées par l'eau, tandis que les éléments peu mobiles, aluminium (bauxite) et fer (cuirasse latéritique), restent sur place. Le nom « bauxite » rappelle les Baux-de-Provence, où ce minerai d'aluminium fut décrit en 1821. La meulière du Bassin parisien est un calcaire lacustre dont le carbonate a disparu au profit de la silice. En climat semi-aride, en revanche (pluie comprise entre 20 et 50 % de l'ETP, moins de 760 mm/an), la remontée capillaire de l'eau laisse du carbonate dans le sol : c'est la calcrète, qui peut former des dalles de plusieurs mètres.</p>`,
         groupes: [
-          { nom: "Par lessivage", brgm: "Roche d'altération par lessivage", note: "Les éléments solubles partent ; les éléments peu mobiles restent.",
+          { nom: "Par lessivage", brgm: "Roche d'altération par lessivage", note: "Les éléments solubles sont évacués, tandis que les éléments peu mobiles demeurent sur place.",
             roches: ["bauxite", "laterite", "meuliere"] },
-          { nom: "Par concentration", brgm: "Roche d'altération par concentration", note: "Des éléments apportés par l'eau précipitent dans le sol.",
+          { nom: "Par concentration", brgm: "Roche d'altération par concentration", note: "Des éléments apportés par l'eau précipitent au sein du sol.",
             roches: ["calcrete"] },
         ],
       },
       {
         code: "S.6", nom: "Formations superficielles", brgm: "Sédiment",
-        note: "Dépôts meubles récents qui recouvrent le substratum. Ce ne sont pas des roches au sens strict mais les matériaux parentaux de la plupart des sols. Le lexique n'en connaît qu'une partie, sous « Sédiment ».",
-        plus: `<p>Les cartes géologiques au 1/50 000 représentent les formations superficielles lorsqu'elles sont assez épaisses,
-          souvent plus d'un mètre. Leurs notations sont codifiées : F pour les alluvions fluviatiles (Fz les plus récentes,
-          puis Fy, Fx… pour les terrasses plus anciennes), C pour les colluvions, G pour les dépôts glaciaires, E pour les
-          éboulis, LP pour les limons des plateaux, R pour les formations résiduelles. On distingue les formations
-          <b>transportées</b> (par l'eau, la glace, le vent ou la gravité) et les formations <b>résiduelles</b>, restées en place
-          après la dissolution ou l'altération de leur substratum. En pédologie, ce matériau parental conditionne la texture,
-          la réserve en eau et la richesse chimique du sol qui s'y développe.</p>`,
+        note: "Formations meubles et récentes couvrant le substratum. Elles n'entrent pas vraiment dans la catégorie des roches, mais servent de matériau parental à la plupart des sols. Le lexique n'en retient qu'une fraction, sous la rubrique « Sédiment ».",
+        plus: `<p>Les formations superficielles n'apparaissent sur les cartes géologiques au 1/50 000 que si elles ont une épaisseur notable, souvent supérieure à un mètre. Le code des notations est le suivant : F pour les alluvions fluviatiles (Fz pour les plus récentes, Fy, Fx… pour les terrasses plus anciennes), C pour les colluvions, G pour les dépôts glaciaires, E pour les éboulis, LP pour les limons des plateaux, R pour les formations résiduelles. Les formations <b>transportées</b> (par l'eau, la glace, le vent ou la gravité) s'opposent aux formations <b>résiduelles</b>, demeurées en place après la dissolution ou l'altération de leur substratum. En pédologie, ce matériau parental fixe la texture, la réserve en eau et la richesse chimique du sol qui en dérive.</p>`,
         groupes: [
-          { nom: "Formations transportées", brgm: "Sédiment", note: "Déposées par l'eau, la glace, le vent ou la gravité.",
+          { nom: "Formations transportées", brgm: "Sédiment", note: "Matériaux mis en place par transport, qu'il s'agisse de l'eau, de la glace, du vent ou de la gravité.",
             roches: ["alluvions", "colluvions", "eboulis", "moraine", "dunes", "loess", "vase_tangue"] },
-          { nom: "Formations résiduelles", brgm: "Roche d'altération par lessivage", note: "Restées en place après l'altération ou la dissolution du substratum.",
+          { nom: "Formations résiduelles", brgm: "Roche d'altération par lessivage", note: "Formations demeurées sur place, issues de l'altération ou de la dissolution de leur substratum.",
             roches: ["alterite", "terra_rossa", "argile_silex"] },
         ],
       },
@@ -221,72 +153,44 @@ const ROCHES_ARBRE = [
   },
   {
     id: "metamorphique", nom: "Roches métamorphiques",
-    desc: "Roches transformées à l'état solide par la température, la pression ou des fluides, sans passer par la fusion. Le lexique du BRGM les classe par type de métamorphisme.",
-    plus: `<p>Quand une roche est portée à d'autres conditions que celles de sa formation, ses minéraux deviennent instables et
-      recristallisent en un nouvel assemblage. Une argile enfouie devient successivement ardoise, micaschiste puis gneiss ;
-      un calcaire devient marbre ; un basalte devient schiste vert, amphibolite ou éclogite selon la pression et la
-      température atteintes. Certains minéraux servent de thermomètres et de baromètres : les trois polymorphes
-      Al₂SiO₅ (andalousite, disthène, sillimanite) indiquent à eux seuls le domaine pression–température.</p>
-      <p>Le type de métamorphisme dépend du contexte. Le métamorphisme <b>régional</b> affecte de grands volumes lors de la
-      formation des chaînes de montagnes (Massif central, Massif armoricain, Alpes). Le métamorphisme de <b>contact</b> recuit
-      l'encaissant autour d'une intrusion. Le métamorphisme <b>dynamique</b> se concentre le long des failles. La
-      <b>métasomatose</b> modifie la chimie de la roche par apport de fluides.</p>
-      <p>Au-delà d'environ 650–700 °C en présence d'eau, la roche commence à fondre : c'est la migmatite, à la frontière
-      entre métamorphisme et magmatisme.</p>`,
+    desc: "Ces roches se transforment à l'état solide sous l'effet de la température, de la pression ou de fluides, sans jamais fondre. Le BRGM les répartit selon le type de métamorphisme en jeu.",
+    plus: `<p>Placée dans d'autres conditions que celles de sa genèse, une roche voit ses minéraux devenir instables et se recomposer en un assemblage nouveau. Une argile enfouie passe successivement à l'ardoise, au micaschiste puis au gneiss ; un calcaire devient marbre ; un basalte se mue en schiste vert, en amphibolite ou en éclogite selon la pression et la température. Certains minéraux jouent le rôle de thermomètres et de baromètres : les trois polymorphes Al₂SiO₅ (andalousite, disthène, sillimanite) délimitent à eux seuls le domaine de pression et de température.</p>
+      <p>Le contexte détermine le type de métamorphisme. Le métamorphisme <b>régional</b> touche de vastes volumes pendant la formation des chaînes de montagnes (Massif central, Massif armoricain, Alpes). Le métamorphisme de <b>contact</b> cuit l'encaissant autour d'une intrusion. Le métamorphisme <b>dynamique</b> se localise le long des failles. La <b>métasomatose</b>, enfin, change la composition chimique de la roche par apport de fluides.</p>
+      <p>Au-delà d'environ 650 à 700 °C en présence d'eau, la roche entame sa fusion : c'est la migmatite, située à la limite entre métamorphisme et magmatisme.</p>`,
     branches: [
       {
         code: "R.1", nom: "Métamorphisme régional", brgm: "Roche du métamorphisme régional",
-        note: "Enfouissement de grands volumes de roches lors de la formation des chaînes de montagnes. Les minéraux recristallisent et s'orientent : la roche acquiert une foliation.",
-        plus: `<p>Le degré de métamorphisme (« grade ») croît avec la profondeur atteinte. Pour une roche d'origine argileuse, la
-          séquence est : ardoise (très bas grade, clivage fin), micaschiste (micas visibles), gneiss (alternance de lits clairs
-          et sombres), puis migmatite (fusion partielle). Les géologues regroupent les assemblages minéraux en « faciès »
-          métamorphiques, définis sur les roches basiques : schistes verts, amphibolite, granulite pour les hautes
-          températures ; schistes bleus et éclogite pour les hautes pressions des zones de subduction. Les schistes bleus et
-          éclogites des Alpes occidentales et de l'île de Groix témoignent de roches enfouies à plusieurs dizaines de
-          kilomètres puis remontées.</p>`,
+        note: "Des volumes importants de roches, enfouis pendant la construction des chaînes, recristallisent ; leurs minéraux s'alignent et la roche prend une foliation.",
+        plus: `<p>Le grade augmente avec la profondeur atteinte. Pour une roche issue d'une argile, la série commence par l'ardoise (très bas grade, clivage fin), se poursuit avec le micaschiste (micas visibles) puis le gneiss (alternance de lits clairs et sombres) et s'achève par la migmatite (fusion partielle). Pour classer les assemblages minéraux, les géologues définissent des « faciès » à partir des roches basiques : schistes verts, amphibolite et granulite correspondent aux températures élevées ; schistes bleus et éclogite aux fortes pressions des zones de subduction. Les schistes bleus et les éclogites des Alpes occidentales et de l'île de Groix attestent de roches enfouies à plusieurs dizaines de kilomètres, puis ramenées en surface.</p>`,
         groupes: [
-          { nom: "D'origine sédimentaire", brgm: "Roche métasédimentaire", note: "Anciennes argiles (ardoise, micaschiste), grès (quartzite), calcaires (marbre) ou alternances marno-calcaires (calcschiste).",
+          { nom: "D'origine sédimentaire", brgm: "Roche métasédimentaire", note: "Ardoise et micaschiste dérivent d'anciennes argiles, quartzite d'un grès, marbre d'un calcaire, calcschiste d'une alternance marno-calcaire.",
             roches: ["ardoise", "micaschiste", "quartzite", "marbre", "calcschiste"] },
-          { nom: "D'origine basique", brgm: "Roche métamorphique", note: "Anciens basaltes ou gabbros. L'assemblage minéral indique le faciès : schistes verts, amphibolite, schistes bleus (haute pression, basse température), éclogite (très haute pression).",
+          { nom: "D'origine basique", brgm: "Roche métamorphique", note: "Ces roches proviennent de basaltes ou de gabbros anciens. Leur assemblage minéral désigne le faciès : schistes verts, amphibolite, schistes bleus (haute pression et basse température) ou éclogite (très haute pression).",
             roches: ["schiste_vert", "amphibolite", "schiste_bleu", "eclogite"] },
-          { nom: "Haut grade", brgm: "Roche métamorphique", note: "Températures élevées. La migmatite marque le début de la fusion partielle.",
+          { nom: "Haut grade", brgm: "Roche métamorphique", note: "Conditions de température élevée : la migmatite signale le début de la fusion partielle.",
             roches: ["gneiss", "leptynite", "granulite_meta", "migmatite"] },
         ],
       },
       {
         code: "R.2", nom: "Métamorphisme de contact", brgm: "Roche du métamorphisme de contact",
-        note: "Recuit des roches encaissantes autour d'une intrusion magmatique, sur quelques mètres à quelques kilomètres, sans déformation notable.",
-        plus: `<p>La chaleur d'un pluton granitique se diffuse dans les roches qu'il traverse et forme une auréole de contact. Près
-          de l'intrusion, les argiles deviennent des cornéennes, dures et à cassure esquilleuse ; plus loin, des schistes
-          tachetés où de petits cristaux (andalousite, cordiérite) commencent à pousser. Quand l'encaissant est calcaire et
-          que des fluides chargés de silice, de fer et de magnésium circulent, il se forme des skarns, riches en grenats et
-          pyroxènes calciques. Le skarn de Salau (Ariège) a été exploité pour la scheelite, minerai de tungstène.</p>`,
+        note: "Cuisson des roches voisines d'une intrusion magmatique, sur une distance de quelques mètres à quelques kilomètres, sans déformation sensible.",
+        plus: `<p>La chaleur d'un pluton granitique gagne les roches qu'elle traverse et dessine une auréole de contact. Tout près de l'intrusion, les argiles se changent en cornéennes, dures et à cassure esquilleuse ; plus loin, des schistes tachetés voient se former de petits cristaux d'andalousite ou de cordiérite. Si l'encaissant est calcaire et que des fluides chargés de silice, de fer et de magnésium le traversent, le contact se couvre de skarns, riches en grenats et en pyroxènes calciques. Celui de Salau (Ariège) a été exploité pour la scheelite, minerai de tungstène.</p>`,
         groupes: [
           { nom: "Roches de contact", brgm: "Roche du métamorphisme de contact", note: "", roches: ["corneenne", "skarn"] },
         ],
       },
       {
         code: "R.3", nom: "Métamorphisme dynamique", brgm: "Roche dynamométamorphique",
-        note: "Déformation localisée le long des failles : broyage cassant (cataclasite), cisaillement ductile (mylonite), fusion par friction (pseudotachylite). Le lexique y range aussi l'impactite, produite par le choc d'une météorite.",
-        plus: `<p>Le comportement d'une roche dans une faille dépend de la profondeur. Près de la surface, elle se fracture et se
-          broie : brèches de faille et cataclasites. Plus bas, vers 10 à 15 km et au-delà de 300 °C environ, le quartz se
-          déforme plastiquement et la roche s'étire en mylonite, à grain très fin et fortement foliée. Lors d'un séisme, la
-          chaleur de friction peut fondre la roche en quelques secondes : le verre obtenu est une pseudotachylite. L'impactite
-          relève d'un choc bien plus bref et plus intense : l'astroblème de Rochechouart (Haute-Vienne), vieux d'environ 200
-          millions d'années, en conserve des brèches et des suévites.</p>`,
+        note: "Les failles localisent la déformation : broyage cassant (cataclasite), cisaillement ductile (mylonite) ou fusion par friction (pseudotachylite). Le lexique range également l'impactite, née du choc d'une météorite.",
+        plus: `<p>Dans une faille, le comportement de la roche dépend de sa profondeur d'enfouissement. Proche de la surface, les fragments s'accumulent par fracturation : on parle alors de brèches de faille et de cataclasites. À des niveaux plus profonds, dès 10 à 15 km et au-delà de 300 °C environ, la déformation devient plastique : le quartz s'écoule, et la roche se transforme en mylonite, de grain très fin et fortement feuilletée. Lors d'un séisme, le frottement peut porter la roche à la fusion en quelques secondes ; le verre figé ainsi obtenu forme une pseudotachylite. L'impactite résulte d'un choc plus soudain et plus violent : à Rochechouart (Haute-Vienne), l'astroblème, vieux d'environ 200 millions d'années, en garde des brèches et des suévites.</p>`,
         groupes: [
           { nom: "Roches de faille et de choc", brgm: "Roche dynamométamorphique", note: "", roches: ["mylonite", "cataclasite", "pseudotachylite", "impactite"] },
         ],
       },
       {
         code: "R.4", nom: "Métasomatose", brgm: "Roche métasomatique",
-        note: "Transformation chimique d'une roche par des fluides qui apportent ou emportent des éléments : serpentinisation, greisenisation, fénitisation, spilitisation.",
-        plus: `<p>Contrairement au métamorphisme « isochimique », où la roche garde sa composition globale, la métasomatose la
-          modifie. Au contact de l'eau de mer, les péridotites du plancher océanique s'hydratent en serpentinites ; les
-          basaltes échangent du calcium contre du sodium et deviennent des spilites. Les gabbros et dolérites enclavés dans ces
-          serpentinites perdent leur silice et gagnent du calcium : ce sont les rodingites. Dans le toit des granites, les
-          fluides riches en fluor et en bore transforment la roche en greisen (quartz et micas blancs), souvent porteur
-          d'étain et de tungstène. Autour des carbonatites, les fluides alcalins produisent les fénites.</p>`,
+        note: "Des fluides modifient la composition d'une roche en lui apportant ou en lui retirant des éléments. Exemples : serpentinisation, greisenisation, fénitisation et spilitisation.",
+        plus: `<p>Le métamorphisme « isochimique » conserve la composition globale de la roche, alors que la métasomatose la modifie. Au contact de l'eau de mer, les péridotites du plancher océanique s'hydratent et deviennent des serpentinites ; des basaltes échangent leur calcium contre du sodium et se transforment en spilites. Les gabbros et dolérites emprisonnés dans ces serpentinites perdent de la silice et gagnent du calcium : ce sont les rodingites. Sous le toit des granites, des fluides riches en fluor et en bore convertissent la roche en greisen (quartz et micas blancs), souvent porteur d'étain et de tungstène. Autour des carbonatites, des fluides alcalins engendrent les fénites.</p>`,
         groupes: [
           { nom: "Roches métasomatiques", brgm: "Roche métasomatique", note: "", roches: ["serpentinite", "greisen", "fenite", "rodingite", "spilite"] },
         ],
@@ -297,80 +201,47 @@ const ROCHES_ARBRE = [
   // qui se croisent : composition (pierreuse, de fer, mixte) et histoire du corps parent (non différencié ou différencié).
   {
     id: "meteoritique", nom: "Roches météoritiques",
-    desc: "Roches venues de l'espace et tombées sur Terre : fragments d'astéroïdes, plus rarement de Mars ou de la Lune. Le lexique du BRGM les range selon leur composition (pierreuses, de fer, mixtes) et selon l'histoire de leur corps parent : resté tel quel depuis la naissance du Système solaire (météorites primitives) ou fondu et séparé en noyau, manteau et croûte (météorites différenciées).",
-    plus: `<p>Une météorite est un objet solide qui a traversé l'atmosphère sans se consumer entièrement. Freinée à quelques
-      dizaines de kilomètres d'altitude, elle finit sa chute en quelques minutes, à la vitesse d'un caillou lâché d'un avion
-      (quelques centaines de km/h). Sa surface a fondu pendant la traversée : il en reste une <b>croûte de fusion</b> noire de
-      moins d'un millimètre, signe le plus sûr pour la reconnaître ; l'intérieur, lui, n'a pas eu le temps de chauffer.</p>
-      <p>Les <b>météorites primitives</b>, ou non différenciées, sont surtout des <b>chondrites</b> : des agglomérats de petites billes
-      fondues (les chondres), de grains de métal et de poussière, réunis dans des astéroïdes trop petits ou formés trop tard pour
-      fondre. Leurs plus vieux constituants, des inclusions blanches riches en calcium et en aluminium, ont 4 567 millions
-      d'années : c'est l'âge du Système solaire. Les <b>météorites différenciées</b> viennent de corps qui ont fondu, chauffés par
-      la désintégration de l'aluminium 26 radioactif : le métal est descendu former un noyau (les <b>météorites de fer</b>), les
-      silicates ont donné un manteau et une croûte basaltique (les <b>achondrites</b>). Les <b>sidérolithes</b>, moitié métal moitié
-      silicates, viennent de mélanges entre les deux.</p>
-      <p>Sur les chutes observées, les chondrites font environ 87 %, les achondrites 8 %, les fers 5 % et les sidérolithes moins de 1 %.
-      Plus de 70 000 météorites sont répertoriées par la Meteoritical Society, dont un peu plus de 1 400 chutes vues ; la
-      plupart des autres ont été trouvées dans les déserts chauds et en Antarctique, où elles se conservent et se repèrent
-      facilement. La France compte environ 70 météorites, presque toutes des chutes des XVIIIᵉ et XIXᵉ siècles.</p>
-      <p>Ne pas confondre avec l'<b>impactite</b> (fiche du métamorphisme dynamique) : c'est une roche TERRESTRE transformée par le
-      choc d'une météorite, comme les brèches de Rochechouart, où l'astéroïde lui-même s'est vaporisé.</p>`,
+    desc: "Ces roches arrivent de l'espace : fragments d'astéroïdes et, plus rarement, morceaux de Mars ou de la Lune. Le BRGM les classe d'après leur composition (pierreuses, de fer, mixtes) et d'après l'histoire de leur corps parent : soit intactes depuis la naissance du Système solaire (météorites primitives), soit issues d'un corps fondu, séparé en noyau, manteau et croûte (météorites différenciées).",
+    plus: `<p>Un solide qui a traversé l'atmosphère sans se consumer entièrement constitue une météorite. Elle ralentit à quelques dizaines de kilomètres d'altitude et termine sa course en quelques minutes, à peu près à la vitesse d'un caillou tombé d'un avion (quelques centaines de km/h). Durant la traversée, sa surface a fondu : il en subsiste une <b>croûte de fusion</b> noire, de moins d'un millimètre, indice le plus sûr pour la reconnaître, tandis que le cœur n'a guère eu le temps de chauffer.</p>
+      <p>Les <b>météorites primitives</b> (non différenciées) sont avant tout des <b>chondrites</b> : des agglomérats de petites billes fondues (les chondres), de grains métalliques et de poussière, réunis dans des astéroïdes trop petits ou formés trop tard pour fondre. Leurs constituants les plus anciens, des inclusions blanches riches en calcium et en aluminium, datent de 4 567 millions d'années, soit l'âge du Système solaire. Les <b>météorites différenciées</b> viennent de corps fondus sous la chaleur de la désintégration de l'aluminium 26 : le métal s'est rassemblé en noyau (les <b>météorites de fer</b>), tandis que les silicates formaient un manteau et une croûte basaltique (les <b>achondrites</b>). Les <b>sidérolithes</b>, où métal et silicates sont présents à parts égales, résultent de mélanges entre les deux.</p>
+      <p>Parmi les chutes observées, environ 87 % sont des chondrites, 8 % des achondrites, 5 % des fers et moins de 1 % des sidérolithes. La Meteoritical Society recense plus de 70 000 météorites, dont un peu plus de 1 400 chutes vues ; la plupart ont été retrouvées dans les déserts chauds et en Antarctique, où elles se conservent et se repèrent aisément. La France en compte environ 70, presque toutes tombées aux XVIIIᵉ et XIXᵉ siècles.</p>
+      <p>Il ne faut pas confondre avec l'<b>impactite</b> (fiche du métamorphisme dynamique) : celle-ci est une roche terrestre transformée par le choc d'une météorite, comme les brèches de Rochechouart, où l'astéroïde lui-même s'est vaporisé.</p>`,
     branches: [
       {
         code: "E.1", nom: "Météorites primitives", brgm: "Météorite non-différenciée (primitive)",
-        note: "Leur astéroïde n'a jamais fondu : elles gardent les chondres et la composition chimique du disque où sont nées les planètes. Les achondrites primitives ont commencé à fondre sans aller au bout.",
-        plus: `<p>Les chondrites sont classées par <b>groupe chimique</b> (H, L, LL pour les ordinaires ; CI, CM, CO, CV… pour les
-          carbonées ; EH, EL pour les chondrites à enstatite), chaque groupe venant d'un astéroïde différent, et par <b>type
-          pétrologique</b>, de 1 à 6 (Van Schmus et Wood 1967). Le type 3 est presque intact ; les types 1 et 2 ont été transformés
-          par de l'eau liquide circulant dans l'astéroïde, vers 20 à 150 °C ; les types 4 à 6 ont été chauffés sans fondre, de
-          600 à 950 °C environ, et leurs chondres s'estompent. La chaleur venait surtout de l'aluminium 26, radioactif, dont la
-          moitié disparaît en 717 000 ans : un astéroïde formé tôt chauffait beaucoup, un astéroïde formé tard presque pas.</p>
-          <p>Dans un même astéroïde, le cœur chauffait le plus et refroidissait le dernier : les chondrites H les plus recuites
-          (type 6) ont refroidi des dizaines de millions d'années après les moins recuites (type 4), comme les couches d'un
-          oignon. Les chondrites françaises de Sainte-Marguerite (H4, Nord, 1962) et de Kernouvé (H6, Morbihan, 1869) ont servi
-          à le montrer.</p>`,
+        note: "Leur astéroïde n'a jamais connu la fusion, si bien qu'elles conservent chondres et composition du disque protoplanétaire. Les achondrites primitives ont entamé la fusion sans la mener à son terme.",
+        plus: `<p>Le classement des chondrites repose d'abord sur le <b>groupe chimique</b> (H, L, LL pour les ordinaires ; CI, CM, CO, CV… pour les carbonées ; EH, EL pour les chondrites à enstatite). Chaque groupe provient d'un astéroïde distinct. Vient ensuite le <b>type pétrologique</b>, qui va de 1 à 6 (Van Schmus et Wood 1967). Le type 3 demeure presque intact. Les types 1 et 2 ont été altérés par une eau liquide circulant dans l'astéroïde, vers 20 à 150 °C. Les types 4 à 6 ont subi un chauffage sans fusion, à environ 600 à 950 °C, qui a effacé leurs chondres. Cette chaleur venait surtout de l'aluminium 26, radioactif, dont la moitié disparaît en 717 000 ans : un astéroïde formé tôt se réchauffait fortement, un astéroïde formé tard à peine.</p>
+          <p>Au sein d'un même astéroïde, le cœur chauffait davantage et se refroidissait en dernier. Les chondrites H les plus recuites (type 6) ont donc refroidi des dizaines de millions d'années après les moins recuites (type 4), à la manière des couches d'un oignon. Les chondrites françaises de Sainte-Marguerite (H4, Nord, 1962) et de Kernouvé (H6, Morbihan, 1869) ont permis de l'établir.</p>`,
         groupes: [
-          { nom: "Chondrites", brgm: "Chondrite", note: "Petites billes fondues (chondres), grains de métal et poussière fine agglomérés : plus de huit chutes sur dix.",
+          { nom: "Chondrites", brgm: "Chondrite", note: "Chondres, grains métalliques et poussière fine, agglomérés ensemble : plus de huit chutes sur dix appartiennent à ce type.",
             roches: ["chondrite_ordinaire", "chondrite_carbonee", "chondrite_enstatite"] },
-          { nom: "Achondrites primitives", brgm: "Achondrite primitive", note: "Une chondrite chauffée jusqu'au début de la fusion : composition de chondrite, grains recristallisés, chondres effacés.",
+          { nom: "Achondrites primitives", brgm: "Achondrite primitive", note: "Chondrite portée jusqu'au seuil de fusion : sa composition reste celle d'une chondrite, mais ses grains recristallisent et ses chondres disparaissent.",
             roches: ["achondrite_primitive"] },
         ],
       },
       {
         code: "E.2", nom: "Achondrites", brgm: "Achondrite",
-        note: "Roches pierreuses sans chondres, cristallisées d'un magma dans un corps qui avait fondu : un astéroïde comme Vesta, Mars ou la Lune.",
-        plus: `<p>Une achondrite ressemble à une roche magmatique terrestre : basalte, gabbro, roche à olivine ou à pyroxène. Ce qui
-          trahit son origine, c'est la signature de ses atomes d'oxygène (rapports des isotopes 16, 17 et 18), propre à chaque
-          corps du Système solaire, et pour Mars, les gaz de son atmosphère piégés dans le verre de choc.</p>
-          <p>Les achondrites d'astéroïdes (eucrites, diogénites, howardites, aubrites…) sont presque aussi vieilles que le Système
-          solaire. Les martiennes sont bien plus jeunes, de 150 millions à 4,4 milliards d'années, parce que Mars, plus grosse, a
-          gardé un volcanisme actif longtemps. Pour quitter Mars, un fragment doit être lancé à plus de 5 km/s par l'impact d'un
-          astéroïde ; pour quitter la Lune, 2,4 km/s suffisent.</p>`,
+        note: "Roches pierreuses dépourvues de chondres, issues d'un magma cristallisé dans un corps ayant fondu, comme Vesta, Mars ou la Lune.",
+        plus: `<p>Une achondrite rappelle une roche magmatique terrestre : basalte, gabbro, roche à olivine ou à pyroxène. Son origine se révèle par la signature isotopique de l'oxygène (rapports des isotopes 16, 17 et 18), propre à chaque corps du Système solaire, et, pour Mars, par les gaz de l'atmosphère martienne piégés dans le verre de choc.</p>
+          <p>Les achondrites issues d'astéroïdes (eucrites, diogénites, howardites, aubrites…) sont presque aussi anciennes que le Système solaire. Les martiennes, en revanche, sont bien plus récentes, de 150 millions à 4,4 milliards d'années, car Mars, plus massive, a conservé longtemps un volcanisme actif. Un fragment doit être éjecté de Mars à plus de 5 km/s par l'impact d'un astéroïde ; pour quitter la Lune, il suffit de 2,4 km/s.</p>`,
         groupes: [
-          { nom: "Achondrites", brgm: "Achondrite", note: "Selon leur corps parent : astéroïde, Mars ou Lune.",
+          { nom: "Achondrites", brgm: "Achondrite", note: "Le corps parent détermine la classe : astéroïde, Mars ou Lune.",
             roches: ["achondrite_asteroidale", "achondrite_martienne", "achondrite_lunaire"] },
         ],
       },
       {
         code: "E.3", nom: "Météorites de fer", brgm: "Météorite de fer",
-        note: "Fer et nickel presque purs, venus du noyau d'astéroïdes qui avaient fondu, puis brisés par des collisions.",
-        plus: `<p>Plus de 50 astéroïdes différents ont fourni des météorites de fer : il existait donc au début du Système solaire bien
-          plus de corps fondus que ceux qui restent aujourd'hui. On les classe par leur structure (octaédrites, hexaédrites,
-          ataxites, selon la teneur en nickel) et par leur chimie (groupes IAB, IIAB, IIIAB, IVA…, d'après le gallium, le germanium
-          et l'iridium).</p>
-          <p>Les figures de Widmanstätten se forment entre 700 et 450 °C, quand la taénite riche en nickel rejette des lamelles de
-          kamacite ; il faut pour cela un refroidissement de quelques dizaines à quelques milliers de degrés par million d'années.
-          La largeur des lamelles donne la vitesse de refroidissement, donc la taille du noyau d'origine.</p>`,
+        note: "Quasiment purs en fer et en nickel, ces métaux proviennent du noyau d'astéroïdes fondus, ensuite fragmentés par des chocs.",
+        plus: `<p>Plus de 50 astéroïdes distincts ont livré des météorites de fer : au début du Système solaire, les corps fondus étaient donc bien plus nombreux qu'aujourd'hui. On les répartit selon leur structure (octaédrites, hexaédrites, ataxites, d'après la teneur en nickel) et selon leur chimie (groupes IAB, IIAB, IIIAB, IVA…, établis d'après le gallium, le germanium et l'iridium).</p>
+          <p>Les figures de Widmanstätten apparaissent entre 700 et 450 °C, lorsque la taénite riche en nickel expulse des lamelles de kamacite ; il faut pour cela un refroidissement de quelques dizaines à quelques milliers de degrés par million d'années. La largeur des lamelles mesure cette vitesse, donc la taille du noyau d'origine.</p>`,
         groupes: [
           { nom: "Météorites de fer", brgm: "Météorite de fer", note: "", roches: ["meteorite_fer"] },
         ],
       },
       {
         code: "E.4", nom: "Sidérolithes", brgm: "Sidérolithe",
-        note: "Météorites mixtes, faites de métal et de silicates à parts presque égales.",
-        plus: `<p>Deux groupes très différents : les <b>pallasites</b>, cristaux d'olivine du manteau enchâssés dans du métal de noyau, et
-          les <b>mésosidérites</b>, brèches de croûte basaltique mêlée de métal. Dans les deux cas, il a fallu une collision pour réunir
-          ce qu'un astéroïde avait séparé en fondant. Elles ne font qu'environ 1 % des chutes.</p>`,
+        note: "Ces météorites mêlent métal et silicates, presque à parts égales.",
+        plus: `<p>Ces deux familles diffèrent nettement. Les <b>pallasites</b> réunissent des cristaux d'olivine issus du manteau, enchâssés dans du métal de noyau ; les <b>mésosidérites</b> sont des brèches de croûte basaltique mêlée de métal. Dans les deux cas, une collision a rassemblé ce qu'un astéroïde avait séparé en fondant. Elles ne forment qu'environ 1 % des chutes.</p>`,
         groupes: [
           { nom: "Sidérolithes", brgm: "Sidérolithe", note: "", roches: ["pallasite", "mesosiderite"] },
         ],
@@ -460,7 +331,7 @@ const ROCHES_BRGM = {
   pallasite: ["Pallasite", "Sidérolithe"], mesosiderite: ["Mésosidérite", "Sidérolithe"],
 };
 const ROCHES_HORS_LEXIQUE = {
-  porphyre: "« Porphyre » désigne une texture (gros cristaux dans une pâte fine), pas une lithologie : le lexique n'a pas de terme correspondant.",
+  porphyre: "Le mot « porphyre » qualifie une texture (gros cristaux dans une pâte fine) et non une lithologie ; le lexique n'en propose donc aucun terme équivalent.",
 };
 
 // Emplacement d'une fiche dans l'arbre : { fam, branche, groupe } (null si absente)

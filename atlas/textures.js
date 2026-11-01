@@ -578,8 +578,8 @@
     const reperes = [{ ab: "Vrr", x: Wp * 0.62, y: Hp * 0.3, petit: false }, ...t.cristaux.map((o) => repereSur(G, objets.filter((c) => c.min === o.min), hab(o.min).ab, 20))];
     const groupes = [
       { titre: "Verre : le liquide figé avant de cristalliser", lignes: [
-        { ab: "Vrr", nom: nomMin("verre"), cle: "verre", role: t.roleVerre || "limpide au microscope, en lits d'écoulement de teinte un peu différente", couleur: t.teintes[0] },
-        ...(t.cristallites ? [{ nom: "Cristallites", cle: "cristallites", role: t.roleCristallites || "aiguilles sombres (oxydes de fer, pyroxène) alignées sur l'écoulement ; par milliards, elles rendent la roche noire à l'œil nu", couleur: t.couleurCristallites || "#3a332e" }] : []),
+        { ab: "Vrr", nom: nomMin("verre"), cle: "verre", role: t.roleVerre || "Limpide au microscope, il forme des lits d'écoulement de teinte légèrement différente.", couleur: t.teintes[0] },
+        ...(t.cristallites ? [{ nom: "Cristallites", cle: "cristallites", role: t.roleCristallites || "Aiguilles sombres (oxydes de fer, pyroxène) alignées sur l'écoulement ; si nombreuses, elles noircissent la roche à l'œil nu.", couleur: t.couleurCristallites || "#3a332e" }] : []),
         ...(t.vacuoles ? [{ nom: "Vacuoles", role: "bulles de gaz étirées", couleur: "#fbfaf6", cle: "vacuoles" }] : []),
       ] },
       { titre: t.titreCristaux || "Rares cristaux formés avant l'éruption", lignes: t.cristaux.map((o) => ligne(roche, o.min, o.role)) },
@@ -628,7 +628,7 @@
       { titre: "Fragments de cristaux : brisés par l'explosion", lignes: t.cristaux.map((o) => ligne(roche, o.min, o.role)) },
       { titre: "Verre : le magma pulvérisé", lignes: [
         { ab: t.soude ? "F" : "P", nom: t.soude ? "Fiamme" : "Ponces", role: t.soude ? "ponces écrasées et soudées, en flammèches" : "fragments de lave bulleuse", couleur: ponce.fond, cle: "ponces" },
-        { nom: "Échardes et cendre", role: "parois de bulles éclatées, en croissants, et poussière de cristaux", couleur: t.cendre.fond, cle: "cendre", fond: true },
+        { nom: "Échardes et cendre", role: "Une poussière de cristaux accompagne des parois de bulles éclatées, en forme de croissants.", couleur: t.cendre.fond, cle: "cendre", fond: true },
       ] },
     ];
     return { corps, reperes, mesure, legende: { titre: "Constituants", groupes } };
@@ -938,7 +938,7 @@
       ...(t.maille ? [repereSur({ lire: () => -1 }, reliques, hab(t.maille.coeur).ab)] : [])];
     const groupes = [
       ...(t.porphyro ? [{ titre: "Gros cristaux nés pendant le métamorphisme", lignes: t.porphyro.map((o) => ligne(roche, o.min, o.role)) }] : []),
-      { titre: (t.titreGrains || "Grains recristallisés, soudés en mosaïque") + (t.fantomes ? " ; en pointillé, le contour du grain de sable d'origine" : ""), lignes: [...t.grains.map((o) => ligne(roche, o.min, o.role)), ...(t.maille ? [ligne(roche, t.maille.coeur, "reste de l'olivine d'origine, au cœur de certaines mailles")] : [])] },
+      { titre: (t.titreGrains || "Grains recristallisés, soudés en mosaïque") + (t.fantomes ? " ; en pointillé, le contour du grain de sable d'origine" : ""), lignes: [...t.grains.map((o) => ligne(roche, o.min, o.role)), ...(t.maille ? [ligne(roche, t.maille.coeur, "Au cœur de quelques mailles, on trouve encore de l'olivine d'origine.")] : [])] },
     ];
     return { corps, reperes, mesure, legende: { titre: "Constituants", groupes } };
   };
@@ -1130,7 +1130,7 @@
     const groupes = [
       { titre: "Porphyroclastes : restes de gros cristaux, arrondis par le frottement", lignes: [
         ...t.clastes.map((o) => ligne(roche, o.min, o.role)),
-        { nom: "Queues de recristallisation", cle: t.clastes.map((o) => "queues:" + o.min), role: "feldspath réduit en grains fins, traîné derrière les clastes ; en marches d'escalier montant vers la droite : le haut du schéma a glissé vers la droite", couleur: t.queue },
+        { nom: "Queues de recristallisation", cle: t.clastes.map((o) => "queues:" + o.min), role: "Traînées de feldspath réduit en grains fins, à l'arrière des clastes ; disposées en marches montant vers la droite, elles indiquent que le haut du schéma a glissé vers la droite.", couleur: t.queue },
       ] },
       { titre: "Matrice broyée et recristallisée, étirée en rubans", lignes:
         TL.filter((l) => l.role).map((l) => (l.min ? { ...ligne(roche, l.min, l.role, "bande:" + l.min), couleur: l.couleur } : { nom: l.nom, role: l.role, couleur: l.couleur, cle: "bande:fine" })) },
@@ -1145,7 +1145,7 @@
     granite: {
       mode: "grenue", nom: "grenue", champ: 30, vue: "Surface sciée et polie",
       grain: "cristaux jointifs de 2 à 8 mm, tous visibles à l'œil nu",
-      intro: "Le magma a refroidi lentement, à plusieurs kilomètres de profondeur : les cristaux ont eu le temps de grandir et se touchent tous, sans verre ni pâte fine entre eux.",
+      intro: "Refroidi lentement à plusieurs kilomètres de profondeur, le magma a permis aux cristaux de grandir jusqu'à se toucher tous, sans verre ni pâte fine entre eux.",
       ordre: [
         { min: "biotite", temps: 1, taille: [1.3, 2.6], allong: [2, 3.4], chevauche: 0.02, amas: 0.45 },
         { min: "plagioclases", temps: 1, taille: [2.6, 5], allong: [1.5, 2.3], chevauche: 0, biseau: 0.18 },
@@ -1153,41 +1153,41 @@
         { min: "muscovite", temps: 2, taille: [1.4, 2.4], allong: [2, 3], chevauche: 0.25 },
         { min: "quartz", temps: 3, espacement: 3 },
       ],
-      temps: ["Formés en premier : entiers, à faces nettes", "Puis : s'arrêtent contre les premiers (moulés sur eux)", "En dernier : remplit les vides"],
+      temps: ["Formés en premier : entiers, à faces nettes", "Ensuite : ils s'arrêtent contre les premiers, dont ils épousent la forme", "En dernier : remplit les vides"],
     },
     microgranite: {
       mode: "porphyrique", nom: "microgrenue porphyrique", champ: 30, vue: "Surface sciée et polie",
-      grain: "phénocristaux de 2 à 10 mm dans une pâte aux grains invisibles à l'œil nu",
-      intro: "Le magma a commencé à cristalliser lentement en profondeur, puis il est monté en filon où il a refroidi vite : les cristaux déjà formés sont restés gros, le reste a donné une pâte fine.",
+      grain: "Dans une pâte dont les grains échappent à l'œil nu se détachent des phénocristaux de 2 à 10 mm.",
+      intro: "Lent en profondeur, le début de la cristallisation a précédé une injection en filon ; refroidi vite, le magma a conservé des cristaux gros et une pâte fine.",
       phenos: [
         { min: "orthose", part: 0.12, taille: [4, 10], allong: [1.4, 2], biseau: 0.1 },
         { min: "quartz", part: 0.08, taille: [2, 4.5], allong: [1, 1.15], sections: 6, role: "grains gris à six côtés (bipyramides)" },
         { min: "plagioclases", part: 0.07, taille: [2, 4.5], allong: [1.5, 2.3], biseau: 0.18 },
         { min: "biotite", part: 0.03, taille: [1.2, 2.5], allong: [1.6, 2.6] },
       ],
-      pate: { nom: "Pâte microgrenue", fond: "#dcc6b8", taches: ["#b9bebc", "#f5f2ea", "#e3ae94", "#2f2a27"], pas: 4, role: "quartz, feldspaths et micas en grains de moins de 0,5 mm" },
+      pate: { nom: "Pâte microgrenue", fond: "#dcc6b8", taches: ["#b9bebc", "#f5f2ea", "#e3ae94", "#2f2a27"], pas: 4, role: "Grains de quartz, de feldspaths et de micas inférieurs à 0,5 mm." },
     },
     basalte: {
       mode: "microlitique", nom: "microlitique", champ: 5, vue: "Vue au microscope", fluidalite: 0.3, flux: 0.2,
-      grain: "phénocristaux de 0,5 à 1,5 mm dans une pâte de microlites de quelques dixièmes de millimètre",
-      intro: "Les phénocristaux ont grandi dans la chambre magmatique ; pendant la remontée et l'épanchement, la lave a refroidi en quelques jours à quelques années selon l'épaisseur de la coulée : les microlites n'ont pas eu le temps de grandir, et un peu de liquide s'est figé en verre.",
+      grain: "Une pâte de microlites, de quelques dixièmes de millimètre, enveloppe des phénocristaux de 0,5 à 1,5 mm.",
+      intro: "Formés dans la chambre magmatique, les phénocristaux précèdent un refroidissement de la lave en quelques jours à quelques années ; les microlites n'ont pas pu grandir, et une part du liquide est restée en verre.",
       vacuoles: [{ part: 0.04, taille: [0.3, 0.8], aplat: [0.65, 0.95] }],
       phenos: [
         { min: "olivine", part: 0.08, taille: [0.5, 1.3], allong: [1.2, 1.6], sections: 6, role: "grains vert-jaune craquelés, à six côtés" },
-        { min: "pyroxenes", part: 0.07, taille: [0.4, 1.1], allong: [1, 1.4], sections: 8, role: "sections vertes à huit côtés, clivages en croix" },
+        { min: "pyroxenes", part: 0.07, taille: [0.4, 1.1], allong: [1, 1.4], sections: 8, role: "Sections vertes à huit côtés, portant des clivages en croix." },
         { min: "plagioclases", part: 0.05, taille: [0.6, 1.5], allong: [3, 5], biseau: 0.15, role: "longues tablettes striées" },
       ],
       microlites: [
         { min: "plagioclases", part: 0.26, taille: [0.2, 0.5], allong: [5, 8], chevauche: 0, role: "baguettes blanches" },
       ],
       pate: { nom: "Verre et petits grains", fond: "#4b423c", taches: ["#7d8f55", "#7d8f55", "#c3cc6a", "#141414", "#141414"], pas: 3, rayon: [0.8, 1.7],
-        role: "pyroxène (vert), olivine (vert-jaune) et magnétite (noir) dans le liquide figé" },
+        role: "Le liquide figé renferme du pyroxène vert, de l'olivine vert jaune et de la magnétite noire." },
     },
     obsidienne: {
       mode: "vitreuse", nom: "vitreuse", champ: 4, vue: "Vue au microscope", plis: 9, lits: [10, 30],
       teintes: ["#dcd6ca", "#d1c9ba", "#c6bcaa"], cristallites: 900, couleurCristallites: "#3a332e",
-      grain: "presque tout est du verre ; les rares cristaux font quelques dixièmes de millimètre",
-      intro: "La lave, très riche en silice et pauvre en eau, était si visqueuse que les atomes n'ont pas pu s'assembler en cristaux avant qu'elle ne se fige : elle est devenue un verre, qui garde la trace de son écoulement.",
+      grain: "Le verre domine presque entièrement ; les cristaux, rares, mesurent quelques dixièmes de millimètre.",
+      intro: "Très riche en silice et pauvre en eau, la lave était si visqueuse que les atomes n'ont pu s'assembler en cristaux avant de se figer : elle a donné un verre, qui conserve la trace de son écoulement.",
       cristaux: [
         { min: "sanidine", part: 0.035, taille: [0.2, 0.45], allong: [1.6, 2.4], biseau: 0.1, role: "petits cristaux limpides" },
         { min: "quartz", part: 0.02, taille: [0.12, 0.25], allong: [1, 1.2], sections: 6, role: "petits grains à six côtés" },
@@ -1196,8 +1196,8 @@
     },
     ignimbrite: {
       mode: "pyroclastique", nom: "pyroclastique soudée (ignimbrite)", champ: 15, vue: "Surface sciée et polie", soude: true, echardes: 260,
-      grain: "fragments de cristaux de 0,2 à 2 mm et flammèches de verre de quelques millimètres",
-      intro: "Un écoulement pyroclastique, mélange de gaz, de cendre et de ponces à plusieurs centaines de degrés, s'est déposé d'un coup ; encore assez chaud (au-dessus d'environ 600 °C) pour que le verre soit mou, il s'est tassé et soudé : les ponces écrasées forment des flammèches alignées.",
+      grain: "Des éclats de cristaux, de 0,2 à 2 mm, côtoient des flammèches de verre longues de quelques millimètres.",
+      intro: "Un écoulement pyroclastique, mélange de gaz, de cendre et de ponces porté à plusieurs centaines de degrés, s'est déposé d'un seul coup. Encore supérieur à environ 600 °C, le dépôt a ramolli son verre : il s'est tassé et soudé, et les ponces écrasées forment des flammèches alignées.",
       ponces: { part: 0.14, taille: [2.5, 7], fond: "#3d3531" },
       cristaux: [
         { min: "sanidine", part: 0.15, taille: [0.9, 2.6], allong: [1.3, 2], biseau: 0.1, essais: 3000, role: "éclats limpides" },
@@ -1210,20 +1210,20 @@
     },
     gres: {
       mode: "detritique", nom: "détritique (arénacée)", champ: 3, vue: "Vue au microscope", taille: [0.1, 0.5], arrondi: 1, jointif: [0.97, 1.03],
-      grain: "grains de sable de 0,1 à 0,5 mm, assez bien triés et arrondis, qui se touchent",
-      intro: "Des grains de sable usés par un long transport se sont déposés, puis ont été enfouis : l'eau qui circulait entre eux a précipité un ciment qui les a soudés.",
+      grain: "Grains de sable de 0,1 à 0,5 mm, assez bien triés et arrondis, en contact les uns avec les autres.",
+      intro: "Après un long transport, des grains de sable usés se sont déposés, puis enfouis ; un ciment précipité par l'eau de circulation les a soudés.",
       grains: [
         { min: "quartz", part: 0.85, enduit: 0.15, sansMarque: true, role: "grains gris arrondis" },
         { min: "orthose", part: 0.05, role: "grains roses, plus rares" },
       ],
       liant: { titre: "Ensuite, entre les grains", nom: "Ciment", fond: "#e4dccb", taches: ["#d6ccb6", "#efe9dc", "#b8742f"],
-        role: "silice qui soude les grains, oxyde de fer en liseré brun, paillettes de mica" },
+        role: "Silice soudant les grains, liseré brun d'oxyde de fer et paillettes de mica." },
     },
     breche_sedimentaire: {
       mode: "detritique", nom: "bréchique", champ: 30, vue: "Surface sciée et polie", taille: [2, 9], arrondi: 0, jointif: [0.88, 0.97], serre: 0.95,
-      titreGrains: "Clastes : morceaux de roche anguleux, peu transportés",
-      grain: "fragments anguleux de 2 à 10 mm, de tailles très variées, dans une matrice fine",
-      intro: "Des fragments arrachés à une falaise ou à un escarpement de faille se sont accumulés au pied, sans être roulés ni triés ; une boue rougeâtre a rempli les vides puis s'est cimentée.",
+      titreGrains: "Clastes : fragments de roche anguleux, peu transportés.",
+      grain: "Pris dans une matrice fine, des fragments anguleux de 2 à 10 mm présentent des tailles très diverses.",
+      intro: "Au pied d'une falaise ou d'un escarpement de faille, des fragments se sont accumulés sans être roulés ni triés. Une boue rougeâtre a comblé les vides avant de cimenter l'ensemble.",
       grains: [
         { cle: "calcite", ab: "Cal", nom: "Calcaire", fond: "#ece4d2", taches: "#cfc2a6", part: 0.45, role: "clastes clairs (calcite)" },
         { cle: "quartz", ab: "Qz", nom: "Quartz", fond: "#c7cbc9", part: 0.3, role: "éclats gris" },
@@ -1234,29 +1234,29 @@
     },
     siltite: {
       mode: "litee", nom: "litée", champ: 6, vue: "Vue au microscope", ondulation: 2.5,
-      grain: "lits de 0,1 à 1 mm, grains de silt de quelques centièmes de millimètre",
-      intro: "Au fond d'un lac ou d'une mer calme, des apports un peu plus grossiers (crues, tempêtes) ont alterné avec la lente décantation des argiles : chaque lit enregistre un épisode de dépôt.",
+      grain: "Silt en grains de quelques centièmes de millimètre, disposé en lits de 0,1 à 1 mm.",
+      intro: "Dans un lac ou une mer calme, la décantation lente des argiles alterne avec des apports plus grossiers (crues, tempêtes). Chaque lit garde la trace d'un dépôt.",
       lits: [
-        { cle: "silt", ab: "S", nom: "Lits silteux", part: 0.6, epaisseur: [0.25, 1], fond: "#cfc6b4", taches: ["#b9bebc", "#b9bebc", "#e8e2d4", "#a0927b"], micas: 1.2, role: "grains de quartz et paillettes de mica couchées" },
+        { cle: "silt", ab: "S", nom: "Lits silteux", part: 0.6, epaisseur: [0.25, 1], fond: "#cfc6b4", taches: ["#b9bebc", "#b9bebc", "#e8e2d4", "#a0927b"], micas: 1.2, role: "Paillettes de mica disposées à plat, mêlées à des grains de quartz." },
         { cle: "argile", ab: "A", nom: "Lits argileux", part: 0.4, epaisseur: [0.08, 0.5], fond: "#8f8373", taches: ["#7d7263", "#9f937f", "#86a77e"], micas: 0.3, mica: "#bdb49c", role: "illite et chlorite, très fines" },
       ],
     },
     calcaire: {
       mode: "bioclastique", nom: "bioclastique", champ: 8, vue: "Vue au microscope",
-      grain: "débris de 0,2 à 3 mm dans une boue calcaire aux grains invisibles (quelques millièmes de millimètre)",
-      intro: "Sur le fond d'une mer chaude, peu profonde et assez calme pour que la boue se dépose, les coquilles et squelettes calcaires des êtres vivants se sont accumulés dans une boue de calcite, qui a durci en s'enfouissant.",
+      grain: "Une boue calcaire à grains de quelques millièmes de millimètre contient des débris de 0,2 à 3 mm.",
+      intro: "Sur le fond d'une mer chaude, peu profonde et assez calme pour que la boue se dépose, les coquilles et les squelettes calcaires des organismes se sont accumulés dans une boue de calcite, qui a durci en s'enfouissant.",
       elements: [
         { type: "coquille", ab: "Co", nom: "Coquilles", part: 0.17, taille: [1.2, 3.2], role: "fragments courbes de bivalves et de brachiopodes" },
         { type: "entroque", ab: "En", nom: "Entroques", part: 0.11, taille: [0.6, 1.3], couleur: "#eee6d6", role: "articles de crinoïdes, percés d'un canal" },
         { type: "foraminifere", ab: "Fo", nom: "Foraminifères", part: 0.09, taille: [0.5, 1], couleur: "#fbf8f0", role: "loges enroulées d'organismes unicellulaires" },
         { type: "grain", ab: "Qz", min: "quartz", part: 0.02, taille: [0.1, 0.3], role: "rares grains de sable" },
       ],
-      fond: { titre: "Liant", nom: "Micrite", fond: "#d8cdb8", taches: ["#c9bda5", "#e3dac8", "#9c8f7b", "#b8742f"], role: "boue de calcite très fine, avec un peu d'argile et d'oxyde de fer" },
+      fond: { titre: "Liant", nom: "Micrite", fond: "#d8cdb8", taches: ["#c9bda5", "#e3dac8", "#9c8f7b", "#b8742f"], role: "Argile et oxyde de fer en petite quantité accompagnent une calcite très fine, déposée en boue." },
     },
     quartzite: {
       mode: "mosaique", nom: "granoblastique (en mosaïque)", champ: 4, vue: "Vue au microscope", taille: 0.32, fantomes: 0.35,
-      grain: "grains de quartz de 0,2 à 0,5 mm, soudés par des joints droits",
-      intro: "Un grès enfoui et chauffé a recristallisé : les grains de sable et leur ciment se sont soudés en une mosaïque de quartz sans vides ; la roche casse à travers les grains, et non plus entre eux.",
+      grain: "Soudés par des joints rectilignes, des grains de quartz de 0,2 à 0,5 mm.",
+      intro: "Un grès recristallisé sous l'effet de l'enfouissement et de la chaleur : ses grains et leur ciment ne forment plus qu'une mosaïque de quartz sans vide. Désormais, la cassure traverse les grains.",
       grains: [
         { min: "quartz", part: 0.95, sansMarque: true, role: "grains polygonaux, jointifs" },
         { min: "muscovite", part: 0.03, lamelle: true, taille: [0.2, 0.45], allong: [3, 5], role: "rares paillettes" },
@@ -1265,8 +1265,8 @@
     },
     marbre: {
       mode: "mosaique", nom: "granoblastique (en mosaïque)", champ: 8, vue: "Vue au microscope", taille: 0.7,
-      grain: "cristaux de calcite de 0,3 à 1 mm, jointifs",
-      intro: "Un calcaire chauffé en profondeur a recristallisé sans fondre : la boue et les coquilles ont disparu, remplacées par des cristaux de calcite plus gros, soudés en mosaïque, marqués de lamelles de macle.",
+      grain: "Jointifs, des cristaux de calcite mesurent de 0,3 à 1 mm.",
+      intro: "Sans passer par la fusion, un calcaire enfoui a recristallisé : boue et coquilles ont disparu, remplacées par une mosaïque de cristaux de calcite plus gros, marqués de lamelles de macle.",
       grains: [
         { min: "calcite", part: 0.96, role: "cristaux clairs à lamelles de macle obliques" },
         { min: "dolomite", part: 0.02, role: "quelques grains beiges" },
@@ -1275,9 +1275,9 @@
     },
     micaschiste: {
       mode: "foliee", nom: "foliée (schisteuse)", champ: 10, vue: "Vue au microscope", taille: 0.5, aplatissement: 2.4, films: 0.9,
-      grain: "micas de 0,5 à 2 mm couchés dans un même plan, grenats de 1 à 3 mm",
-      intro: "Une roche argileuse enfouie à 15–25 km dans une chaîne de montagnes a recristallisé sous pression : les micas ont grandi à plat, perpendiculairement à la compression, ce qui feuillette la roche ; les grenats, plus rigides, ont grandi dans la roche et le feuilletage s'est moulé autour d'eux en s'aplatissant.",
-      porphyro: [{ min: "grenat", part: 0.08, taille: [1.2, 2.8], allong: [1, 1.1], sections: 8, role: "gros cristaux rouges contournés par la foliation" }],
+      grain: "Des micas de 0,5 à 2 mm, couchés dans un plan commun, accompagnent des grenats de 1 à 3 mm.",
+      intro: "Enterrée entre 15 et 25 km dans une chaîne de montagnes, une roche argileuse a recristallisé sous pression. Les micas, orientés à plat et perpendiculairement à la compression, feuilletent la roche ; les grenats, plus rigides, ont poussé dans la roche, autour de laquelle le feuilletage s'est moulé.",
+      porphyro: [{ min: "grenat", part: 0.08, taille: [1.2, 2.8], allong: [1, 1.1], sections: 8, role: "De gros cristaux rouges, que la foliation contourne." }],
       micas: [
         { min: "chlorite_m", part: 0.07, taille: [0.7, 1.6], allong: [4, 7], role: "lamelles vertes" },
         { min: "biotite", part: 0.15, taille: [0.7, 1.8], allong: [4, 7], role: "lamelles noires" },
@@ -1290,8 +1290,8 @@
     },
     gneiss: {
       mode: "rubanee", nom: "rubanée (gneissique)", champ: 20, vue: "Surface sciée et polie", taille: 0.9, aplatissement: 1.7, plis: 7,
-      grain: "rubans clairs et sombres de 1 à 5 mm, grains de 0,5 à 2 mm",
-      intro: "À 20–30 km de profondeur et vers 600–700 °C, la roche s'est déformée sans fondre : ses minéraux se sont séparés en rubans, clairs (quartz et feldspaths) ou sombres (biotite et grenat), étirés dans le sens de la déformation.",
+      grain: "Des grains de 0,5 à 2 mm composent des rubans clairs ou sombres, épais de 1 à 5 mm.",
+      intro: "Vers 600 à 700 °C, entre 20 et 30 km de profondeur, la roche se déforme sans fondre : ses minéraux se rangent en rubans clairs (quartz et feldspaths) ou sombres (biotite et grenat).",
       clair: { titre: "Rubans clairs", part: 0.62, epaisseur: [1.5, 4.5], grains: [
         { min: "quartz", part: 0.27, sansMarque: true, role: "grains gris" },
         { min: "orthose", part: 0.33, role: "grains roses" },
@@ -1305,8 +1305,8 @@
     },
     mylonite: {
       mode: "mylonitique", nom: "mylonitique (œillée)", champ: 10, vue: "Vue au microscope", queue: "#efd9cb",
-      grain: "porphyroclastes de 0,5 à 3 mm dans une matrice aux grains de quelques centièmes de millimètre",
-      intro: "Dans une zone de cisaillement, à plus de 10 km de profondeur (au-delà d'environ 300 °C, là où le quartz se déforme sans casser), la roche a été laminée à l'état solide : les grains se sont réduits et étirés en rubans, seuls les feldspaths, plus résistants, ont survécu en « yeux » arrondis.",
+      grain: "Une matrice aux grains de quelques centièmes de millimètre entoure des porphyroclastes de 0,5 à 3 mm.",
+      intro: "Dans une zone de cisaillement, au-delà de 10 km de profondeur et de 300 °C environ (là où le quartz se déforme sans se briser), la roche a été laminée à l'état solide : les grains se sont réduits en rubans, tandis que les feldspaths, plus résistants, subsistent en « yeux » arrondis.",
       clastes: [
         { min: "orthose", part: 0.16, taille: [1.2, 3], role: "yeux roses, en deux moitiés" },
         { min: "plagioclases", part: 0.12, taille: [0.8, 2], role: "yeux blancs striés" },
@@ -1333,7 +1333,7 @@
   // grains [{ min, part, taille, forme: "grain" | "framboise" | "plaque" | "rhombe", role }], matrice { nom, fond, taches, role }, net.
   const CHONDRES = {
     po: { cle: "ch:olivine", nom: "Chondres porphyriques à olivine", fond: "#c3cc6a", verre: "#8f8b68", role: "cristaux d'olivine dans un peu de verre" },
-    bo: { cle: "chb:olivine", nom: "Chondres à barres d'olivine", fond: "#c7cf72", verre: "#625d48", role: "lamelles parallèles d'olivine, figées d'une goutte entièrement fondue" },
+    bo: { cle: "chb:olivine", nom: "Chondres à barres d'olivine", fond: "#c7cf72", verre: "#625d48", role: "Une goutte entièrement fondue a figé des lamelles d'olivine parallèles." },
     rp: { cle: "ch:enstatite", nom: "Chondres radiés de pyroxène", fond: "#d4cfae", verre: "#8c8a68", role: "fibres de pyroxène qui rayonnent d'un point" },
     pop: { cle: "chp:enstatite", nom: "Chondres à olivine et pyroxène", fond: "#b9bd82", verre: "#7b7656", role: "olivine et pyroxène mêlés" },
   };
@@ -1420,11 +1420,11 @@
       ...(t.grains || []).map((o) => repereSur(G, objets.filter((c) => c.cle === (o.cle || o.min)), o.ab || hab(o.min).ab, 24)),
     ];
     const groupes = [];
-    if (t.cai) groupes.push({ titre: "Les premiers solides du Système solaire", lignes: [{ ab: "CAI", nom: "Inclusions réfractaires", cle: "cai", couleur: "#f3efe3", role: "riches en calcium et en aluminium, 4 567 millions d'années" }] });
-    if (vus.length) groupes.push({ titre: t.titreChondres || "Chondres : gouttes fondues puis figées en quelques heures, dans le disque autour du Soleil",
+    if (t.cai) groupes.push({ titre: "Les premiers solides du Système solaire", lignes: [{ ab: "CAI", nom: "Inclusions réfractaires", cle: "cai", couleur: "#f3efe3", role: "Formés il y a 4 567 millions d'années, ces chondres sont riches en calcium et en aluminium." }] });
+    if (vus.length) groupes.push({ titre: t.titreChondres || "Les chondres naissent de gouttes fondues puis figées en quelques heures, dans le disque qui entourait le Soleil.",
       lignes: vus.map((k) => ({ ab: k === "po" ? "PO" : k === "bo" ? "BO" : k === "rp" ? "RP" : "POP", nom: CHONDRES[k].nom, cle: CHONDRES[k].cle, couleur: CHONDRES[k].fond, role: CHONDRES[k].role })) });
     if ((t.grains || []).length) groupes.push({ titre: t.titreGrains || "Grains de métal et de sulfure", lignes: t.grains.map((o) => ({ ...ligne(roche, o.min, o.role, o.cle || o.min), couleur: o.fond || COUL_MET[o.min] || hab(o.min).fond, ...(o.ab ? { ab: o.ab } : {}) })) });
-    groupes.push({ titre: t.titreMatrice || "Matrice : la poussière fine qui a soudé le tout", lignes: [{ nom: m.nom, role: m.role, couleur: m.fond, cle: "matrice", fond: true }] });
+    groupes.push({ titre: t.titreMatrice || "Matrice : une poussière fine ayant fait office de liant.", lignes: [{ nom: m.nom, role: m.role, couleur: m.fond, cle: "matrice", fond: true }] });
     return { corps, reperes, mesure, legende: { titre: t.titreLegende || "De quoi est faite la chondrite", groupes } };
   };
 
@@ -1504,11 +1504,11 @@
     ];
     const groupes = t.structure === "octaedrite" ? [
       { titre: "Au-dessus de 700 °C, le métal n'était qu'un grand cristal de taénite", lignes: [
-        { ab: "Pl", nom: "Plessite", cle: "plessite", couleur: "#6f7276", role: "mélange très fin de kamacite et de taénite, formé en dernier entre les lamelles", fond: true }] },
+        { ab: "Pl", nom: "Plessite", cle: "plessite", couleur: "#6f7276", role: "Entre les lamelles, la kamacite et la taénite forment en dernier lieu un mélange d'une grande finesse.", fond: true }] },
       { titre: "De 700 à 450 °C, en quelques millions d'années : la kamacite pousse en lamelles", lignes: [
-        { ...ligne(roche, "fer_natif", "kamacite (5 à 7 % de nickel) : lamelles selon les quatre directions des faces d'un octaèdre ; l'acide les teinte différemment selon leur orientation"), ab: "Km", couleur: TONS[1] },
-        { ...ligne(roche, "taenite", "liseré brillant qui borde les lamelles : la taénite enrichie en nickel qu'elles ont rejeté"), couleur: "#eceae2" }] },
-    ] : [{ titre: t.structure === "hexaedrite" ? "Un seul cristal de kamacite (moins de 6 % de nickel)" : "Plus de 16 % de nickel : un mélange trop fin pour l'œil",
+        { ...ligne(roche, "fer_natif", "Kamacite (5 à 7 % de nickel) : lamelles orientées selon les quatre directions des faces d'un octaèdre ; après attaque acide, chacune prend une teinte propre à son orientation."), ab: "Km", couleur: TONS[1] },
+        { ...ligne(roche, "taenite", "Liseré brillant qui borde les lamelles : il s'agit de la taénite, enrichie en nickel que les lamelles ont rejeté."), couleur: "#eceae2" }] },
+    ] : [{ titre: t.structure === "hexaedrite" ? "Un seul cristal de kamacite (moins de 6 % de nickel)" : "Teneur en nickel supérieure à 16 % : mélange trop fin pour être distingué à l'œil.",
       lignes: [{ ...ligne(roche, t.structure === "hexaedrite" ? "fer_natif" : "taenite", t.structure === "hexaedrite" ? "rayé de lignes de Neumann, macles fines nées des chocs" : "fuseaux microscopiques de kamacite dans la taénite"), cle: cleFond, couleur: t.structure === "hexaedrite" ? "#aeb2b5" : "#9a9ea2", fond: t.structure === "ataxite" }] }];
     const incl = [...(t.nodules || []).flatMap((o) => [ligne(roche, o.min, o.role), ...(o.liseré ? [{ ...ligne(roche, o.liseré, "liseré autour des nodules"), couleur: COUL_MET[o.liseré] }] : [])]),
       ...(t.aiguilles ? [{ ...ligne(roche, "schreibersite", "aiguilles (rhabdites)"), couleur: COUL_MET.schreibersite }] : [])]
@@ -1549,9 +1549,9 @@
     mesure.metal = 1 - Object.values(mesure).reduce((a, b) => a + b, 0);
     const reperes = [repereSur(G, ol, "Ol", 40), ...[...(t.extra || []), ...(t.grains || [])].map((o) => repereSur(G, objets.filter((c) => c.cle === (o.cle || o.min)), o.ab || hab(o.min).ab, 26))];
     const groupes = [
-      { titre: t.titreOlivine || "Cristaux du manteau d'un astéroïde", lignes: [ligne(roche, "olivine", t.roleOlivine || "cristaux jaune-vert de 0,5 à 2 cm, translucides en tranche fine"),
+      { titre: t.titreOlivine || "Cristaux du manteau d'un astéroïde", lignes: [ligne(roche, "olivine", t.roleOlivine || "En tranche fine, ces cristaux jaune vert, de 0,5 à 2 cm, deviennent translucides."),
         ...(t.extra || []).map((o) => ligne(roche, o.min, o.role, o.cle || o.min))] },
-      { titre: "Métal d'un noyau, injecté entre eux", lignes: [{ ab: "Fe", nom: "Fer-nickel (kamacite et taénite)", cle: "metal", couleur: "#c4c7ca", role: "figures de Widmanstätten là où le métal est assez large", fond: true },
+      { titre: "Métal d'un noyau, injecté entre eux", lignes: [{ ab: "Fe", nom: "Fer-nickel (kamacite et taénite)", cle: "metal", couleur: "#c4c7ca", role: "Les figures de Widmanstätten apparaissent là où le métal forme des plages assez larges.", fond: true },
         ...(t.grains || []).map((o) => ({ ...ligne(roche, o.min, o.role, o.cle || o.min), couleur: COUL_MET[o.min] || hab(o.min).fond }))] },
     ];
     return { corps, reperes: reperes.filter(Boolean), mesure, legende: { titre: "Tranche polie", groupes } };

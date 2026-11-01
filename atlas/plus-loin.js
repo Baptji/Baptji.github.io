@@ -26,9 +26,9 @@
   };
   // roches dont la silice dépend du magma d'origine, ou hors de l'échelle
   const SANS = {
-    tuf_volcanique: "Un tuf peut venir de n'importe quel magma : sa silice va de celle d'un basalte (≈ 49 %) à celle d'une rhyolite (≈ 73 %). Ceux du Cantal sont surtout trachyandésitiques.",
-    breche_volcanique: "Une brèche volcanique est faite de blocs du volcan qui l'a produite : sa silice est celle de ses laves (dans le Cantal, surtout 53 à 63 %).",
-    carbonatite: "Une carbonatite contient moins de 10 % de silice (IUGS : plus de 50 % de carbonates) : elle est hors de ce graphique, bien à gauche des roches ultrabasiques.",
+    tuf_volcanique: "La silice d'un tuf dépend du magma qui l'a produit : elle s'étend de celle d'un basalte (≈ 49 %) à celle d'une rhyolite (≈ 73 %). Ceux du Cantal sont surtout trachyandésitiques.",
+    breche_volcanique: "Une brèche volcanique est constituée de blocs issus du volcan qui l'a produite : sa silice reflète celle des laves émises (dans le Cantal, principalement 53 à 63 %).",
+    carbonatite: "Sur ce graphique, la carbonatite ne figure pas : elle ne compte pas plus de 10 % de silice (selon l'IUGS, au-delà de 50 % de carbonates) et se place bien à gauche des roches ultrabasiques.",
   };
   const REPERES = [["peridotite", "péridotite"], ["basalte", "basalte"], ["andesite", "andésite"], ["dacite", "dacite"], ["rhyolite", "rhyolite"]];
   const DOMAINES = [[SMIN, 45, "ultrabasique", "#e2d8c9"], [45, 52, "basique", "#e8dfd2"], [52, 63, "intermédiaire", "#eee8de"], [63, SMAX, "acide", "#f7f3ec"]];
@@ -37,35 +37,35 @@
   // tableau qui correspond à la roche est surlignée. Ordres de grandeur : viscosité (Giordano et al. 2008), températures
   // d'éruption et densités de manuel ; vocabulaire « acide/basique » gardé par l'IUGS comme simple étiquette de silice.
   const FAMILLES = [
-    ["ultrabasique", "moins de 45 %", "olivine, pyroxène ; ni feldspath ni quartz", "vert sombre à noir", "≈ 3,3", "péridotite", "komatiite (presque toutes ont plus de 2,5 milliards d'années)", "1 400 à 1 650 °C", "très faible"],
-    ["basique", "45 à 52 %", "pyroxène, plagioclase riche en calcium, parfois olivine", "noir à gris foncé", "≈ 3,0", "gabbro", "basalte", "1 100 à 1 250 °C", "faible : 10 à 1 000 Pa·s, comme un miel épais"],
+    ["ultrabasique", "moins de 45 %", "olivine, pyroxène ; ni feldspath ni quartz", "vert sombre à noir", "≈ 3,3", "péridotite", "komatiites (la plupart ont plus de 2,5 milliards d'années)", "1 400 à 1 650 °C", "très faible"],
+    ["basique", "45 à 52 %", "pyroxène, plagioclase riche en calcium, parfois olivine", "noir à gris foncé", "≈ 3,0", "gabbro", "basalte", "1 100 à 1 250 °C", "Viscosité faible, de 10 à 1 000 Pa·s, comparable à celle d'un miel épais."],
     ["intermédiaire", "52 à 63 %", "plagioclase, amphibole, biotite, un peu de pyroxène", "gris moyen, « poivre et sel »", "≈ 2,8", "diorite", "andésite", "900 à 1 100 °C", "moyenne"],
-    ["acide", "plus de 63 %", "quartz, feldspath potassique, plagioclase riche en sodium, micas", "clair : blanc, rose, gris clair", "≈ 2,65", "granite", "rhyolite", "700 à 900 °C", "très forte : un million de fois celle d'un basalte, ou plus"],
+    ["acide", "plus de 63 %", "quartz, feldspath potassique, plagioclase riche en sodium, micas", "clair : blanc, rose, gris clair", "≈ 2,65", "granite", "rhyolite", "700 à 900 °C", "Très élevée : sa viscosité dépasse de un million de fois celle d'un basalte, voire davantage."],
   ];
   function acideHTML(dom) {
     const lignes = FAMILLES.map((f) => `<tr${f[0] === dom ? ' class="pl-ici"' : ""}><td><b>${f[0]}</b><br><span class="pl-petit">${f[1]} de silice</span></td><td>${f[2]}</td><td>${f[3]}</td><td>${f[4]}</td><td>${f[5]} · ${f[6]}</td><td>${f[7]}</td><td>${f[8]}</td></tr>`).join("");
     return `<div class="pl-plis">
     <details class="pl-pli"><summary>I. Pourquoi dit-on « acide » ? Ce n'est pas le pH</summary>
-      <p>Le mot vient de la chimie du XIXᵉ siècle. On rangeait alors les oxydes en deux camps : les <b>acides</b>, qui se combinent aux autres, et les <b>bases</b>, qui sont combinées. La silice SiO₂ était l'acide (« acide silicique »), et la chaux CaO, la magnésie MgO, l'oxyde de fer FeO, la soude Na₂O et la potasse K₂O les bases. Un silicate était vu comme un sel de cet acide. Une roche riche en silice était donc « acide », une roche riche en chaux, magnésie et fer « basique ».</p>
-      <p>C'est une <b>étiquette de composition</b>, rien de plus : une roche n'a pas de pH, et le granite ne libère aucun acide. Aujourd'hui, l'IUGS garde ces mots seulement pour dire combien de silice contient la roche, avec des bornes chiffrées : 45, 52 et 63 %. Beaucoup de géologues leur préfèrent <b>felsique</b> (riche en feldspaths et en silice, donc clair) et <b>mafique</b> (riche en magnésium et en fer, donc sombre).</p>
-      <p>Ce qui entretient la confusion : les sols sur granite sont bien acides, au sens du pH. Mais ce n'est pas la silice qui les acidifie. Le granite contient peu de calcium et de magnésium. Or ce sont ces éléments, libérés par l'altération, qui neutralisent l'acidité de la pluie et de l'humus. Sur un basalte, il y en a beaucoup, et le sol est moins acide. Les deux sens du mot se rejoignent donc souvent sur le terrain, pour des raisons différentes.</p>
+      <p>Ce mot provient de la chimie du XIXᵉ siècle. On répartissait alors les oxydes en deux catégories : les <b>acides</b>, qui se combinent avec d'autres composés, et les <b>bases</b>, qui se trouvent combinées. La silice SiO₂ jouait le rôle d'acide (« acide silicique »), tandis que la chaux CaO, la magnésie MgO, l'oxyde de fer FeO, la soude Na₂O et la potasse K₂O en étaient les bases. Un silicate passait pour un sel de cet acide. On qualifiait donc d'« acide » une roche riche en silice, et de « basique » une roche riche en chaux, magnésie et fer.</p>
+      <p>Il s'agit d'une <b>étiquette de composition</b>, rien de plus : une roche ne possède pas de pH, et le granite ne libère aucun acide. Aujourd'hui, l'IUGS conserve ces termes uniquement pour indiquer la teneur en silice, avec des bornes chiffrées : 45, 52 et 63 %. Nombre de géologues leur préfèrent <b>felsique</b> (riche en feldspaths et en silice, donc clair) et <b>mafique</b> (riche en magnésium et en fer, donc sombre).</p>
+      <p>La confusion vient de ce que les sols sur granite sont effectivement acides au sens du pH. Ce n'est cependant pas la silice qui les acidifie. Le granite renferme peu de calcium et de magnésium, or ce sont ces éléments, libérés par l'altération, qui neutralisent l'acidité de la pluie et de l'humus. Sur un basalte, ils abondent et le sol est moins acide. Les deux acceptions se rejoignent donc souvent sur le terrain, pour des raisons différentes.</p>
     </details>
     <details class="pl-pli"><summary>II. Ce que la silice change : minéraux, couleur, densité, lave</summary>
-      <p><b>Les minéraux.</b> Dans un magma, la silice sert d'abord à construire les silicates. Quand il y en a beaucoup, il en reste une fois les feldspaths et les micas faits : ce reste cristallise seul, c'est le <b>quartz</b>. Une roche acide a donc presque toujours du quartz. Quand il y a peu de silice, on n'a que des minéraux qui en demandent peu, comme l'olivine et le pyroxène, et jamais de quartz.</p>
-      <p><b>La couleur.</b> La silice va de pair avec le sodium, le potassium et l'aluminium, qui donnent des minéraux clairs (quartz, feldspaths, muscovite). Peu de silice va avec le fer et le magnésium, qui donnent des minéraux sombres (olivine, pyroxène, amphibole, biotite). D'où la règle de terrain : plus une roche magmatique est claire, plus elle est acide.</p>
-      <p><b>La densité.</b> Les minéraux clairs sont légers, les minéraux à fer et magnésium lourds. Le granite (≈ 2,65 t/m³) est plus léger que le basalte (≈ 3,0) : c'est pourquoi la croûte des continents, plutôt granitique, « flotte » plus haut que le plancher des océans, basaltique.</p>
-      <p><b>La lave.</b> Dans un magma, les groupes SiO₄ s'accrochent les uns aux autres en chaînes et en réseaux. Plus il y a de silice, plus ce réseau est serré et plus le liquide est visqueux. Un magma acide est aussi plus froid, ce qui le rend plus visqueux encore. Un basalte coule en rivières de lave, comme à la chaîne des Puys. Une lave acide avance à peine : elle forme des dômes, et ses gaz, qui ne peuvent pas s'échapper, la font exploser (ponces, cendres, ignimbrites).</p>
+      <p><b>Les minéraux.</b> Dans un magma, la silice entre d'abord dans la composition des silicates. Lorsqu'elle abonde, elle subsiste une fois feldspaths et micas formés : ce surplus cristallise à part, sous forme de <b>quartz</b>. Une roche acide contient donc presque toujours du quartz. En revanche, une roche pauvre en silice ne renferme que des minéraux qui en exigent peu, comme l'olivine et le pyroxène, et jamais de quartz.</p>
+      <p><b>La couleur.</b> Silice, sodium, potassium et aluminium vont souvent ensemble, et leur association produit des minéraux clairs (quartz, feldspaths, muscovite). À l'inverse, le fer et le magnésium, peu accompagnés de silice, forment des minéraux sombres (olivine, pyroxène, amphibole, biotite). Sur le terrain, plus une roche magmatique est pâle, plus elle est acide.</p>
+      <p><b>La densité.</b> Les minéraux pâles ont une faible masse volumique, ceux qui contiennent fer et magnésium sont plus lourds. Le granite (≈ 2,65 t/m³) est donc moins dense que le basalte (≈ 3,0) : la croûte continentale, plutôt granitique, flotte plus haut que le plancher océanique, constitué de basalte.</p>
+      <p><b>La lave.</b> Dans un magma, les groupements SiO₄ s'enchaînent en chaînes et en réseaux. Plus la silice est abondante, plus ce réseau est dense et plus le liquide est visqueux. À température égale, un magma acide l'est déjà davantage, et encore plus lorsqu'il est froid. Le basalte coule en rivières de lave, à la manière des coulées de la chaîne des Puys. Une lave acide progresse à peine : elle s'accumule en dômes, et ses gaz, incapables de s'échapper, provoquent des explosions (ponces, cendres, ignimbrites).</p>
       <div class="pl-tableau"><table class="data">
         <tr><th>Famille</th><th>Minéraux principaux</th><th>Couleur</th><th>Densité (t/m³)</th><th>En profondeur · en surface</th><th>Magma</th><th>Viscosité</th></tr>
         ${lignes}
       </table></div>
-      ${dom ? `<p class="pl-petit">La ligne surlignée est celle de cette roche.</p>` : ""}
+      ${dom ? `<p class="pl-petit">Le trait surligné correspond à cette roche.</p>` : ""}
     </details>
     <details class="pl-pli"><summary>III. D'où vient un magma acide ?</summary>
-      <p>Le manteau, lui, est ultrabasique (péridotite, ≈ 42 % de silice). Quand il fond en partie, il ne donne jamais directement un liquide acide : il donne un <b>basalte</b> (≈ 49 %). Pour arriver à plus de 63 %, il y a deux chemins.</p>
-      <p><b>1. Faire fondre la croûte continentale.</b> La croûte est déjà riche en silice. Quand une collision l'épaissit, sa base, vers 25 à 35 km, chauffe et fond en partie vers 700 à 850 °C. Les premiers liquides qui apparaissent sont les plus riches en silice : ils donnent les granites, comme ceux du Massif central et de la Bretagne, formés pendant la collision varisque.</p>
-      <p><b>2. Faire cristalliser un basalte petit à petit.</b> Les premiers minéraux qui cristallisent dans un basalte (olivine, pyroxène, plagioclase riche en calcium) contiennent moins de silice que le liquide. En se formant, ils la laissent donc dans le liquide restant, qui s'enrichit : basalte, puis andésite, dacite, et enfin rhyolite. C'est la <b>cristallisation fractionnée</b>. On la voit dans le Massif central : les grands volcans du Mont-Dore et du Cantal ont émis des basaltes, puis des laves de plus en plus riches en silice, jusqu'aux trachytes et aux rhyolites.</p>
-      <p>Dans les deux cas, il faut un <b>continent</b> ou une <b>zone de subduction</b>. C'est pourquoi les roches acides sont rares au fond des océans, et abondantes dans les chaînes de montagnes et sous les volcans des subductions, comme dans les Andes.</p>
+      <p>La péridotite du manteau, ultrabasique, titre ≈ 42 % de silice. Sa fusion partielle ne produit jamais directement de liquide acide, mais un <b>basalte</b> (≈ 49 %). Deux voies permettent d'atteindre plus de 63 %.</p>
+      <p><b>1. La fusion de la croûte continentale.</b> Déjà riche en silice, la croûte fournit le point de départ. Lorsqu'une collision l'épaissit, sa base, située vers 25 à 35 km, s'échauffe et fond partiellement entre 700 et 850 °C. Le liquide initial est le plus siliceux de tous : il engendre les granites du Massif central et de la Bretagne, mis en place lors de la collision varisque.</p>
+      <p><b>2. La cristallisation fractionnée d'un basalte.</b> Les premiers minéraux formés à partir d'un basalte (olivine, pyroxène, plagioclase calcique) renferment moins de silice que le liquide. Ils l'abandonnent donc dans le liquide résiduel, qui s'enrichit peu à peu : le basalte cède la place à l'andésite, puis à la dacite et enfin à la rhyolite. Le Massif central en fournit l'illustration : les grands volcans du Mont-Dore et du Cantal ont d'abord émis des basaltes, puis des laves toujours plus siliceuses, jusqu'aux trachytes et aux rhyolites.</p>
+      <p>Dans les deux cas, un <b>continent</b> ou une <b>zone de subduction</b> s'avère nécessaire. D'où la rareté des roches acides au fond des océans, et leur abondance dans les chaînes de montagnes et sous les volcans de subduction, comme dans les Andes.</p>
     </details>
   </div>`;
   }
@@ -84,7 +84,7 @@
       [52, 63, "intermédiaire", "#8c8b86", "#fff"], [63, 100, "acide", "#ecd6cd", "#3a2a24"]];
     let s = `<rect x="0" y="0" width="${WS}" height="${HS}" fill="#f6f4ee"/>`;
     // 1. ce que contient la roche
-    s += `<text x="${A0}" y="13" class="si-t">Ce que contient la roche (en % de sa masse)</text>`;
+    s += `<text x="${A0}" y="13" class="si-t">Teneur de la roche en silice (en % de sa masse)</text>`;
     s += `<rect x="${A0}" y="19" width="${A1 - A0}" height="24" rx="3" fill="#e6e2d9"/>`;
     s += `<rect x="${A0}" y="19" width="${r1(XS(v) - A0)}" height="24" rx="3" fill="#9fb8cf"/>`;
     s += `<rect x="${A0}" y="19" width="${A1 - A0}" height="24" rx="3" fill="none" stroke="#8f897d" stroke-width="0.8"/>`;
@@ -92,7 +92,7 @@
     if (100 - v >= 22) s += `<text x="${r1((XS(v) + A1) / 2)}" y="35" class="si-t si-doux" text-anchor="middle">le reste : ${100 - v} %</text>`;
     // 2. trait vers la famille
     s += `<line x1="${XS(v)}" y1="43" x2="${XS(v)}" y2="64" stroke="#c0392b" stroke-width="1.6"/><path d="M${XS(v) - 4} 59 L${XS(v)} 66 L${XS(v) + 4} 59 Z" fill="#c0392b"/>`;
-    s += `<text x="${A0}" y="60" class="si-t">Sa famille, d'après cette part de silice</text>`;
+    s += `<text x="${A0}" y="60" class="si-t">Sa famille, d'après cette teneur en silice</text>`;
     for (const [p, q, n, c, ct] of BANDE) {
       const ici = n === dom;
       s += `<rect x="${XS(p)}" y="67" width="${r1(XS(q) - XS(p))}" height="22" fill="${c}" opacity="${ici ? 1 : 0.32}"/>`;
@@ -112,9 +112,9 @@
     });
     const lab = `${roche.nom.split(" (")[0]} : environ ${v} % de silice`;
     return `<h3>Silice de la roche</h3>
-    <p class="sub">${roche.nom.split(" (")[0]} : environ ${v} % de silice (${a} à ${b} % le plus souvent), une roche ${dom}. « Acide » veut seulement dire riche en silice : ça n'a rien à voir avec le pH. La silice règle les minéraux, la couleur, la densité de la roche et la viscosité de son magma (détails ci-dessous).</p>
+    <p class="sub">${roche.nom.split(" (")[0]} : environ ${v} % de silice (${a} à ${b} % le plus souvent), roche ${dom}. Le mot « acide » signifie simplement riche en silice, sans aucun rapport avec le pH. La silice gouverne les minéraux, la couleur et la densité de la roche, ainsi que la viscosité de son magma (détails ci-dessous).</p>
     <div class="pl-silice"><svg viewBox="0 0 ${WS} ${HS}" role="img" aria-label="${lab}, roche ${dom}">${s}</svg></div>
-    <p class="pl-note">La jauge du haut est la quantité de silice ; la bande du bas, les familles, teintées comme les roches de chaque famille. Limites IUGS : 45, 52 et 63 % (Le Maitre et al. 2002) ; les anciens manuels plaçaient les roches acides au-delà de 66 % et les intermédiaires à partir de 53 %. ${lm ? "Valeur : moyenne mondiale de Le Maitre (1976), arrondie." : "Valeur typique de la roche, arrondie ; la fourchette est indicative."}</p>
+    <p class="pl-note">En haut, la jauge indique la teneur en silice ; en bas, la bande présente les familles, colorées comme les roches de chacune. Bornes IUGS : 45, 52 et 63 % (Le Maitre et al. 2002) ; les anciens manuels rangeaient les roches acides au-delà de 66 % et les intermédiaires à partir de 53 %. ${lm ? "Valeur : moyenne mondiale de Le Maitre (1976), arrondie." : "Valeur courante de la roche, arrondie ; la fourchette n'est qu'indicative."}</p>
     ${acideHTML(dom)}`;
   }
 
@@ -162,16 +162,16 @@
       textes: [[830, 0.28, "à plagioclase", { a: "start" }], [960, 1.05, "à spinelle", { a: "start" }], [830, 2.9, "à grenat", { a: "start" }],
         [1600, 0.5, "fondu en partie", { a: "end" }], [1420, 1.75, "solidus sec", { a: "end" }]],
     };
-    let texte = "Le même manteau, de même composition, ne cristallise pas les mêmes minéraux selon la pression. L'aluminium y loge dans le plagioclase près de la surface, dans le spinelle entre 25 et 60 km environ, dans le grenat plus bas : on parle de lherzolite à plagioclase, à spinelle ou à grenat.";
+    let texte = "À composition identique, le manteau ne forme pas les mêmes minéraux selon la pression. Près de la surface, l'aluminium s'installe dans le plagioclase ; entre 25 et 60 km environ, dans le spinelle ; plus bas, dans le grenat. On parle alors de lherzolite à plagioclase, à spinelle ou à grenat.";
     if (roche.id === "peridotite") {
       o.chemin = [[1000, 1.2], [800, 0.55]];
       o.points = [[1000, 1.2, "Lherz", {}]];
-      texte += " La lherzolite de Lherz est une lherzolite à spinelle, remontée d'environ 40 km (trait rouge : sa remontée, schématique).";
-    } else if (roche.id === "kimberlite") texte += " Une kimberlite naît bien plus bas, dans le champ du grenat (150 à 250 km, hors du cadre) : elle en rapporte des grenats et parfois des diamants.";
-    else if (roche.id === "komatiite") texte += " Le magma d'une komatiite naît dans le champ du grenat, à plus de 150 km, bien au-delà du solidus d'aujourd'hui.";
-    else texte += " Le magma d'une picrite naît au passage du solidus, vers 2 à 3 GPa sous un panache, dans le champ du grenat.";
+      texte += " Située à Lherz, la lherzolite étudiée est à spinelle : elle est remontée d'environ 40 km (trait rouge, schématique).";
+    } else if (roche.id === "kimberlite") texte += " Plus profonde encore, la kimberlite prend naissance dans le champ du grenat, entre 150 et 250 km (hors du cadre) ; elle remonte en emportant grenats et, parfois, diamants.";
+    else if (roche.id === "komatiite") texte += " Le magma komatiitique se forme dans le champ du grenat, à plus de 150 km de profondeur, loin au-delà du solidus actuel.";
+    else texte += " La picrite jaillit au franchissement du solidus, vers 2 à 3 GPa sous un panache, dans le champ du grenat.";
     return `<h3>Quels minéraux selon la pression ? Le manteau</h3><p class="sub">${texte}</p>${cadrePT(o)}
-    <p class="pl-note">Limites mesurées : plagioclase → spinelle à 0,7 GPa (1 000 °C) et 0,8 GPa (1 100 °C) dans une lherzolite fertile (Borghini et al. 2010) ; spinelle → grenat à 1,8–2,0 GPa (1 200 °C) et 2,6–2,7 GPa (1 500 °C) dans le système simplifié CaO–MgO–Al₂O₃–SiO₂ (Klemme et O'Neill 2000) ; le chrome d'un manteau naturel repousse le grenat un peu plus bas. Solidus sec : Hirschmann (2000). Droites prolongées au-delà des mesures.</p>`;
+    <p class="pl-note">Mesures : la transition du plagioclase vers le spinelle a lieu à 0,7 GPa (1 000 °C), puis à 0,8 GPa (1 100 °C), pour une lherzolite fertile (Borghini et al. 2010). La transition du spinelle vers le grenat se produit entre 1,8 et 2,0 GPa à 1 200 °C, puis entre 2,6 et 2,7 GPa à 1 500 °C, dans le système simplifié CaO, MgO, Al₂O₃, SiO₂ (Klemme et O'Neill 2000). Le chrome, présent dans un manteau naturel, abaisse un peu cette limite. Solidus sec : Hirschmann (2000). Les droites sont prolongées au-delà des mesures.</p>`;
   }
   function basaltePT(roche) {
     const o = {
@@ -181,11 +181,11 @@
       textes: [[1125, 0.55, "gabbro : plagioclase + pyroxène (+ olivine)"], [1125, 1.6, "granulite à grenat : grenat + pyroxène + plagioclase + quartz"], [1125, 2.6, "éclogite : grenat + pyroxène (omphacite)"],
         [1245, 0.95, "le grenat apparaît", { a: "end", c: "fa-leg" }], [1245, 2.05, "le plagioclase disparaît", { a: "end", c: "fa-leg" }]],
     };
-    let texte = "Un basalte de même composition donne, en cristallisant ou en recristallisant, des roches différentes selon la pression : un gabbro près de la surface, une granulite à grenat en profondeur, une éclogite au-delà d'environ 70 km. Le grenat, très dense, remplace le plagioclase quand la pression monte.";
+    let texte = "Un même basalte engendre, par cristallisation ou recristallisation, des roches différentes selon la pression : un gabbro près de la surface, une granulite à grenat en profondeur, une éclogite au-delà d'environ 70 km. Quand la pression croît, le grenat, très dense, se substitue au plagioclase.";
     if (roche.id === "gabbro" || roche.id === "dolerite") o.points = [[1150, 0.13, roche.id === "gabbro" ? "gabbro du Chenaillet (≈ 5 km)" : "dolérite (filons, sills)", {}]];
-    if (roche.id === "eclogite") texte += " Les éclogites du Massif central se sont formées bien plus froides (≈ 550–700 °C, hors du cadre) : dans une subduction, la plaque reste froide.";
+    if (roche.id === "eclogite") texte += " Formées à bien plus basse température (≈ 550 à 700 °C, hors du cadre), les éclogites du Massif central témoignent d'une plaque restée froide dans une zone de subduction.";
     return `<h3>Quels minéraux selon la pression ? Le basalte</h3><p class="sub">${texte}</p>${cadrePT(o)}
-    <p class="pl-note">Limites mesurées à 1 100 °C sur un basalte à quartz : le grenat apparaît vers 1,0 GPa, le plagioclase disparaît vers 2,1 GPa (Green et Ringwood 1967) ; selon la composition du basalte, la zone de transition va de 0,34 à 1,2 GPa de large. Expériences au-dessus de 1 000 °C seulement ; la pente des limites n'est pas dessinée.</p>`;
+    <p class="pl-note">Expériences à 1 100 °C menées sur un basalte à quartz : vers 1,0 GPa apparaît le grenat, et vers 2,1 GPa le plagioclase disparaît (Green et Ringwood 1967). La largeur de la zone de transition dépend de la composition, de 0,34 à 1,2 GPa. Ces essais dépassent 1 000 °C ; la pente des limites n'est pas figurée.</p>`;
   }
 
   function html(roche) {

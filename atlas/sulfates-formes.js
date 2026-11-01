@@ -11,6 +11,20 @@
   const HEX = (a, c) => [a, a, c, 90, 90, 120];
   if (window.Cristal) Object.assign(Cristal.CRISTAUX, {
 
+    // ─────────── Thénardite (F.12, 16/10/2026) ───────────
+    thenardite: {
+      nom: "Thénardite", couleur: "#e6e2d8", systeme: "orthorhombique", classe: "mmm", classeNom: "dipyramidale rhombique", reseau: "F",
+      maille: [9.829, 12.302, 5.868, 90, 90, 90], mailleSource: "cod9004092", azimut: 22, elevation: 14,
+      macleNote: "Macles sur {110}, fréquemment en croix. Plus grossières, elles prennent une forme de papillon sur {011}.",
+      facies: [
+        { nom: "Dipyramide", formes: [{ sym: "o", hkl: [1, 1, 1], nom: "dipyramide", d: 1.0 }],
+          note: "Forme la plus répandue parmi les cristaux libres, pouvant atteindre 20 cm dans les lacs salés de Californie et du Chili." },
+        { nom: "Tablette", formes: [{ sym: "b", hkl: [0, 1, 0], nom: "pinacoïde", d: 0.5 }, { sym: "e", hkl: [1, 0, 1], nom: "dôme", d: 1.0 }],
+          note: "Tablette selon b, bordée d'un large dôme {101}. Le plus souvent, la thénardite se présente seulement sous forme de poudre ou de croûte." },
+      ],
+      clivages: [{ hkl: [0, 1, 0], qualite: "parfait", nom: "{010}", pas: 0.22 }],
+    },
+
     // ─────────── Barytine ───────────
     barytine: {
       nom: "Barytine", couleur: "#e9e1d2", systeme: "orthorhombique", classe: "mmm", classeNom: "dipyramidale rhombique", reseau: "P",
@@ -22,7 +36,7 @@
             { sym: "m", hkl: [2, 1, 0], nom: "prisme", d: 1.0 },
             { sym: "o", hkl: [0, 1, 1], nom: "dôme", d: 0.78 },
           ],
-          note: "Tablettes épaisses à contour losangique ou rectangulaire, très lourdes pour un minéral clair (4,5). Groupées en éventail, elles font les « crêtes de coq » ; dans les sables, les « roses des sables » de barytine de l'Oklahoma." },
+          note: "Pour un minéral clair, ces tablettes épaisses, losangiques ou rectangulaires, sont très denses (4,5). Disposées en éventail, elles donnent les « crêtes de coq » ; enfouies dans les sables, elles produisent les « roses des sables » de barytine de l'Oklahoma." },
       ],
       clivages: [
         { hkl: [0, 0, 1], qualite: "parfait", nom: "basal {001}", pas: 0.22 },
@@ -42,7 +56,7 @@
             { sym: "o", hkl: [0, 1, 1], nom: "dôme", d: 0.85 },
             { sym: "d", hkl: [1, 0, 1], nom: "dôme", d: 1.1 },
           ],
-          note: "Tablettes et prismes bleu ciel (d'où son nom, du latin <i>caelestis</i>), tapissant les géodes des calcaires et des marnes." },
+          note: "Tablettes et prismes bleu ciel, dont le nom vient du latin <i>caelestis</i>, qui tapissent les géodes des calcaires et des marnes." },
       ],
       clivages: [
         { hkl: [0, 0, 1], qualite: "parfait", nom: "basal {001}", pas: 0.22 },
@@ -61,7 +75,7 @@
             { sym: "c", hkl: [1, 0, 0], nom: "pinacoïde", d: 0.9 },
             { sym: "p", hkl: [1, 1, 1], nom: "bipyramide", d: 1.05 },
           ],
-          note: "Cristaux à l'éclat adamantin, souvent posés dans une cavité de la galène dont ils sont nés. Indices dans les axes de la structure 3D (Pbnm) : la tablette {001} des ouvrages est ici {100}." },
+          note: "Dont ils sont issus, ces cristaux à l'éclat adamantin se logent souvent dans une cavité de la galène. Dans la structure 3D (Pbnm), les indices suivent les axes : ce que les ouvrages notent {001} pour la tablette s'écrit ici {100}." },
       ],
       clivages: [{ hkl: [1, 0, 0], qualite: "bon", nom: "{100} ({001} dans la notation Pnma des ouvrages)", pas: 0.24 }],
     },
@@ -73,7 +87,7 @@
       facies: [
         { nom: "Rhomboèdre pseudo-cubique",
           formes: [{ sym: "r", hkl: [1, 0, -1, 2], nom: "rhomboèdre", d: 1.0 }, { sym: "c", hkl: [0, 0, 0, 1], nom: "pinacoïde basal", d: 1.15 }],
-          note: "Petits rhomboèdres presque cubiques (angle de 89°), rares : l'alunite forme surtout des masses grenues ou terreuses dans les roches volcaniques altérées." },
+          note: "Peu fréquents, de petits rhomboèdres presque cubiques (angle de 89°) ; dans les roches volcaniques altérées, l'alunite se présente surtout en masses grenues ou terreuses." },
       ],
       clivages: [{ hkl: [0, 0, 0, 1], qualite: "net", nom: "basal", pas: 0.22 }],
     },
@@ -85,7 +99,7 @@
       facies: [
         { nom: "Tablette pseudo-cubique",
           formes: [{ sym: "c", hkl: [0, 0, 0, 1], nom: "pinacoïde basal", d: 0.65 }, { sym: "r", hkl: [1, 0, -1, 2], nom: "rhomboèdre", d: 1.0 }],
-          note: "Petites tablettes et rhomboèdres jaune-brun, souvent en croûtes scintillantes sur les roches à pyrite altérées." },
+          note: "Sur les roches à pyrite altérée, ces petites tablettes et rhomboèdres jaune-brun composent souvent des croûtes scintillantes." },
       ],
       clivages: [{ hkl: [0, 0, 0, 1], qualite: "net", nom: "basal", pas: 0.22 }],
     },
@@ -100,7 +114,7 @@
             { sym: "m", hkl: [1, 1, 0], nom: "prisme", d: 1.0 },
             { sym: "e", hkl: [0, 1, 1], nom: "dôme", d: 3.4 },
           ],
-          note: "Longs prismes orange vif, striés, souvent creux, entrecroisés en buissons (Dundas, Tasmanie). C'est dans la crocoïte de Sibérie que Vauquelin a découvert le chrome en 1797." },
+          note: "À Dundas (Tasmanie), de longs prismes orange vif, striés et souvent creux, s'entrecroisent en buissons. Ce fut dans la crocoïte de Sibérie que Vauquelin identifia le chrome en 1797." },
       ],
       clivages: [{ hkl: [1, 1, 0], qualite: "net", nom: "{110}", pas: 0.24 }],
     },
@@ -112,7 +126,7 @@
       facies: [
         { nom: "Plaque carrée",
           formes: [{ sym: "c", hkl: [0, 0, 1], nom: "pinacoïde basal", d: 0.25 }, { sym: "n", hkl: [1, 0, 1], nom: "bipyramide", d: 1.0 }],
-          note: "Plaques carrées, minces, orange à jaune miel, aux bords biseautés : Red Cloud (Arizona), Los Lamentos (Mexique), Mežica (Slovénie)." },
+          note: "On trouve, à Red Cloud (Arizona), à Los Lamentos (Mexique) et à Mežica (Slovénie), des plaques carrées et minces, aux bords biseautés, qui vont de l'orange au jaune miel." },
       ],
       clivages: [{ hkl: [1, 0, 1], qualite: "net", nom: "{101}", pas: 0.24 }],
     },
@@ -124,7 +138,7 @@
       facies: [
         { nom: "Bipyramide",
           formes: [{ sym: "e", hkl: [1, 0, 1], nom: "bipyramide", d: 1.0 }],
-          note: "Bipyramides presque octaédriques, blanc crème à orangé ; sous une lampe à ultraviolets courts, la scheelite brille en bleu, et c'est ainsi que les prospecteurs la cherchent la nuit." },
+          note: "Bipyramides presque octaédriques, de couleur blanc crème à orangée ; sous une lampe à ultraviolets courts, la scheelite émet une fluorescence bleue, ce qui permet aux prospecteurs de la repérer de nuit." },
       ],
       clivages: [{ hkl: [1, 0, 1], qualite: "net", nom: "{101}", pas: 0.24 }],
     },
@@ -140,7 +154,7 @@
             { sym: "m", hkl: [1, 1, 0], nom: "prisme", d: 1.0 },
             { sym: "c", hkl: [0, 0, 1], nom: "pinacoïde basal", d: 1.7 },
           ],
-          note: "Tablettes noires allongées selon c, à l'éclat métallique, plantées dans le quartz des filons." },
+          note: "Implantées dans le quartz des filons, les tablettes noires, allongées selon c, présentent un éclat métallique." },
       ],
       clivages: [{ hkl: [0, 1, 0], qualite: "parfait", nom: "{010}", pas: 0.24 }],
     },
@@ -156,211 +170,208 @@
     stoffregen: "Stoffregen R. E., Alpers C. N. et Jambor J. L. (2000). « Alunite–jarosite crystallography, thermodynamics, and geochronology ». <i>Reviews in Mineralogy and Geochemistry</i> 40, p. 453–479.",
     einaudi: "Einaudi M. T., Meinert L. D. et Newberry R. J. (1981). « Skarn deposits ». <i>Economic Geology 75th Anniversary Volume</i>, p. 317–391.",
   };
-  const OXYD = "Pas de diagramme : c'est l'oxydation près de la surface et la chimie de l'eau de pluie qui décident.";
-  const FILON = "Pas de diagramme : ce qui décide ici, c'est la chimie de l'eau chaude (mélange de deux eaux, sulfate et baryum ou strontium), qu'aucun diagramme de l'atlas ne représente.";
+  const OXYD = "Aucun diagramme n'est proposé : l'oxydation proche de la surface et la chimie de l'eau de pluie en décident.";
+  const FILON = "Aucun diagramme n'est proposé : ici, c'est la chimie de l'eau chaude qui décide (mélange de deux eaux, porteuses de sulfate et de baryum ou de strontium), chimie qu'aucun diagramme de l'atlas ne représente.";
 
   Object.assign(MIN_F, {
 
+    // ─────────── Schwertmannite (F.12, 16/10/2026) ───────────
+    schwertmannite: {
+      sansForme: "Aucune forme n'est dessinée : la schwertmannite ne cristallise pas en faces, elle se présente en aiguilles de quelques nanomètres groupées autour de petites sphères.",
+      forme: `Faiblement cristallisée, la schwertmannite ne dispose pas d'une structure établie atome par atome. Le modèle le plus répandu reprend celui de l'akaganéite : des doubles chaînes d'octaèdres de fer délimitant des tunnels carrés. Une partie des sulfates occupe ces tunnels, le reste demeure fixé à la surface des aiguilles ; le modèle 3D ne représente que la charpente du fer.`,
+      intro: `La schwertmannite se forme dans les eaux acides (pH 3 à 4,5) chargées en sulfate de fer, là où la pyrite s'oxyde.`,
+      scenarios: [
+        { nom: "Dans un drainage acide ou un sol sulfaté acide",
+          texte: `Dès qu'une vase à pyrite est drainée ou que l'eau sort d'une mine, la pyrite s'oxyde et libère acide sulfurique et fer. Ce fer, passé à l'état Fe³⁺ au contact de l'air, précipite selon le pH : en jarosite sous pH 3, en schwertmannite entre 3 et 4,5, puis en ferrihydrite et goethite au-delà. Il en résulte les boues ocre-jaune des fossés de polders et des ruisseaux miniers. Peu stable, la schwertmannite devient goethite en un à deux ans, en libérant de l'acide.`,
+          cond: { type: "ehph", systeme: "fer", chemin: [
+            { pH: 7, Eh: -0.1, n: 1, t: "En profondeur, la pyrite reste stable, car l'eau est neutre et dépourvue d'oxygène." },
+            { pH: 3.8, Eh: 0.75, n: 2, t: "Une fois drainée, la pyrite s'oxyde : l'eau devient acide et oxydante. Entre pH 3 et 4,5, et en présence d'un fort excès de sulfate, le fer précipite sous forme de schwertmannite." },
+          ], note: "Le diagramme ne représente pas le soufre : la schwertmannite se forme à la frontière entre le Fe³⁺ dissous et les oxydes de fer, dans une eau acide riche en sulfate." },
+          src: [SRC.nordstrom, "Bigham J. M. et al. (1996). « Schwertmannite and the chemical modeling of iron in acid sulfate waters ». <i>Geochimica et Cosmochimica Acta</i> 60, p. 2111–2121."] },
+      ],
+    },
+
+    // ─────────── Thénardite (F.12, 16/10/2026) ───────────
+    thenardite: {
+      forme: `Un soufre occupe le centre de chaque tétraèdre SO₄, et six oxygènes de sulfates entourent chaque sodium, sans eau. Le lien ionique qui unit le sodium au sulfate est faible, puisqu'une même charge se répartit sur six oxygènes : le sel est donc tendre et très soluble. Dans l'eau, au-dessous de 32,4 °C, la mirabilite, qui porte dix molécules d'eau, devient la phase stable.`,
+      intro: `La thénardite cristallise à partir d'eaux riches en sulfate de sodium qui s'évaporent à chaud, ou elle apparaît lorsque la mirabilite perd son eau.`,
+      scenarios: [
+        { nom: "Dans un lac salé ou une croûte de sol salé",
+          texte: `Au-dessus de 32,4 °C, la thénardite précipite lorsque l'eau chargée de sulfate de sodium s'évapore dans les lacs salés et les sebkhas des régions arides : elle forme alors des croûtes et des cristaux (Espartinas près d'Aranjuez, Searles Lake). Dans les sols salés, elle se rencontre en efflorescences de surface durant la saison sèche, associée à la halite et au gypse.`,
+          cond: false, sansDiagramme: "Aucun diagramme n'est proposé : la température et l'humidité de l'air déterminent le passage entre thénardite et mirabilite, mais l'atlas ne dispose pas de ce diagramme.",
+          src: ["Steiger M. et Asmussen S. (2008). « Crystallization of sodium sulfate phases in porous materials: the phase diagram Na₂SO₄–H₂O and the generation of stress ». <i>Geochimica et Cosmochimica Acta</i> 72, p. 4291–4306."] },
+        { nom: "Quand la mirabilite sèche",
+          texte: `La mirabilite se déshydrate et se transforme en poudre blanche de thénardite lorsque l'humidité de l'air tombe sous 76 % à 20 °C ; la thénardite refixe son eau à l'air humide. Dans les pierres d'un mur, ces allers-retours provoquent leur éclatement.`,
+          cond: false, sansDiagramme: "Aucun diagramme n'est proposé : la réaction a lieu à l'air, à température ordinaire." },
+        { nom: "Autour des fumerolles",
+          texte: `Des gaz de fumerolles, au Vésuve comme à l'Etna, la déposent aussi.`,
+          cond: false, sansDiagramme: "Aucun diagramme n'est proposé : le dépôt se forme à partir des gaz volcaniques." },
+      ],
+    },
+
     // ─────────── Barytine ───────────
     barytine: {
-      forme: `La barytine est faite de tétraèdres SO₄ isolés et de gros ions baryum, chacun entouré de douze oxygènes. Les plans
-        {001} sont les moins liés : clivage parfait, qui détache des lames, et deux autres clivages {210} : un éclat de barytine
-        a des angles de 90° et de 78°. Le baryum, lourd, en fait le plus dense des minéraux clairs courants.`,
-      intro: `La barytine précipite quand une eau qui porte du baryum rencontre une eau qui porte du sulfate.`,
+      forme: `La barytine se compose de tétraèdres SO₄ isolés et de gros ions baryum, chacun entouré de douze oxygènes. Les plans
+{001} sont les moins liés : ils donnent un clivage parfait qui détache des lames, auquel s'ajoutent deux autres clivages {210} ; un éclat de barytine présente des angles de 90° et de 78°. Par son baryum, lourd, elle compte parmi les minéraux clairs les plus denses.`,
+      intro: `La barytine se forme lorsqu'une eau chargée de baryum rencontre une eau chargée de sulfate.`,
       scenarios: [
         { nom: "Dans un filon",
-          texte: `Le baryum, lessivé des feldspaths par des eaux chaudes et salées sans sulfate, remonte par les failles ; au contact
-            d'une eau plus froide riche en sulfate, la barytine précipite aussitôt, tant elle est insoluble. Ces filons, souvent
-            avec la fluorine, ont été exploités dans le Massif central et à Chaillac (Indre) pour les boues de forage.`,
+          texte: `Des eaux chaudes et salées, dépourvues de sulfate, lessivent le baryum des feldspaths et le font remonter par les failles ; au contact
+d'une eau plus froide riche en sulfate, la barytine précipite aussitôt, en raison de son insolubilité. Ces filons, fréquemment
+associés à la fluorine, ont été exploités dans le Massif central et à Chaillac (Indre) pour les boues de forage.`,
           cond: false, sansDiagramme: FILON, src: [SRC.hanor] },
         { nom: "En concrétions dans un sédiment",
-          texte: `Au fond de la mer, la barytine précipite aussi en nodules et en lits là où des eaux de la vase riches en baryum
-            remontent vers l'eau de mer sulfatée. Dans les sables des déserts, elle cristallise entre les grains en « roses des
-            sables », comme le gypse.`,
+          texte: `Au fond des mers, la barytine se dépose également sous forme de nodules et de lits, là où des eaux de vase riches en baryum
+remontent vers l'eau de mer sulfatée. Dans les sables des déserts, elle cristallise entre les grains en « roses des
+sables », à l'image du gypse.`,
           cond: false, sansDiagramme: FILON, src: [SRC.hanor] },
       ],
     },
 
     // ─────────── Célestine ───────────
     celestine: {
-      forme: `Même structure que la barytine, avec le strontium à la place du baryum : même clivage parfait {001} et clivages
-        {210}, mêmes tablettes. Les deux minéraux forment une série ; le strontium, plus léger, la rend moins dense.`,
-      intro: `La célestine cristallise surtout dans les roches sédimentaires, en géodes et dans les évaporites.`,
+      forme: `Elle reprend la structure de la barytine, le strontium remplaçant le baryum : elle présente le même clivage parfait {001}, les mêmes clivages
+{210} et les mêmes tablettes. Les deux minéraux forment une série continue ; le strontium, plus léger, abaisse la densité.`,
+      intro: `La célestine cristallise principalement dans les roches sédimentaires, sous forme de géodes ou dans les évaporites.`,
       scenarios: [
         { nom: "Dans une géode",
-          texte: `Le strontium, libéré quand l'aragonite des coquilles se change en calcite, ou apporté par les saumures, migre
-            dans les marnes et les calcaires et cristallise dans les cavités. Les géodes géantes de Sakoany (Madagascar),
-            tapissées de cristaux bleus, sont fendues et vendues dans le monde entier.`,
+          texte: `Lorsque l'aragonite des coquilles devient calcite, elle libère du strontium ; les saumures en apportent aussi. Ce strontium gagne les marnes et les calcaires, puis cristallise dans les cavités. Les géodes géantes de Sakoany (Madagascar), tapissées de cristaux bleus, sont fendues puis vendues à travers le monde.`,
           cond: false, sansDiagramme: FILON, src: [SRC.hanor] },
       ],
     },
 
     // ─────────── Anglésite ───────────
     anglesite: {
-      forme: `Même structure que la barytine, avec le plomb à la place du baryum. Le plomb, lourd et entouré d'électrons, lui
-        donne un éclat adamantin et une densité de 6,3.`,
-      intro: `L'anglésite est le premier produit d'oxydation de la galène.`,
+      forme: `Elle reprend la structure de la barytine, le plomb occupant la place du baryum. Entouré d'un nuage d'électrons, ce plomb lourd lui
+confère un éclat adamantin et une densité de 6,3.`,
+      intro: `C'est par l'anglésite que commence l'oxydation de la galène.`,
       scenarios: [
         { nom: "Dans la zone oxydée d'un filon de plomb",
-          texte: `L'eau de pluie oxyde le soufre de la galène en sulfate ; le plomb reste sur place en anglésite, souvent en coque
-            autour d'un cœur de galène intact. Plus tard, si l'eau apporte du gaz carbonique, l'anglésite se change en
-            cérusite. Elle a été décrite à Anglesey (pays de Galles) ; Touissit (Maroc) en a donné de grands cristaux.`,
+          texte: `Sous l'effet de l'eau de pluie, le soufre de la galène passe à l'état de sulfate, tandis que le plomb reste en place sous forme d'anglésite, souvent en coque autour d'un cœur de galène intact. Si l'eau apporte ensuite du gaz carbonique, l'anglésite se transforme en cérusite. Anglesey (pays de Galles) l'a livrée, et Touissit (Maroc) en a donné de grands cristaux.`,
           cond: false, sansDiagramme: OXYD },
       ],
     },
 
     // ─────────── Anhydrite ───────────
     anhydrite: {
-      sansForme: "Forme non dessinée : les cristaux d'anhydrite sont rares ; elle forme des masses grenues ou fibreuses, qui se cassent en blocs presque cubiques le long de ses trois clivages.",
-      forme: `L'anhydrite est un sulfate de calcium sans eau : tétraèdres SO₄ et calciums entourés de huit oxygènes, en colonnes.
-        Ses trois clivages sont presque à angle droit (pseudo-cubiques). Au contact de l'eau, elle en reprend deux molécules et
-        devient gypse, en gonflant d'environ 60 %.`,
-      intro: `L'anhydrite naît du gypse enfoui, ou directement des saumures les plus chaudes.`,
+      sansForme: "Forme non dessinée : les cristaux d'anhydrite sont rares ; elle se présente en masses grenues ou fibreuses, qui se brisent en blocs presque cubiques selon ses trois clivages.",
+      forme: `Sans eau, l'anhydrite est un sulfate de calcium : ses tétraèdres SO₄ et ses calciums, entourés de huit oxygènes, forment des colonnes. Ses trois clivages sont presque à angle droit (pseudo-cubiques). Lorsqu'elle rencontre l'eau, elle fixe deux molécules et se mue en gypse, ce qui la fait gonfler d'environ 60 %.`,
+      intro: `L'anhydrite se forme à partir du gypse enfoui, ou directement dans les saumures les plus chaudes.`,
       scenarios: [
         { nom: "Un gypse enfoui qui perd son eau",
-          texte: `Le gypse déposé dans les lagunes, enfoui sous 1 à 2 km de couches, chauffe ; au-delà de 45 à 58 °C selon la
-            salinité de l'eau qui l'imprègne, il perd son eau et devient anhydrite. C'est pourquoi les évaporites profondes du
-            Keuper et du Muschelkalk sont faites d'anhydrite, et leurs affleurements de gypse.`,
+          texte: `Enfoui sous 1 à 2 km de couches, le gypse déposé dans les lagunes monte en température ; à partir de 45 à 58 °C, selon la salinité de l'eau qui l'imprègne, il perd son eau pour devenir anhydrite. Les évaporites profondes du Keuper et du Muschelkalk sont donc faites d'anhydrite, leurs affleurements étant en gypse.`,
           cond: { type: "anhydrite", chemin: [
             q({ F: 1, T: 28 }, 0, "", { lab: "eau de mer" }),
-            q({ F: 3.8, T: 30 }, 1, "Dans une lagune presque fermée, l'eau de mer s'évapore jusqu'à × 3,8 : le sulfate de calcium précipite, en gypse tant que la saumure reste sous ≈ 47 °C."),
-            q({ F: 4, T: 70 }, 2, "Enfoui sous 1 à 2 km de couches, le gypse chauffe : au-delà de ≈ 45–58 °C, il perd son eau et devient anhydrite."),
-            q({ F: 0.1, T: 15 }, 3, "Ramenée près de la surface, au contact de l'eau douce, l'anhydrite reprend de l'eau et regonfle en gypse."),
+            q({ F: 3.8, T: 30 }, 1, "Dans une lagune presque fermée, l'eau de mer s'évapore jusqu'à atteindre un facteur de concentration de 3,8 : le sulfate de calcium précipite sous forme de gypse, tant que la saumure reste en dessous de ≈ 47 °C."),
+            q({ F: 4, T: 70 }, 2, "Le gypse, enfoui sous 1 à 2 km de couches, perd son eau dès que la température dépasse ≈ 45 à 58 °C : il devient alors anhydrite."),
+            q({ F: 0.1, T: 15 }, 3, "Ramenée près de la surface, au contact de l'eau douce, l'anhydrite fixe de nouveau de l'eau et se transforme en gypse en gonflant."),
           ] },
           src: ["hardie"] },
         { nom: "Dans une sebkha brûlante",
-          texte: `Sur les côtes du golfe Persique (Abou Dabi), l'eau de mer qui s'évapore dans les vases des sebkhas, à plus de
-            40 °C et très salée, dépose directement l'anhydrite, en nodules blancs serrés comme un grillage.`,
-          cond: false, sansDiagramme: "Pas de diagramme : voir l'onglet précédent, qui montre la limite gypse–anhydrite selon la température et la salinité." },
+          texte: `Aux sebkhas du golfe Persique, près d'Abou Dabi, de l'eau de mer très salée et chauffée à plus de 40 °C s'évapore dans des vases : l'anhydrite y précipite directement, en nodules blancs serrés qui évoquent un grillage.`,
+          cond: false, sansDiagramme: "Aucun diagramme n'est proposé : se reporter à l'onglet précédent, qui montre la limite gypse-anhydrite selon la température et la salinité." },
       ],
     },
 
     // ─────────── Epsomite ───────────
     epsomite: {
-      sansForme: "Forme non dessinée : l'epsomite forme des efflorescences, des croûtes et des aiguilles ; ses cristaux naturels sont rares.",
-      forme: `L'epsomite est un sulfate de magnésium à sept molécules d'eau : six entourent le magnésium en octaèdre, la
-        septième est libre entre les ions. Très soluble, au goût amer, elle perd et reprend son eau avec l'humidité de l'air.`,
-      intro: `L'epsomite cristallise là où une eau riche en magnésium et en sulfate s'évapore.`,
+      sansForme: "Forme non dessinée : l'epsomite se présente en efflorescences, en croûtes et en aiguilles ; ses cristaux naturels sont rares.",
+      forme: `Portant sept molécules d'eau, l'epsomite est un sulfate de magnésium : six d'entre elles encadrent le magnésium en octaèdre, la septième flotte entre les ions. Très soluble et au goût amer, le minéral gagne ou perd son eau au gré de l'humidité.`,
+      intro: `Une eau riche en magnésium et en sulfate, en s'évaporant, fait cristalliser l'epsomite.`,
       scenarios: [
         { nom: "Efflorescences et lacs salés",
-          texte: `Sur les parois des mines et des grottes sèches, quand l'eau d'infiltration, chargée du sulfate de la pyrite
-            oxydée et du magnésium des roches, s'évapore ; et dans les lacs salés magnésiens. Elle doit son nom à la source
-            d'Epsom (Surrey), dont on tirait au XVII<sup>e</sup> siècle le « sel d'Epsom » purgatif.`,
+          texte: `On la trouve sur les parois des mines et des grottes sèches, là où l'eau d'infiltration s'évapore après avoir charrié le sulfate issu de la pyrite oxydée et le magnésium des roches ; elle se forme aussi dans les lacs salés magnésiens. Son nom provient de la source d'Epsom (Surrey), où l'on extrayait au XVII<sup>e</sup> siècle le « sel d'Epsom », purgatif.`,
           cond: false, sansDiagramme: OXYD },
       ],
     },
 
     // ─────────── Mirabilite ───────────
     mirabilite: {
-      sansForme: "Forme non dessinée : la mirabilite forme des croûtes et des efflorescences qui se déshydratent à l'air ; ses cristaux sont éphémères.",
-      forme: `La mirabilite (sel de Glauber) est un sulfate de sodium à dix molécules d'eau : chaînes d'octaèdres Na(H₂O)₆, ions
-        sulfate et molécules d'eau tenues par des liaisons hydrogène. Au-dessus de 32 °C, elle se dissout dans sa propre eau ;
-        à l'air sec, elle devient une poudre de thénardite.`,
-      intro: `La mirabilite précipite quand une eau riche en sulfate de sodium se refroidit.`,
+      sansForme: "Forme non dessinée : la mirabilite se présente en croûtes et en efflorescences qui se déshydratent à l'air ; ses cristaux ne durent pas.",
+      forme: `Dix molécules d'eau accompagnent le sulfate de sodium de la mirabilite (sel de Glauber) : des octaèdres Na(H₂O)₆ forment des chaînes, et des liaisons hydrogène retiennent sulfate et eau. Au-dessus de 32 °C, elle se dissout dans sa propre eau ; à l'air sec, elle se réduit en poudre de thénardite.`,
+      intro: `La mirabilite se dépose lorsqu'une eau riche en sulfate de sodium se refroidit.`,
       scenarios: [
         { nom: "Dans un lac salé qui gèle",
-          texte: `Sa solubilité baisse beaucoup avec la température : un lac salé chargé de sulfate de sodium la dépose en hiver,
-            quand l'eau se refroidit, et la redissout l'été (Grand lac Salé, lacs de Saskatchewan, golfe de Kara-Bogaz). Ce
-            n'est pas l'évaporation, mais le froid, qui la fait cristalliser.`,
-          cond: false, sansDiagramme: "Pas de diagramme : c'est la baisse de température, et non l'évaporation, qui la fait cristalliser ; l'atlas n'a pas ce diagramme." },
+          texte: `Un lac salé chargé de sulfate de sodium dépose la mirabilite en hiver, lorsque l'eau se refroidit, car sa solubilité chute avec la température ; il la redissout en été (Grand lac Salé, lacs de Saskatchewan, golfe de Kara-Bogaz). Ce n'est donc pas l'évaporation, mais le froid, qui déclenche la cristallisation.`,
+          cond: false, sansDiagramme: "Aucun diagramme n'est proposé : c'est la baisse de température, et non l'évaporation, qui provoque la cristallisation ; l'atlas ne dispose pas de ce diagramme." },
       ],
     },
 
     // ─────────── Chalcanthite ───────────
     chalcanthite: {
-      sansForme: "Forme non dessinée : la chalcanthite forme des stalactites, des croûtes et des efflorescences ; les beaux cristaux vendus sont presque tous artificiels.",
-      forme: `La chalcanthite est un sulfate de cuivre à cinq molécules d'eau : quatre entourent le cuivre en carré, avec deux
-        oxygènes de sulfate plus loin, la cinquième est libre. C'est le « vitriol bleu » des chimistes, très soluble ; à l'air
-        sec, il perd son eau et blanchit.`,
-      intro: `La chalcanthite naît de l'oxydation des sulfures de cuivre, là où rien ne la dissout.`,
+      sansForme: "Forme non dessinée : la chalcanthite se présente en stalactites, en croûtes et en efflorescences ; les beaux cristaux vendus sont presque tous artificiels.",
+      forme: `Cinq molécules d'eau entourent le sulfate de cuivre de la chalcanthite : quatre forment un carré autour du cuivre, deux oxygènes de sulfate se trouvent plus loin et la cinquième reste libre. Très soluble, ce « vitriol bleu » des chimistes blanchit à l'air sec en perdant son eau.`,
+      intro: `La chalcanthite se forme par oxydation des sulfures de cuivre, dans les lieux où rien ne la dissout.`,
       scenarios: [
         { nom: "Dans les galeries de mines et les déserts",
-          texte: `L'eau qui ruisselle sur les sulfures de cuivre oxydés s'acidifie et se charge en cuivre ; en s'évaporant, elle
-            dépose la chalcanthite en stalactites et en croûtes bleues dans les vieilles galeries. Elle ne subsiste à
-            l'affleurement que dans les déserts hyper-arides, comme à Chuquicamata (Chili).`,
+          texte: `Ruisselant sur les sulfures de cuivre oxydés, l'eau s'acidifie et se charge en cuivre ; en s'évaporant dans les vieilles galeries, elle forme la chalcanthite, en stalactites et en croûtes bleues. À l'affleurement, elle ne survit que dans les déserts hyperarides, comme à Chuquicamata (Chili).`,
           cond: false, sansDiagramme: OXYD },
       ],
     },
 
     // ─────────── Alunite ───────────
     alunite: {
-      forme: `L'alunite est faite de feuillets d'octaèdres d'aluminium (avec des OH) reliés par des tétraèdres SO₄, et de
-        potassium entre les feuillets. Ses cristaux, rares, sont des rhomboèdres presque cubiques ; son clivage basal suit les
-        feuillets.`,
-      intro: `L'alunite naît de l'attaque d'une roche volcanique par une eau très acide, chargée d'acide sulfurique.`,
+      forme: `L'alunite se compose de feuillets d'octaèdres d'aluminium (porteurs de groupes OH) reliés par des tétraèdres SO₄, le potassium occupant l'espace entre les feuillets. Ses cristaux, peu fréquents, prennent la forme de rhomboèdres presque cubiques ; son clivage basal suit ces feuillets.`,
+      intro: `L'alunite se forme lorsqu'une eau très acide, chargée d'acide sulfurique, attaque une roche volcanique.`,
       scenarios: [
         { nom: "Dans une roche volcanique altérée par l'acide",
-          texte: `Près des volcans, le soufre des gaz s'oxyde en acide sulfurique au contact de l'eau ; cette eau dissout les
-            feldspaths et ne laisse que de la silice, de l'alunite et de la kaolinite (altération « argilique avancée »). Les
-            alunières de Tolfa, près de Rome, ont fourni du XV<sup>e</sup> siècle à l'époque moderne l'alun qui fixait les
-            teintures ; le Mont-Dore en contient.`,
+          texte: `Près des volcans, le soufre des gaz donne de l'acide sulfurique au contact de l'eau, et cette eau dissout les feldspaths : il ne reste que silice, alunite et kaolinite (altération « argilique avancée »). Du XV<sup>e</sup> siècle à l'époque moderne, les alunières de Tolfa, près de Rome, ont fourni l'alun qui fixait les teintures ; le Mont-Dore en renferme également.`,
           cond: false, sansDiagramme: OXYD, src: [SRC.stoffregen] },
       ],
     },
 
     // ─────────── Jarosite ───────────
     jarosite: {
-      forme: `La jarosite a la structure de l'alunite, avec le fer ferrique à la place de l'aluminium : mêmes feuillets
-        d'octaèdres, mêmes tétraèdres SO₄, même potassium entre les feuillets. Le fer la colore en jaune-brun.`,
-      intro: `La jarosite précipite dans les eaux très acides et oxydantes qui coulent des roches à pyrite.`,
+      forme: `La jarosite adopte la structure de l'alunite, le fer ferrique remplaçant l'aluminium : on retrouve les mêmes feuillets
+d'octaèdres, les mêmes tétraèdres SO₄ et le même potassium entre les feuillets. C'est le fer qui lui donne sa couleur jaune-brun.`,
+      intro: `Ce sont les eaux très acides et oxydantes issues des roches à pyrite qui permettent à la jarosite de se déposer.`,
       scenarios: [
         { nom: "Dans un drainage acide",
-          texte: `Quand la pyrite s'oxyde, elle libère de l'acide sulfurique et du fer. Dans cette eau très acide (pH sous ≈ 3)
-            et oxydante, le fer reste dissous en Fe³⁺ ; avec le potassium des argiles, il précipite en jarosite, en croûtes jaunes
-            sur les terrils et les berges des rivières minières. Le robot Opportunity en a trouvé sur Mars en 2004 : la preuve
-            d'une eau acide passée.`,
+          texte: `En s'oxydant, la pyrite produit acide sulfurique et fer. Très acide (pH inférieur à ≈ 3) et oxydante, cette eau garde le fer en Fe³⁺ ; le potassium des argiles s'y ajoute et la jarosite précipite en croûtes jaunes, sur les terrils comme sur les berges des rivières minières. Opportunity l'a repérée sur Mars en 2004 : c'était la trace d'une eau acide ancienne.`,
           cond: { type: "ehph", systeme: "fer", chemin: [
-            { pH: 7, Eh: -0.1, n: 1, t: "En profondeur, la pyrite est stable : l'eau est neutre et sans oxygène." },
-            { pH: 1.5, Eh: 0.95, n: 2, t: "À l'air, la pyrite s'oxyde et libère de l'acide sulfurique : l'eau devient très acide et oxydante, le fer y reste dissous en Fe³⁺. Avec le sulfate et le potassium, la jarosite précipite." },
-          ], note: "Le diagramme ne trace pas le soufre : la jarosite se forme dans le domaine du Fe³⁺ dissous, en eau acide (pH sous ≈ 3) riche en sulfate." },
+            { pH: 7, Eh: -0.1, n: 1, t: "En profondeur, la pyrite reste stable, car l'eau est neutre et dépourvue d'oxygène." },
+            { pH: 1.5, Eh: 0.95, n: 2, t: "Au contact de l'air, la pyrite s'oxyde et libère de l'acide sulfurique : l'eau devient très acide et oxydante, le fer y demeure dissous à l'état Fe³⁺. En présence de sulfate et de potassium, la jarosite précipite." },
+          ], note: "Sans représenter le soufre, le diagramme place la jarosite dans le domaine du Fe³⁺ dissous, en eau acide (pH inférieur à ≈ 3) riche en sulfate." },
           src: [SRC.nordstrom, SRC.stoffregen] },
       ],
     },
 
     // ─────────── Crocoïte ───────────
     crocoite: {
-      forme: `La crocoïte a la structure de la monazite : tétraèdres CrO₄ isolés et plombs entourés de neuf oxygènes. Le chrome
-        hexavalent lui donne son orange vif ; la lumière l'assombrit lentement.`,
-      intro: `La crocoïte naît quand un filon de plomb oxydé traverse une roche riche en chrome.`,
+      forme: `La crocoïte possède la structure de la monazite : tétraèdres CrO₄ isolés, plombs entourés de neuf oxygènes. Sa couleur orange vif tient au chrome hexavalent ; la lumière l'assombrit lentement.`,
+      intro: `La crocoïte se forme lorsqu'un filon de plomb oxydé recoupe une roche riche en chrome.`,
       scenarios: [
         { nom: "Dans la zone oxydée d'un filon de plomb",
-          texte: `L'oxydation de la galène libère le plomb ; celle des serpentinites voisines libère le chrome, qui passe en chromate
-            dans l'eau oxydante. Les deux se rencontrent et la crocoïte cristallise : Dundas (Tasmanie), Berezovsk (Oural), où
-            elle a été découverte en 1766.`,
+          texte: `Le plomb vient de l'oxydation de la galène, le chrome de celle des serpentinites voisines, où il passe à l'état de chromate dans l'eau oxydante. Ces deux éléments se rejoignent alors pour former la crocoïte, à Dundas (Tasmanie) ou à Berezovsk (Oural), où elle fut découverte en 1766.`,
           cond: false, sansDiagramme: OXYD },
       ],
     },
 
     // ─────────── Wulfénite ───────────
     wulfenite: {
-      forme: `La wulfénite a la structure de la scheelite : tétraèdres MoO₄ isolés et plombs entourés de huit oxygènes, dans une
-        maille quadratique. Elle pousse vite selon a et b, lentement selon c : d'où les plaques carrées, minces, qui la
-        rendent si reconnaissable.`,
-      intro: `La wulfénite se forme dans la zone oxydée des filons de plomb qui contiennent du molybdène.`,
+      forme: `La wulfénite présente la structure de la scheelite : tétraèdres MoO₄ isolés et plombs entourés de huit oxygènes, dans une
+maille quadratique. Elle croît rapidement selon a et b, lentement selon c, ce qui donne ces plaques carrées et minces qui la
+rendent facilement identifiable.`,
+      intro: `Dans la zone oxydée de filons plombeux riches en molybdène, la wulfénite se développe.`,
       scenarios: [
         { nom: "Dans la zone oxydée d'un filon de plomb",
-          texte: `L'oxydation de la galène et de la molybdénite libère plomb et molybdate, qui se recombinent en plaques de
-            wulfénite dans les cavités : Red Cloud (Arizona), Los Lamentos (Mexique), Mežica (Slovénie).`,
+          texte: `Les plaques de wulfénite se forment dans les cavités de Red Cloud (Arizona), Los Lamentos (Mexique) et Mežica (Slovénie), après que la galène et la molybdénite ont libéré plomb et molybdate par oxydation, et que ces éléments se sont recombinés.`,
           cond: false, sansDiagramme: OXYD },
       ],
     },
 
     // ─────────── Scheelite ───────────
     scheelite: {
-      forme: `La scheelite est faite de tétraèdres WO₄ isolés et de calciums entourés de huit oxygènes, dans une maille
-        quadratique deux fois plus haute que large : d'où les bipyramides presque octaédriques. Le tungstène, lourd, la rend
-        très dense (6,1) pour un minéral clair.`,
-      intro: `La scheelite naît surtout au contact d'un granite et d'un calcaire (skarn).`,
+      forme: `Des tétraèdres WO₄ isolés et des calciums à huit oxygènes forment la scheelite, dont la maille quadratique est deux fois plus haute que large, d'où les bipyramides presque octaédriques. Élément lourd, le tungstène la rend très dense (6,1) pour un minéral clair.`,
+      intro: `Dans un skarn, c'est surtout au contact entre granite et calcaire que naît la scheelite.`,
       scenarios: [
         { nom: "Dans un skarn",
-          texte: `Un granite se met en place près de calcaires ; les fluides chauds qu'il libère, chargés de silice, de fer et de
-            tungstène, réagissent avec le calcaire : grenats et pyroxènes cristallisent, et le tungstène se fixe avec le calcium en
-            scheelite. Salau (Ariège), exploitée de 1971 à 1986, fut l'une des grandes mines de tungstène d'Europe.`,
+          texte: `Lorsqu'un granite se met en place près de calcaires, les fluides chauds qu'il expulse, chargés de silice, de fer et de tungstène, attaquent le calcaire : grenats et pyroxènes cristallisent, et le calcium capte le tungstène pour former la scheelite. La mine de Salau (Ariège), exploitée de 1971 à 1986, fut l'une des grandes mines de tungstène d'Europe.`,
           cond: { type: "meta", echelle: "contact", courbes: ["graniteEau"], chemin: [
-            pt(150, 0.12, 1, "Des calcaires reposent à 4–5 km de profondeur, vers 150 °C."),
-            pt(300, 0.12, 2, "Un granite s'injecte tout près et libère, en cristallisant, des fluides chauds chargés de tungstène."),
-            pt(550, 0.12, 3, "Vers 400–650 °C, fluides et calcaire échangent leurs éléments ; la scheelite cristallise avec les grenats.", { bande: "skarn" }),
-            pt(15, 0, 4, "L'érosion met au jour le skarn et sa scheelite (Salau, ≈ 295 Ma)."),
+            pt(150, 0.12, 1, "Entre 4 et 5 km de profondeur, vers 150 °C, reposent des calcaires."),
+            pt(300, 0.12, 2, "En cristallisant, un granite voisin expulse des fluides chauds porteurs de tungstène."),
+            pt(550, 0.12, 3, "Avec les grenats, la scheelite cristallise lorsque fluides et calcaire échangent leurs éléments, vers 400 à 650 °C.", { bande: "skarn" }),
+            pt(15, 0, 4, "L'érosion dégage le skarn et sa scheelite (Salau, ≈ 295 Ma)."),
           ], note: "Chemin schématique." },
           src: ["tuttle", SRC.einaudi] },
       ],
@@ -368,23 +379,18 @@
 
     // ─────────── Wolframite ───────────
     wolframite: {
-      forme: `La wolframite est faite de chaînes d'octaèdres WO₆ et d'octaèdres (Fe,Mn)O₆ en zigzag, allongées selon c. Fer et
-        manganèse se remplacent en toutes proportions, de la ferbérite à la hübnérite. Clivage parfait {010}, densité de 7,3.
-        La structure affichée est celle d'une wolframite riche en fer (ferbérite).`,
-      intro: `La wolframite se dépose dans les filons de quartz qui s'échappent des coupoles granitiques.`,
+      forme: `Chaînes d'octaèdres WO₆ et octaèdres (Fe,Mn)O₆ en zigzag, allongés selon c : telle est la structure de la wolframite. Fer et manganèse se remplacent en toutes proportions, de la ferbérite à la hübnérite. Le clivage parfait {010} et la densité de 7,3 la caractérisent. La structure affichée est celle d'une wolframite riche en fer (ferbérite).`,
+      intro: `Ce sont les filons de quartz issus des coupoles granitiques qui accueillent la wolframite.`,
       scenarios: [
         { nom: "Dans un filon de quartz au-dessus d'un granite",
-          texte: `En fin de cristallisation, un granite riche en eau libère des fluides chargés de tungstène et d'étain, qui
-            fracturent sa coupole et la roche au-dessus. Vers 250–400 °C, ils déposent dans ces fissures du quartz, de la
-            wolframite et de la cassitérite : Enguialès (Aveyron), Montredon (Tarn), Puy-les-Vignes (Haute-Vienne), et
-            l'Erzgebirge.`,
+          texte: `En fin de cristallisation, un granite hydraté émet des fluides chargés de tungstène et d'étain ; ils fissurent la coupole ainsi que les roches qui la surmontent. Vers 250 à 400 °C, ils déposent dans ces fractures quartz, wolframite et cassitérite : Enguialès (Aveyron), Montredon (Tarn), Puy-les-Vignes (Haute-Vienne) et l'Erzgebirge.`,
           cond: { type: "silice", tmax: 350, xlab: "Température de l'eau (°C)",
             chemin: [
-              { T: 350, C: 948, n: 1, t: "Vers 350 °C, les fluides issus du granite portent silice et tungstène." },
-              { T: 280, C: 948, n: 2, t: "Ils montent dans les fissures et se refroidissent : ils sont sursaturés." },
-              { T: 250, C: 434, n: 3, t: "Le quartz du filon cristallise ; la wolframite se dépose avec lui, en tablettes noires." },
+              { T: 350, C: 948, n: 1, t: "Vers 350 °C, la silice et le tungstène sont transportés par les fluides issus du granite." },
+              { T: 280, C: 948, n: 2, t: "En remontant dans les fissures, ils se refroidissent et deviennent sursaturés." },
+              { T: 250, C: 434, n: 3, t: "Au moment où le quartz du filon se forme, il entraîne avec lui des tablettes noires de wolframite." },
             ],
-            note: "Le diagramme montre la silice, qui forme le quartz du filon. Chemin schématique." },
+            note: "Schématique, le chemin tracé sur le diagramme porte sur la silice, qui donne le quartz du filon." },
           src: ["rimstidt", "fournier"] },
       ],
     },

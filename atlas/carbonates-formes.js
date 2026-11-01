@@ -20,23 +20,23 @@
 
   if (window.Cristal) Object.assign(Cristal.CRISTAUX, {
     magnesite: rhomboedrique("Magnésite", "#ecebe6", 4.6328, 15.0129, "cod9017360", "-3m",
-      "Les cristaux de magnésite sont rares : des rhomboèdres comme celui-ci, qui est aussi la forme de son clivage. Elle se trouve surtout en masses blanches, compactes, à cassure de porcelaine."),
+      "Les cristaux de magnésite restent rares : ce sont des rhomboèdres, forme que reprend aussi le clivage. Le minéral se présente surtout en masses blanches et compactes, à cassure de porcelaine."),
     siderite: rhomboedrique("Sidérite", "#a7804e", 4.6916, 15.3796, "cod9017361", "-3m",
-      "Rhomboèdres brun miel, souvent aux faces courbes, groupés en « selles » dans les géodes des filons. Le rhomboèdre est aussi la forme du clivage."),
+      "Des rhomboèdres brun miel, aux faces souvent courbes, s'assemblent en « selles » dans les géodes des filons. Cette même forme caractérise aussi le clivage."),
     rhodochrosite: rhomboedrique("Rhodochrosite", "#d97a8c", 4.7682, 15.6354, "cod9017358", "-3m",
-      "Rhomboèdres rose framboise, transparents dans les plus beaux gisements (Sweet Home, Colorado) ; le plus souvent, elle forme des croûtes et des stalactites zonées."),
+      "Dans les plus beaux gisements (Sweet Home, Colorado), les rhomboèdres rose framboise sont transparents ; le plus souvent, le minéral forme des croûtes et des stalactites zonées."),
     smithsonite: rhomboedrique("Smithsonite", "#b9cfc2", 4.6526, 15.0257, "cod9017357", "-3m",
-      "Les cristaux de smithsonite sont petits et rares, aux faces courbes ; elle forme surtout des croûtes mamelonnées. Le rhomboèdre dessiné est celui de son clivage."),
+      "La smithsonite cristallise rarement, en petits cristaux aux faces courbes ; elle prend surtout la forme de croûtes mamelonnées. Le rhomboèdre représenté correspond à son clivage."),
     dolomite: rhomboedrique("Dolomite", "#e8dfd0", 4.8033, 15.984, "cod9000573", "-3",
-      "Rhomboèdres aux faces souvent courbes, en « selle de cheval » : les plans de calcium et de magnésium, de tailles différentes, ne s'accordent pas parfaitement et le réseau se tord en grandissant. Moins symétrique que la calcite (classe 3̄), elle n'a pas de scalénoèdre."),
+      "Ses rhomboèdres, souvent à faces incurvées (« selle de cheval »), reflètent des plans de calcium et de magnésium de tailles inégales, mal accordés : le réseau se déforme pendant la croissance. Moins symétrique que la calcite (classe 3̄), elle ne forme pas de scalénoèdre."),
     ankerite: rhomboedrique("Ankérite", "#d8c3a0", 4.824, 16.1217, "cod9001246", "-3",
-      "Rhomboèdres aux faces courbes, comme la dolomite dont elle est la sœur ferrifère ; elle brunit en surface quand son fer s'oxyde."),
+      "Des rhomboèdres aux faces courbes, à la manière de la dolomite dont elle est l'équivalent ferrifère ; elle brunit en surface lorsque son fer s'oxyde."),
 
     // ─────────── Aragonite ───────────
     aragonite: {
       nom: "Aragonite", couleur: "#e9e2d6", systeme: "orthorhombique", classe: "mmm", classeNom: "dipyramidale rhombique", reseau: "P",
       maille: [4.9616, 7.9705, 5.7394, 90, 90, 90], mailleSource: "cod9000229", azimut: 24, elevation: 14,
-      macleNote: "Macles cycliques sur {110} : trois individus soudés à ≈ 120° donnent des prismes pseudo-hexagonaux, ceux de Molina de Aragón (non dessinés).",
+      macleNote: "Trois individus soudés à ≈ 120° sur {110} forment des macles cycliques, à prismes pseudo-hexagonaux comme ceux de Molina de Aragón (non dessinés).",
       facies: [
         { nom: "Aiguille",
           formes: [
@@ -44,7 +44,7 @@
             { sym: "b", hkl: [0, 1, 0], nom: "pinacoïde", d: 1.05 },
             { sym: "k", hkl: [0, 1, 1], nom: "dôme aigu", d: 3.2 },
           ],
-          note: "Aiguilles et baguettes terminées en biseau : la forme des cristaux qui poussent dans les sources chaudes et les grottes (fleurs de fer, en buissons)." },
+          note: "Les cristaux qui se développent dans les sources chaudes et les grottes prennent souvent des aiguilles ou des baguettes en biseau (fleurs de fer, en buissons)." },
       ],
       clivages: [{ hkl: [0, 1, 0], qualite: "net", nom: "{010}", pas: 0.24 }],
     },
@@ -53,7 +53,7 @@
     cerusite: {
       nom: "Cérusite", couleur: "#eeeae0", systeme: "orthorhombique", classe: "mmm", classeNom: "dipyramidale rhombique", reseau: "P",
       maille: [5.18324, 8.4992, 6.14746, 90, 90, 90], mailleSource: "cod9013803", azimut: 24, elevation: 16,
-      macleNote: "Macles sur {110}, souvent répétées : étoiles à six branches et réseaux de lames entrecroisées à 60°, la signature de la cérusite (non dessinées).",
+      macleNote: "Les macles sur {110}, fréquemment répétées, dessinent des étoiles à six branches et des réseaux de lames croisées à 60° : c'est la signature de la cérusite (non dessinées).",
       facies: [
         { nom: "Tablette",
           formes: [
@@ -62,7 +62,7 @@
             { sym: "p", hkl: [1, 1, 1], nom: "bipyramide", d: 1.15 },
             { sym: "x", hkl: [0, 1, 2], nom: "dôme", d: 0.75 },
           ],
-          note: "Tablettes aplaties selon b, à l'éclat adamantin : la densité (6,6) et l'éclat la distinguent d'un premier coup d'œil des autres minéraux blancs." },
+          note: "Aplatis selon b, ces cristaux en tablettes ont un éclat adamantin ; leur densité (6,6) et cet éclat les séparent immédiatement des autres minéraux blancs." },
       ],
       clivages: [{ hkl: [1, 1, 0], qualite: "net", nom: "{110}", pas: 0.24 }],
     },
@@ -77,7 +77,7 @@
             { sym: "m", hkl: [1, 1, 0], nom: "prisme", d: 1.0 },
             { sym: "p", hkl: [1, 1, 1], nom: "bipyramide", d: 2.6 },
           ],
-          note: "Prismes allongés en pointe, souvent en gerbes rayonnantes, blancs à vert pâle." },
+          note: "Des prismes allongés, en pointe, forment souvent des gerbes rayonnantes, blanches à vert pâle." },
       ],
       clivages: [{ hkl: [1, 1, 0], qualite: "net", nom: "{110}", pas: 0.24 }],
     },
@@ -93,7 +93,7 @@
             { sym: "m", hkl: [1, 1, 0], nom: "prisme", d: 1.0 },
             { sym: "a", hkl: [1, 0, 0], nom: "pinacoïde", d: 1.05 },
           ],
-          note: "Tablettes épaisses bleu profond, groupées en rosettes ; les cristaux de Chessy, en boules de cristaux, ont fait connaître le minéral." },
+          note: "Des tablettes épaisses, bleu profond, se regroupent en rosettes ; les cristaux de Chessy, réunis en boules, ont rendu le minéral célèbre." },
       ],
       clivages: [{ hkl: [0, 1, 1], qualite: "net", nom: "{011}", pas: 0.24 }],
     },
@@ -110,255 +110,203 @@
     morse: "Morse J. W., Arvidson R. S. et Lüttge A. (2007). « Calcium carbonate formation and dissolution ». <i>Chemical Reviews</i> 107, p. 342–381 (aragonite des eaux riches en magnésium).",
     williams: "Williams P. A. (1990). <i>Oxide Zone Geochemistry</i>. Ellis Horwood (malachite et azurite selon la pression de CO₂).",
   };
-  const FILON = "Pas de diagramme : ce qui décide ici, c'est la chimie de l'eau chaude (gaz carbonique, métaux dissous), qu'aucun diagramme de l'atlas ne représente.";
-  const OXYD = "Pas de diagramme : c'est l'oxydation près de la surface, au-dessus de la nappe, et la chimie de l'eau de pluie qui décident.";
+  const FILON = "Aucun diagramme : ici, c'est la chimie de l'eau chaude (gaz carbonique, métaux dissous) qui décide, et aucun diagramme de l'atlas ne la représente.";
+  const OXYD = "Aucun diagramme ici : ce qui compte, c'est l'oxydation juste sous la surface, au-dessus de la nappe, ainsi que la composition de l'eau de pluie.";
 
   Object.assign(MIN_F, {
 
     // ─────────── Magnésite ───────────
     magnesite: {
-      forme: `Même structure que la calcite : plans de magnésium et plans de groupes CO₃ triangulaires, couchés à plat. Le
-        magnésium, plus petit que le calcium, resserre la maille (4,63 Å au lieu de 4,99) et rend le minéral plus dur et
-        plus dense. Même clivage en rhomboèdre ; mais à froid, elle ne fait presque pas effervescence avec l'acide.`,
-      intro: `La magnésite naît surtout de l'altération des roches du manteau par une eau riche en gaz carbonique.`,
+      forme: `La magnésite a la même architecture que la calcite : des plans de magnésium alternent avec des plans de groupes CO₃ triangulaires posés à plat. Plus petit que le calcium, le magnésium resserre la maille (4,63 Å contre 4,99) et rend le minéral plus dur et plus dense. Le clivage reste rhomboédrique, mais à froid, l'acide ne provoque presque aucune effervescence.`,
+      intro: `La magnésite se forme surtout par altération des roches du manteau, sous l'action d'une eau riche en gaz carbonique.`,
       scenarios: [
         { nom: "Dans une serpentinite traversée par du CO₂",
-          texte: `Une eau chargée de gaz carbonique qui circule dans une serpentinite transforme le silicate de magnésium en
-            magnésite et en silice : des veines blanches, en réseau, et parfois des amas exploités pour la magnésie
-            réfractaire (Grèce, Slovaquie, Australie). La même réaction est étudiée pour stocker le CO₂ dans les roches.`,
-          cond: false, sansDiagramme: "Pas de diagramme : c'est la quantité de gaz carbonique apportée par l'eau qui décide, à basse température.",
+          texte: `Dans une serpentinite, une eau chargée de gaz carbonique convertit le silicate de magnésium en
+            magnésite et en silice : il en résulte des veines blanches en réseau et, parfois, des amas exploités pour la magnésie
+            réfractaire (Grèce, Slovaquie, Australie). Cette même réaction fait l'objet de recherches pour stocker le CO₂ dans les roches.`,
+          cond: false, sansDiagramme: "Aucun diagramme : à basse température, la quantité de gaz carbonique apportée par l'eau détermine la formation.",
           src: [SRC.hansen] },
       ],
     },
 
     // ─────────── Sidérite ───────────
     siderite: {
-      forme: `Structure de la calcite, avec le fer à la place du calcium : même rhomboèdre de clivage. Le fer y est ferreux
-        (Fe²⁺) : à l'air, il s'oxyde, et les cristaux brunissent en surface puis se changent en goethite.`,
-      intro: `La sidérite précipite là où le fer est dissous sous forme Fe²⁺, sans oxygène, en présence de carbonate.`,
+      forme: `La structure est celle de la calcite, le fer occupant la place du calcium : le clivage reste rhomboédrique. Le fer y est à l'état ferreux
+        (Fe²⁺) ; à l'air, il s'oxyde, et les cristaux brunissent en surface avant de se transformer en goethite.`,
+      intro: `La sidérite précipite lorsque le fer dissous sous forme Fe²⁺ rencontre du carbonate, en l'absence d'oxygène.`,
       scenarios: [
         { nom: "Dans une vase sans oxygène",
-          texte: `Dans les marécages côtiers et les boues des deltas, l'eau manque d'oxygène mais pas de gaz carbonique : le fer
-            reste dissous (Fe²⁺) et, quand il n'y a pas assez de soufre pour faire de la pyrite, il précipite en sidérite, en
-            nodules et en lits. Les « minerais de fer des houillères » (blackband) en sont faits.`,
+          texte: `Dans les marais côtiers et les boues deltaïques, l'eau manque d'oxygène tout en restant riche en gaz carbonique : le fer
+            demeure dissous (Fe²⁺) et, faute de soufre suffisant pour former de la pyrite, il se dépose en sidérite, en
+            nodules et en lits. Les « minerais de fer des houillères » (blackband) en sont constitués.`,
           cond: { type: "ehph", systeme: "fer", chemin: [
-            { pH: 7, Eh: 0.45, n: 1, t: "En surface, l'eau est oxydante : le fer ne reste pas dissous, il précipite en oxydes." },
-            { pH: 6.3, Eh: -0.3, n: 2, t: "Dans la vase, sans oxygène, le fer passe en Fe²⁺ dissous ; avec le gaz carbonique de la matière organique en décomposition, il précipite en sidérite." },
-          ], note: "Le diagramme ne trace pas le carbone : la sidérite se forme dans le domaine du Fe²⁺ dissous quand l'eau contient assez de carbonate et peu de soufre." }, },
+            { pH: 7, Eh: 0.45, n: 1, t: "À la surface, l'eau est oxydante : le fer précipite alors sous forme d'oxydes, sans rester en solution." },
+            { pH: 6.3, Eh: -0.3, n: 2, t: "Dans la vase privée d'oxygène, le fer passe à l'état de Fe²⁺ dissous ; le gaz carbonique issu de la matière organique en décomposition le fait alors précipiter en sidérite." },
+          ], note: "Le carbone n'apparaît pas sur le diagramme : la sidérite se stabilise dans le domaine du Fe²⁺ dissous dès que l'eau renferme assez de carbonate et peu de soufre." }, },
         { nom: "Dans un filon",
-          texte: `Elle forme aussi la gangue de nombreux filons, en rhomboèdres brun miel : le « fer spathique » d'Allevard
-            (Isère), exploité pour l'acier depuis le Moyen Âge.`,
+          texte: `Dans de nombreux filons, la sidérite sert de gangue, en rhomboèdres brun miel ; à Allevard (Isère), ce « fer spathique » a alimenté l'acier depuis le Moyen Âge.`,
           cond: false, sansDiagramme: FILON },
       ],
     },
 
     // ─────────── Rhodochrosite ───────────
     rhodochrosite: {
-      forme: `Structure de la calcite, avec le manganèse à la place du calcium. Le rose vient du manganèse lui-même
-        (Mn²⁺) ; un peu de calcium ou de fer le pâlit ou le brunit.`,
+      forme: `La structure reprend celle de la calcite, le manganèse occupant la place du calcium. La teinte rose provient du manganèse lui-même
+        (Mn²⁺) ; un peu de calcium ou de fer la pâlit ou la brunit.`,
       intro: `La rhodochrosite se dépose dans les filons riches en manganèse.`,
       scenarios: [
         { nom: "Dans un filon hydrothermal",
-          texte: `Avec la galène, la blende et le quartz, dans les filons de moyenne à basse température : Sweet Home
-            (Colorado), Capillitas (Argentine), où elle forme des stalactites zonées, taillées en tranches.`,
+          texte: `On la voit avec la galène, la blende et le quartz, dans des filons à température moyenne ou basse : à Sweet Home (Colorado) et Capillitas (Argentine), elle forme des stalactites zonées, débitées en tranches.`,
           cond: false, sansDiagramme: FILON },
       ],
     },
 
     // ─────────── Smithsonite ───────────
     smithsonite: {
-      forme: `Structure de la calcite, avec le zinc à la place du calcium : maille resserrée, dureté de 4 à 4,5. Les cristaux
-        sont rares : elle pousse surtout en croûtes mamelonnées, aux couleurs variées selon les traces de cuivre (vert,
-        bleu), de cobalt (rose) ou de cadmium (jaune).`,
-      intro: `La smithsonite naît de l'oxydation de la blende dans les calcaires.`,
+      forme: `Avec le zinc à la place du calcium, la structure reprend celle de la calcite, mais la maille se resserre. Le minéral se rencontre rarement en cristaux ; il forme surtout des croûtes mamelonnées, teintées de vert ou de bleu par le cuivre, de rose par le cobalt, de jaune par le cadmium. Sa dureté va de 4 à 4,5.`,
+      intro: `C'est par oxydation de la blende, au sein des calcaires, que se forme la smithsonite.`,
       scenarios: [
-        { nom: "Dans la zone oxydée d'un gisement de zinc",
-          texte: `Près de la surface, l'eau de pluie oxyde la blende ; le zinc dissous rencontre le calcaire encaissant et
-            précipite en carbonate. Ces « calamines » ont été les premiers minerais de zinc exploités : Moresnet (Belgique),
-            Les Malines (Gard).`,
+        { nom: "Dans la zone oxydée d'un gisement de zinc, à proximité de la surface.",
+          texte: `En surface, l'eau de pluie attaque la blende ; le zinc dissous rencontre alors le calcaire environnant et se dépose sous forme de carbonate. Ces « calamines » furent les premiers minerais de zinc exploités, à Moresnet (Belgique) et aux Malines (Gard).`,
           cond: false, sansDiagramme: OXYD, src: [SRC.reichenberg] },
       ],
     },
 
     // ─────────── Aragonite ───────────
     aragonite: {
-      forme: `L'aragonite a la même formule que la calcite mais un autre arrangement : les calciums sont empilés de façon plus
-        serrée, chacun entouré de neuf oxygènes (six dans la calcite). Elle est plus dense (2,95 contre 2,71) et n'est stable
-        qu'à haute pression ; à la surface, elle se change lentement en calcite. Pas de clivage en rhomboèdre : les cristaux
-        sont des aiguilles ou des prismes.`,
-      intro: `L'aragonite naît des êtres vivants, des eaux riches en magnésium, et, plus rarement, de la haute pression.`,
+      forme: `Malgré la même formule que la calcite, l'aragonite s'organise autrement : chaque calcium, entouré de neuf oxygènes au lieu de six, occupe un espace plus serré. Plus dense (2,95 contre 2,71), elle ne demeure stable qu'à haute pression ; en surface, elle se transforme lentement en calcite. Elle ne présente pas de clivage rhomboédrique et forme des aiguilles ou des prismes.`,
+      intro: `L'aragonite provient surtout des êtres vivants, d'eaux riches en magnésium et, plus rarement, d'une haute pression.`,
       scenarios: [
         { nom: "Dans les coquilles et la nacre",
-          texte: `Coraux, mollusques et algues vertes bâtissent leur squelette en aragonite, bien qu'elle ne soit pas stable :
-            dans l'eau de mer, le magnésium gêne la croissance de la calcite et favorise l'aragonite. Nacre et perles sont
-            des empilements de plaquettes d'aragonite. Après la mort, elle se change en calcite en quelques milliers à
-            quelques millions d'années.`,
-          cond: false, sansDiagramme: "Pas de diagramme : c'est l'organisme, et le magnésium de l'eau de mer, qui choisissent l'aragonite.",
+          texte: `Coraux, mollusques et algues vertes édifient leur squelette en aragonite, forme pourtant instable : dans l'eau de mer, le magnésium entrave la croissance de la calcite et favorise l'aragonite. La nacre et les perles résultent d'un empilement de plaquettes d'aragonite. Après la mort de l'organisme, cette aragonite se convertit en calcite au bout de quelques milliers à quelques millions d'années.`,
+          cond: false, sansDiagramme: "Ce sont l'organisme et le magnésium de l'eau de mer qui sélectionnent l'aragonite : aucun diagramme n'en rend compte.",
           src: [SRC.morse] },
         { nom: "Dans une source chaude",
-          texte: `Les sources chaudes riches en magnésium et en gaz carbonique déposent l'aragonite en aiguilles et en
-            pisolithes, comme à Karlovy Vary (République tchèque).`,
-          cond: false, sansDiagramme: "Pas de diagramme : c'est la chimie de l'eau, et non la pression, qui fait l'aragonite ici." },
+          texte: `Les sources chaudes, riches en magnésium et en gaz carbonique, laissent l'aragonite former aiguilles et pisolithes : c'est le cas à Karlovy Vary (République tchèque).`,
+          cond: false, sansDiagramme: "Ici, c'est la chimie de l'eau, et non la pression, qui conduit à l'aragonite. Aucun diagramme ne le représente." },
         { nom: "Dans un schiste bleu",
-          texte: `Enfoui très vite dans une zone de subduction, un calcaire passe à haute pression et basse température : la
-            calcite y devient aragonite, la forme stable. Elle ne se conserve que si la roche remonte froide ; sinon, elle
-            redevient calcite.`,
+          texte: `Un calcaire enfoui très rapidement dans une zone de subduction passe à haute pression et basse température : la calcite y cède la place à l'aragonite, forme stable dans ces conditions. Pour se conserver, la roche doit remonter froide ; sinon, elle redevient calcite.`,
           cond: { type: "meta", echelle: "hp", gradients: [10, 30, 60], chemin: [
-            pt(15, 0, 1, "Un calcaire du fond océanique est entraîné dans la subduction."),
-            pt(350, 1.0, 2, "À ≈ 1 GPa (30 km) et 350 °C seulement, la calcite devient aragonite.", { bande: "aragonite" }),
-            pt(150, 0.2, 3, "La roche remonte en restant froide : l'aragonite n'a pas le temps de redevenir calcite."),
-          ], note: "Chemin schématique. Limite calcite–aragonite ≈ 0,5 GPa à 100 °C, ≈ 0,9 GPa à 400 °C." },
+            pt(15, 0, 1, "Entraîné par la subduction, un calcaire issu du fond océanique s'enfonce."),
+            pt(350, 1.0, 2, "À environ 1 GPa (30 km) et seulement 350 °C, la calcite se transforme en aragonite.", { bande: "aragonite" }),
+            pt(150, 0.2, 3, "Lors de la remontée, la roche reste froide : l'aragonite n'a pas le temps de redevenir calcite."),
+          ], note: "Chemin schématique. Limite calcite-aragonite ≈ 0,5 GPa à 100 °C, ≈ 0,9 GPa à 400 °C." },
           src: ["pattison"] },
       ],
     },
 
     // ─────────── Cérusite ───────────
     cerusite: {
-      forme: `La cérusite a la structure de l'aragonite, le plomb à la place du calcium : chaque plomb entouré de neuf oxygènes.
-        Le plomb, lourd, la rend très dense (6,6) et lui donne un éclat adamantin. Sa maille est presque hexagonale (b ≈ a√3),
-        d'où les macles à 60° en étoiles et en réseaux.`,
-      intro: `La cérusite naît de l'oxydation de la galène.`,
+      forme: `Dans la cérusite, le plomb occupe la place du calcium d'une structure de type aragonite : chaque plomb est entouré de neuf oxygènes. Ce métal lourd rend le minéral très dense (6,6) et lui confère un éclat adamantin ; sa maille, presque hexagonale (b ≈ a√3), explique les macles à 60° en étoiles et en réseaux.`,
+      intro: `La cérusite résulte de l'oxydation de la galène.`,
       scenarios: [
         { nom: "Dans la zone oxydée d'un filon de plomb",
-          texte: `Près de la surface, l'eau de pluie, chargée de gaz carbonique, oxyde la galène ; le plomb libéré précipite sur
-            place en cérusite, souvent avec l'anglésite et la pyromorphite. Tsumeb (Namibie) et Broken Hill en ont donné des
-            réseaux de cristaux de plusieurs centimètres.`,
+          texte: `Près de la surface, l'eau de pluie chargée de gaz carbonique attaque la galène ; le plomb libéré se dépose sur place sous forme de cérusite, souvent accompagnée d'anglésite et de pyromorphite. Tsumeb (Namibie) et Broken Hill ont livré des réseaux de cristaux de plusieurs centimètres.`,
           cond: false, sansDiagramme: OXYD },
       ],
     },
 
     // ─────────── Strontianite ───────────
     strontianite: {
-      forme: `Structure de l'aragonite, avec le strontium à la place du calcium. Elle a donné son nom au strontium, découvert
-        dans des échantillons de Strontian (Écosse) en 1790.`,
-      intro: `La strontianite se dépose dans les filons et les géodes de basse température.`,
+      forme: `Structure de l'aragonite, avec le strontium à la place du calcium. En 1790, des échantillons issus de Strontian (Écosse) ont permis d'identifier cet élément, qui lui doit son nom.`,
+      intro: `Dans les filons à basse température et les géodes, on rencontre la strontianite.`,
       scenarios: [
         { nom: "Dans un filon ou une géode",
-          texte: `Avec la calcite, la barytine et la célestine, dans les filons de basse température et les géodes des calcaires
-            et des marnes (Westphalie, Strontian).`,
+          texte: `Filons à basse température et géodes de calcaires ou de marnes (Westphalie, Strontian) : la strontianite voisine la calcite, la barytine et la célestine.`,
           cond: false, sansDiagramme: FILON },
       ],
     },
 
     // ─────────── Withérite ───────────
     witherite: {
-      sansForme: "Forme non dessinée : la withérite est toujours maclée par trois, en fausses bipyramides hexagonales, que le moteur ne sait pas dessiner.",
-      forme: `Structure de l'aragonite, avec le baryum à la place du calcium : le plus gros cation de la famille, qui écarte la
-        maille. Comme la cérusite, sa maille est presque hexagonale, et ses cristaux, toujours maclés par trois, imitent des
-        bipyramides hexagonales.`,
-      intro: `La withérite se dépose dans les filons de basse température à baryum.`,
+      sansForme: "Non dessinée : la withérite se macle systématiquement par trois, formant de fausses bipyramides hexagonales que le moteur ne représente pas.",
+      forme: `Le baryum, cation le plus volumineux de la famille, prend la place du calcium dans une structure d'aragonite et dilate la maille. Presque hexagonale comme celle de la cérusite, elle engendre des cristaux maclés par trois, qui imitent des bipyramides hexagonales.`,
+      intro: `La withérite cristallise dans les filons à baryum formés à basse température.`,
       scenarios: [
         { nom: "Dans un filon à galène et barytine",
-          texte: `Rare : elle se forme quand le baryum arrive sans sulfate (sinon c'est la barytine). Alston Moor et Settlingstones
-            (nord de l'Angleterre) en ont été les gisements classiques. Elle est toxique, contrairement à la barytine.`,
+          texte: `Rare, elle apparaît lorsque le baryum rencontre des ions carbonate sans sulfate (sinon, c'est la barytine qui se forme). Alston Moor et Settlingstones (nord de l'Angleterre) ont été ses gisements classiques. Contrairement à la barytine, elle est toxique.`,
           cond: false, sansDiagramme: FILON },
       ],
     },
 
     // ─────────── Dolomite ───────────
     dolomite: {
-      forme: `La dolomite est une calcite dont un plan de calcium sur deux est remplacé par un plan de magnésium. Cet ordre
-        abaisse la symétrie (classe 3̄) ; les deux cations, de tailles différentes, tordent le réseau, d'où les cristaux en selle.
-        Même clivage en rhomboèdre que la calcite ; mais à froid, elle ne fait presque pas effervescence avec l'acide dilué.`,
-      intro: `La dolomite se forme surtout en transformant un calcaire au contact d'une eau riche en magnésium.`,
+      forme: `Dans la dolomite, un plan de calcium sur deux cède la place à un plan de magnésium. Cet ordre réduit la symétrie (classe 3̄) : les deux cations, de tailles différentes, déforment le réseau et donnent les cristaux en selle. Le clivage rhomboédrique est identique à celui de la calcite, mais à froid, l'acide dilué ne produit presque pas de bulles.`,
+      intro: `La dolomite naît le plus souvent d'un calcaire transformé au contact d'une eau magnésienne.`,
       scenarios: [
         { nom: "Dans une lagune qui s'évapore",
-          texte: `Quand l'eau de mer s'évapore, le gypse retire du calcium et la saumure s'enrichit en magnésium. Plus dense, elle
-            s'infiltre dans les boues calcaires ; son magnésium y remplace la moitié du calcium et la calcite devient
-            dolomite : les dolomies du Jurassique des Causses.`,
+          texte: `À mesure que l'eau de mer s'évapore, le gypse élimine le calcium et la saumure s'enrichit en magnésium. Plus dense, celle-ci s'infiltre dans les boues calcaires : son magnésium remplace la moitié du calcium et la calcite se mue en dolomite, comme dans les dolomies jurassiques des Causses.`,
           cond: { type: "mgca", chemin: [
-            q({ F: 1.2, R: 5.13 }, 1, "Dans une lagune chaude, l'eau de mer (magnésium ÷ calcium ≈ 5) dépose des boues calcaires."),
+            q({ F: 1.2, R: 5.13 }, 1, "Dans une lagune chaude, les boues calcaires se déposent à partir d'une eau de mer au rapport magnésium sur calcium voisin de 5."),
             q({ F: 3.8, R: 5.13 }),
-            q({ F: 6, R: 10 }, 2, "L'évaporation concentre l'eau ; dès × 3,8, le gypse cristallise et retire du calcium : le rapport magnésium ÷ calcium dépasse 10."),
-            q({ F: 6, R: 3 }, 3, "La saumure s'infiltre dans les boues calcaires : la calcite devient dolomite, et la saumure, appauvrie en magnésium, voit son rapport retomber."),
+            q({ F: 6, R: 10 }, 2, "Dès que l'évaporation atteint un facteur 3,8, le gypse précipite et soustrait du calcium : le rapport magnésium sur calcium dépasse alors 10."),
+            q({ F: 6, R: 3 }, 3, "La saumure, en s'infiltrant dans les boues calcaires, transforme la calcite en dolomite ; appauvrie en magnésium, elle voit ensuite son rapport retomber."),
           ] }, },
         { nom: "Dans un filon (dolomite en selle)",
-          texte: `Les saumures chaudes des bassins, qui déposent aussi galène et blende, déposent la dolomite en rhomboèdres courbes
-            dans les cavités : la dolomite « baroque » des gisements des Causses.`,
+          texte: `Les saumures chaudes des bassins, porteuses aussi de galène et de blende, déposent dans les cavités une dolomite en rhomboèdres courbes, dite « baroque » dans les gisements des Causses.`,
           cond: false, sansDiagramme: FILON },
       ],
     },
 
     // ─────────── Ankérite ───────────
     ankerite: {
-      forme: `L'ankérite est une dolomite dont une partie du magnésium est remplacée par du fer (plus de fer que de magnésium).
-        Même structure ordonnée, même clivage en rhomboèdre, mêmes faces courbes.`,
-      intro: `L'ankérite est la gangue carbonatée des filons aurifères et une phase des carbonates de fer sédimentaires.`,
+      forme: `Dans l'ankérite, une part du magnésium de la dolomite est remplacée par du fer, en quantité supérieure au magnésium. La structure ordonnée, le clivage rhomboédrique et les faces courbes sont conservés.`,
+      intro: `L'ankérite constitue la gangue carbonatée des filons aurifères et figure parmi les carbonates de fer sédimentaires.`,
       scenarios: [
         { nom: "Dans un filon de quartz aurifère",
-          texte: `Les eaux chaudes riches en gaz carbonique des filons d'or des chaînes de montagnes transforment la roche autour
-            du filon : les silicates de fer et de magnésium deviennent ankérite. Cette auréole blanchâtre, rouillée en surface,
-            guide les prospecteurs.`,
+          texte: `Les eaux chaudes et chargées de gaz carbonique qui circulent autour des filons d'or des chaînes de montagnes transforment les silicates de fer et de magnésium de la roche en ankérite. Cette auréole blanchâtre, rouillée en surface, sert de guide aux prospecteurs.`,
           cond: false, sansDiagramme: FILON, src: ["Groves D. I., Goldfarb R. J. et al. (1998). « Orogenic gold deposits ». <i>Ore Geology Reviews</i> 13, p. 7–27."] },
       ],
     },
 
     // ─────────── Malachite ───────────
     malachite: {
-      sansForme: "Forme non dessinée : la malachite forme rarement des cristaux (aiguilles) ; elle pousse en masses mamelonnées à bandes concentriques.",
-      forme: `La malachite associe des chaînes d'octaèdres de cuivre, liées par des groupes CO₃ et des OH. Elle croît en fibres
-        serrées, rangées en rayons autour de petits centres : en grandissant, les couches successives dessinent les bandes
-        claires et sombres que révèle le polissage.`,
-      intro: `La malachite naît de l'altération des minerais de cuivre près de la surface, sous un climat assez humide.`,
+      sansForme: "Non dessinée : la malachite cristallise rarement en aiguilles ; elle prend le plus souvent des masses mamelonnées à bandes concentriques.",
+      forme: `La malachite est construite de chaînes d'octaèdres de cuivre, reliées par des groupes CO₃ et des OH. Ses fibres serrées rayonnent autour de petits centres ; en grandissant, les couches successives forment les bandes claires et sombres que révèle le polissage.`,
+      intro: `La malachite se forme par altération des minerais de cuivre proches de la surface, sous un climat suffisamment humide.`,
       scenarios: [
-        { nom: "Dans la zone oxydée d'un gisement de cuivre",
-          texte: `L'eau de pluie, chargée de gaz carbonique, oxyde la chalcopyrite ; le cuivre dissous précipite en malachite,
-            surtout au contact d'un calcaire qui neutralise l'acidité. Elle est stable sous la pression de gaz carbonique de
-            l'air ; plus riche en gaz carbonique, l'eau dépose l'azurite, qui se change en malachite quand il diminue. Chessy
-            (Rhône) et l'Oural (pierre des palais des tsars) en sont célèbres.`,
+        { nom: "Dans la zone oxydée d'un gisement cuprifère",
+          texte: `L'eau de pluie chargée de gaz carbonique oxyde la chalcopyrite ; le cuivre dissous précipite en malachite, surtout au contact d'un calcaire qui neutralise l'acidité. Stable sous la pression de gaz carbonique de l'air, elle cède la place à l'azurite lorsque l'eau en contient davantage ; l'azurite se reconvertit en malachite quand cette pression baisse. Chessy (Rhône) et l'Oural (pierre des palais des tsars) sont des sites célèbres.`,
           cond: false, sansDiagramme: OXYD, src: [SRC.williams] },
       ],
     },
 
     // ─────────── Azurite ───────────
     azurite: {
-      forme: `L'azurite associe des cuivres entourés de quatre oxygènes en carré, des groupes CO₃ et des OH. Elle contient plus
-        de carbonate que la malachite : il lui faut une eau plus riche en gaz carbonique. Son bleu, qui a donné son nom, a
-        servi de pigment aux peintres du Moyen Âge.`,
-      intro: `L'azurite se forme dans la zone oxydée des gisements de cuivre, quand l'eau est riche en gaz carbonique.`,
+      forme: `Constituée de cuivres entourés de quatre oxygènes en carré, de groupes CO₃ et d'OH, l'azurite contient plus de carbonate que la malachite ; une eau plus chargée en gaz carbonique lui est nécessaire. Son bleu, qui lui vaut son nom, teintait les peintures médiévales.`,
+      intro: `Dans la zone oxydée des gisements de cuivre, l'azurite apparaît lorsque l'eau est riche en gaz carbonique.`,
       scenarios: [
-        { nom: "Dans la zone oxydée d'un gisement de cuivre",
-          texte: `Comme la malachite, mais là où l'eau est plus chargée en gaz carbonique (contact d'un calcaire, roche peu
-            perméable). Quand le gaz carbonique diminue, elle se change en malachite en gardant sa forme : on trouve des cristaux
-            d'azurite à moitié verts. Chessy (Rhône) en a livré les boules de cristaux qui ont fait le tour des musées
-            (« chessylite »).`,
+        { nom: "Dans la zone oxydée d'un gisement cuprifère",
+          texte: `Elle se rapproche de la malachite, mais se forme là où l'eau est plus chargée en gaz carbonique (contact d'un calcaire, roche peu perméable). Lorsque le gaz carbonique diminue, elle se transforme en malachite sans changer de forme : certains cristaux d'azurite sont ainsi à moitié verts. Chessy (Rhône) a livré les boules de cristaux qui ont fait le tour des musées (« chessylite »).`,
           cond: false, sansDiagramme: OXYD, src: [SRC.williams] },
       ],
     },
 
     // ─────────── Nitratine ───────────
     nitratine: {
-      sansForme: "Forme non dessinée : la nitratine forme des croûtes et des masses grenues ; ses cristaux naturels sont rares.",
-      forme: `La nitratine a la structure de la calcite, avec le sodium à la place du calcium et des groupes NO₃ à la place
-        des CO₃ : mêmes triangles couchés, même clivage en rhomboèdre, même double réfraction très forte. Elle est très
-        soluble : il suffit de quelques pluies pour la faire disparaître.`,
-      intro: `La nitratine ne subsiste que dans le désert le plus sec du monde.`,
+      sansForme: "Non dessinée : la nitratine se présente en croûtes et en masses grenues, ses cristaux naturels étant rares.",
+      forme: `La nitratine adopte la structure de la calcite : le sodium y occupe la place du calcium et des groupes NO₃ remplacent les CO₃. Les triangles couchés, le clivage rhomboédrique et la forte double réfraction sont donc les mêmes. Très soluble, elle disparaît après quelques pluies.`,
+      intro: `Seul le désert le plus aride du monde conserve la nitratine.`,
       scenarios: [
         { nom: "Dans un désert hyper-aride",
-          texte: `Dans le désert d'Atacama, l'azote de l'air, fixé par la foudre et les réactions dans l'atmosphère, se dépose en
-            nitrates depuis des millions d'années ; comme il ne pleut presque jamais, rien ne les lessive, et ils s'accumulent
-            sous la surface en croûtes (caliche) avec le sel et le gypse. Ce « salpêtre du Chili » a été l'engrais et la
-            poudre du monde jusqu'aux années 1920.`,
+          texte: `Dans le désert d'Atacama, la foudre et les réactions de l'atmosphère fixent l'azote, qui retombe en nitrates depuis des millions d'années. Il ne pleut quasiment jamais : rien ne lessive ces sels, qui s'accumulent sous la surface en croûtes (caliche) avec le sel et le gypse. Ce « salpêtre du Chili » a servi d'engrais et de poudre à canon jusqu'aux années 1920.`,
           cond: { type: "climat", domaines: [[10, 25, 0, 0.05]], etiquettes: [["nitrates", 17.5, 0.18]], villes: ["Perpignan", "Montpellier"], chemin: [
-            { T: 17, ai: 0.01, n: 1, t: "Désert d'Atacama : ≈ 17 °C, quelques millimètres de pluie par an, moins de 1 % de l'ETP." },
-            { n: 2, t: "Les nitrates tombés de l'atmosphère ne sont pas lessivés et s'accumulent sous la surface, depuis des millions d'années." },
-          ], note: "Domaine schématique : sous ≈ 5 % de l'ETP. Plus humide, la pluie dissout les nitrates." },
+            { T: 17, ai: 0.01, n: 1, t: "Atacama : température moyenne ≈ 17 °C, quelques millimètres de pluie annuelle, moins de 1 % de l'ETP." },
+            { n: 2, t: "Les nitrates apportés par l'atmosphère, non lessivés, s'accumulent sous la surface depuis des millions d'années." },
+          ], note: "Domaine schématique : sous ≈ 5 % de l'ETP, les nitrates résistent ; dans un climat plus humide, la pluie les dissout." },
           src: ["h5", SRC.ericksen] },
       ],
     },
 
     // ─────────── Nitre ───────────
     nitre: {
-      sansForme: "Forme non dessinée : le nitre forme des efflorescences et des aiguilles, rarement des cristaux mesurables.",
-      forme: `Le nitre a la structure de l'aragonite, avec le potassium à la place du calcium et des groupes NO₃ à la place
-        des CO₃. Très soluble, il ne se conserve qu'à l'abri de la pluie.`,
-      intro: `Le nitre se forme là où des bactéries transforment l'azote de la matière organique, à l'abri de la pluie.`,
+      sansForme: "Non dessinée : le nitre se présente en efflorescences et en aiguilles, rarement en cristaux mesurables.",
+      forme: `Le potassium remplace le calcium dans la structure de l'aragonite, et des groupes NO₃ succèdent aux CO₃. Très soluble, il ne subsiste qu'à l'abri de la pluie.`,
+      intro: `Le nitre se développe là où des bactéries transforment en nitrate l'azote de la matière organique, à l'abri des précipitations.`,
       scenarios: [
         { nom: "Sur les murs et dans les grottes",
-          texte: `Dans les caves, les étables et les grottes à guano, des bactéries changent l'ammoniac en nitrates, qui remontent
-            avec l'humidité et cristallisent en surface. Jusqu'au XIX<sup>e</sup> siècle, des « salpêtriers » grattaient ces
-            murs pour la poudre à canon.`,
-          cond: false, sansDiagramme: "Pas de diagramme : ce sont les bactéries et la matière organique qui décident." },
+          texte: `Dans les caves, les étables et les grottes à guano, des bactéries oxydent l'ammoniac en nitrates : l'humidité les remonte et ils cristallisent à la surface. Jusqu'au XIX<sup>e</sup> siècle, des « salpêtriers » raclaient ces parois pour fabriquer de la poudre à canon.`,
+          cond: false, sansDiagramme: "Aucun diagramme : bactéries et matière organique gouvernent ce processus." },
       ],
     },
   });

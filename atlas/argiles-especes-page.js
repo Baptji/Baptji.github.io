@@ -67,11 +67,11 @@
       reps: repFiches("cecMin", "cecMax"), objets: [],
       tous: valeursEspeces("cec"), population: "espèces d'argiles de l'atlas",
       plusQue: "CEC plus forte que", meme: "même CEC",
-      carres: (v) => carresDe(v, 10, `1 carré = 10 cmol⁺/kg : ${fr(v)} cmol⁺/kg, soit ${fr(v / 10)} carré${v / 10 >= 2 ? "s" : ""}.`),
+      carres: (v) => carresDe(v, 10, `1 carré vaut 10 cmol⁺/kg : ${fr(v)} cmol⁺/kg correspondent à ${fr(v / 10)} carré${v / 10 >= 2 ? "s" : ""}.`),
       // 1 cmol⁺ = 0,20 g de Ca²⁺ (40,08 g/mol ÷ 2 charges ÷ 100) ou 0,39 g de K⁺ (39,10 g/mol ÷ 100)
-      concret: (v, id, nom) => `<p class="nb-titre">CEC en cmol⁺/kg, comparée aux grandes familles (milieu de la fourchette de leur fiche)</p>
+      concret: (v, id, nom) => `<p class="nb-titre">Comparaison de la CEC, en cmol⁺/kg, avec celle des grandes familles (milieu de la fourchette propre à chacune)</p>
         ${barres(repFiches("cecMin", "cecMax", QUATRE)(), nom, v)}
-        <p class="nb-note">1 kg de ${esc(nom.toLowerCase())} peut retenir sur ses surfaces, prêts à être échangés avec l'eau du sol,
+        <p class="nb-note">1 kg de ${esc(nom.toLowerCase())} fixe sur ses surfaces, disponibles pour un échange avec l'eau du sol,
         ≈ ${fr(v * 0.2004)} g de calcium (Ca²⁺) ou ≈ ${fr(v * 0.391)} g de potassium (K⁺).</p>`,
     };
     Nombres.GRANDEURS.eau = {
@@ -83,10 +83,10 @@
       plusQue: "Retient plus d'eau que", meme: "même rétention",
       carres: (v) => carresDe(v, 50, `1 carré = 50 g d'eau pour 100 g d'argile : ${fr(v)} g/100 g.`),
       // 1 g/100 g = 10 g d'eau par kg = 1 cl ; un verre = 20 cl
-      concret: (v, id, nom) => `<p class="nb-titre">Rétention d'eau en g/100 g, comparée aux grandes familles (milieu de la fourchette de leur fiche)</p>
+      concret: (v, id, nom) => `<p class="nb-titre">Rétention d'eau, en g pour 100 g, comparée à celle des grandes familles (milieu de la fourchette propre à chacune)</p>
         ${barres(repFiches("eauMin", "eauMax", QUATRE)(), nom, v)}
-        <p class="nb-note">1 kg de ${esc(nom.toLowerCase())} retient ≈ ${fr(v * 10, 0)} g d'eau, soit ≈ ${fr(v / 100)} litre
-        (≈ ${fr(v / 20)} verre${v / 20 >= 2 ? "s" : ""} de 20 cl).</p>`,
+        <p class="nb-note">1 kg de ${esc(nom.toLowerCase())} retient ≈ ${fr(v * 10, 0)} g d'eau, c'est-à-dire ≈ ${fr(v / 100)} litre
+        (soit ≈ ${fr(v / 20)} verre${v / 20 >= 2 ? "s" : ""} de 20 cl).</p>`,
     };
     // objets de comparaison pour la surface (dimensions réglementaires)
     const OBJETS = [
@@ -107,9 +107,9 @@
       concret: (v, id, nom) => {
         const o = OBJETS.reduce((m, x) => Math.abs(Math.log(v / x[1])) < Math.abs(Math.log(v / m[1])) ? x : m);
         const k = v / o[1];
-        return `<p class="nb-titre">Surface en m²/g, comparée aux grandes familles (milieu de la fourchette de leur fiche)</p>
+        return `<p class="nb-titre">Surface spécifique, en m²/g, comparée à celle des grandes familles (milieu de la fourchette propre à chacune)</p>
           ${barres(repFiches("surfMin", "surfMax", QUATRE)(), nom, v)}
-          <p class="nb-note">Les surfaces de 1 g de ${esc(nom.toLowerCase())}, mises bout à bout, couvriraient ≈ ${fr(v, 0)} m² :
+          <p class="nb-note">Mises bout à bout, les surfaces de 1 g de ${esc(nom.toLowerCase())} couvriraient ≈ ${fr(v, 0)} m² :
           ${k > 0.8 && k < 1.25 ? `environ ${o[0]}` : `≈ ${fr(k)} fois ${o[0]}`} (${fr(o[1])} m²).</p>`;
       },
     };
@@ -142,15 +142,15 @@
     const fig = (on, svg, titre, texte) => `<figure class="eo-fig${on ? " on" : ""}">${svg}
       <figcaption><b>${titre}</b><span>${texte}</span></figcaption></figure>`;
     return `<div class="eo-grille">
-        ${fig(di, feuilletSVG(true), "Dioctaédrique", "2 sites sur 3 occupés, par Al³⁺ ou Fe³⁺ ; le troisième reste vide")}
-        ${fig(tri, feuilletSVG(false), "Trioctaédrique", "3 sites sur 3 occupés, par Mg²⁺ ou Fe²⁺")}
+        ${fig(di, feuilletSVG(true), "Dioctaédrique", "Le troisième site, sur 3, reste vide ; les 2 autres accueillent Al³⁺ ou Fe³⁺.")}
+        ${fig(tri, feuilletSVG(false), "Trioctaédrique", "Les 3 sites sur 3 sont occupés par Mg²⁺ ou Fe²⁺.")}
       </div>`;
   }
   const rang = (lib, valeur, visuel) => `<div class="id-ligne"><div class="id-tete"><span>${lib}</span><b>${valeur || ""}</b></div>${visuel || ""}</div>`;
   function identiteHTML(eid, place) {
     const e = ESPECES[eid], V = VAL_ESP[eid] || {};
     const familles = `<div class="id-rang">${CLASSIF.map((f, fi) => `<a href="#argrp/${fi}-0" class="id-chip${place && place.fi === fi ? " on" : ""}"
-      aria-label="${esc(f.famille)}"><span>${FAM_COURT[fi] || esc(f.famille.split(" — ")[0])}</span></a>`).join("")}</div>`;
+      aria-label="${esc(f.famille)}"><span>${FAM_COURT[fi] || esc(f.famille.split(/ [—:] /)[0])}</span></a>`).join("")}</div>`;
     const o = (e.octa || "").toLowerCase();
     const di = /\bdi/.test(o) || o.startsWith("di"), tri = /tri/.test(o);
     const feuilletO = o && o !== "—" ? feuilletHTML(di, tri) : "";
@@ -185,10 +185,10 @@
   function nombresHTML(eid) {
     const V = VAL_ESP[eid] || {};
     const f = ficheDe(eid), fNom = f ? court(f.nom) : "";
-    const rep = (min, max, u) => f && f[min] != null ? `${fmt(f[min])}–${fmt(f[max])} ${u} pour la fiche ${esc(fNom)}` : "";
+    const rep = (min, max, u) => f && f[min] != null ? `${fmt(f[min])} à ${fmt(f[max])} ${u} pour la fiche ${esc(fNom)}` : "";
     const ef = eauFiche(eid);
     const eau = ef ? `<div class="mesure">
-        <div class="mesure-tete"><span>Rétention d'eau</span><b>${fmt(ef.eauMin)}–${fmt(ef.eauMax)} <small>g/100 g</small></b></div>
+        <div class="mesure-tete"><span>Rétention d'eau</span><b>${fmt(ef.eauMin)} à ${fmt(ef.eauMax)} <small>g/100 g</small></b></div>
         <p class="mesure-texte esp-precision">Valeur de la fiche ${esc(court(ef.nom))} : aucune mesure sur cette espèce seule.</p>
         ${window.Nombres ? Nombres.blocHTML("eau", eid) : ""}</div>`
       : `<div class="mesure mesure-vide"><div class="mesure-tete"><span>Rétention d'eau</span><b>non renseignée</b></div></div>`;
@@ -205,8 +205,8 @@
       </div>
       ${V.eauInter ? ligne("Eau entre les feuillets", "eauInter") : ""}
       ${ligne("Espacement basal mesuré", "d001")}
-      <p class="pan-note esp-note-nr">« Non renseignée » : aucune mesure publiée sur cette espèce seule n'a été trouvée ; la valeur de la
-      fiche de son groupe est donnée en repère. Sources en bas de page.</p>`;
+      <p class="pan-note esp-note-nr">« Non renseignée » : aucune mesure publiée ne concerne cette espèce seule ; la valeur de la
+      fiche de son groupe sert de repère. Les sources figurent en bas de page.</p>`;
   }
 
   // sources du schéma de la CEC (G.2), ajoutées à la liste de la page
@@ -222,7 +222,7 @@
         <div class="ox-img pan-photo" id="esppimg-${eid}"><span class="sw-ph"></span></div>
         <h1><span class="sw-big" style="background:${sw}"></span>${e.nom}</h1>
         <div class="formule">${e.formule}</div>
-        ${place ? `<p class="sub crumb">Argiles <span>→</span> <a href="#argiles">${esc(place.fam.famille.split(" — ")[0])}</a>
+        ${place ? `<p class="sub crumb">Argiles <span>→</span> <a href="#argiles">${esc(place.fam.famille.split(/ [—:] /)[0])}</a>
           <span>→</span> <a href="#argrp/${place.fi}-${place.gi}">${esc(place.groupe.nom)}</a></p>` : ""}
       </div>`;
     const s3d = typeof Structure3D !== "undefined" && Structure3D.existe(eid)

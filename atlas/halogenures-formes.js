@@ -19,7 +19,7 @@
       maille: CUBIQUE(5.6401), mailleSource: "cod9003308",
       facies: [
         { nom: "Cube", formes: [{ sym: "a", hkl: [1, 0, 0], nom: "cube", d: 1.0 }],
-          note: "La forme presque unique du sel. Les cubes qui poussent à la surface d'une saumure grandissent plus vite par les arêtes que par le milieu des faces : ils deviennent des « trémies », des pyramides creuses en escalier, qui flottent jusqu'à couler (forme non dessinée ici)." },
+          note: "Quasi seule forme du sel. Des cubes apparaissent à la surface d'une saumure et croissent plus vite le long des arêtes qu'au centre des faces : ils forment des « trémies », pyramides creuses en gradins, qui flottent avant de sombrer (non dessinée ici)." },
       ],
       clivages: CLIV_CUBE,
     },
@@ -30,10 +30,10 @@
       maille: CUBIQUE(6.2788), mailleSource: "cod9009733",
       facies: [
         { nom: "Cube", formes: [{ sym: "a", hkl: [1, 0, 0], nom: "cube", d: 1.0 }],
-          note: "Comme la halite, dont elle a la structure : des cubes, rares, car la sylvite se trouve surtout en grains dans la sylvinite." },
+          note: "Structure identique à celle de la halite ; les cubes sont peu fréquents, la sylvite se rencontrant surtout en grains au sein de la sylvinite." },
         { nom: "Cube et octaèdre",
           formes: [{ sym: "a", hkl: [1, 0, 0], nom: "cube", d: 1.0 }, { sym: "o", hkl: [1, 1, 1], nom: "octaèdre", d: 1.4 }],
-          note: "Les sommets du cube sont coupés par de petites faces triangulaires de l'octaèdre : plus fréquent chez la sylvite que chez la halite." },
+          note: "De minuscules facettes triangulaires d'octaèdre rognent les angles du cube, plus souvent chez la sylvite que chez la halite." },
       ],
       clivages: CLIV_CUBE,
     },
@@ -42,15 +42,15 @@
     fluorine: {
       nom: "Fluorine", couleur: "#9b7fd0", systeme: "cubique", classe: "m-3m", classeNom: "hexakisoctaédrique", reseau: "F",
       maille: CUBIQUE(5.4631), mailleSource: "cod9007060",
-      macleNote: "Macle d'interpénétration : deux cubes qui se traversent, l'un tourné de 180° autour d'une diagonale [111] ; des sommets du second sortent des faces du premier (non dessinée : le moteur ne dessine que les macles accolées).",
+      macleNote: "Macle par interpénétration : deux cubes s'entrecroisent, l'un tourné de 180° autour d'une diagonale [111], si bien que les angles du second ressortent des faces du premier (absente du dessin, qui ne montre que les macles accolées).",
       facies: [
         { nom: "Cube", formes: [{ sym: "a", hkl: [1, 0, 0], nom: "cube", d: 1.0 }],
-          note: "La forme la plus courante dans les filons de basse température (Morvan, Tarn, Chaillac) : des cubes nets, souvent zonés de violet." },
+          note: "Dans les filons froids (Morvan, Tarn, Chaillac), on rencontre surtout des cubes nets, fréquemment zonés en violet." },
         { nom: "Octaèdre", formes: [{ sym: "o", hkl: [1, 1, 1], nom: "octaèdre", d: 1.0 }],
-          note: "Plus rare dans la nature, fréquent dans les filons plus chauds (Alpes, Chamonix : les octaèdres roses des fentes alpines). C'est aussi la forme que révèle le clivage : on taille des octaèdres à partir d'un cube en le frappant sur ses sommets." },
+          note: "Rare à l'état naturel mais courant dans les filons chauds (Alpes, Chamonix : les octaèdres roses des fentes alpines), cette forme apparaît aussi au clivage : frapper un cube par ses angles en détache des octaèdres." },
         { nom: "Cube et octaèdre",
           formes: [{ sym: "a", hkl: [1, 0, 0], nom: "cube", d: 1.0 }, { sym: "o", hkl: [1, 1, 1], nom: "octaèdre", d: 1.35 }],
-          note: "Cube aux sommets coupés : passage d'une forme à l'autre, quand la température ou la chimie de l'eau changent pendant la croissance." },
+          note: "Un cube à angles rognés témoigne d'un basculement d'une forme à l'autre au gré des variations de température ou de chimie de l'eau." },
       ],
       clivages: [{ hkl: [1, 1, 1], qualite: "parfait", nom: "octaédrique, quatre directions", pas: 0.26 }],
     },
@@ -61,7 +61,7 @@
       maille: CUBIQUE(5.5463), mailleSource: "cod9011666",
       facies: [
         { nom: "Cube", formes: [{ sym: "a", hkl: [1, 0, 0], nom: "cube", d: 1.0 }],
-          note: "Petits cubes rares ; la chlorargyrite forme surtout des croûtes et des masses cireuses, translucides, qui se coupent au couteau." },
+          note: "Cubes minuscules et peu fréquents ; la chlorargyrite donne surtout des croûtes et des masses cireuses et translucides, taillables au couteau." },
       ],
       clivages: [],
     },
@@ -70,11 +70,11 @@
     cryolite: {
       nom: "Cryolite", couleur: "#eef2f5", systeme: "monoclinique", classe: "2/m", classeNom: "prismatique", reseau: "P",
       maille: [5.4139, 5.6012, 7.7769, 90, 90.183, 90], mailleSource: "cod9006157",
-      macleNote: "Macles très fréquentes, souvent répétées (polysynthétiques), sur plusieurs lois : héritées du passage de la forme cubique de haute température à la forme monoclinique, en refroidissant.",
+      macleNote: "Très courantes, ces macles se répètent souvent (polysynthétiques), selon plusieurs lois ; elles résultent du basculement de la forme cubique haute température vers la forme monoclinique lors du refroidissement.",
       facies: [
         { nom: "Pseudo-cube",
           formes: [{ sym: "c", hkl: [0, 0, 1], nom: "pinacoïde basal", d: 1.0 }, { sym: "m", hkl: [1, 1, 0], nom: "prisme", d: 1.0 }],
-          note: "Un faux cube : la maille est presque cubique (c ≈ a√2, β ≈ 90°), si bien que le prisme {110} et la base {001} se coupent presque à angle droit. Les cristaux d'Ivigtut atteignaient une dizaine de centimètres." },
+          note: "Faux cube : la maille s'approche du cube (c ≈ a√2, β ≈ 90°), si bien que le prisme {110} rencontre la base {001} presque à l'équerre. À Ivigtut, les cristaux dépassaient une dizaine de centimètres." },
       ],
       clivages: [],
     },
@@ -90,7 +90,7 @@
             { sym: "c", hkl: [0, 0, 1], nom: "pinacoïde", d: 1.05 },
             { sym: "e", hkl: [0, 1, 1], nom: "dôme", d: 4.5 },
           ],
-          note: "Prismes fins, allongés selon l'axe b et striés dans leur longueur, terminés en toit par le dôme {011}. Indices dans les axes de la structure 3D (dans les ouvrages en Pnam, le prisme est noté {110} et l'allongement [001])." },
+          note: "Cristaux prismatiques minces, étirés suivant b, striés en long et coiffés d'un dôme {011}. Les indices suivent les axes de la structure 3D (les ouvrages en Pnam notent le prisme {110} et l'allongement [001])." },
       ],
       clivages: [{ hkl: [0, 0, 1], qualite: "parfait", nom: "{001} ({010} dans la notation Pnam des ouvrages)", pas: 0.22 }],
     },
@@ -105,181 +105,123 @@
     cameron: "Cameron E. M., Leybourne M. I. et Palacios C. (2007). « Atacamite in the oxide zone of copper deposits in northern Chile: involvement of deep formation waters? ». <i>Mineralium Deposita</i> 42, p. 205–218.",
     warren2016: "Warren J. K. (2016). <i>Evaporites: A Geological Compendium</i>, 2ᵉ éd., Springer, chap. 11 (potasse) : la sylvite primaire suppose une saumure pauvre en sulfate de magnésium.",
   };
-  const ARIDE = "Pas de diagramme : ce qui décide, c'est la chimie de l'eau (chlore, oxydant ou non), qu'aucun diagramme de l'atlas ne représente pour ce métal.";
+  const ARIDE = "Aucun diagramme n'est proposé : le comportement dépend de la composition chimique de l'eau (teneur en chlore, caractère oxydant ou non), que nul diagramme de l'atlas ne figure pour ce métal.";
 
   Object.assign(MIN_F, {
 
     // ─────────── Halite ───────────
     halite_m: {
-      forme: `La halite est l'empilement le plus simple qui soit entre deux ions de tailles différentes : chaque Na⁺ est
-        entouré de six Cl⁻, et chaque Cl⁻ de six Na⁺, aux sommets d'un octaèdre. Le réseau est cubique dans les trois
-        directions, d'où les cubes. Les plans {100} portent autant de charges + que de charges − : ils sont neutres et
-        se séparent sans effort — c'est le <b>clivage cubique</b> parfait, qui casse un bloc de sel en petits cubes.`,
-      intro: `La halite naît de l'évaporation de l'eau de mer ou d'un lac salé ; enfouie, elle flue et peut remonter en
-        dômes.`,
+      forme: `La halite présente l'empilement le plus simple entre deux ions de tailles différentes : chaque Na⁺ est entouré de six Cl⁻, et réciproquement, aux sommets d'un octaèdre. Le réseau est cubique selon les trois directions, d'où la forme cubique des cristaux. Les plans {100} portent autant de charges positives que de charges négatives : neutres, ils se séparent sans effort, si bien qu'un <b>clivage cubique</b> parfait fragmente un bloc de sel en petits cubes.`,
+      intro: `La halite se forme par évaporation de l'eau de mer ou d'un lac salé ; enfouie, elle se déforme plastiquement et peut former des dômes qui remontent vers la surface.`,
       scenarios: [
         { nom: "Dans une lagune qui s'évapore",
-          texte: `Une lagune séparée de la mer par un seuil se concentre à chaque saison sèche. Carbonates puis gypse
-            précipitent d'abord ; quand il ne reste que 9 % de l'eau (× 10,6), le sel sature et cristallise, en petits cubes
-            et en trémies à la surface, en croûtes au fond. Tant que la mer réalimente le bassin, les bancs s'empilent : le
-            sel du Keuper de Lorraine (≈ 220 millions d'années) dépasse 100 m d'épaisseur cumulée.`,
+          texte: `Une lagune isolée de la mer par un seuil se concentre à chaque saison sèche. Les carbonates puis le gypse précipitent en premier ; lorsqu'il ne subsiste que 9 % de l'eau initiale (× 10,6), le chlorure de sodium sature et cristallise, en petits cubes à la surface et en croûtes au fond. Tant que la mer réalimente le bassin, les bancs s'accumulent : le sel du Keuper de Lorraine (≈ 220 millions d'années) atteint plus de 100 m d'épaisseur cumulée.`,
           cond: { type: "saumure", sels: ["halite"], chemin: [
             q({ F: 1, C: 28.4 }, 0, "", { lab: "eau de mer" }),
-            q({ F: 10.6, C: 301 }, 1, "Après les carbonates et le gypse, à × 10,6 (91 % de l'eau évaporée), le sel dissous atteint ≈ 300 g par kilogramme d'eau : la halite cristallise."),
-            q({ F: 30, C: 301 }, 2, "Tant que la lagune est réalimentée, tout le sel qui arrive en plus cristallise : les cubes s'empilent en bancs."),
+            q({ F: 10.6, C: 301 }, 1, "La halite apparaît lorsque, après le départ des carbonates et du gypse, le sel dissous atteint ≈ 300 g par kilogramme d'eau, soit × 10,6 de la concentration initiale, c'est-à-dire 91 % de l'eau évaporée."),
+            q({ F: 30, C: 301 }, 2, "Tant que la lagune est réalimentée, tout le sel apporté en supplément cristallise : les cubes s'accumulent en couches successives."),
           ] },
           src: ["mccaffrey", "warren", "millero2008"] },
         { nom: "Dans un marais salant",
-          texte: `Le même phénomène, conduit par l'homme : à Salin-de-Giraud (Camargue) ou à Guérande, l'eau de mer passe
-            de bassin en bassin ; on laisse le gypse se déposer dans les premiers et l'on récolte le sel dans les derniers,
-            avant que les sels de magnésium, amers, ne précipitent à leur tour.`,
-          cond: false, sansDiagramme: "Pas de nouveau diagramme : même chemin que dans la lagune (onglet précédent), arrêté avant les sels de potassium." },
+          texte: `Dans les marais salants de Salin-de-Giraud (Camargue) ou de Guérande, ce processus est reproduit à dessein : l'eau de mer progresse d'un bassin à l'autre, le gypse s'y dépose d'abord, le sel est récupéré dans les bassins terminaux, et les sels de magnésium, au goût amer, précipitent en dernier.`,
+          cond: false, sansDiagramme: "Aucun nouveau diagramme n'est proposé : le parcours est identique à celui de la lagune (onglet précédent), interrompu avant le dépôt des sels de potassium." },
         { nom: "Enfouie, elle monte en dômes",
-          texte: `Le sel est moins dense (2,16) que les roches qui le recouvrent (≈ 2,5) et, à quelques kilomètres de
-            profondeur, il flue lentement comme un glacier. Il s'accumule là où la couverture est plus mince et monte en
-            dômes et en murs (diapirs), qui percent parfois jusqu'à la surface : en Bresse, en Aquitaine, en Allemagne du
-            Nord. Ses cristaux s'y recristallisent en gros grains.`,
-          cond: false, sansDiagramme: "Pas de diagramme : c'est la différence de densité, pas la température ni la concentration, qui fait monter le sel." },
+          texte: `Plus léger (2,16) que les terrains sus-jacents (≈ 2,5), le sel se déplace lentement, à quelques kilomètres de profondeur, à la manière d'un glacier. Il se concentre sous les zones où la couverture s'amincit et s'élève en dômes ou en murs appelés diapirs, dont certains affleurent, en Bresse, en Aquitaine ou dans le nord de l'Allemagne. Ses cristaux s'y reforment en grains volumineux.`,
+          cond: false, sansDiagramme: "Aucun diagramme n'est proposé : c'est la différence de densité, et non la température ou la concentration, qui provoque la remontée du sel." },
       ],
     },
 
     // ─────────── Sylvite ───────────
     sylvite: {
-      forme: `Même structure que la halite, avec du potassium à la place du sodium : chaque K⁺ entre six Cl⁻. Le potassium,
-        plus gros, écarte les ions (3,14 Å au lieu de 2,82) : la maille est plus grande et le cristal plus léger (1,99).
-        Mêmes plans neutres, même <b>clivage cubique</b> parfait.`,
-      intro: `La sylvite est un sel de toute fin d'évaporation, quand il ne reste qu'un peu plus de 1 % de l'eau.`,
+      forme: `Structure identique à celle de la halite, le potassium remplaçant le sodium : chaque K⁺ est entouré de six Cl⁻. Plus volumineux, le potassium écarte les ions (3,14 Å au lieu de 2,82) : la maille est plus grande et le cristal moins dense (1,99). Les plans restent neutres et le <b>clivage cubique</b> parfait est conservé.`,
+      intro: `La sylvite est un sel de la toute fin de l'évaporation, lorsqu'il ne reste qu'un peu plus de 1 % de l'eau initiale.`,
       scenarios: [
         { nom: "Fin d'évaporation (bassin potassique d'Alsace)",
-          texte: `Après le gypse et le sel, au-delà de ≈ 65 fois la concentration de l'eau de mer, le potassium sature. Dans
-            l'eau de mer actuelle, riche en sulfate de magnésium, il précipite d'abord dans des sels complexes (kaïnite,
-            carnallite) ; mais dans les saumures pauvres en sulfate, comme celle du fossé rhénan il y a 35 à 30 millions
-            d'années, la sylvite cristallise directement avec la halite : c'est la sylvinite des Mines de potasse d'Alsace,
-            en deux couches de 1 à 5 m.`,
+          texte: `Une fois passés le gypse et le sel, la saturation en potassium survient au-delà de ≈ 65 fois la concentration de l'eau de mer. Dans l'eau actuelle, riche en sulfate de magnésium, celui-ci se fixe d'abord dans des sels complexes (kaïnite, carnallite). À l'inverse, les saumures appauvries en sulfate, telles que celle du fossé rhénan entre 35 et 30 millions d'années, laissent la sylvite cristalliser en même temps que la halite. C'est l'origine de la sylvinite exploitée dans les Mines de potasse d'Alsace, formée de deux couches de 1 à 5 m.`,
           cond: { type: "saumure", sels: ["sylvite", "halite"], chemin: [
             q({ F: 1, C: 0.79 }, 0, "", { lab: "eau de mer" }),
-            q({ F: 65, C: 51 }, 1, "Après le gypse (× 3,8) et le sel (× 10,6), au-delà de ≈ × 65, le potassium dissous atteint ≈ 50 g par kilogramme d'eau (compté en sylvite) : les sels de potassium cristallisent."),
-            q({ F: 100, C: 51 }, 2, "Halite et sylvite précipitent ensemble, en lits alternés : la sylvinite (Alsace, 35–30 Ma)."),
+            q({ F: 65, C: 51 }, 1, "Passé le gypse (× 3,8) et le sel (× 10,6), le potassium dissous atteint, au-delà de ≈ × 65, une teneur de ≈ 50 g par kilogramme d'eau (calculée en sylvite) : c'est le seuil de cristallisation des sels potassiques."),
+            q({ F: 100, C: 51 }, 2, "Halite et sylvite se déposent conjointement, en lits superposés : cet ensemble forme la sylvinite (Alsace, 35 à 30 Ma)."),
           ] },
           src: ["mccaffrey", "warren", "millero2008", SRC.warren2016] },
         { nom: "En lessivant la carnallite",
-          texte: `Une partie de la sylvite des gisements est secondaire : une eau peu salée qui traverse une couche de
-            carnallite (KMgCl₃·6H₂O) emporte le chlorure de magnésium, très soluble, et laisse le potassium en sylvite.`,
-          cond: false, sansDiagramme: "Pas de diagramme : c'est la composition de l'eau qui traverse la couche, pas sa concentration globale, qui décide." },
+          texte: `Certaines sylvites des gisements résultent d'une transformation postérieure. Lorsqu'une eau faiblement minéralisée traverse une couche de carnallite (KMgCl₃·6H₂O), elle dissout le chlorure de magnésium, très soluble, et abandonne le potassium sous la forme de sylvite.`,
+          cond: false, sansDiagramme: "Aucun diagramme n'est proposé : ce qui détermine le phénomène est la composition de l'eau qui traverse la couche, et non sa concentration globale." },
       ],
     },
 
     // ─────────── Carnallite ───────────
     carnallite: {
-      sansForme: "Forme non dessinée : les cristaux de carnallite sont rares, pseudo-hexagonaux et mal décrits ; elle se trouve en masses grenues.",
-      forme: `La carnallite est un sel <b>hydraté</b> : chaque magnésium est enfermé dans un octaèdre de six molécules
-        d'eau (voir la structure 3D), et potassium et chlore occupent les vides entre ces octaèdres. Ce sont des liaisons
-        hydrogène, faibles, qui tiennent l'ensemble : pas de clivage, une dureté de 2,5, et un cristal qui absorbe l'eau de
-        l'air jusqu'à se dissoudre (déliquescence).`,
-      intro: `La carnallite est l'un des tout derniers sels à cristalliser quand l'eau de mer s'évapore.`,
+      sansForme: "Aucune forme n'est représentée : les cristaux de carnallite, rares, sont pseudo-hexagonaux et peu documentés ; le minéral se présente plutôt en agrégats grenus.",
+      forme: `La carnallite est un sel <b>hydraté</b> : chaque magnésium est enfermé dans un octaèdre de six molécules d'eau (voir la structure 3D), tandis que le potassium et le chlore occupent les vides entre ces octaèdres. La cohésion de l'ensemble repose sur des liaisons hydrogène, faibles, d'où l'absence de clivage, une dureté de 2,5 et une déliquescence marquée : le cristal absorbe l'humidité de l'air jusqu'à se dissoudre.`,
+      intro: `La carnallite compte parmi les tout derniers sels à cristalliser lors de l'évaporation de l'eau de mer.`,
       scenarios: [
         { nom: "Au bout de l'évaporation",
-          texte: `Quand il ne reste qu'environ 1 % de l'eau de mer (100 à 170 fois la concentration de départ), la saumure,
-            devenue très riche en magnésium, dépose la carnallite avec la halite et la kiesérite. Ces couches ne se
-            conservent que si elles sont vite recouvertes et jamais traversées par une eau moins salée : le Zechstein
-            d'Allemagne (≈ 255 millions d'années), l'Oural (Solikamsk) en ont de grandes épaisseurs ; en Alsace, elle reste
-            mineure à côté de la sylvite.`,
+          texte: `Quand 1 % seulement de l'eau de mer subsiste (soit 100 à 170 fois la concentration initiale), la saumure, très enrichie en magnésium, précipite la carnallite avec la halite et la kiesérite. Pour se préserver, ces dépôts doivent être vite enfouis et jamais recoupés par une eau moins salée. Le Zechstein allemand (≈ 255 millions d'années) et le site de Solikamsk, dans l'Oural, en contiennent de vastes épaisseurs ; en Alsace, elle reste secondaire face à la sylvite.`,
           cond: { type: "saumure", sels: ["sylvite"], xmax: 200, chemin: [
             q({ F: 1, C: 0.79 }, 0, "", { lab: "eau de mer" }),
-            q({ F: 65, C: 51 }, 1, "Gypse puis sel sont déjà déposés ; au-delà de ≈ × 65, les sels de potassium et de magnésium commencent à cristalliser."),
-            q({ F: 140, C: 51 }, 2, "Entre ≈ × 100 et × 170, la saumure riche en magnésium dépose la carnallite, avec halite et kiesérite."),
-          ], note: "La courbe compte le potassium comme s'il précipitait en sylvite ; ici, il part dans la carnallite (KMgCl₃·6H₂O). Chemin schématique." },
+            q({ F: 65, C: 51 }, 1, "Une fois le gypse et le sel déposés, les sels de potassium et de magnésium entament leur cristallisation au-delà de ≈ × 65."),
+            q({ F: 140, C: 51 }, 2, "Pour des concentrations comprises entre ≈ × 100 et × 170, la carnallite se dépose depuis la saumure magnésienne, en compagnie de la halite et de la kiesérite."),
+          ], note: "Sur la courbe, le potassium est comptabilisé comme s'il précipitait sous forme de sylvite, alors qu'il se fixe ici dans la carnallite (KMgCl₃·6H₂O). Ce tracé n'est qu'une schématisation." },
           src: ["warren", "millero2008"] },
       ],
     },
 
     // ─────────── Fluorine ───────────
     fluorine: {
-      forme: `Dans la fluorine, les calciums forment un réseau cubique à faces centrées et les fluors occupent tous les
-        petits vides tétraédriques entre eux : chaque calcium a huit fluors, en cube, chaque fluor quatre calciums. Les
-        plans {111} ne contiennent qu'une sorte d'ion : entre deux plans de fluors voisins, les charges se repoussent et
-        la liaison est faible. D'où le <b>clivage octaédrique</b> parfait, qui détache des octaèdres d'un cube.`,
-      intro: `La fluorine se dépose surtout dans les filons, à partir d'eaux chaudes qui ont lessivé le fluor des granites.`,
+      forme: `La structure de la fluorine repose sur un empilement cubique à faces centrées de calciums, dont tous les petits sites tétraédriques sont occupés par des fluors. Chaque calcium est ainsi cerné de huit fluors disposés en cube, tandis que chaque fluor est lié à quatre calciums. Les plans {111} ne portent qu'un seul type d'ion : deux plans de fluor contigus se repoussent, d'où une cohésion faible. Il en découle le <b>clivage octaédrique</b> parfait, qui sépare des octaèdres au sein d'un cube.`,
+      intro: `Le dépôt de fluorine a lieu principalement dans les filons : il provient d'eaux chaudes qui ont extrait le fluor des granites.`,
       scenarios: [
         { nom: "Dans un filon de basse température",
-          texte: `Des eaux salées, chauffées en profondeur, lessivent le fluor des granites et du socle et remontent le long
-            des failles. Entre ≈ 80 et 200 °C, quand elles se refroidissent ou se mélangent à une eau plus froide et plus
-            riche en calcium, la fluorine précipite, en cubes, souvent avec la barytine, le quartz et la galène. Les
-            grands filons de France datent pour la plupart du Jurassique (≈ 200–150 millions d'années) : Voltennes dans le
-            Morvan, Le Burc et Mont-Roc dans le Tarn, Chaillac dans l'Indre.`,
-          cond: false, sansDiagramme: "Pas de diagramme : la fluorine précipite par mélange de deux eaux autant que par refroidissement, ce qu'aucun diagramme de l'atlas ne représente." },
+          texte: `Chauffées en profondeur, des eaux salées extraient le fluor du granite et du socle, puis remontent par les failles. Entre ≈ 80 et 200 °C, au moment où elles refroidissent ou se mêlent à une eau plus froide et plus calcique, la fluorine se dépose sous forme de cubes, accompagnée fréquemment de barytine, de quartz et de galène. Les grands filons français sont en majorité jurassiques (≈ 200 à 150 millions d'années) : Voltennes (Morvan), Le Burc et Mont-Roc (Tarn), ou encore Chaillac (Indre).`,
+          cond: false, sansDiagramme: "L'atlas ne propose aucun diagramme ici, car la fluorine se forme autant par mélange de deux eaux que par refroidissement, un processus qu'aucune représentation de l'atlas ne restitue." },
         { nom: "En fin de cristallisation d'un granite",
-          texte: `Le fluor ne trouve presque pas de place dans les minéraux du granite : il se concentre dans les derniers
-            liquides et les fluides qui s'en échappent. Il cristallise alors en fluorine dans les pegmatites et les greisens,
-            ces granites transformés par les fluides autour des gîtes d'étain et de tungstène (Échassières dans l'Allier,
-            Cornouailles).`,
-          cond: false, sansDiagramme: "Pas de diagramme : la fluorine n'est ici qu'un minéral accessoire de fluides de fin de cristallisation." },
+          texte: `Le granite n'offre presque aucune place au fluor, qui s'accumule dans les dernières fractions liquides et dans les fluides qui en émanent. Il se fixe alors sous forme de fluorine dans les pegmatites et dans les greisens, granites remaniés par ces fluides à proximité des gisements d'étain et de tungstène (Échassières dans l'Allier, Cornouailles).`,
+          cond: false, sansDiagramme: "Aucun diagramme n'est proposé : la fluorine n'est ici qu'un minéral accessoire issu des fluides de fin de cristallisation." },
       ],
     },
 
     // ─────────── Chlorargyrite ───────────
     chlorargyrite: {
-      forme: `Même structure que le sel de cuisine : chaque argent entre six chlores. Mais la liaison Ag–Cl est en partie
-        covalente : les plans glissent sans se séparer, si bien que la chlorargyrite n'a pas de clivage et se coupe au
-        couteau comme de la corne. La lumière en libère de l'argent métallique : le cristal noircit, comme une pellicule
-        photographique (le même sel).`,
-      intro: `La chlorargyrite naît dans la partie oxydée des filons d'argent, sous les climats secs.`,
+      forme: `La chlorargyrite adopte la structure du sel de cuisine, chaque atome d'argent étant cerné de six atomes de chlore. Toutefois, la liaison Ag-Cl présente un caractère covalent partiel, si bien que les plans coulissent sans se désolidariser : le minéral est dépourvu de clivage et se taille au couteau, à la manière de la corne. Sous l'effet de la lumière, il libère de l'argent métallique et noircit, tout comme une pellicule photographique (c'est précisément le sel des pellicules).`,
+      intro: `On rencontre la chlorargyrite dans la zone d'oxydation des filons d'argent, en milieu aride.`,
       scenarios: [
         { nom: "Zone d'oxydation, en climat aride",
-          texte: `Près de la surface, l'eau de pluie, oxydante, attaque les sulfures d'argent. Sous un climat humide, l'argent
-            est emporté plus bas ; sous un climat aride, l'eau est rare et chargée de chlore (sels des sols, embruns,
-            nappes salées) : l'argent est fixé sur place en chlorure. D'où les « chapeaux » de chlorargyrite massive des
-            filons du Chili (Chañarcillo) et de Broken Hill, en Australie.`,
+          texte: `En surface, les sulfures d'argent subissent l'attaque oxydante de l'eau de pluie. En climat humide, l'argent migre vers les profondeurs ; en climat aride en revanche, l'eau se raréfie et se charge de chlore issu des sels du sol, des embruns ou des nappes salées, de sorte que l'argent demeure en place et précipite en chlorure. On observe ainsi des « chapeaux » de chlorargyrite massive, notamment dans les filons chiliens (Chañarcillo) et à Broken Hill, en Australie.`,
           cond: { type: "climat", domaines: [[12, 30, 0, 0.2]], etiquettes: [["chlorargyrite", 21, 0.1]], villes: ["Perpignan", "Marseille"], chemin: [
-            { T: 18, ai: 0.17, n: 1, t: "Broken Hill (Australie) : ≈ 18 °C, 250 mm de pluie pour ≈ 1 500 mm d'évaporation possible — la pluie ne couvre que ≈ 17 % de l'ETP." },
-            { n: 2, t: "L'eau de pluie oxyde les sulfures d'argent ; rare et salée, elle n'emporte pas l'argent, qui précipite en chlorure dans les fissures." },
-          ], note: "Domaine schématique : la chlorargyrite domine les zones d'oxydation quand la pluie reste sous ≈ 20 % de l'ETP." },
+            { T: 18, ai: 0.17, n: 1, t: "À Broken Hill (Australie), la température moyenne atteint ≈ 18 °C ; la pluie, de ≈ 250 mm, ne représente que ≈ 17 % d'une évapotranspiration potentielle d'environ 1 500 mm." },
+            { n: 2, t: "Oxydés par l'eau de pluie, les sulfures d'argent libèrent un métal que la rareté et la salinité de l'eau ne permettent pas d'évacuer : il précipite donc en chlorure dans les fissures." },
+          ], note: "Limite indicative : la chlorargyrite prend le pas sur les autres minéraux d'oxydation dès que les précipitations descendent sous ≈ 20 % de l'ETP." },
           src: ["h5"] },
       ],
     },
 
     // ─────────── Cryolite ───────────
     cryolite: {
-      forme: `La cryolite est faite d'octaèdres AlF₆ isolés, avec le sodium entre eux : un arrangement de type pérovskite.
-        À haute température, les octaèdres sont droits et la maille est cubique ; en refroidissant sous ≈ 885 °C, ils se
-        penchent légèrement et la maille devient monoclinique — mais si peu (β = 90,2°) que les cristaux gardent l'allure
-        de cubes. Les domaines penchés dans des sens différents donnent ses macles répétées.`,
-      intro: `La cryolite n'a formé qu'un seul grand gisement au monde, au sommet d'un petit granite du Groenland.`,
+      forme: `Les octaèdres AlF₆, isolés les uns des autres, sont séparés par des ions sodium : l'ensemble rappelle la structure pérovskite. Au-dessus de ≈ 885 °C, ces octaèdres demeurent alignés et la maille reste cubique. Plus froide, la structure s'incline légèrement, passant en monoclinique avec un angle β de 90,2°, si faible que le cristal garde une silhouette cubique. Des domaines inclinés différemment engendrent alors ses macles multiples.`,
+      intro: `La cryolite ne forme qu'un seul grand gisement mondial, au sommet d'un petit granite du Groenland.`,
       scenarios: [
         { nom: "Au toit d'un granite alcalin (Ivigtut)",
-          texte: `Il y a 1,27 milliard d'années, un petit massif de granite alcalin, très riche en fluor, s'est mis en place à
-            Ivigtut (Groenland). Ses derniers liquides et fluides, chargés de fluor, de sodium et d'aluminium, se sont
-            accumulés sous son toit et y ont cristallisé un corps de cryolite presque pure, avec sidérite, quartz et
-            fluorine : ≈ 3,8 millions de tonnes, exploitées de 1854 à 1987 pour fondre l'alumine dans l'électrolyse de
-            l'aluminium.`,
-          cond: false, sansDiagramme: "Pas de diagramme : l'origine exacte (liquide magmatique ou fluide) reste discutée, et ces conditions ne figurent sur aucun diagramme de l'atlas.",
+          texte: `Voici 1,27 milliard d'années, un modeste massif de granite alcalin, riche en fluor, s'installe à Ivigtut, au Groenland. Ses ultimes liquides et fluides, porteurs de fluor, de sodium et d'aluminium, s'accumulent sous la voûte et y forment une masse de cryolite quasi pure, mêlée de sidérite, de quartz et de fluorine : ≈ 3,8 millions de tonnes, extraites de 1854 à 1987 pour fournir le fondant de l'alumine lors de l'électrolyse de l'aluminium.`,
+          cond: false, sansDiagramme: "L'atlas ne propose pas de diagramme ici : l'origine précise, liquide magmatique ou fluide, fait encore débat, et aucune représentation de l'atlas ne rend compte de ces conditions.",
           src: [SRC.pauly] },
       ],
     },
 
     // ─────────── Atacamite ───────────
     atacamite: {
-      forme: `Le cuivre y est au centre d'octaèdres déformés — quatre OH proches et deux chlores plus loin, ou cinq OH et
-        un chlore — qui partagent leurs arêtes en une charpente compacte. Les liaisons hydrogène des OH vers les chlores
-        tiennent les plans {001} moins fort que le reste : c'est le clivage parfait. Les chaînes d'octaèdres allongées
-        selon b expliquent les prismes fins et striés.`,
-      intro: `L'atacamite remplace la malachite là où il ne pleut presque jamais et où l'eau est salée.`,
+      forme: `Chaque cuivre se place au cœur d'un octaèdre déformé : quatre OH rapprochés et deux chlores plus éloignés, ou bien cinq OH et un seul chlore. Ces octaèdres se touchent par leurs arêtes et composent un édifice serré. Des liaisons hydrogène relient OH et chlores, plus lâches sur les plans {001}, ce qui produit le clivage parfait. Des chaînes d'octaèdres étirées le long de b rendent compte des prismes fins et striés.`,
+      intro: `Dans les régions presque dépourvues de pluie et où l'eau est chargée de sel, l'atacamite prend la place de la malachite.`,
       scenarios: [
         { nom: "Zone d'oxydation, en climat hyper-aride",
-          texte: `Dans le désert d'Atacama, il tombe quelques millimètres de pluie par an. Les sulfures de cuivre s'y oxydent
-            lentement, au contact d'eaux rares et très salées (brouillards côtiers, nappes profondes remontées par les
-            failles) : au lieu des carbonates (malachite, azurite) des climats humides, c'est le chlorure de cuivre vert qui
-            cristallise. Elle ne se conserve que si le climat reste sec : une seule saison des pluies abondantes la
-            dissoudrait. L'hyperaridité de l'Atacama dure depuis ≈ 15 millions d'années.`,
+          texte: `Au désert d'Atacama, les précipitations ne se mesurent qu'en millimètres annuels. Les sulfures de cuivre y réagissent lentement avec des eaux rares et très chargées en sel, issues des brouillards côtiers ou de nappes profondes remontées par les failles. Là où les climats humides forment carbonates (malachite, azurite), le chlorure de cuivre vert s'impose. Sa conservation suppose un climat constamment sec : une seule saison pluvieuse importante suffirait à le dissoudre. Cette hyperaridité persiste depuis ≈ 15 millions d'années.`,
           cond: { type: "climat", domaines: [[10, 25, 0, 0.05]], etiquettes: [["atacamite", 17.5, 0.18]], villes: ["Perpignan", "Montpellier"], chemin: [
-            { T: 17, ai: 0.01, n: 1, t: "Désert d'Atacama : ≈ 17 °C, quelques millimètres de pluie par an, moins de 1 % de l'ETP." },
-            { n: 2, t: "Les sulfures de cuivre s'oxydent ; l'eau rare et salée fixe le cuivre en chlorure vert : l'atacamite." },
-          ], note: "Domaine schématique : sous ≈ 5 % de l'ETP. Plus humide, la malachite la remplace." },
+            { T: 17, ai: 0.01, n: 1, t: "Atacama : température moyenne ≈ 17 °C, quelques millimètres de pluie annuelle, moins de 1 % de l'ETP." },
+            { n: 2, t: "Lorsque les sulfures de cuivre s'oxydent au contact d'une eau peu abondante et salée, le métal se fixe en chlorure vert : c'est l'atacamite." },
+          ], note: "Ce domaine est schématique : en dessous de ≈ 5 % de l'ETP. Dans un milieu plus humide, la malachite lui succède." },
           src: ["h5", SRC.reich, SRC.cameron] },
         { nom: "Sur les bronzes immergés",
-          texte: `L'eau de mer, riche en chlore, transforme lentement le cuivre des bronzes antiques et des épaves en
-            atacamite et en ses deux sœurs (paratacamite, clinoatacamite) : c'est une partie de la patine verte, et la
-            « maladie du bronze » qui ronge les objets sortis de l'eau.`,
+          texte: `Dans le milieu marin, le cuivre des bronzes anciens et des épaves se transforme peu à peu en atacamite et en ses deux polymorphes (paratacamite, clinoatacamite). Ces minéraux entrent dans la composition de la patine verte, de même que dans la « maladie du bronze », qui attaque les objets remontés de l'eau.`,
           cond: false, sansDiagramme: ARIDE },
       ],
     },

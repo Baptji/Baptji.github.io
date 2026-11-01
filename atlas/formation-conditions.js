@@ -535,7 +535,7 @@
     const [zf, pf] = ZONE_FONDU[c.echelle] || ZONE_FONDU.manteau;
     etiquetteZone(G, lf, zf, pf, { dans: fondus[0] });
     for (const [t, T, P] of c.etiquettes || []) etiquetteZone(G, t, [T - E.T * 0.18, T + E.T * 0.18, Math.max(0, P - E.P * 0.2), Math.min(E.P, P + E.P * 0.2)], [T, P]);
-    return rendre(G, `Diagramme pression–température : ${roche.nom}`) + legende(ch, roche);
+    return rendre(G, `Diagramme pression-température : ${roche.nom}`) + legende(ch, roche);
   };
 
   // ── métamorphiques : faciès jointifs, silicates d'alumine, jadéite, coésite, anatexie, gradients ──
@@ -580,7 +580,7 @@
       etiquetteZone(G, f.nom, zone, pref, { c: "fc2-lab-facies", rot: f.rot, oblig: false, dans: f.pts.map(([t, p]) => G.P(Math.min(t, E.T * 1.5), Math.min(p, E.P * 1.5))) });
     }
     for (const [t, T, P] of c.etiquettes || []) etiquetteZone(G, t, [T - E.T * 0.18, T + E.T * 0.18, Math.max(0, P - E.P * 0.2), Math.min(E.P, P + E.P * 0.2)], [T, P]);
-    return rendre(G, `Diagramme pression–température : ${roche.nom}`) + legende(ch, roche);
+    return rendre(G, `Diagramme pression-température : ${roche.nom}`) + legende(ch, roche);
   };
 
   // ── roches de faille : cassant / ductile le long du géotherme ──
@@ -606,7 +606,7 @@
     etiquetteZone(G, "cassant", [0, 290, 0, E.P], [150, 0.7]);
     etiquetteZone(G, "ductile", [460, c.fusionSeche ? 990 : E.T, 0, E.P], [800, 0.7]);
     if (c.fusionSeche) etiquetteZone(G, "la roche sèche fond", [1000, E.T, 0, E.P], [1200, 0.6]);
-    return rendre(G, `Diagramme pression–température : ${roche.nom}`) + legende(ch, roche);
+    return rendre(G, `Diagramme pression-température : ${roche.nom}`) + legende(ch, roche);
   };
 
   // ── choc (impacts) : pression de choc et température qui reste après le passage de l'onde ──
@@ -762,9 +762,9 @@
     const ch = c.chemin.map((p) => Object.assign({}, p, { x: p.F, y: p.R }));
     chemin(G, ch);
     etiquettesPoints(G, ch);
-    etiquette(G, { t: "rapport Mg/Ca de la saumure", c: "fc2-lab-courbe", it: true, taille: 9.8, oblig: true, cands: leLong(G, L.slice(30)) });
+    etiquette(G, { t: "rapport magnésium/calcium de la saumure", c: "fc2-lab-courbe", it: true, taille: 9.8, oblig: true, cands: leLong(G, L.slice(30)) });
     etiquettesChemin(G, ch);
-    etiquetteZone(G, "le gypse cristallise\net retire du calcium", [3.9, 10.4, 14, 48], [5.2, 30]);
+    etiquetteZone(G, "le gypse cristallise\net extrait du calcium", [3.9, 10.4, 14, 48], [5.2, 30]);
     etiquetteZone(G, "eau de mer : Mg/Ca ≈ 5", [0.8, 3.8, 1, 4.5], [1.6, 3.5], { c: "fc2-lab-courbe", gras: false });
     return rendre(G, `Saumure et dolomitisation : ${roche.nom}`) + legende(ch, roche);
   };
@@ -776,7 +776,7 @@
     const TM = c.tmax || 120;
     const G = graphique({ x: { min: 0, max: TM }, y: { min: 0.1, max: 1000, type: "log" } });
     const pasT = TM > 200 ? 50 : 20;
-    axes(G, { x: { ticks: pas(0, TM, pasT), titre: c.xlab || "Température de l'eau (°C) — elle monte quand la boue s'enfouit" },
+    axes(G, { x: { ticks: pas(0, TM, pasT), titre: c.xlab || "Température de l'eau (°C) : elle s'élève lorsque la boue s'enfouit" },
       y: { ticks: [0.1, 1, 10, 100, 1000], titre: "Silice dissoute (mg par litre)" } });
     const Lo = serie((t) => [t, siliceOpale(t)], 0, TM), Lq = serie((t) => [t, siliceQuartz(t)], 0, TM);
     polygone(G, [...Lo, [TM, 1000], [0, 1000]], "fc2-sursat");
@@ -795,7 +795,7 @@
       etiquetteZone(G, "opale-CT → quartz", [50, 80, 0.1, 1000], [65, 0.25], { c: "fc2-lab-courbe", gras: false, it: true, taille: 9.5 });
     }
     etiquetteZone(G, "l'opale précipite", [0, TM, 150, 1000], [TM * 0.2, 700]);
-    etiquetteZone(G, "seul le quartz peut précipiter,\ntrès lentement", [0, TM, 5, 300], [TM * 0.72, 60], { dans: polyPx(G, [...Lq, ...Lo.slice().reverse()]) });
+    etiquetteZone(G, "seul le quartz peut précipiter,\nmais très lentement", [0, TM, 5, 300], [TM * 0.72, 60], { dans: polyPx(G, [...Lq, ...Lo.slice().reverse()]) });
     etiquetteZone(G, "la silice se dissout", [0, TM, 0.1, 30], [TM * 0.75, 0.35], { dans: polyPx(G, [...Lq, [TM, 0.1], [0, 0.1]]) });
     return rendre(G, `Silice dissoute et saturation : ${roche.nom}`) + legende(ch, roche);
   };
@@ -824,7 +824,7 @@
     etiquette(G, { t: "équilibre à 25 °C", c: "fc2-lab-courbe", it: true, taille: 9.8, oblig: true, cands: leLong(G, L25) });
     etiquettesChemin(G, ch);
     etiquetteZone(G, "eau sursaturée :\nla calcite précipite", [Math.pow(10, -3.4), 0.3, 150, 470], [0.0015, 380]);
-    etiquetteZone(G, "eau sous-saturée :\nle calcaire se dissout", [0.003, 1, 0, 150], [0.2, 40], { dans: polyPx(G, [...L25, [1, 0], [Math.pow(10, -3.5), 0]]) });
+    etiquetteZone(G, "eau sous-saturée :\nle calcaire est dissous", [0.003, 1, 0, 150], [0.2, 40], { dans: polyPx(G, [...L25, [1, 0], [Math.pow(10, -3.5), 0]]) });
     return rendre(G, `Calcite, CO₂ et calcium dissous : ${roche.nom}`) + legende(ch, roche);
   };
 
@@ -834,7 +834,7 @@
   const Papatite = (pH) => { const lh = (14.46 + 5 * 2.603 - 7 * pH) / 3; return Math.pow(10, lh) * (1 + Math.pow(10, pH - 7.2)) * 30974; };
   DIAG.apatite = function (c, roche) {
     const G = graphique({ x: { min: 4, max: 9 }, y: { min: 0.0001, max: 1000, type: "log" } });
-    axes(G, { x: { ticks: [4, 5, 6, 7, 8, 9], titre: "pH de l'eau — acide ← → basique" },
+    axes(G, { x: { ticks: [4, 5, 6, 7, 8, 9], titre: "pH de l'eau : acide ← → basique" },
       y: { ticks: [0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000], titre: "Phosphate dissous (mg de phosphore par litre)", fmt: (v) => nb(v, v < 1 ? Math.round(-Math.log10(v)) : 0) } });
     const L = serie((ph) => [ph, Papatite(ph)], 4, 9, 50).filter(([, y]) => y <= 5000);
     polygone(G, [...L, [9, 1e4], [L[0][0], 1e4]], "fc2-sursat");
@@ -882,10 +882,10 @@
     etiquette(G, { t: "saturation de la calcite", c: "fc2-lab-seuil", taille: 9.8, oblig: true, cands: leLong(G, Ls) });
     etiquette(G, { t: "teneur mesurée (Atlantique)", c: "fc2-lab-courbe", it: true, taille: 9.8, oblig: true, cands: leLong(G, Lm) });
     etiquettesChemin(G, ch);
-    etiquetteZone(G, "zone éclairée : le plancton\nfabrique la calcite", [150, 300, 1, 200], [240, 8]);
-    etiquetteZone(G, "eau sursaturée :\nla calcite se conserve", [45, 230, 250, 4000], [85, 900], { dans: [...Lm, ...Ls.slice().reverse()].map(([x, z]) => G.P(x, z)) });
-    etiquetteZone(G, "profondeur de compensation (4,5–5,5 km)", [0, 300, 2500, 6000], [150, 3800], { taille: 9.8, c: "fc2-lab-courbe", gras: false, it: true });
-    return rendre(G, `Carbonates marins : ion carbonate et saturation de la calcite : ${roche.nom}`) + legende(ch, roche);
+    etiquetteZone(G, "zone éclairée : le plancton\nsécrète la calcite", [150, 300, 1, 200], [240, 8]);
+    etiquetteZone(G, "eau sursaturée :\nla calcite persiste", [45, 230, 250, 4000], [85, 900], { dans: [...Lm, ...Ls.slice().reverse()].map(([x, z]) => G.P(x, z)) });
+    etiquetteZone(G, "profondeur de compensation (4,5 à 5,5 km)", [0, 300, 2500, 6000], [150, 3800], { taille: 9.8, c: "fc2-lab-courbe", gras: false, it: true });
+    return rendre(G, `Carbonates marins : concentration de l'ion carbonate et saturation en calcite : ${roche.nom}`) + legende(ch, roche);
   };
 
   // ── 5.2.8 fer : Eh–pH (domaines de POURBAIX.fer, partie Oxydes de l'atlas) ──
@@ -894,13 +894,13 @@
     if (!sys) return "";
     const autre = (c.systeme || "fer") !== "fer";
     const G = graphique({ x: { min: 0, max: 14 }, y: { min: -1, max: 1.5 } });
-    axes(G, { x: { ticks: pas(0, 14, 2), titre: "pH — acide ← → basique" }, y: { ticks: [-1, -0.5, 0, 0.5, 1, 1.5], titre: "Eh (V) — réducteur ↓, oxydant ↑", fmt: (v) => nb(v, 1) } });
+    axes(G, { x: { ticks: pas(0, 14, 2), titre: "pH : acide ← → basique" }, y: { ticks: [-1, -0.5, 0, 0.5, 1, 1.5], titre: "Eh (V) : réducteur ↓, oxydant ↑", fmt: (v) => nb(v, 1) } });
     for (const d of sys.domaines) G.domaines.push(`<polygon points="${pts(G, d.points)}" style="fill:${d.couleur};opacity:.5" class="fc2-facies"/>`);
     for (const E0 of [1.229, 0]) courbe(G, [[0, E0], [14, E0 - 0.0592 * 14]], "fc2-courbe fc2-c-eau-lim");
     const ch = c.chemin.map((p) => Object.assign({}, p, { x: p.pH, y: p.Eh }));
     chemin(G, ch);
     etiquettesPoints(G, ch);
-    etiquette(G, { t: "l'eau se décompose en oxygène au-dessus", c: "fc2-lab-courbe", it: true, taille: 9.5, cands: leLong(G, [[0, 1.229], [14, 1.229 - 0.0592 * 14]]) });
+    etiquette(G, { t: "au-dessus, l'eau se décompose en oxygène", c: "fc2-lab-courbe", it: true, taille: 9.5, cands: leLong(G, [[0, 1.229], [14, 1.229 - 0.0592 * 14]]) });
     etiquette(G, { t: "en hydrogène au-dessous", c: "fc2-lab-courbe", it: true, taille: 9.5, cands: leLong(G, [[0, 0], [14, -0.0592 * 14]]) });
     etiquettesChemin(G, ch);
     const NOMS = { fe2: "Fe²⁺ dissous", fe3: "Fe³⁺ dissous", fe0: "fer métal", feoh3: "oxydes de fer solides", feo4: "FeO₄²⁻ dissous" };
@@ -911,22 +911,22 @@
         { dans: polyPx(G, d.points), taille: 9.8, oblig: false });
     }
     for (const [lab, ph, eh] of c.etiquettes || []) etiquetteZone(G, lab, [ph - 2.5, ph + 2.5, eh - 0.35, eh + 0.35], [ph, eh]);
-    return rendre(G, `Diagramme Eh–pH ${autre ? (/^[aeiouéh]/i.test(sys.nom) ? "de l'" : "du ") + sys.nom.toLowerCase() : "du fer"} : ${roche.nom}`) + legende(ch, roche);
+    return rendre(G, `Diagramme Eh-pH ${autre ? (/^[aeiouéh]/i.test(sys.nom) ? "de l'" : "du ") + sys.nom.toLowerCase() : "du fer"} : ${roche.nom}`) + legende(ch, roche);
   };
 
   // ── 5.2.9 enfouissement : profondeur au fil du temps, seuils de température ──
   // T = 10 °C en surface + 30 °C par km (gradient moyen) ; seuils : voir SEUILS_ENF
   const T_KM = (z) => 10 + 30 * z, Z_T = (T) => (T - 10) / 30;
   const SEUILS_ENF = {
-    quartz: { de: 70, a: 80, nom: "le quartz cimente les grains (≈ 70–80 °C)", src: "walderhaug" },
-    huile: { de: 100, a: 170, nom: "fenêtre à pétrole (≈ 100–170 °C)", src: "burnham" },
+    quartz: { de: 70, a: 80, nom: "le quartz cimente les grains (≈ 70 à 80 °C)", src: "walderhaug" },
+    huile: { de: 100, a: 170, nom: "fenêtre à pétrole (≈ 100 à 170 °C)", src: "burnham" },
     lignite: { de: 0, a: 50, nom: "tourbe, puis lignite", src: "burnham" },
     subbitumineux: { de: 50, a: 100, nom: "charbon sub-bitumineux", src: "burnham" },
     houille: { de: 100, a: 200, nom: "houille (charbon bitumineux)", src: "burnham" },
     anthracite: { de: 200, a: 280, nom: "anthracite", src: "burnham" },
-    anchizone: { de: 200, a: 300, nom: "très faible métamorphisme (≈ 200–300 °C)", src: "anchizone" },
-    gypse: { de: 42, a: 58, nom: "gypse → anhydrite (≈ 42–58 °C)", src: "hardie" },
-    opale: { de: 35, a: 56, nom: "opale → quartz (≈ 35–56 °C)", src: "odp" },
+    anchizone: { de: 200, a: 300, nom: "très faible métamorphisme (≈ 200 à 300 °C)", src: "anchizone" },
+    gypse: { de: 42, a: 58, nom: "gypse → anhydrite (≈ 42 à 58 °C)", src: "hardie" },
+    opale: { de: 35, a: 56, nom: "opale → quartz (≈ 35 à 56 °C)", src: "odp" },
   };
   DIAG.enfouissement = function (c, roche) {
     const tmax = c.tmax, zmax = c.zmax || 6;
@@ -1038,17 +1038,17 @@
     const ch = c.chemin.map((p) => Object.assign({}, p, { x: p.d, y: p.v }));
     chemin(G, ch);
     etiquettesPoints(G, ch);
-    etiquette(G, { t: "le vent met le grain en mouvement", c: "fc2-lab-courbe", it: true, taille: 9.8, oblig: true, cands: leLong(G, Ls) });
+    etiquette(G, { t: "le vent entraîne le grain", c: "fc2-lab-courbe", it: true, taille: 9.8, oblig: true, cands: leLong(G, Ls) });
     etiquette(G, { t: "vitesse de chute du grain", c: "fc2-lab-courbe", it: true, taille: 9.8, oblig: true, cands: leLong(G, Lwv) });
     etiquettesChemin(G, ch);
     // croisement des deux courbes (≈ 0,07 mm) : à gauche, les grains soulevés restent en l'air ; à droite, ils font des bonds
     let ix = 0; while (ix < ds.length - 1 && !(W[ix] < S[ix] && W[ix + 1] >= S[ix + 1])) ix++;
     const dx = ds[ix];
     etiquetteZone(G, "suspension :\nles poussières voyagent loin", [0.002, 10, 60, 300], [0.012, 170]);
-    etiquetteZone(G, "une fois soulevé,\nle grain reste en l'air", [0.002, dx, 3, 60], [0.008, 14], { dans: polyPx(G, [...haut.slice(0, ix + 1), ...bas.slice(0, ix + 1).reverse()]) });
+    etiquetteZone(G, "une fois soulevé,\nle grain demeure en suspension", [0.002, dx, 3, 60], [0.008, 14], { dans: polyPx(G, [...haut.slice(0, ix + 1), ...bas.slice(0, ix + 1).reverse()]) });
     etiquetteZone(G, "bonds", [dx, 10, 20, 300], [0.6, 60], { dans: polyPx(G, [...haut.slice(ix), ...bas.slice(ix).reverse()]) });
     etiquetteZone(G, "au repos,\nou il retombe", [0.002, 10, 2, 20], [0.8, 5]);
-    return rendre(G, `Vent, mise en mouvement et suspension : ${roche.nom}`) + legende(ch, roche);
+    return rendre(G, `Vent : mise en mouvement et mise en suspension : ${roche.nom}`) + legende(ch, roche);
   };
 
   // ─────────────────────────────── 6. données des roches ───────────────────────────────
@@ -1063,368 +1063,372 @@
   // ═════ M.1 plutoniques ═════
   COND.granite = M("croute", [
     pt(650, 0.85, 0, "", { lab: "croûte épaissie" }),
-    pt(850, 0.85, 1, "La croûte épaissie par la collision varisque chauffe et fond en partie vers 750–850 °C, à 25–35 km : le liquide se sépare des minéraux restés solides."),
-    pt(845, 0.2, 2, "Moins dense que les roches qui l'entourent (≈ 2,4 contre 2,7 tonnes par m³), le liquide se rassemble dans des veines puis remonte par des filons (dykes) de quelques mètres de large qu'il ouvre lui-même ; le massif se remplit en 1 000 à 100 000 ans."),
-    pt(845, 0.2, 3, "Vers 5 à 10 km (≈ 0,2 GPa), il s'étale en lames successives ; sa chaleur transforme les roches voisines (auréole de contact)."),
-    pt(680, 0.2, 4, "Il cristallise entre ≈ 850 °C et le solidus (≈ 680 °C) : plagioclase et biotite, puis feldspath potassique, puis quartz ; le massif refroidit en 100 000 ans à 1 million d'années.", { bande: "cristallisation" }),
+    pt(850, 0.85, 1, "Épaissie par la collision varisque, la croûte s'échauffe et fond partiellement entre 750 et 850 °C, à 25 à 35 km : le liquide se sépare des minéraux demeurés solides."),
+    pt(845, 0.2, 2, "Plus léger que les roches encaissantes (≈ 2,4 contre 2,7 tonnes par m³), le liquide se regroupe en veines, puis remonte par des dykes de quelques mètres d'épaisseur qu'il ouvre lui-même ; le massif se constitue en 1 000 à 100 000 ans."),
+    pt(845, 0.2, 3, "Entre 5 et 10 km (≈ 0,2 GPa), il se répand en lames successives ; sa chaleur modifie les roches encaissantes (auréole de contact)."),
+    pt(680, 0.2, 4, "La cristallisation débute vers ≈ 850 °C et se poursuit jusqu'au solidus (≈ 680 °C) : plagioclase et biotite se forment d'abord, puis feldspath potassique et quartz ; en 100 000 ans à 1 million d'années, le massif se refroidit.", { bande: "cristallisation" }),
     pt(220, 0.2),
-    pt(15, 0, 5, "L'érosion enlève les 5 à 10 km de roches du dessus : le granite affleure, se débite en boules et donne de l'arène (granites cristallisés entre 360 et 290 Ma)."),
+    pt(15, 0, 5, "Après l'enlèvement des 5 à 10 km de roches qui le recouvrent, le granite affleure : il se débite en boules et son arène s'accumule (granites cristallisés entre 360 et 290 Ma)."),
   ], { src: ["tuttle", "diffusion", "maaloe"] });
   COND.granodiorite = M("croute", [
     pt(750, 0.95, 0, "", { lab: "bas de la croûte" }),
-    pt(900, 0.95, 1, "Le bas de la croûte fond vers 850–950 °C, à 30–35 km ; des magmas basiques venus du manteau apportent chaleur et matière et se mêlent au liquide."),
-    pt(890, 0.3, 2, "Moins dense que les roches voisines, le magma se rassemble et remonte, en 1 000 à 100 000 ans."),
-    pt(890, 0.3, 3, "Il s'installe vers 7–12 km ; sa chaleur transforme les roches voisines (auréole de contact)."),
-    pt(700, 0.3, 4, "Il cristallise entre ≈ 900 et ≈ 700 °C : plagioclase et amphibole d'abord, quartz et feldspath potassique à la fin ; le massif refroidit en 100 000 ans à 1 million d'années.", { bande: "cristallisation" }),
+    pt(900, 0.95, 1, "À 30 à 35 km, la base de la croûte se met à fondre vers 850 à 950 °C ; des magmas basiques issus du manteau apportent leur chaleur et leur matière et se mélangent au liquide."),
+    pt(890, 0.3, 2, "Moins dense que l'encaissant, le magma se regroupe et remonte en 1 000 à 100 000 ans."),
+    pt(890, 0.3, 3, "La mise en place s'effectue vers 7 à 12 km ; sa chaleur modifie les roches encaissantes (auréole de contact)."),
+    pt(700, 0.3, 4, "La cristallisation s'étend de ≈ 900 à ≈ 700 °C : plagioclase et amphibole apparaissent d'abord, quartz et feldspath potassique en fin de parcours ; en 100 000 ans à 1 million d'années, le massif se refroidit.", { bande: "cristallisation" }),
     pt(250, 0.3),
-    pt(15, 0, 5, "Mis en place entre 345 et 295 Ma, le massif est dégagé par l'érosion (Margeride, Corse, Mont-Blanc)."),
+    pt(15, 0, 5, "L'érosion exhume le massif, mis en place entre 345 et 295 Ma (Margeride, Corse, Mont-Blanc)."),
   ], { src: ["tuttle", "diffusion"] });
   COND.tonalite = M("croute", [
     pt(820, 1.0, 0, "", { lab: "amphibolites" }),
-    pt(950, 1.0, 1, "Des roches basiques du bas de la croûte (amphibolites) fondent en partie vers 900–1 000 °C, vers 35 km : le liquide est riche en sodium, pauvre en potassium."),
-    pt(940, 0.33, 2, "Moins dense que les roches voisines, le magma se rassemble et remonte, en 1 000 à 100 000 ans."),
-    pt(940, 0.33, 3, "Il s'installe vers 8–15 km ; sa chaleur transforme les roches voisines (auréole de contact)."),
-    pt(720, 0.33, 4, "Il cristallise entre ≈ 950 et ≈ 720 °C : beaucoup de plagioclase, d'amphibole et de biotite, presque pas de feldspath potassique.", { bande: "cristallisation" }),
+    pt(950, 1.0, 1, "Vers 35 km, les roches basiques de la base de la croûte (amphibolites) entrent partiellement en fusion entre 900 et 1 000 °C : le liquide formé est riche en sodium et pauvre en potassium."),
+    pt(940, 0.33, 2, "Moins dense que l'encaissant, le magma se regroupe et remonte en 1 000 à 100 000 ans."),
+    pt(940, 0.33, 3, "Une mise en place vers 8 à 15 km ; sa chaleur modifie les roches encaissantes (auréole de contact)."),
+    pt(720, 0.33, 4, "La cristallisation se fait entre ≈ 950 et ≈ 720 °C et privilégie plagioclase, amphibole et biotite, le feldspath potassique étant presque absent.", { bande: "cristallisation" }),
     pt(260, 0.33),
-    pt(15, 0, 5, "Les tonalites varisques des Maures et de Corse (345–300 Ma) sont dégagées par l'érosion."),
+    pt(15, 0, 5, "Exhumées par l'érosion, les tonalites varisques des Maures et de Corse (345 à 300 Ma) affleurent."),
   ], { src: ["tuttle", "diffusion"] });
   COND.charnockite = M("croute", [
     pt(850, 1.05, 0, "", { lab: "croûte profonde, sèche" }),
-    pt(990, 1.05, 1, "Au bas d'une croûte très chaude et pauvre en eau (≈ 38 km), la roche fond vers 950–1 000 °C : sans eau, il faut bien plus chaud que pour un granite ordinaire."),
-    pt(980, 0.65, 2, "Le magma monte peu : il s'arrête dans la croûte profonde, vers 20–25 km."),
-    pt(800, 0.65, 3, "Il cristallise sans eau, entre ≈ 980 et ≈ 800 °C : l'orthopyroxène remplace la biotite et l'amphibole.", { bande: "cristallisation" }),
+    pt(990, 1.05, 1, "Dans une croûte très chaude et pauvre en eau (≈ 38 km), la base fond vers 950 à 1 000 °C : privée d'eau, la roche exige une température nettement supérieure à celle d'un granite ordinaire."),
+    pt(980, 0.65, 2, "Peu ascendant, le magma s'immobilise dans la croûte profonde, vers 20 à 25 km."),
+    pt(800, 0.65, 3, "À sec, il cristallise entre ≈ 980 et ≈ 800 °C : l'orthopyroxène se substitue à la biotite et à l'amphibole.", { bande: "cristallisation" }),
     pt(450, 0.55),
-    pt(15, 0, 4, "Seule une érosion très longue, de 20 km de roches, l'amène au jour : rares en France, les charnockites couvrent de vastes régions en Inde du Sud (≈ 2,5 milliards d'années)."),
+    pt(15, 0, 4, "Seule une érosion prolongée, emportant 20 km de roches, le mène à l'affleurement : rares en France, les charnockites couvrent de vastes régions de l'Inde du Sud (≈ 2,5 milliards d'années)."),
   ], { src: ["tuttle"] });
   // basiques et intermédiaires nés du manteau : fusion vers 50–70 km, réservoir au bas de la croûte, puis mise en place
   const debutDiorite = (t1) => [pt(1450, 2.9, 0, "", { lab: "manteau solide" }), pt(1410, 2.0, 1, t1)];
   COND.diorite = M("manteau", [
-    ...debutDiorite("Un magma basique naît dans le manteau, vers 50–70 km."),
+    ...debutDiorite("Dans le manteau, vers 50 à 70 km de profondeur, un magma basique prend naissance."),
     pt(1200, 0.9),
-    pt(1050, 0.9, 2, "Au bas de la croûte (≈ 30 km), il perd ses premiers cristaux (olivine, pyroxène) et fond un peu de croûte : il devient intermédiaire.", { bande: "premiers cristaux" }),
-    pt(1050, 0.25, 3, "Il s'installe vers 5–10 km ; sa chaleur transforme les roches voisines (auréole de contact)."),
-    pt(850, 0.25, 4, "Il cristallise entre ≈ 1 050 et ≈ 850 °C : plagioclase et amphibole ; le massif refroidit en 100 000 ans à 1 million d'années.", { bande: "cristallisation" }),
+    pt(1050, 0.9, 2, "À la base de la croûte (≈ 30 km), il se défait de ses premiers cristaux (olivine, pyroxène) et fond une partie de la croûte, devenant ainsi intermédiaire.", { bande: "premiers cristaux" }),
+    pt(1050, 0.25, 3, "Une mise en place vers 5 à 10 km ; sa chaleur modifie les roches encaissantes (auréole de contact)."),
+    pt(850, 0.25, 4, "Entre ≈ 1 050 et ≈ 850 °C, il cristallise plagioclase et amphibole ; en 100 000 ans à 1 million d'années, le massif se refroidit.", { bande: "cristallisation" }),
     pt(240, 0.25),
-    pt(15, 0, 5, "Diorites varisques (345–300 Ma), dégagées par l'érosion ; la corsite montre des orbicules de plagioclase et d'amphibole."),
+    pt(15, 0, 5, "Chez la corsite, des orbicules de plagioclase et d'amphibole apparaissent dans les diorites varisques (345 à 300 Ma), que l'érosion a exhumées."),
   ], { src: ["hirschmann", "diffusion"] });
   COND.monzodiorite = M("manteau", [
-    ...debutDiorite("Un manteau enrichi en potassium fond en partie, vers 50–70 km."),
+    ...debutDiorite("Un manteau enrichi en potassium entre partiellement en fusion, vers 50 à 70 km."),
     pt(1200, 0.9),
-    pt(1050, 0.9, 2, "Au bas de la croûte, le magma perd ses premiers cristaux et se charge en potassium.", { bande: "premiers cristaux" }),
-    pt(1050, 0.25, 3, "Il s'installe vers 5–10 km ; sa chaleur transforme les roches voisines (auréole de contact)."),
-    pt(850, 0.25, 4, "Il cristallise entre ≈ 1 050 et ≈ 850 °C : plagioclase, feldspath potassique et amphibole.", { bande: "cristallisation" }),
+    pt(1050, 0.9, 2, "À la base de la croûte, le magma perd ses premiers cristaux et s'enrichit en potassium.", { bande: "premiers cristaux" }),
+    pt(1050, 0.25, 3, "Une mise en place vers 5 à 10 km ; sa chaleur modifie les roches encaissantes (auréole de contact)."),
+    pt(850, 0.25, 4, "Plagioclase, feldspath potassique et amphibole se forment entre ≈ 1 050 et ≈ 850 °C.", { bande: "cristallisation" }),
     pt(240, 0.25),
-    pt(15, 0, 5, "Les monzodiorites du batholite corse (345–290 Ma) sont dégagées par l'érosion."),
+    pt(15, 0, 5, "Exhumées par l'érosion, les monzodiorites du batholite corse (345 à 290 Ma) affleurent aujourd'hui."),
   ], { src: ["hirschmann", "diffusion"] });
   COND.monzonite = M("manteau", [
     pt(1500, 3.6, 0, "", { lab: "manteau solide" }),
-    pt(1450, 2.3, 1, "À la fin de la chaîne varisque, un manteau enrichi en potassium fond en partie, vers 70–100 km."),
+    pt(1410, 2.0, 1, "Vers 50 à 70 km, à la fin de la chaîne varisque, du manteau enrichi en potassium se met partiellement à fondre."),
     pt(1200, 0.8),
-    pt(1000, 0.8, 2, "Dans un réservoir profond (≈ 30 km), le magma perd ses premiers cristaux et s'enrichit en potassium.", { bande: "premiers cristaux" }),
-    pt(1000, 0.2, 3, "Il s'installe vers 3–8 km ; sa chaleur transforme les roches voisines (auréole de contact)."),
-    pt(800, 0.2, 4, "Feldspath potassique et plagioclase cristallisent à parts égales, entre ≈ 1 000 et ≈ 800 °C.", { bande: "cristallisation" }),
+    pt(1000, 0.8, 2, "Dans un réservoir profond (≈ 30 km), le magma voit ses premiers cristaux se séparer de lui tandis que sa teneur en potassium grimpe.", { bande: "premiers cristaux" }),
+    pt(1000, 0.2, 3, "Une mise en place vers 3 à 8 km ; sa chaleur modifie les roches encaissantes (auréole de contact)."),
+    pt(800, 0.2, 4, "Feldspath potassique et plagioclase cristallisent en proportions comparables, entre ≈ 1 000 et ≈ 800 °C.", { bande: "cristallisation" }),
     pt(200, 0.2),
-    pt(15, 0, 5, "Les monzonites permiennes de l'Estérel et de Corse (300–270 Ma) sont dégagées par l'érosion."),
+    pt(15, 0, 5, "L'érosion a mis au jour les monzonites permiennes de l'Estérel et de Corse (300 à 270 Ma)."),
   ], { src: ["hirschmann", "diffusion"] });
   COND.syenite = M("manteau", [
     pt(1515, 3.5, 0, "", { lab: "manteau solide" }),
-    pt(1490, 2.6, 1, "Quelques pour cent seulement du manteau fondent, vers 80 km : le liquide concentre sodium et potassium."),
+    pt(1490, 2.6, 1, "Vers 80 km, seules quelques pour cent du manteau entrent en fusion : le liquide s'enrichit en sodium et en potassium."),
     pt(1200, 0.8),
-    pt(900, 0.8, 2, "Dans un réservoir profond, le magma perd olivine, pyroxène et plagioclase : il s'enrichit encore en alcalins.", { bande: "premiers cristaux" }),
-    pt(900, 0.2, 3, "Il s'installe vers 3–8 km ; sa chaleur transforme les roches voisines (auréole de contact)."),
-    pt(750, 0.2, 4, "Il cristallise entre ≈ 900 et ≈ 750 °C : surtout du feldspath potassique, presque pas de quartz.", { bande: "cristallisation" }),
+    pt(900, 0.8, 2, "Dans un réservoir profond, le magma se débarrasse d'olivine, de pyroxène et de plagioclase, ce qui accroît encore sa teneur en alcalins.", { bande: "premiers cristaux" }),
+    pt(900, 0.2, 3, "Une mise en place vers 3 à 8 km ; sa chaleur modifie les roches encaissantes (auréole de contact)."),
+    pt(750, 0.2, 4, "Sa cristallisation s'effectue entre ≈ 900 et ≈ 750 °C et produit surtout du feldspath potassique, avec très peu de quartz.", { bande: "cristallisation" }),
     pt(200, 0.2),
-    pt(15, 0, 5, "Les syénites varisques des Vosges (Champ du Feu) et de Corse (345–290 Ma) sont dégagées par l'érosion."),
+    pt(15, 0, 5, "L'érosion a mis au jour les syénites varisques des Vosges (Champ du Feu) et de Corse (345 à 290 Ma)."),
   ], { src: ["hirschmann", "diffusion"] });
   COND.syenite_nephelinique = M("manteau", [
     pt(1525, 3.6, 0, "", { lab: "manteau solide" }),
-    pt(1510, 3.0, 1, "Très profond (≈ 100 km), le manteau fond à peine : le liquide est pauvre en silice et riche en sodium."),
+    pt(1510, 3.0, 1, "À environ 100 km de profondeur, le manteau fond très peu : le liquide, appauvri en silice, se trouve enrichi en sodium."),
     pt(1200, 0.8),
-    pt(900, 0.8, 2, "En évoluant dans un réservoir, le liquide s'enrichit en alcalins sans jamais avoir assez de silice pour faire du quartz.", { bande: "premiers cristaux" }),
-    pt(900, 0.15, 3, "Il s'installe vers 2–6 km ; sa chaleur transforme les roches voisines (auréole de contact)."),
-    pt(750, 0.15, 4, "La néphéline cristallise à la place du quartz, qui ne peut pas apparaître faute de silice.", { bande: "cristallisation" }),
+    pt(900, 0.8, 2, "Au cours de son évolution dans un réservoir, le liquide accroît sa teneur en alcalins, mais il ne dispose jamais d'assez de silice pour former du quartz.", { bande: "premiers cristaux" }),
+    pt(900, 0.15, 3, "Une mise en place vers 2 à 6 km ; sa chaleur modifie les roches encaissantes (auréole de contact)."),
+    pt(750, 0.15, 4, "Faute de silice, le quartz ne peut pas se former : c'est la néphéline qui cristallise à sa place.", { bande: "cristallisation" }),
     pt(180, 0.15),
-    pt(15, 0, 5, "Complexes alcalins rares, presque absents de France ; les Khibiny (presqu'île de Kola) datent d'environ 380 Ma."),
+    pt(15, 0, 5, "Les complexes alcalins sont rares et presque absents de France ; les Khibiny (presqu'île de Kola) remontent à environ 380 Ma."),
   ], { src: ["hirschmann"] });
   COND.foidolite = M("manteau", [
     pt(1420, 3.6, 0, "", { lab: "manteau riche en CO₂" }),
-    pt(1450, 3.2, 1, "Très profond (≈ 100 km), un manteau riche en CO₂ et en alcalins fond à peine : le CO₂ abaisse son point de fusion, sous le solidus du manteau sec."),
+    pt(1510, 3.2, 1, "Un manteau riche en CO₂ et en alcalins, situé vers 100 km, fond à peine ; le CO₂ fait baisser le point de fusion en dessous du solidus du manteau sec."),
     pt(1250, 0.8),
-    pt(1050, 0.8, 2, "Le magma, très pauvre en silice, évolue peu dans un réservoir profond.", { bande: "premiers cristaux" }),
-    pt(1040, 0.15, 3, "Il s'installe vers 2–6 km, souvent avec des carbonatites."),
-    pt(900, 0.15, 4, "La néphéline cristallise au lieu des feldspaths, entre ≈ 1 050 et ≈ 900 °C.", { bande: "cristallisation" }),
+    pt(1050, 0.8, 2, "Très pauvre en silice, le magma change peu dans un réservoir profond.", { bande: "premiers cristaux" }),
+    pt(1040, 0.15, 3, "Il se met en place vers 2 à 6 km, souvent avec des carbonatites."),
+    pt(900, 0.15, 4, "La néphéline cristallise à la place des feldspaths, entre ≈ 1 050 et ≈ 900 °C.", { bande: "cristallisation" }),
     pt(180, 0.15),
-    pt(15, 0, 5, "Roche absente de France ; la localité type est Iivaara (Finlande), dans la province alcaline de Kola (≈ 370 Ma)."),
+    pt(15, 0, 5, "Iivaara (Finlande), dans la province alcaline de Kola (≈ 370 Ma), sert de localité type à cette roche, absente de France."),
   ], { src: ["hirschmann", "dasgupta"] });
   // ophiolite du Chenaillet : dorsale lente, chambre à 4–5 km sous un fond lui-même sous 3,5 km d'eau (≈ 0,16 GPa)
   const debutDorsale = (t1) => [pt(1350, 2.2, 0, "", { lab: "manteau solide" }), pt(1290, 0.6, 1, t1)];
   const finOphiolite = (t4, t5) => [pt(400, 0.08), pt(5, 0.035, 4, t4), pt(15, 0, 5, t5)];
+  // gabbro (B.8, 27/10/2026) : une lentille de 50 à 200 m qui cristallise en quelques siècles puis refroidit vite (Nicollet et al. 2022)
   COND.gabbro = M("manteau", [
-    ...debutDorsale("Sous la dorsale de l'océan alpin, le manteau remonte et fond en partie entre 60 et 20 km de profondeur."),
-    pt(1230, 0.16, 2, "Le liquide basaltique monte et remplit une chambre 4 à 5 km sous le fond de l'océan, lui-même sous ≈ 3,5 km d'eau."),
-    pt(1000, 0.16, 3, "Il cristallise lentement entre ≈ 1 200 et ≈ 1 000 °C (166–158 Ma).", { bande: "cristallisation" }),
-    ...finOphiolite("La faille de détachement le ramène au fond de l'océan (≈ 2 °C sous 3,5 km d'eau), en ≈ 1 million d'années (vers 160 Ma).",
-      "À la fermeture de l'océan (vers 50 Ma), une écaille de ce fond est charriée sans plonger : au Chenaillet, on marche aujourd'hui sur un fond d'océan jurassique."),
-  ], { src: ["hirschmann", "diffusion", "manatschal"] });
+    ...debutDorsale("Entre 60 et 20 km de profondeur, sous la dorsale de l'océan alpin, le manteau s'élève et fond en partie."),
+    pt(1230, 0.16, 2, "Le liquide s'accumule en une lentille de 50 à 200 m d'épaisseur, 4 à 5 km sous le fond de l'océan (lui-même sous ≈ 3,5 km d'eau)."),
+    pt(1000, 0.16, 0, "", { bande: "cristallisation" }),
+    pt(500, 0.16, 3, "Elle cristallise entre ≈ 1 200 et ≈ 1 000 °C en quelques centaines d'années (vers 161 Ma), puis l'eau de mer infiltrée la refroidit vers 500 °C en quelques milliers d'années."),
+    pt(5, 0.035, 4, "En ≈ 1 million d'années, la faille de détachement l'amène au fond de l'océan, à ≈ 2 °C sous 3,5 km d'eau ; des brèches puis des laves en coussins la recouvrent."),
+    pt(15, 0, 5, "Lors de la fermeture de l'océan (vers 50 Ma), une écaille de ce fond est charriée sans s'enfoncer : on foule aujourd'hui, au Chenaillet, un fond d'océan jurassique."),
+  ], { src: ["hirschmann", "nicollet2022", "li2013", "masini2008", "manatschal"] });
   COND.trondhjemite = M("manteau", [
-    ...debutDorsale("Sous la dorsale de l'océan alpin, le manteau qui remonte fond en partie entre 60 et 20 km de profondeur."),
-    pt(1200, 0.16, 2, "Le liquide monte par des chenaux et remplit une chambre 4 à 5 km sous le fond de l'océan, lui-même sous ≈ 3,5 km d'eau."),
-    pt(920, 0.16, 3, "La chambre cristallise en gabbro entre ≈ 1 200 et ≈ 1 000 °C ; les derniers liquides, riches en silice et en sodium, figent vers 900 °C en filons clairs de trondhjémite (vers 160 Ma).", { bande: "cristallisation" }),
-    ...finOphiolite("La faille de détachement ramène le gabbro et sa trondhjémite au fond de l'océan, en ≈ 1 million d'années.",
-      "À la fermeture de l'océan (vers 50 Ma), une écaille de ce fond est charriée sans plonger : le Chenaillet, aujourd'hui à 2 650 m."),
+    ...debutDorsale("Le manteau ascendant, sous la dorsale de l'océan alpin, fond partiellement entre 60 et 20 km de profondeur."),
+    pt(1200, 0.16, 2, "Le liquide circule par des chenaux et emplit une chambre située 4 à 5 km sous le plancher océanique, lequel se trouve sous ≈ 3,5 km d'eau."),
+    pt(920, 0.16, 3, "Dans la chambre, le gabbro cristallise entre ≈ 1 200 et ≈ 1 000 °C ; à la fin, les liquides, chargés de silice et de sodium, forment vers 900 °C des filons clairs de trondhjémite (vers 160 Ma).", { bande: "cristallisation" }),
+    ...finOphiolite("En ≈ 1 million d'années, la faille de détachement fait regagner au fond de l'océan le gabbro et sa trondhjémite.",
+      "Le Chenaillet, situé aujourd'hui à 2 650 m, est une écaille de fond océanique charriée sans plonger, vers 50 Ma, lors de la fermeture de l'océan."),
   ], { src: ["hirschmann", "manatschal"] });
+  // pyroxénite (27/10/2026, B.8) : lits de l'Ariège, cristallisés sur les parois d'un conduit vers 45 km (Bodinier et al. 1987),
+  // puis la même remontée crétacée que la lherzolite de Lers (points 3 et 4 = ceux de la péridotite)
   COND.pyroxenite = M("manteau", [
-    pt(1350, 2.2, 0, "", { lab: "manteau solide" }),
-    pt(1300, 0.6, 1, "Sous la dorsale de l'océan alpin, le manteau remonte et fond en partie entre 60 et 20 km de profondeur."),
-    pt(1260, 0.16, 2, "Le magma basique monte et remplit une chambre 4 à 5 km sous le fond de l'océan."),
-    pt(1200, 0.16, 3, "Les pyroxènes, denses, cristallisent parmi les premiers (≈ 1 260–1 200 °C) et s'accumulent en lits au fond de la chambre (vers 160 Ma).", { bande: "cristallisation" }),
-    ...finOphiolite("La faille de détachement ramène la chambre, devenue solide, au fond de l'océan, en ≈ 1 million d'années.",
-      "Charriés avec une écaille du fond de l'océan (vers 50 Ma), ces lits affleurent dans les Alpes (Chenaillet)."),
-  ], { src: ["hirschmann", "manatschal"] });
+    pt(1380, 1.9, 0, "", { lab: "magma venu de plus bas" }),
+    pt(1300, 1.4),
+    pt(1250, 1.4, 1, "Vers 45 km, un magma à ≈ 1 300 °C monte dans une fissure du manteau ; ses pyroxènes cristallisent sur les parois et la colmatent.", { bande: "cristallisation" }),
+    pt(950, 1.4, 2, "D'autres fissures se colmatent et le liquide imprègne la roche autour (la harzburgite devient lherzolite) ; en se déformant, le manteau fait tourner ces bandes et les couche toutes dans un même plan : des lits parallèles. Il refroidit ensuite vers 950 °C."),
+    pt(700, 0.6),
+    pt(150, 0.02, 3, "Au Crétacé, l'Ibérie s'écarte de l'Europe : la croûte s'amincit et le manteau remonte jusqu'au fond d'un bassin marin (108 à 103 Ma)."),
+    pt(15, 0, 4, "Quand l'Ibérie revient vers l'Europe, le manteau est coincé dans la chaîne pyrénéenne, où des plis à plan presque vertical le basculent ; l'érosion dégage ses lits à l'étang de Lers."),
+  ], { src: ["hirschmann", "lagabrielle", "bodinier1987", "leroux2008", "avelallemant1969", "lacroix1901"] });
   COND.hornblendite = M("manteau", [
-    pt(1250, 2.0, 1, "L'eau abaisse le point de fusion du manteau : vers 60 km, à ≈ 1 250 °C, un magma basique riche en eau se forme alors que le manteau sec resterait solide."),
-    pt(1120, 0.7, 2, "Il monte dans une chambre au sein de la croûte, vers 25 km."),
-    pt(980, 0.7, 3, "En dessous d'environ 1 000 °C, l'amphibole cristallise à la place du pyroxène et s'accumule : c'est la présence d'eau qui le permet.", { bande: "cumulats d'amphibole" }),
+    pt(1250, 2.0, 1, "Vers 60 km, l'eau abaisse le point de fusion du manteau : à ≈ 1 250 °C se forme un magma basique riche en eau, là où le manteau sec resterait solide."),
+    pt(1120, 0.7, 2, "Vers 25 km, il s'élève dans une chambre logée au cœur de la croûte."),
+    pt(980, 0.7, 3, "En dessous d'environ 1 000 °C, l'amphibole remplace le pyroxène dans la cristallisation et s'accumule ; la présence d'eau rend ce processus possible.", { bande: "cumulats d'amphibole" }),
     pt(500, 0.7),
-    pt(15, 0, 4, "Roche rare, dégagée par l'érosion du socle varisque (345–290 Ma)."),
+    pt(15, 0, 4, "Roche rare, mise au jour par l'érosion du socle varisque (345 à 290 Ma)."),
   ], { courbes: ["peridotite", "peridotiteEau"], src: ["hirschmann", "grove2006"] });
   COND.essexite = M("manteau", [
     pt(1525, 3.6, 0, "", { lab: "manteau solide" }),
-    pt(1500, 2.7, 1, "Sous le Massif central, une fusion faible du manteau, vers 70–100 km, donne un magma basique pauvre en silice."),
-    pt(1200, 0.3, 2, "Le magma monte et alimente le stratovolcan du Cantal."),
-    pt(1150, 0.05, 3, "Une partie se fige sous l'édifice, à 1–3 km de profondeur (vers 8 Ma)."),
-    pt(950, 0.05, 4, "Néphéline, augite et plagioclase cristallisent entre ≈ 1 150 et ≈ 950 °C, en quelques milliers d'années : la roche est grenue malgré sa faible profondeur.", { bande: "cristallisation" }),
+    pt(1500, 2.7, 1, "Une faible fusion du manteau, vers 70 à 100 km, sous le Massif central, produit un magma basique pauvre en silice."),
+    pt(1200, 0.3, 2, "Le magma s'élève et nourrit le stratovolcan du Cantal."),
+    pt(1150, 0.05, 3, "Une fraction se solidifie sous l'édifice, entre 1 et 3 km de profondeur (vers 8 Ma)."),
+    pt(950, 0.05, 4, "Entre ≈ 1 150 et ≈ 950 °C, néphéline, augite et plagioclase cristallisent en quelques milliers d'années ; malgré sa faible profondeur, la roche se présente à grain régulier.", { bande: "cristallisation" }),
     pt(100, 0.05),
-    pt(15, 0, 5, "L'érosion du volcan met ces intrusions au jour en quelques millions d'années."),
+    pt(15, 0, 5, "En quelques millions d'années, l'érosion du volcan expose ces intrusions."),
   ], { src: ["hirschmann"] });
   COND.peridotite = M("manteau", [
-    pt(950, 1.4, 1, "La péridotite fait partie du manteau solide, sous le continent, vers 45 km : à ≈ 950 °C, elle reste bien en dessous de son solidus et ne fond pas."),
-    pt(700, 0.6, 2, "Au Crétacé, l'Ibérie s'écarte de l'Europe : la croûte s'amincit, le manteau remonte et refroidit."),
-    pt(80, 0.02, 3, "Vers 108–103 Ma, des lambeaux de manteau affleurent au fond de bassins marins, où ils sont érodés et remaniés en brèches."),
-    pt(15, 0, 4, "L'Ibérie revient vers l'Europe : les lambeaux sont coincés dans la chaîne pyrénéenne, et l'érosion dégage la lherzolite de l'étang de Lers."),
+    pt(950, 1.4, 1, "Partie du manteau solide, sous le continent, la péridotite se trouve vers 45 km : à ≈ 950 °C, elle demeure sous son solidus et ne fond pas."),
+    pt(700, 0.6, 2, "Au Crétacé, l'Ibérie se détache de l'Europe ; la croûte s'amincit et le manteau, en remontant, se refroidit."),
+    pt(80, 0.02, 3, "Vers 108 à 103 Ma, des lambeaux de manteau sont exposés au fond de bassins marins, où l'érosion les réduit en brèches."),
+    pt(15, 0, 4, "L'érosion fait apparaître la lherzolite de l'étang de Lers, coincée dans la chaîne pyrénéenne, quand l'Ibérie revient vers l'Europe."),
   ], { etiquettes: [["le manteau solide reste sous son solidus", 650, 2.6]], src: ["hirschmann", "lagabrielle"] });
 
   // ═════ M.2 volcaniques ═════
   COND.basalte = M("manteau", [
     MANTEAU_MC(),
-    pt(1450, 2.3, 1, "Le manteau qui remonte franchit son solidus vers 100 km et fond de quelques pour cent jusque vers 70 km : le liquide basaltique se sépare des grains."),
-    pt(1200, 0, 2, "Le magma ouvre une fracture et monte en quelques jours à quelques semaines : il arrive en surface vers 1 200 °C."),
-    pt(1100, 0, 3, "La lave jaillit en fontaine et s'étale en coulée vers 1 100–1 200 °C (chaîne des Puys, il y a ≈ 8 400 ans)."),
+    pt(1450, 2.3, 1, "Le manteau ascendant passe son solidus vers 100 km, puis fond de quelques pour cent jusque vers 70 km ; le liquide basaltique se détache alors des grains."),
+    pt(1200, 0, 2, "Le magma ouvre une fracture et atteint la surface en quelques jours à quelques semaines, à une température proche de 1 200 °C."),
+    pt(1100, 0, 3, "Une fontaine de lave s'élève puis s'étale en coulée, entre 1 100 et 1 200 °C (chaîne des Puys, il y a ≈ 8 400 ans)."),
     pt(1000, 0, 0, "", { bande: "cristallisation" }),
-    pt(15, 0, 4, "La coulée fige : croûte en quelques heures, cœur en quelques années ; des microlites de plagioclase dans du verre, puis des prismes de retrait en refroidissant."),
+    pt(15, 0, 4, "La coulée se solidifie : la croûte prend en quelques heures, le cœur en quelques années ; le verre renferme des microlites de plagioclase, et le refroidissement engendre des prismes de retrait."),
   ], { src: ["hirschmann", "eruption", "diffusion"] });
   COND.trachybasalte = M("manteau", [
     MANTEAU_MC(),
-    pt(1450, 2.3, 1, "Le manteau qui remonte fond en partie, entre 100 et 70 km."),
+    pt(1450, 2.3, 1, "Le manteau ascendant fond partiellement, entre 100 et 70 km."),
     pt(1200, 0.6),
-    pt(1130, 0.6, 2, "Arrêté un temps dans la croûte (≈ 20 km), le basalte perd un peu d'olivine et de pyroxène : il s'enrichit légèrement en silice et en alcalins.", { bande: "premiers cristaux" }),
-    pt(1100, 0, 3, "Fontaines de lave, cône de scories, puis coulée : la plupart des coulées de la chaîne des Puys (entre ≈ 15 000 et ≈ 8 500 ans), de l'Aubrac et du Cantal."),
+    pt(1130, 0.6, 2, "Retenu dans la croûte (≈ 20 km), le basalte se défait d'un peu d'olivine et de pyroxène et s'enrichit légèrement en silice et en alcalins.", { bande: "premiers cristaux" }),
+    pt(1100, 0, 3, "La plupart des coulées de la chaîne des Puys (entre ≈ 15 000 et ≈ 8 500 ans), de l'Aubrac et du Cantal résultent de fontaines de lave, puis d'un cône de scories, puis d'une coulée."),
     pt(1000, 0, 0, "", { bande: "cristallisation" }),
-    pt(15, 0, 4, "La coulée fige en quelques heures (croûte) à quelques années (cœur) : microlites, verre, prismes."),
+    pt(15, 0, 4, "Une coulée se fige en quelques heures en surface, en quelques années à cœur : il en résulte microlites, verre et prismes."),
   ], { src: ["hirschmann", "eruption"] });
   COND.basanite = M("manteau", [
     pt(1525, 3.6, 0, "", { lab: "manteau solide" }),
-    pt(1500, 2.9, 1, "Très profond, vers 80–100 km, le manteau fond à peine (quelques pour cent) : le liquide est pauvre en silice."),
-    pt(1200, 0, 2, "Le magma monte vite, sans s'arrêter : il n'a presque pas le temps d'évoluer."),
-    pt(1120, 0, 3, "Les coulées pavent le plateau du Devès (entre 3,5 et 0,6 Ma, surtout vers 2 et 1 Ma)."),
+    pt(1500, 2.9, 1, "Entre 80 et 100 km, le manteau ne fond qu'à hauteur de quelques pour cent : le liquide est pauvre en silice."),
+    pt(1200, 0, 2, "Le magma remonte rapidement, sans marquer d'arrêt : il n'a presque pas le temps d'évoluer."),
+    pt(1120, 0, 3, "Le plateau du Devès est couvert de coulées (entre 3,5 et 0,6 Ma, surtout vers 2 et 1 Ma)."),
     pt(1000, 0, 0, "", { bande: "cristallisation" }),
-    pt(15, 0, 4, "La coulée fige : olivine et néphéline dans une pâte vitreuse, puis prismes."),
+    pt(15, 0, 4, "En se figeant, la coulée associe olivine et néphéline dans une pâte vitreuse, avant de former des prismes."),
   ], { src: ["hirschmann", "eruption"] });
   COND.picrite = M("manteau", [
     pt(1590, 3.4, 0, "", { lab: "panache chaud" }),
-    pt(1520, 2.6, 1, "Sous La Réunion, un panache de manteau plus chaud que la moyenne fond davantage, dès plus de 120 km : le liquide est riche en magnésium."),
-    pt(1230, 0, 2, "Le magma monte ; en chemin, il se charge de cristaux d'olivine accumulés dans le réservoir, sous le volcan."),
-    pt(1160, 0, 3, "Avril 2007 : fontaines et coulées chargées de plus de 20 % de cristaux d'olivine, jusqu'à la mer."),
+    pt(1520, 2.6, 1, "Sous La Réunion, dès plus de 120 km, un panache de manteau surchauffé fond davantage : le liquide est riche en magnésium."),
+    pt(1230, 0, 2, "Le magma remonte ; en chemin, il s'enrichit en cristaux d'olivine accumulés dans le réservoir, sous le volcan."),
+    pt(1160, 0, 3, "En avril 2007, des fontaines et des coulées contenant plus de 20 % de cristaux d'olivine ont atteint la mer."),
     pt(1000, 0, 0, "", { bande: "cristallisation" }),
-    pt(15, 0, 4, "Figée avec plus de 15 à 20 % d'olivine : c'est une picrite au sens large (les « océanites » du Piton de la Fournaise)."),
+    pt(15, 0, 4, "Solidifiée avec plus de 15 à 20 % d'olivine, la roche relève, au sens large, de la picrite (« océanites » du Piton de la Fournaise)."),
   ], { src: ["hirschmann", "eruption"] });
   COND.andesite = M("manteau", [
     pt(1300, 3.0, 1, "La plaque atlantique plonge sous les Antilles ; vers 100 km, l'eau qu'elle libère fait fondre le manteau au-dessus d'elle : à ≈ 1 300 °C, sec il resterait solide (≈ 1 450 °C), hydraté il fond (dès 800–860 °C, Grove et al. 2006)."),
     pt(1150, 0.2),
     pt(890, 0.2, 2, "Stocké à 7–8 km (200 MPa) sous la montagne Pelée, le magma perd ses cristaux et fond un peu de croûte : il devient andésite, à 875–900 °C avec 5 à 6 % d'eau (Pichavant et al. 2002).", { bande: "premiers cristaux" }),
-    pt(880, 0, 3, "Le 8 mai 1902, une nuée ardente détruit Saint-Pierre (≈ 28 000 morts) ; un dôme hérissé d'une aiguille pousse ensuite dans le cratère."),
+    pt(880, 0, 3, "Un dôme surmonté d'une aiguille croît dans le cratère après que la nuée ardente du 8 mai 1902 a anéanti Saint-Pierre (≈ 28 000 morts)."),
     pt(750, 0, 0, "", { bande: "figement" }),
-    pt(15, 0, 4, "Figée, la lave montre de grands plagioclases zonés et des pyroxènes dans une pâte de microlites (quelques années en surface, des siècles au cœur du dôme)."),
+    pt(15, 0, 4, "Une pâte de microlites renferme de grands plagioclases zonés et des pyroxènes ; quelques années suffisent en surface, et des siècles au cœur du dôme, pour figer ce tableau."),
   ], { courbes: ["peridotite", "peridotiteEau"], src: ["hirschmann", "grove2006", "pichavant2002"] });
   COND.dacite = M("manteau", [
-    MANTEAU_MC(),
-    pt(1450, 2.3, 1, "Sous le Massif central, le manteau fond en partie : un basalte se forme."),
+    pt(1300, 3.0, 1, "La plaque Juan de Fuca plonge sous les Cascades ; vers 100 km, l'eau qu'elle libère fait fondre le manteau au-dessus d'elle : à ≈ 1 300 °C, sec il resterait solide (≈ 1 450 °C), hydraté il fond (Grove et al. 2006). Il se forme un basalte."),
     pt(1150, 0.25),
-    pt(900, 0.25, 2, "Dans un réservoir sous le Mont-Dore, le magma perd ses premiers cristaux et fond un peu de croûte : il devient dacite, vers 900 °C.", { bande: "premiers cristaux" }),
-    pt(880, 0, 3, "Visqueuse, la lave bâtit dômes et aiguilles (Mont-Dore, Sancy, 5–2 Ma)."),
+    pt(900, 0.22, 2, "Stocké vers 7 km (220 MPa) sous le mont Saint Helens, à 870 à 930 °C, le magma abandonne ses premiers cristaux, fond un peu de croûte et se transforme en dacite (Rutherford et al. 1985).", { bande: "premiers cristaux" }),
+    pt(880, 0, 3, "Après l'éruption du 18 mai 1980, un dôme de lave très visqueuse grandit dans le cratère du mont Saint Helens jusqu'en 1986."),
     pt(750, 0, 0, "", { bande: "figement" }),
-    pt(15, 0, 4, "Elle fige en une pâte vitreuse à microlitique : plagioclases zonés et amphiboles."),
-  ], { src: ["hirschmann"] });
+    pt(15, 0, 4, "Elle se solidifie en une pâte vitreuse à microlites, renfermant des plagioclases zonés et des amphiboles."),
+  ], { courbes: ["peridotite", "peridotiteEau"], src: ["hirschmann", "grove2006", "rutherford1985"] });
   COND.trachyte = M("manteau", [
     MANTEAU_MC(),
-    pt(1450, 2.3, 1, "Sous la chaîne des Puys, le manteau fond en partie : un basalte alcalin se forme."),
+    pt(1450, 2.3, 1, "Sous la chaîne des Puys, le manteau fond partiellement : il se forme un basalte alcalin."),
     pt(1150, 0.33),
     pt(800, 0.33, 2, "Stocké à 10–12 km (300–350 MPa), le basalte perd olivine, pyroxène et plagioclase : le liquide restant devient trachyte, vers 700–825 °C, avec jusqu'à 8 % d'eau (Martel et al. 2013).", { bande: "premiers cristaux" }),
     pt(790, 0, 3, "Trop visqueux pour couler, il s'empile en dôme : le puy de Dôme, il y a ≈ 11 000 ans ; sa dernière éruption, explosive, date d'≈ 10 700 ans (Miallier et al. 2010)."),
     pt(700, 0, 0, "", { bande: "figement" }),
-    pt(15, 0, 4, "Le dôme refroidit en quelques années en surface, en quelques milliers d'années au cœur ; ses baguettes de feldspath restent alignées par l'écoulement : c'est la texture « trachytique »."),
+    pt(15, 0, 4, "Le dôme se refroidit en quelques années en surface, en quelques milliers d'années à cœur ; l'écoulement aligne les baguettes de feldspath : c'est la texture « trachytique »."),
   ], { src: ["hirschmann", "martel2013", "miallier2010", "diffusion"] });
   COND.trachyandesite = M("manteau", [
     MANTEAU_MC(),
-    pt(1450, 2.3, 1, "Sous le Massif central, le manteau fond en partie : un basalte alcalin se forme."),
+    pt(1450, 2.3, 1, "Sous le Massif central, le manteau fond partiellement : il se forme un basalte alcalin."),
     pt(1150, 0.25),
-    pt(1000, 0.25, 2, "Dans un réservoir de la croûte, le basalte perd olivine, pyroxène et plagioclase : le liquide restant devient trachyandésite.", { bande: "premiers cristaux" }),
-    pt(1000, 0, 3, "Entre 8,5 et 7 Ma, coulées, brèches et cendres bâtissent un volcan de 25 km de diamètre et de plus de 3 000 m (Nehlig et al. 2001)."),
+    pt(1000, 0.25, 2, "Un basalte qui se différencie dans un réservoir de la croûte perd olivine, pyroxène et plagioclase ; le liquide résiduel devient une trachyandésite.", { bande: "premiers cristaux" }),
+    pt(1000, 0, 3, "Entre 8,5 et 7 Ma, coulées, brèches et cendres bâtissent un volcan de plus de 3 000 m ; avec ses coulées et ses brèches, il couvre ≈ 70 km de diamètre (2 500 km²) (Nehlig et al. 2001)."),
     pt(850, 0, 0, "", { bande: "figement" }),
-    pt(15, 0, 4, "Chaque coulée fige en jours à années : grands cristaux de plagioclase dans une pâte de microlites."),
-    pt(15, 0, 5, "Trop haut et trop raide, le volcan perd un flanc : l'avalanche de débris, faite de roches froides, s'étale sur des dizaines de kilomètres."),
-    pt(15, 0, 6, "Rivières puis glaciers creusent le volcan en étoile : restent les crêtes du puy Mary et du plomb du Cantal. Le Mont-Dore (3–0,25 Ma) a la même histoire, plus jeune."),
+    pt(15, 0, 4, "Chaque coulée se solidifie en quelques jours à quelques années ; elle renferme de grands cristaux de plagioclase dans une pâte de microlites."),
+    pt(15, 0, 5, "Trop haut et trop escarpé, l'édifice perd un flanc : l'avalanche de débris, constituée de roches froides, se répand sur des dizaines de kilomètres."),
+    pt(15, 0, 6, "Des rivières, puis des glaciers, découpent le volcan en étoile et ne laissent subsister que les crêtes du puy Mary et du plomb du Cantal ; le Mont-Dore (de 3 à 0,25 Ma), plus jeune, a connu la même évolution."),
   ], { src: ["hirschmann", "nehlig2001"] });
   COND.latite = M("manteau", [
     MANTEAU_MC(),
-    pt(1450, 2.3, 1, "À la fin de la chaîne varisque, un manteau enrichi en potassium fond en partie."),
+    pt(1450, 2.3, 1, "Pendant la chaîne varisque, vers 335 Ma, un manteau enrichi en potassium entre partiellement en fusion sous les Vosges."),
     pt(1150, 0.25),
-    pt(1000, 0.25, 2, "Dans la croûte, le magma perd ses premiers cristaux et s'enrichit en potassium.", { bande: "premiers cristaux" }),
-    pt(1000, 0, 3, "La lave s'étale en coulées dans le bassin permien de l'Estérel (300–270 Ma)."),
+    pt(1000, 0.25, 2, "Dans la croûte, le magma se défait de ses premiers cristaux et gagne en potassium.", { bande: "premiers cristaux" }),
+    pt(1000, 0, 3, "Dans le bassin viséen des Vosges du Sud (≈ 335 Ma), la lave se répand en coulées."),
     pt(850, 0, 0, "", { bande: "figement" }),
-    pt(15, 0, 4, "La coulée fige : plagioclase et feldspath potassique à parts proches, dans une pâte fine."),
-    pt(15, 0, 5, "Plus dure que les grès rouges qui l'entourent, la coulée reste en relief quand l'érosion les enlève."),
+    pt(15, 0, 4, "La coulée se fige : plagioclase et feldspath potassique en proportions voisines, dans une pâte fine."),
+    pt(15, 0, 5, "Plus résistante que les tufs et les grauwackes environnants, la coulée demeure en relief lorsque l'érosion dégage ces derniers."),
   ], { src: ["hirschmann"] });
   COND.phonolite = M("manteau", [
     pt(1525, 3.6, 0, "", { lab: "manteau solide" }),
-    pt(1500, 2.9, 1, "Très profond (80–100 km), le manteau fond à peine : un basalte pauvre en silice se forme."),
+    pt(1500, 2.9, 1, "À 80 à 100 km de profondeur, le manteau fond à peine ; il en résulte un basalte pauvre en silice."),
     pt(1150, 0.6),
-    pt(900, 0.6, 2, "En évoluant dans un réservoir, le liquide devient riche en alcalins sans jamais pouvoir former de quartz : la néphéline apparaît.", { bande: "premiers cristaux" }),
-    pt(900, 0, 3, "Visqueuse, la lave s'extrude en dôme et en aiguille : Gerbier-de-Jonc, rocher d'Aiguilhe (13–2 Ma)."),
+    pt(900, 0.6, 2, "Au cours de son évolution dans un réservoir, le liquide s'enrichit en alcalins sans pouvoir former de quartz : c'est la néphéline qui apparaît.", { bande: "premiers cristaux" }),
+    pt(900, 0, 3, "Très visqueuse, la lave se met en place sous forme de dôme et d'aiguille : Gerbier-de-Jonc et sucs du Meygal (de 13 à 2 Ma)."),
     pt(750, 0, 0, "", { bande: "figement" }),
-    pt(15, 0, 4, "Elle se débite en dalles minces qui « sonnent » au marteau (d'où son nom)."),
-    pt(15, 0, 5, "Plus dure que les scories et les roches voisines, elle reste en relief quand elles s'érodent : les sucs du Velay et du Mézenc."),
+    pt(15, 0, 4, "Cette roche se débite en dalles minces qui « sonnent » sous le marteau, d'où son nom."),
+    pt(15, 0, 5, "Plus résistants que les scories et les roches voisines, ces sucs restent en relief lorsque celles-ci s'érodent : ce sont ceux du Velay et du Mézenc."),
   ], { src: ["hirschmann"] });
   COND.rhyolite = M("croute", [
     pt(700, 0.8, 0, "", { lab: "croûte" }),
-    pt(880, 0.8, 1, "À la fin de la chaîne varisque, la croûte fond en partie vers 800–900 °C, vers 30 km."),
-    pt(860, 0.2, 2, "Très riche en silice et en gaz, le magma se stocke vers 5–8 km."),
-    pt(820, 0, 3, "Il sort vers 800–850 °C : trop visqueux pour couler loin, il forme des dômes ou explose en ignimbrites (Estérel, 295–250 Ma)."),
+    pt(880, 0.8, 1, "À la fin de la chaîne varisque, vers 30 km de profondeur, la croûte entre partiellement en fusion, entre 800 et 900 °C."),
+    pt(860, 0.2, 2, "Riche en silice et en gaz, le magma s'accumule entre 5 et 8 km de profondeur."),
+    pt(820, 0, 3, "Émis entre 800 et 850 °C, il est trop visqueux pour s'écouler loin : il forme des dômes ou se fragmente en ignimbrites (Estérel, de 295 à 250 Ma)."),
     pt(700, 0, 0, "", { bande: "figement" }),
-    pt(15, 0, 4, "Figée en jours à années, la lave garde une pâte vitreuse ou très fine autour de quelques cristaux de quartz et de feldspath."),
-    pt(15, 0, 5, "Pendant 280 millions d'années, l'érosion dégage les rhyolites, plus dures que les grès et les tufs voisins : les reliefs rouges de l'Estérel."),
+    pt(15, 0, 4, "Solidifiée en quelques jours à quelques années, la lave conserve une pâte vitreuse ou très fine, où flottent quelques cristaux de quartz et de feldspath."),
+    pt(15, 0, 5, "Peu à peu, l'érosion met au jour des rhyolites, plus résistantes que les grès et les tufs voisins : elles dessinent les reliefs rouges de l'Estérel."),
   ], { src: ["tuttle", "eruption"] });
   COND.obsidienne = M("croute", [
     pt(700, 0.7, 0, "", { lab: "croûte" }),
-    pt(850, 0.7, 1, "Sous l'arc des îles Éoliennes, la croûte fond en partie vers 850 °C, vers 25 km : un liquide très riche en silice se forme."),
-    pt(830, 0.2, 2, "Stocké vers 5–8 km, il perd une partie de ses gaz : il n'explosera pas, il s'épanchera."),
-    pt(800, 0, 3, "La lave rhyolitique sort vers 800 °C et forme la coulée épaisse des Rocche Rosse (Lipari), vers 1230."),
+    pt(850, 0.7, 1, "Sous l'arc des îles Éoliennes, la croûte entre en fusion partielle vers 850 °C, vers 25 km : il en résulte un liquide fortement enrichi en silice."),
+    pt(830, 0.2, 2, "Ayant perdu une partie de ses gaz, le magma stocké vers 5 à 8 km ne fera pas explosion : il s'épanchera."),
+    pt(800, 0, 3, "Émise vers 800 °C, la lave rhyolitique édifie la coulée épaisse des Rocche Rosse (Lipari), vers 1230."),
     pt(700, 0, 0, "", { bande: "verre" }),
-    pt(15, 0, 4, "Très visqueuse, elle devient rigide (vers 700 °C) avant que ses atomes aient pu s'ordonner : un verre se forme au lieu de cristaux. Quasi absente de France."),
+    pt(15, 0, 4, "Très visqueuse, elle devient rigide (vers 700 °C) avant que ses atomes aient pu s'ordonner : il en résulte un verre plutôt que des cristaux. Roche quasi absente de France."),
   ], { src: ["tuttle", "eruption"] });
   COND.ignimbrite = M("croute", [
     pt(700, 0.8, 0, "", { lab: "croûte" }),
-    pt(850, 0.8, 1, "La croûte fond en partie à la fin de la chaîne varisque, vers 30 km."),
-    pt(830, 0.2, 2, "Un magma rhyolitique riche en gaz s'accumule vers 5–8 km."),
-    pt(650, 0, 3, "L'éruption explose ; la colonne s'effondre en nuées ardentes qui dévalent les pentes et s'arrêtent encore à 600–700 °C."),
+    pt(850, 0.8, 1, "À la fin de la chaîne varisque, la croûte entre en fusion partielle vers 30 km."),
+    pt(830, 0.2, 2, "Riche en gaz, un magma rhyolitique se loge entre 5 et 8 km."),
+    pt(650, 0, 3, "L'éruption se fait explosive ; la colonne s'effondre en nuées ardentes qui dévalent les pentes et conservent encore 600 à 700 °C à leur arrêt."),
     pt(600, 0, 0, "", { bande: "soudure" }),
-    pt(15, 0, 4, "Encore chaudes, les ponces s'aplatissent et se soudent (fiammes) avant de refroidir : Estérel, Corse (300–270 Ma)."),
+    pt(15, 0, 4, "Avant de refroidir, les ponces, toujours brûlantes, s'aplatissent et se soudent en fiammes : Estérel et Corse (300 à 270 Ma)."),
   ], { src: ["tuttle"] });
   COND.tuf_volcanique = M("manteau", [
     MANTEAU_MC(),
-    pt(1450, 2.3, 1, "Le manteau fond en partie sous le Massif central."),
+    pt(1450, 2.3, 1, "Sous le Massif central, le manteau entre partiellement en fusion."),
     pt(1150, 0.2),
-    pt(950, 0.2, 2, "Dans un réservoir de la croûte, le magma évolue et se charge en gaz.", { bande: "premiers cristaux" }),
-    pt(950, 0, 3, "Les gaz se détendent brutalement : le magma est pulvérisé en cendres, qui refroidissent en l'air en quelques secondes (Cantal, vers 8 Ma)."),
-    pt(15, 0, 4, "Les cendres retombent en couches puis se consolident ; le verre se change peu à peu en argiles et en zéolites."),
+    pt(950, 0.2, 2, "Le magma, dans un réservoir de la croûte, évolue en s'enrichissant en gaz.", { bande: "premiers cristaux" }),
+    pt(950, 0, 3, "La détente brutale des gaz réduit le magma en cendres ; celles-ci se refroidissent dans l'air en quelques secondes (Cantal, vers 8 Ma)."),
+    pt(15, 0, 4, "Les cendres se déposent en couches, puis se consolident ; peu à peu, le verre se transforme en argiles et en zéolites."),
   ], { src: ["hirschmann"] });
   COND.pouzzolane = M("manteau", [
     MANTEAU_MC(),
-    pt(1450, 2.3, 1, "Le manteau fond en partie sous la chaîne des Puys."),
-    pt(1180, 0, 2, "Le basalte monte, chargé de gaz, en quelques jours à quelques semaines."),
-    pt(700, 0, 3, "Les gaz forment des bulles qui éclatent : des lambeaux de lave projetés vers 1 100 °C se figent en l'air en quelques secondes.", { bande: "figement" }),
-    pt(15, 0, 4, "Les scories s'empilent en cône ; près du conduit, encore chaudes, elles s'oxydent et rougissent (chaîne des Puys, 95 000 à 6 900 ans)."),
+    pt(1450, 2.3, 1, "Sous la chaîne des Puys, le manteau entre partiellement en fusion."),
+    pt(1180, 0, 2, "Chargé de gaz, le basalte remonte en quelques jours à quelques semaines."),
+    pt(700, 0, 3, "Les bulles de gaz éclatent et projettent des lambeaux de lave vers 1 100 °C ; ceux-ci se figent dans l'air en quelques secondes.", { bande: "figement" }),
+    pt(15, 0, 4, "Les scories forment un cône ; près du conduit, encore brûlantes, elles s'oxydent et prennent une teinte rougeâtre (chaîne des Puys, 95 000 à 6 900 ans)."),
   ], { src: ["hirschmann"] });
   COND.breche_volcanique = M("manteau", [
     MANTEAU_MC(),
-    pt(1450, 2.3, 1, "Le manteau fond en partie sous le Cantal."),
+    pt(1450, 2.3, 1, "Le manteau fond partiellement sous le Cantal."),
     pt(1150, 0.25),
-    pt(1000, 0, 2, "Les magmas évolués bâtissent le stratovolcan, coulée après coulée (8,5–7 Ma)."),
-    pt(15, 0, 3, "Un flanc refroidi du volcan s'effondre : une avalanche de débris s'étale sur des dizaines de kilomètres (vers 7 Ma)."),
-    pt(15, 0, 4, "Les blocs s'immobilisent dans une matrice de cendres qui durcit et s'argilise."),
+    pt(1000, 0, 2, "Coulée après coulée, des magmas évolués forment le stratovolcan (de 8,5 à 7 Ma)."),
+    pt(15, 0, 3, "Un flanc refroidi du volcan s'effondre (vers 7 Ma) : l'avalanche de débris se répand sur des dizaines de kilomètres."),
+    pt(15, 0, 4, "Les blocs restent figés dans une matrice de cendres qui durcit et se transforme en argile."),
   ], { src: ["hirschmann", "nehlig2001"] });
   COND.komatiite = M("profond", [
     pt(1900, 7.0, 0, "", { lab: "panache" }),
-    pt(1850, 6, 1, "Dans la Terre archéenne, plus chaude, un panache du manteau fond largement dès plus de 200 km."),
-    pt(1700, 0, 2, "Le liquide, très riche en magnésium, monte en quelques jours."),
-    pt(1580, 0, 3, "Il sort à près de 1 600 °C, d'une fluidité exceptionnelle pour une lave, il y a ≈ 3,5 milliards d'années (Barberton)."),
+    pt(1850, 6, 1, "Dans la Terre archéenne, plus chaude, un panache du manteau entre largement en fusion au-delà de 200 km."),
+    pt(1700, 0, 2, "Très riche en magnésium, le liquide s'élève en quelques jours."),
+    pt(1580, 0, 3, "Émis à près de 1 600 °C, avec une fluidité exceptionnelle pour une lave, il y a ≈ 3,5 milliards d'années (Barberton)."),
     pt(1250, 0, 0, "", { bande: "spinifex" }),
-    pt(15, 0, 4, "Trempé, il se fige en gerbes d'aiguilles d'olivine : la texture spinifex. Aucune komatiite en France."),
+    pt(15, 0, 4, "Refroidi brusquement, il cristallise en gerbes d'aiguilles d'olivine : c'est la texture spinifex. Aucune komatiite n'est connue en France métropolitaine ; la Guyane en possède, d'environ 2,1 milliards d'années."),
   ], { etiquettes: [["diamant stable", 700, 6.6], ["graphite stable", 700, 1.2]], src: ["hirschmann", "kennedy", "arndt"] });
   COND.kimberlite = M("profond", [
-    pt(1300, 6.0, 1, "Sous les vieux continents, à 150–250 km, un manteau riche en CO₂ et en eau fond très peu : le liquide naît là où le diamant est stable."),
-    pt(1050, 0.08, 2, "Il remonte en quelques heures à quelques jours, en arrachant des fragments du manteau et leurs diamants."),
-    pt(1000, 0, 3, "Près de la surface, le gaz explose : la cheminée se remplit de brèche."),
-    pt(15, 0, 4, "Les diamants, instables en surface, survivent : la remontée a été trop rapide, et la surface est trop froide, pour qu'ils se changent en graphite (Kimberley, vers 90 Ma)."),
+    pt(1300, 6.0, 1, "Le liquide se forme là où le diamant est stable : entre 150 et 250 km, sous les vieux continents, un manteau riche en CO₂ et en eau fond très peu."),
+    pt(1050, 0.08, 2, "Des fragments du manteau, avec leurs diamants, sont arrachés au passage d'un liquide qui remonte en quelques heures à quelques jours."),
+    pt(1000, 0, 3, "Près de la surface, la détente des gaz fragmente la roche : la cheminée se remplit de brèche."),
+    pt(15, 0, 4, "Les diamants persistent malgré leur instabilité en surface : la remontée, trop brève, et la surface, trop froide, empêchent leur conversion en graphite (Kimberley, vers 90 Ma)."),
   ], { etiquettes: [["diamant stable", 700, 6.6], ["graphite stable", 700, 1.2]], src: ["hirschmann", "kennedy", "sparks", "dasgupta"] });
 
   // ═════ M.3 hypovolcaniques ═════
   COND.microgranite = M("croute", [
     pt(700, 0.8, 0, "", { lab: "croûte" }),
-    pt(820, 0.8, 1, "La croûte fond en partie, comme pour un granite ; quelques cristaux de quartz et de feldspath grandissent déjà dans le magma."),
-    pt(790, 0.06, 2, "Chargé de cristaux, le magma s'injecte en filons vers 1–3 km, en quelques heures à quelques jours."),
+    pt(820, 0.8, 1, "Par fusion partielle, la croûte produit un magma semblable à celui d'un granite ; quelques cristaux de quartz et de feldspath y croissent déjà."),
+    pt(790, 0.06, 2, "En quelques heures à quelques jours, le magma, chargé de cristaux, pénètre en filons entre 1 et 3 km."),
     pt(720, 0.06, 0, "", { bande: "pâte fine" }),
-    pt(60, 0.06, 3, "Près de la surface, le liquide se fige vite : un filon de 1 m en quelques semaines, un de 50 m en un siècle environ ; la pâte reste fine autour des grands cristaux."),
-    pt(15, 0, 4, "Plus dur que le socle altéré, le filon ressort en muraille (filons tardi-hercyniens et permiens, 300–270 Ma)."),
+    pt(60, 0.06, 3, "Près de la surface, le liquide se solidifie rapidement : un filon de 1 m se forme en quelques semaines, un de 50 m en un siècle environ ; autour des grands cristaux, la pâte demeure fine."),
+    pt(15, 0, 4, "Résistant davantage que le socle altéré, le filon dessine une muraille (filons tardi-hercyniens et permiens, 300 à 270 Ma)."),
   ], { src: ["tuttle", "diffusion"] });
   COND.porphyre = M("croute", [
     pt(700, 0.8, 0, "", { lab: "croûte" }),
     pt(850, 0.8),
-    pt(800, 0.35, 1, "La croûte fond en partie ; dans un réservoir profond, de gros cristaux de quartz et de feldspath grandissent lentement.", { bande: "gros cristaux" }),
-    pt(790, 0.04, 2, "Le magma et ses gros cristaux montent en filon près de la surface (0,5–2 km)."),
+    pt(800, 0.35, 1, "De gros cristaux de quartz et de feldspath croissent lentement dans un réservoir profond, pendant que la croûte fond partiellement.", { bande: "gros cristaux" }),
+    pt(790, 0.04, 2, "En filon près de la surface (0,5 à 2 km), le magma remonte avec ses gros cristaux."),
     pt(720, 0.04, 0, "", { bande: "pâte fine" }),
-    pt(60, 0.04, 3, "Le liquide restant se fige vite autour des gros cristaux : une pâte fine."),
-    pt(15, 0, 4, "Dur, le porphyre forme les reliefs rouges de l'Estérel (300–270 Ma)."),
+    pt(60, 0.04, 3, "Autour des gros cristaux, le liquide restant se solidifie vite en une pâte fine."),
+    pt(15, 0, 4, "Les reliefs rouges de l'Estérel (300 à 270 Ma) doivent leur existence au porphyre, roche dure."),
   ], { src: ["tuttle", "diffusion"] });
   COND.aplite = M("croute", [
     pt(850, 0.22, 0, "", { lab: "granite encore liquide" }),
-    pt(700, 0.22, 1, "Le granite a presque fini de cristalliser (≈ 700 °C) : il reste un peu de liquide riche en eau et en silice.", { bande: "cristallisation du granite" }),
-    pt(680, 0.15, 2, "Ce dernier liquide s'injecte dans les fractures du massif, vers 5 km."),
-    pt(620, 0.15, 3, "Il perd brusquement son eau et cristallise très vite, en grain fin et régulier.", { bande: "cristallisation rapide" }),
+    pt(700, 0.22, 1, "La cristallisation du granite touche à sa fin (≈ 700 °C) : il subsiste un peu de liquide riche en eau et en silice.", { bande: "cristallisation du granite" }),
+    pt(680, 0.15, 2, "Ce liquide ultime pénètre dans les fractures du massif, vers 5 km de profondeur."),
+    pt(620, 0.15, 3, "Brusquement privé d'eau, il cristallise très rapidement, en grain fin et régulier.", { bande: "cristallisation rapide" }),
     pt(250, 0.15),
-    pt(15, 0, 4, "L'érosion met au jour le granite du Sidobre et ses filons clairs (vers 300 Ma)."),
+    pt(15, 0, 4, "L'érosion dégage le granite du Sidobre ainsi que ses filons clairs (vers 300 Ma)."),
   ], { src: ["tuttle"] });
   COND.pegmatite = M("croute", [
     pt(850, 0.22, 0, "", { lab: "granite encore liquide" }),
-    pt(700, 0.22, 1, "Le granite a presque fini de cristalliser : le dernier liquide concentre l'eau, le bore, le fluor, le lithium.", { bande: "cristallisation du granite" }),
-    pt(680, 0.15, 2, "Il s'injecte en filons dans le granite et ses roches voisines."),
-    pt(480, 0.15, 3, "Très fluide, riche en eau, il cristallise nettement sous le solidus habituel du granite (jusque vers 450–500 °C), en cristaux géants.", { bande: "cristaux géants" }),
+    pt(700, 0.22, 1, "Le granite est presque entièrement cristallisé : le dernier liquide concentre l'eau, le bore, le fluor et le lithium.", { bande: "cristallisation du granite" }),
+    pt(680, 0.15, 2, "Il s'introduit en filons dans le granite et dans les roches qui l'entourent."),
+    pt(480, 0.15, 3, "Très fluide et riche en eau, il cristallise bien en dessous du solidus habituel du granite (jusque vers 450 à 500 °C) et forme des cristaux géants.", { bande: "cristaux géants" }),
     pt(220, 0.15),
-    pt(15, 0, 4, "L'érosion met au jour les filons, exploités pour leurs grands cristaux (Chanteloube, Ambazac, 340–290 Ma)."),
+    pt(15, 0, 4, "Ces filons, exploités pour leurs grands cristaux, émergent sous l'effet de l'érosion (Chanteloube, Ambazac, 340 à 290 Ma)."),
   ], { src: ["tuttle", "london"] });
   COND.dolerite = M("manteau", [
     MANTEAU_MC(),
-    pt(1450, 2.3, 1, "Le manteau fond en partie : un basalte se forme."),
-    pt(1220, 0.45, 2, "Le magma traverse la croûte en quelques jours à quelques semaines."),
-    pt(1170, 0.08, 3, "Il s'arrête à faible profondeur (1,5–4 km) en dykes et en sills."),
+    pt(1450, 2.3, 1, "Le manteau fond partiellement : il se forme un basalte."),
+    pt(1220, 0.45, 2, "En quelques jours à quelques semaines, le magma traverse la croûte."),
+    pt(1170, 0.08, 3, "Il s'arrête à faible profondeur (1,5 à 4 km) sous forme de dykes et de sills."),
     pt(1000, 0.08, 0, "", { bande: "cristallisation" }),
-    pt(70, 0.08, 4, "Il refroidit plus lentement qu'une coulée, plus vite qu'un gabbro : en quelques mois à quelques siècles, un grain moyen."),
-    pt(15, 0, 5, "L'érosion met au jour dykes et sills : plus durs que les schistes, ils forment murailles et corniches (Massif armoricain, Morvan)."),
+    pt(70, 0.08, 4, "En quelques mois à quelques siècles, un grain moyen se forme : son refroidissement est plus lent que celui d'une coulée, mais plus rapide que celui d'un gabbro."),
+    pt(15, 0, 5, "Plus durs que les schistes, dykes et sills émergent par érosion et forment murailles et corniches (Massif armoricain)."),
   ], { src: ["hirschmann", "diffusion"] });
   COND.lamprophyre = M("manteau", [
-    pt(1300, 2.6, 1, "Un manteau riche en eau et en potassium fond en partie vers 80 km : l'eau abaisse son point de fusion."),
-    pt(1150, 0.4, 2, "Le magma, riche en éléments volatils, monte vite."),
-    pt(1080, 0.06, 3, "Il s'injecte en filons dans les granites, à 1–5 km."),
+    pt(1300, 2.6, 1, "Vers 80 km, un manteau riche en eau et en potassium fond partiellement ; l'eau y abaisse le point de fusion."),
+    pt(1150, 0.4, 2, "Le magma, riche en éléments volatils, remonte rapidement."),
+    pt(1080, 0.06, 3, "Entre 1 et 5 km, il s'injecte en filons dans les schistes et les grès dévoniens de la rade de Brest."),
     pt(950, 0.06, 0, "", { bande: "cristallisation" }),
-    pt(60, 0.06, 4, "Biotite et amphibole cristallisent en grand ; les feldspaths restent dans la pâte (minette, kersantite)."),
-    pt(15, 0, 5, "L'érosion met au jour le granite et ses filons sombres : le kersanton, pierre des calvaires bretons (340–290 Ma)."),
+    pt(60, 0.06, 4, "La biotite et l'amphibole cristallisent en gros cristaux ; les feldspaths demeurent dans la pâte (minette, kersantite)."),
+    pt(15, 0, 5, "Le kersanton, pierre des calvaires bretons (340 à 290 Ma), apparaît quand l'érosion découvre les schistes et leurs filons sombres."),
   ], { courbes: ["peridotite", "peridotiteEau"], src: ["hirschmann", "grove2006"] });
   COND.microdiorite = M("manteau", [
-    ...debutDiorite("Un magma basique naît dans le manteau, vers 50–70 km."),
+    ...debutDiorite("Dans le manteau, vers 50 à 70 km de profondeur, un magma basique prend naissance."),
     pt(1200, 0.9),
-    pt(1000, 0.9, 2, "Au bas de la croûte, il évolue : plagioclase et amphibole apparaissent.", { bande: "premiers cristaux" }),
-    pt(950, 0.05, 3, "Il s'injecte en filons à faible profondeur (0,5–3 km)."),
+    pt(1000, 0.9, 2, "Dans la partie basse de la croûte, il évolue et voit apparaître plagioclase et amphibole.", { bande: "premiers cristaux" }),
+    pt(950, 0.05, 3, "Il s'injecte en filons à faible profondeur (0,5 à 3 km)."),
     pt(850, 0.05, 0, "", { bande: "cristallisation" }),
-    pt(60, 0.05, 4, "Figé en quelques semaines à quelques années, en grain fin : plagioclase et amphibole."),
-    pt(15, 0, 5, "L'érosion enlève les roches du dessus : le filon affleure au bord de la rade de Brest, exploité comme pierre de taille (pierre de Logonna)."),
+    pt(60, 0.05, 4, "Solidifié en quelques semaines à quelques années, il présente un grain fin, avec plagioclase et amphibole."),
+    pt(15, 0, 5, "Mis à nu après l'enlèvement des roches sus-jacentes, le filon affleure au bord de la rade de Brest ; il a servi de pierre de taille (pierre de Logonna)."),
   ], { src: ["hirschmann", "diffusion"] });
 
   // ═════ M.4 carbonatites ═════
   COND.carbonatite = M("manteau", [
-    pt(1050, 2.6, 1, "Un peu de CO₂ abaisse de plusieurs centaines de degrés le point de fusion du manteau : vers 80 km, un liquide riche en carbonates apparaît vers 1 000–1 100 °C, bien sous le solidus du manteau sec."),
-    pt(900, 0.8, 2, "Le magma monte ; dans la croûte, les carbonates se séparent des silicates."),
-    pt(540, 0, 3, "L'Ol Doinyo Lengai (Tanzanie) émet une lave noire de carbonates vers 540 °C, qui blanchit à l'air en quelques jours."),
-    pt(15, 0, 4, "La plupart des carbonatites cristallisent en profondeur : l'érosion les dégage (de 3 000 millions d'années à aujourd'hui)."),
+    pt(1050, 2.6, 1, "Quelques fractions de CO₂ abaissent le point de fusion du manteau de plusieurs centaines de degrés : vers 80 km, un liquide riche en carbonates se forme entre 1 000 et 1 100 °C, nettement sous le solidus du manteau sec."),
+    pt(900, 0.8, 2, "Le magma s'élève et, dans la croûte, les carbonates se détachent des silicates."),
+    pt(540, 0, 3, "L'Ol Doinyo Lengai (Tanzanie) émet une lave noire, riche en carbonates, vers 540 °C ; à l'air, elle blanchit en quelques jours."),
+    pt(15, 0, 4, "Les carbonatites se forment surtout en profondeur ; l'érosion les expose (de 3 000 millions d'années à aujourd'hui)."),
   ], { labFondu: "manteau sec partiellement fondu", src: ["hirschmann", "dasgupta"] });
 
   // ═════ R métamorphiques ═════
@@ -1433,177 +1437,177 @@
   const AL = ["kyAnd", "andSil", "kySil"];
   const FOND_OCEAN = (t) => pt(5, 0.04, 1, t); // fond de l'océan : ≈ 2–5 °C sous 3–4 km d'eau
   COND.ardoise = R("reg", [
-    pt(15, 0, 1, "À l'Ordovicien (470–460 Ma), des argiles décantent au fond de la mer, lit après lit."),
-    pt(190, 0.28, 2, "Prises dans la collision varisque, elles descendent à une dizaine de kilomètres (≈ 0,3 GPa)."),
-    pt(300, 0.3, 3, "Vers 250–350 °C, les argiles deviennent des micas très fins, tous parallèles : la roche se fend en feuillets.", { bande: "recristallisation" }),
+    pt(15, 0, 1, "Lit après lit, des argiles s'accumulent au fond de la mer, à l'Ordovicien (470 à 460 Ma)."),
+    pt(190, 0.28, 2, "Entraînées par la collision varisque, elles s'enfoncent jusqu'à une dizaine de kilomètres (≈ 0,3 GPa)."),
+    pt(300, 0.3, 3, "Entre 200 et 300 °C, les argiles se transforment en micas très fins, tous parallèles : la roche se débite alors en feuillets.", { bande: "recristallisation" }),
     pt(200, 0.12),
-    pt(15, 0, 4, "L'érosion de la chaîne ramène les ardoises à la surface : ardoisières d'Angers-Trélazé."),
+    pt(15, 0, 4, "Ardoisières d'Angers-Trélazé : l'érosion de la chaîne remonte les ardoises jusqu'à la surface."),
   ], { gradients: [10, 30, 60] });
   COND.micaschiste = R("reg", [
-    pt(15, 0, 1, "Des argiles et des limons décantent au fond d'un bassin (540–480 Ma)."),
-    pt(480, 0.85, 2, "La collision varisque fait plonger la marge d'un continent sous l'autre plaque (360–340 Ma) : ses argiles descendent à ≈ 30 km, et la pression monte plus vite que la température."),
-    pt(600, 0.65, 3, "La chaleur rattrape la roche : vers 500–650 °C, les minéraux argileux se changent en micas alignés, et grenat, staurotide et disthène ou sillimanite cristallisent.", { bande: "recristallisation" }),
+    pt(15, 0, 1, "Au fond d'un bassin (540 à 480 Ma), des argiles et des limons se déposent."),
+    pt(480, 0.55, 2, "Lors de la collision varisque (360 à 340 Ma), la marge d'un continent plonge sous l'autre plaque : ses argiles atteignent ≈ 20 km de profondeur, la pression croissant plus vite que la température."),
+    pt(560, 0.5, 3, "La chaleur atteint la roche : entre 450 et 600 °C, les argiles se muent en micas orientés ; biotite et grenat apparaissent, la staurotide par endroits (Lozère).", { bande: "recristallisation" }),
     pt(400, 0.28),
-    pt(15, 0, 4, "Trop épaisse, la chaîne s'étale sur des failles normales (vers 315 Ma) ; l'érosion l'allège et la racine remonte. Vers 250 Ma, les micaschistes des Cévennes sont à l'air libre : les grès du Trias se déposent directement dessus."),
+    pt(15, 0, 4, "Trop épaissie, la chaîne s'étire sur des failles normales (vers 315 Ma) ; l'érosion l'allège et la racine remonte. Vers 305 Ma, les micaschistes des Cévennes affleurent déjà : les charbons du Stéphanien (bassin d'Alès) s'y déposent, puis le Trias les recouvre."),
   ], { courbes: [...AL, "graniteEau"], gradients: [10, 30, 60], src: ["pattison", "faure2001", "white1992", "tuttle"] });
   COND.quartzite = R("reg", [
-    pt(15, 0, 1, "Des sables quartzeux se déposent sur une plateforme marine (grès armoricain, 478–470 Ma)."),
-    pt(250, 0.3, 2, "La collision varisque les enfouit à une dizaine de kilomètres (340–325 Ma)."),
-    pt(420, 0.4, 3, "Au-delà de ≈ 300 °C, le quartz recristallise : les grains se soudent en mosaïque, et la roche casse à travers eux, non plus entre eux.", { bande: "recristallisation" }),
+    pt(15, 0, 1, "Sur une plate-forme marine (grès armoricain, 478 à 470 Ma), des sables quartzeux s'accumulent."),
+    pt(250, 0.3, 2, "Sous l'effet de la collision varisque, une dizaine de kilomètres les ensevelissent (340 à 325 Ma)."),
+    pt(420, 0.4, 3, "Au-delà de ≈ 300 °C, le quartz recristallise : les grains se soudent en mosaïque, et la rupture traverse la roche au lieu de la contourner.", { bande: "recristallisation" }),
     pt(300, 0.15),
-    pt(15, 0, 4, "Très résistante, la quartzite arme les crêtes quand l'érosion use la chaîne (monts d'Arrée)."),
+    pt(15, 0, 4, "Monts d'Arrée : là où l'érosion use la chaîne, la quartzite, très résistante, dessine les crêtes."),
   ], { gradients: [10, 30, 60] });
   COND.marbre = R("reg", [
-    pt(15, 0, 1, "Des boues calcaires s'accumulent sur une plate-forme marine (Jurassique, vers 150 Ma)."),
-    pt(300, 0.22, 2, "La croûte pyrénéenne s'amincit : sous les bassins qui s'ouvrent, la chaleur monte (145–110 Ma)."),
-    pt(520, 0.26, 3, "Chauffée à ≈ 500 °C mais à faible pression (8–10 km), la calcite recristallise en grains de sucre : marbre de Saint-Béat (110–85 Ma).", { bande: "recristallisation" }),
+    pt(15, 0, 1, "Sur une plate-forme marine (Jurassique, vers 150 Ma), des boues calcaires s'accumulent."),
+    pt(300, 0.22, 2, "Sous les bassins qui s'ouvrent, la croûte pyrénéenne s'amincit et la chaleur augmente (145 à 110 Ma)."),
+    pt(520, 0.26, 3, "Calcite recristallisée en grains de sucre : marbre de Saint-Béat (110 à 85 Ma), formé vers 500 °C mais sous faible pression (8 à 10 km).", { bande: "recristallisation" }),
     pt(330, 0.08),
-    pt(15, 0, 4, "La collision pyrénéenne soulève la série ; l'érosion met le marbre au jour."),
+    pt(15, 0, 4, "La collision pyrénéenne soulève la série, puis l'érosion dégage le marbre."),
   ], { courbes: AL, gradients: [10, 30, 60], src: ["pattison", "ducoux"] });
   COND.calcschiste = R("hp", [
-    FOND_OCEAN("Des boues calcaires et argileuses se déposent au fond de l'océan alpin, sous 3 à 4 km d'eau (Jurassique–Crétacé)."),
-    pt(250, 0.9, 2, "L'océan se ferme : la subduction entraîne ces boues à 30–50 km sans les chauffer beaucoup (60–55 Ma)."),
-    pt(440, 1.4, 3, "Vers 300–480 °C et 1 à 1,8 GPa selon les unités (plus chaud et plus profond vers l'est), calcite, mica blanc et quartz recristallisent en feuillets luisants, dans le faciès des schistes bleus.", { bande: "recristallisation" }),
+    FOND_OCEAN("Au fond de l'océan alpin, sous 3 à 4 km d'eau, se déposent des boues calcaires et argileuses (Jurassique à Crétacé)."),
+    pt(250, 0.9, 2, "À la fermeture de l'océan, la subduction emporte ces boues entre 30 et 50 km sans les réchauffer beaucoup (60 à 55 Ma)."),
+    pt(440, 1.4, 3, "Calcite, mica blanc et quartz se recristallisent en feuillets luisants, dans le faciès des schistes bleus : 300 à 480 °C et 1 à 1,8 GPa selon les unités, plus chaud et plus profond vers l'est.", { bande: "recristallisation" }),
     pt(380, 0.6),
-    pt(15, 0, 4, "En remontant le long du plan de subduction (50–35 Ma), les roches se rééquilibrent dans le faciès des schistes verts."),
+    pt(15, 0, 4, "Le long du plan de subduction, les roches remontent (de 50 à 35 Ma) et se rééquilibrent dans le faciès des schistes verts."),
   ], { courbes: ["jadeite"], gradients: [10, 30], src: ["holland", "agard"] });
   COND.schiste_vert = R("reg", [
-    FOND_OCEAN("Au fond de l'océan alpin, la dorsale produit des basaltes (vers 160 Ma)."),
-    pt(250, 0.32, 2, "La fermeture de l'océan et la collision enfouissent ces basaltes à une dizaine de kilomètres (50–40 Ma)."),
-    pt(400, 0.5, 3, "Vers 300–500 °C, le basalte devient chlorite, actinote, épidote et albite : il verdit.", { bande: "recristallisation" }),
+    FOND_OCEAN("La dorsale de l'océan alpin engendre des basaltes (vers 160 Ma)."),
+    pt(250, 0.32, 2, "Ces basaltes sont enfouis vers une quinzaine de kilomètres (50 à 40 Ma) par la fermeture de l'océan, puis par la collision."),
+    pt(400, 0.5, 3, "Entre 300 et 500 °C, le basalte se transforme en chlorite, actinote, épidote et albite : il verdit.", { bande: "recristallisation" }),
     pt(300, 0.18),
-    pt(15, 0, 4, "La chaîne s'étale, l'érosion l'allège : les schistes verts remontent (depuis 35 Ma)."),
+    pt(15, 0, 4, "Les schistes verts remontent depuis 35 Ma : la chaîne s'étire, et l'érosion l'allège."),
   ], { gradients: [10, 30, 60] });
   COND.amphibolite = R("reg", [
-    FOND_OCEAN("Au fond d'un océan, la dorsale produit des basaltes et des gabbros (vers 480 Ma)."),
-    pt(450, 0.8, 2, "L'océan se ferme : sa croûte est entraînée à 20–35 km lors de la collision varisque (380–360 Ma)."),
-    pt(650, 0.8, 3, "Vers 500–750 °C, pyroxène et plagioclase deviennent hornblende et plagioclase, alignés (vers 360 Ma).", { bande: "recristallisation" }),
+    FOND_OCEAN("La dorsale d'un océan engendre des basaltes et des gabbros (vers 480 Ma)."),
+    pt(450, 0.8, 2, "Lors de la collision varisque (380 à 360 Ma), l'océan se referme et sa croûte est entraînée entre 20 et 35 km."),
+    pt(650, 0.8, 3, "Entre 500 et 750 °C, pyroxène et plagioclase se transforment en hornblende et plagioclase alignés (vers 360 Ma).", { bande: "recristallisation" }),
     pt(450, 0.32),
-    pt(15, 0, 4, "La chaîne s'étale, l'érosion l'allège : l'amphibolite remonte avec la croûte (Limousin)."),
+    pt(15, 0, 4, "L'amphibolite remonte avec la croûte (Limousin) : la chaîne s'étire, l'érosion l'allège."),
   ], { courbes: ["graniteEau"], gradients: [10, 30, 60], src: ["tuttle"] });
   COND.schiste_bleu = R("hp", [
-    FOND_OCEAN("Au fond d'un océan, des boues recouvrent les basaltes de la dorsale (vers 480 Ma)."),
-    pt(250, 1.0, 2, "La subduction les entraîne vite en profondeur : la roche, froide, ne se réchauffe presque pas (370–365 Ma)."),
-    pt(475, 1.7, 3, "Île de Groix : 1,6–1,8 GPa (≈ 55–60 km) et 450–500 °C ; le glaucophane, amphibole bleue, cristallise (vers 360 Ma).", { bande: "recristallisation" }),
+    FOND_OCEAN("Des boues viennent recouvrir les basaltes de la dorsale, au fond d'un océan (vers 480 Ma)."),
+    pt(250, 1.0, 2, "Entraînée rapidement en profondeur par la subduction, la roche, restée froide, se réchauffe à peine (370 à 365 Ma)."),
+    pt(475, 1.7, 3, "Le glaucophane, amphibole bleue, cristallise à l'île de Groix, sous 1,6 à 1,8 GPa (≈ 55 à 60 km) et 450 à 500 °C (vers 360 Ma).", { bande: "recristallisation" }),
     pt(420, 0.7),
-    pt(15, 0, 4, "Une remontée rapide, le long du plan de subduction, préserve en partie les minéraux bleus (360–350 Ma)."),
+    pt(15, 0, 4, "Les minéraux bleus subsistent en partie après une remontée rapide le long du plan de subduction (360 à 350 Ma)."),
   ], { courbes: ["jadeite"], gradients: [10, 30], src: ["holland", "bosse"] });
   COND.eclogite = R("hp", [
-    FOND_OCEAN("Au fond d'un océan, la dorsale produit des basaltes (vers 480 Ma)."),
-    pt(450, 1.4, 2, "La subduction varisque entraîne la croûte océanique au-delà de 50 km (420–410 Ma)."),
-    pt(720, 2.1, 3, "Vers 650–850 °C et ≈ 2 GPa (Haut-Allier, Lévézou), plagioclase et pyroxène laissent place à l'omphacite et au grenat : la roche devient très dense. Localement, la coésite signale plus de 2,8 GPa.", { bande: "recristallisation" }),
+    FOND_OCEAN("Au fond d'un océan, des basaltes naissent de l'activité de la dorsale (vers 480 Ma)."),
+    pt(450, 1.4, 2, "Au-delà de 50 km, la subduction varisque emporte la croûte océanique (390 à 380 Ma)."),
+    pt(720, 2.1, 3, "Entre 650 et 850 °C et ≈ 2 GPa (Haut-Allier, Lévézou), omphacite et grenat remplacent plagioclase et pyroxène : la roche gagne en densité (383 Ma à Najac, 358 Ma au Lévézou). Localement, la coésite indique plus de 2,8 GPa.", { bande: "recristallisation" }),
     pt(650, 0.9),
-    pt(15, 0, 4, "Une écaille se détache et remonte le long du plan de subduction ; en chemin, une partie devient amphibolite (400–380 Ma)."),
+    pt(15, 0, 4, "Une écaille détachée remonte le long du plan de subduction ; en chemin, une partie se change en amphibolite (358 à 340 Ma)."),
   ], { courbes: ["jadeite", "coesite", "graniteEau"], gradients: [10, 30], src: ["holland", "bose", "lotout", "tuttle"] });
   COND.gneiss = R("reg", [
     pt(850, 0.2, 0, "", { lab: "magma granitique" }),
-    pt(680, 0.2, 1, "Un granite cristallise vers 7 km (vers 480 Ma) : ce sera la roche de départ.", { bande: "cristallisation" }),
+    pt(680, 0.2, 1, "Vers 7 km de profondeur, un granite cristallise (vers 480 Ma) : il constituera la roche de départ.", { bande: "cristallisation" }),
     pt(330, 0.2),
-    pt(500, 0.8, 2, "La collision varisque enfouit le granite à 20–30 km avec la croûte qui le porte (360–345 Ma)."),
-    pt(700, 0.75, 3, "Vers 650–750 °C, les minéraux recristallisent et se trient en lits clairs (quartz, feldspaths) et sombres (micas) ; parfois la roche commence à fondre.", { bande: "recristallisation" }),
+    pt(500, 0.8, 2, "Entre 360 et 345 Ma, la collision varisque fait descendre le granite, avec la croûte qui le porte, de 20 à 30 km."),
+    pt(700, 0.75, 3, "Entre 650 et 750 °C, les minéraux se recristallisent et se séparent en lits clairs (quartz, feldspaths) et sombres (micas) ; la roche peut parfois commencer à fondre.", { bande: "recristallisation" }),
     pt(450, 0.4),
-    pt(15, 0, 4, "La chaîne s'étale sur ses failles, l'érosion l'allège : le gneiss remonte avec la croûte (Haut-Allier)."),
+    pt(15, 0, 4, "La chaîne s'étire le long de ses failles ; l'érosion l'allège et le gneiss remonte avec la croûte (Haut-Allier)."),
   ], { courbes: [...AL, "graniteEau"], anatexie: true, src: ["pattison", "tuttle"] });
   COND.leptynite = R("reg", [
     pt(850, 0, 0, "", { lab: "lave acide" }),
-    pt(15, 0, 1, "Des laves claires, riches en silice, s'épanchent puis refroidissent en surface (vers 480 Ma)."),
-    pt(500, 0.8, 2, "La collision varisque enfouit ces roches à 25–30 km (380–360 Ma)."),
-    pt(680, 0.8, 3, "Vers 600–750 °C, la roche recristallise en quartz et feldspaths à grain fin, presque sans mica.", { bande: "recristallisation" }),
+    pt(15, 0, 1, "Vers 480 Ma, des laves claires, riches en silice, déferlent et se figent à la surface."),
+    pt(500, 0.8, 2, "Lors de la collision varisque (380 à 360 Ma), ces roches sont enfouies entre 25 et 30 km."),
+    pt(680, 0.8, 3, "Entre 600 et 750 °C, la roche recristallise en quartz et feldspaths à grain fin, presque dépourvue de mica.", { bande: "recristallisation" }),
     pt(420, 0.32),
-    pt(15, 0, 4, "Elle remonte avec les amphibolites voisines (Limousin, Vendée)."),
+    pt(15, 0, 4, "Avec les amphibolites voisines, elle remonte (Limousin, Vendée)."),
   ], { courbes: [...AL, "graniteEau"], gradients: [30], src: ["pattison", "tuttle"] });
   COND.granulite_meta = R("reg", [
-    pt(15, 0, 1, "Des sédiments s'accumulent au fond d'un bassin (540–480 Ma)."),
-    pt(650, 1.1, 2, "Ils se retrouvent au bas d'une croûte épaissie, vers 35–40 km (380–360 Ma)."),
-    pt(850, 1.0, 3, "Au-delà de 750 °C, les micas se décomposent : grenat et orthopyroxène les remplacent, l'eau s'en va avec un peu de liquide.", { bande: "recristallisation" }),
+    pt(15, 0, 1, "Au fond d'un bassin (540 à 480 Ma), des sédiments s'accumulent."),
+    pt(650, 1.1, 2, "Elles se retrouvent à la base d'une croûte épaissie, vers 35 à 40 km (380 à 360 Ma)."),
+    pt(850, 1.0, 3, "Au-delà de 750 °C, grenat et orthopyroxène prennent la place des micas en se décomposant ; l'eau repart avec un peu de liquide.", { bande: "recristallisation" }),
     pt(600, 0.4),
-    pt(15, 0, 4, "Seule une remontée tectonique ou une érosion très profonde les amène en surface (Massif central)."),
+    pt(15, 0, 4, "Seule une remontée tectonique ou une érosion très profonde les conduit à l'air libre (Massif central)."),
   ], { courbes: [...AL, "graniteEau"], anatexie: true, src: ["pattison", "tuttle"] });
   COND.migmatite = R("reg", [
-    pt(15, 0, 1, "Des argiles et des limons s'accumulent au fond d'un bassin (540–480 Ma)."),
-    pt(650, 0.8, 2, "La collision varisque les enfouit à 25–30 km (360–340 Ma)."),
-    pt(800, 0.45, 3, "En remontant, la roche dépasse le solidus du granite : 750–850 °C à 0,4–0,5 GPa dans le dôme du Velay ; le liquide clair se rassemble en lits (340–300 Ma).", { bande: "fusion partielle" }),
+    pt(15, 0, 1, "Au fond d'un bassin (540 à 480 Ma), des argiles et des limons s'accumulent."),
+    pt(650, 0.8, 2, "Lors de la collision varisque (360 à 340 Ma), elles sont enfouies entre 25 et 30 km."),
+    pt(800, 0.45, 3, "À 0,4 à 0,5 GPa, dans le dôme du Velay, la roche atteint 750 à 850 °C et franchit le solidus du granite ; le liquide clair s'organise en lits (340 à 300 Ma).", { bande: "fusion partielle" }),
     pt(500, 0.18),
-    pt(15, 0, 4, "Plus légère, la croûte fondue remonte en dôme ; l'érosion le dégage."),
+    pt(15, 0, 4, "Moins dense, la croûte fondue s'élève en dôme ; l'érosion le met au jour."),
   ], { courbes: [...AL, "graniteEau"], anatexie: true, src: ["pattison", "tuttle", "barbey"] });
   // contact, métasomatose : faible pression, forte chaleur
   COND.corneenne = R("contact", [
-    pt(160, 0.15, 1, "Des argiles et des schistes reposent à 5–6 km de profondeur, vers 150–200 °C."),
-    pt(330, 0.15, 2, "Un granite chaud (≈ 700–800 °C) s'injecte tout près : sa chaleur gagne la roche voisine."),
-    pt(560, 0.15, 3, "Chauffée à 450–650 °C sans être comprimée davantage, la roche fabrique andalousite et cordiérite, minéraux de basse pression ; l'auréole chauffe et refroidit en 10 000 à 100 000 ans.", { bande: "recristallisation" }),
+    pt(160, 0.15, 1, "Entre 5 et 6 km de profondeur, vers 150 à 200 °C, des argiles et des schistes gisent."),
+    pt(330, 0.15, 2, "Tout près, un granite chaud (≈ 700 à 800 °C) s'injecte : sa chaleur se transmet à la roche voisine."),
+    pt(560, 0.15, 3, "Entre 450 et 650 °C, sans compression supplémentaire, la roche forme andalousite et cordiérite, minéraux de basse pression ; l'auréole se réchauffe puis se refroidit en 10 000 à 100 000 ans.", { bande: "recristallisation" }),
     pt(250, 0.11),
-    pt(15, 0, 4, "Refroidie, l'auréole remonte avec son granite et l'érosion la dégage (Sidobre, vers 300 Ma)."),
+    pt(15, 0, 4, "Une fois refroidie, l'auréole remonte avec son granite, avant d'être dégagée par l'érosion (Sidobre, vers 300 Ma)."),
   ], { courbes: [...AL, "graniteEau"], src: ["pattison", "tuttle", "diffusion"] });
   COND.skarn = R("contact", [
-    pt(150, 0.12, 1, "Des calcaires reposent à 4–5 km de profondeur, vers 150 °C."),
-    pt(300, 0.12, 2, "Un granite s'injecte tout près et libère, en cristallisant, des fluides chauds chargés de silice, de fer et de métaux."),
-    pt(550, 0.12, 3, "Vers 400–650 °C, fluides et calcaire échangent leurs éléments : le CO₂ part, silice et fer entrent ; grenats et pyroxènes calciques cristallisent.", { bande: "échanges" }),
+    pt(150, 0.12, 1, "Entre 4 et 5 km de profondeur, vers 150 °C, reposent des calcaires."),
+    pt(300, 0.12, 2, "Tout près, un granite s'injecte, et sa cristallisation dégage des fluides chauds chargés de silice, de fer et de métaux."),
+    pt(550, 0.12, 3, "Entre 400 et 650 °C, fluides et calcaire échangent leurs éléments : le CO₂ s'échappe, tandis que silice et fer pénètrent ; grenats et pyroxènes calciques cristallisent.", { bande: "échanges" }),
     pt(250, 0.09),
-    pt(15, 0, 4, "L'érosion met au jour le skarn et son minerai de tungstène (Salau, Costabonne, 320–290 Ma)."),
+    pt(15, 0, 4, "Le skarn et son minerai de tungstène (Salau, Costabonne, 320 à 290 Ma) sont mis au jour par l'érosion."),
   ], { courbes: ["graniteEau"], src: ["tuttle"] });
   COND.greisen = R("contact", [
     pt(850, 0.1, 0, "", { lab: "coupole de granite" }),
-    pt(700, 0.1, 1, "Le sommet d'une coupole de granite finit de cristalliser vers 3–4 km (≈ 0,1 GPa).", { bande: "cristallisation" }),
-    pt(550, 0.1, 2, "Il libère des fluides chauds riches en fluor, bore, lithium, étain et tungstène."),
-    pt(400, 0.1, 3, "Vers 300–500 °C, ces fluides attaquent le granite : feldspaths et biotite laissent place au quartz, au mica blanc et à la topaze.", { bande: "greisenisation" }),
+    pt(700, 0.1, 1, "Vers 3 à 4 km de profondeur (≈ 0,1 GPa), le sommet d'une coupole de granite achève sa cristallisation.", { bande: "cristallisation" }),
+    pt(550, 0.1, 2, "Des fluides chauds, riches en fluor, bore, lithium, étain et tungstène, s'échappent de ce corps."),
+    pt(400, 0.1, 3, "Entre 300 et 500 °C, ces fluides altèrent le granite : au profit du quartz, du mica blanc et de la topaze, feldspaths et biotite disparaissent.", { bande: "greisenisation" }),
     pt(200, 0.08),
-    pt(15, 0, 4, "Cassitérite et wolframite se déposent en filons ; l'érosion les met au jour (Montebras, 330–300 Ma)."),
+    pt(15, 0, 4, "Des filons de cassitérite et de wolframite se forment, puis l'érosion les découvre (Montebras, 330 à 300 Ma)."),
   ], { courbes: ["graniteEau"], src: ["tuttle", "pirajno"] });
   COND.fenite = R("contact", [
     pt(900, 0.2, 0, "", { lab: "carbonatite" }),
-    pt(750, 0.2, 1, "Une carbonatite (ou une syénite néphélinique) s'installe vers 7 km."),
-    pt(650, 0.2, 2, "Elle libère des fluides riches en sodium et en potassium, qui envahissent les roches voisines."),
-    pt(500, 0.2, 3, "À plusieurs centaines de degrés, l'encaissant perd son quartz et gagne feldspath alcalin et ægyrine, sur une auréole de quelques mètres à quelques kilomètres.", { bande: "fénitisation" }),
+    pt(750, 0.2, 1, "Une carbonatite (ou une syénite néphélinique) se met en place vers 7 km."),
+    pt(650, 0.2, 2, "Des fluides riches en sodium et en potassium envahissent les roches voisines, libérés par ce corps."),
+    pt(500, 0.2, 3, "Sous l'effet de plusieurs centaines de degrés, l'encaissant voit disparaître son quartz au profit de feldspath alcalin et d'ægyrine, sur une auréole large de quelques mètres à quelques kilomètres.", { bande: "fénitisation" }),
     pt(250, 0.14),
-    pt(15, 0, 4, "L'érosion dégage le complexe et son auréole (Fen, Norvège, vers 580 Ma) ; la fénite est absente de France."),
+    pt(15, 0, 4, "Le complexe et son auréole sont mis à nu par l'érosion (Fen, Norvège, vers 580 Ma) ; la fénite n'existe pas en France."),
   ], { src: ["elliott"] });
   COND.serpentinite = R("reg", [
     pt(950, 0.9, 0, "", { lab: "manteau" }),
-    pt(500, 0.04, 1, "Sous une dorsale lente, le manteau remonte jusqu'au fond de l'océan alpin sans beaucoup fondre, et refroidit en arrivant."),
-    pt(400, 0.08, 2, "En refroidissant, il se fracture : l'eau de mer s'infiltre."),
-    pt(250, 0.08, 3, "Sous ≈ 300–400 °C, l'olivine s'hydrate en serpentine et magnétite ; la roche gonfle et s'allège (165–150 Ma).", { bande: "serpentinisation" }),
+    pt(500, 0.04, 1, "Au-dessous d'une dorsale lente, le manteau monte jusqu'au fond de l'océan alpin en fondant peu, puis se refroidit à l'arrivée."),
+    pt(400, 0.08, 2, "La roche, en se refroidissant, se fissure, et l'eau de mer y pénètre."),
+    pt(250, 0.08, 3, "Entre ≈ 300 et 400 °C, l'olivine s'hydrate et donne serpentine et magnétite ; la roche enfle et perd en densité (165 à 150 Ma).", { bande: "serpentinisation" }),
     pt(450, 1.1, 0, "", { lab: "Queyras" }),
-    pt(15, 0, 4, "À la fermeture de l'océan, l'essentiel de son fond plonge (Queyras : jusqu'à ≈ 40 km, la serpentine devient antigorite) puis remonte ; une écaille restée près de la surface forme le Chenaillet."),
+    pt(15, 0, 4, "Lors de la fermeture de l'océan, la majeure partie de son fond s'enfonce (Queyras : jusqu'à ≈ 40 km, où la serpentine devient antigorite) avant de remonter ; une écaille restée près de la surface constitue le Chenaillet."),
   ], { src: ["evans", "manatschal"] });
   COND.rodingite = R("fond", [
     pt(1180, 0.1, 0, "", { lab: "magma basique" }),
-    pt(1000, 0.1, 1, "Un filon de gabbro traverse la péridotite du fond de l'océan alpin et cristallise.", { bande: "cristallisation" }),
-    pt(400, 0.1, 2, "La péridotite qui l'entoure se serpentinise : l'eau qui circule se charge en calcium."),
-    pt(300, 0.1, 3, "Vers 250–350 °C, ces fluides calciques transforment le gabbro : grenat grossulaire et diopside remplacent les feldspaths (165–100 Ma).", { bande: "métasomatose" }),
+    pt(1000, 0.1, 1, "Dans le fond de l'océan alpin, un filon de gabbro recoupe la péridotite et se solidifie.", { bande: "cristallisation" }),
+    pt(400, 0.1, 2, "La péridotite environnante se serpentinise, et l'eau qui y circule s'enrichit en calcium."),
+    pt(300, 0.1, 3, "Entre 250 et 350 °C, ces fluides calciques transforment le gabbro : grenat grossulaire et diopside se substituent aux feldspaths (165 à 150 Ma).", { bande: "métasomatose" }),
     pt(150, 0.05),
-    pt(15, 0, 4, "La rodingite est charriée avec les ophiolites alpines (Chenaillet, Queyras)."),
+    pt(15, 0, 4, "C'est avec les ophiolites alpines (Chenaillet, Queyras) qu'a été charriée la rodingite."),
   ], { src: ["bach", "manatschal"] });
   COND.spilite = R("fond", [
-    pt(1150, 0.035, 1, "Un basalte s'épanche en coussins au fond de l'océan alpin, sous ≈ 3,5 km d'eau, vers 1 150 °C."),
-    pt(350, 0.05, 2, "L'eau de mer, chauffée par la croûte encore chaude, circule dans la lave."),
-    pt(280, 0.05, 3, "Vers 200–400 °C, le sodium de l'eau remplace le calcium du plagioclase (albite) ; chlorite et épidote verdissent la roche (vers 160 Ma).", { bande: "spilitisation" }),
+    pt(1150, 0.035, 1, "En coussins au fond de l'océan alpin, sous ≈ 3,5 km d'eau, un basalte s'étale à ≈ 1 150 °C."),
+    pt(350, 0.05, 2, "Chauffée par la croûte encore brûlante, l'eau de mer circule à travers la lave."),
+    pt(280, 0.05, 3, "Entre 200 et 400 °C, le sodium de l'eau se substitue au calcium du plagioclase (albite) ; la chlorite et l'épidote verdissent la roche (vers 160 Ma).", { bande: "spilitisation" }),
     pt(100, 0.03),
-    pt(15, 0, 4, "Préservée dans l'ophiolite du Chenaillet, charriée sur le continent, comme dans les vieilles séries volcaniques de Bretagne et des Vosges."),
+    pt(15, 0, 4, "On la retrouve aussi dans les vieilles séries volcaniques de Bretagne et des Vosges, mais c'est dans l'ophiolite du Chenaillet, charriée sur le continent, qu'elle est conservée."),
   ], { src: ["alt", "manatschal"] });
   // roches de faille
   COND.mylonite = { type: "faille", chemin: [
-    pt(250, 0.3, 1, "Un granite déjà formé se trouve vers 11 km, à ≈ 250 °C : à cette température, son quartz casserait."),
-    pt(500, 0.42, 2, "Une grande zone de cisaillement l'entraîne vers 15 km ; là, des granites encore chauds se mettent en place le long de la faille : la roche passe ≈ 500 °C, son quartz ne casse plus, il s'étire."),
-    pt(420, 0.3, 3, "Pendant que le cisaillement la fait remonter, la roche recristallise en rubans fins autour d'« yeux » de feldspath plus résistants.", { bande: "recristallisation" }),
-    pt(15, 0, 4, "Le jeu de la faille et l'érosion la remontent (cisaillement sud-armoricain, 320–290 Ma)."),
+    pt(250, 0.3, 1, "Vers 11 km de profondeur, à ≈ 250 °C, un granite déjà formé se trouve dans des conditions où son quartz se briserait."),
+    pt(500, 0.42, 2, "Une grande zone de cisaillement l'entraîne vers 15 km ; des granites encore chauds s'y mettent en place le long de la faille, la roche atteignant ≈ 500 °C : son quartz cesse de se briser et s'étire."),
+    pt(420, 0.3, 3, "Des rubans fins se recristallisent autour d'« yeux » de feldspath, plus résistants, tandis que le cisaillement fait remonter la roche.", { bande: "recristallisation" }),
+    pt(15, 0, 4, "L'activité de la faille et l'érosion la font remonter (cisaillement sud-armoricain, 320 à 290 Ma)."),
   ], src: ["scholz"] };
   COND.cataclasite = { type: "faille", chemin: [
-    pt(130, 0.1, 1, "Une roche quelconque, ici un granite, vers 4 km (≈ 130 °C)."),
-    pt(220, 0.2, 2, "Une faille la traverse vers 7 km, sous ≈ 300 °C : le quartz reste cassant."),
-    pt(220, 0.2, 3, "À chaque glissement, la roche est broyée en fragments anguleux, puis des fluides la recimentent (de l'Hercynien à l'actuel)."),
+    pt(130, 0.1, 1, "Vers 4 km de profondeur (≈ 130 °C) se trouve une roche quelconque, ici un granite."),
+    pt(220, 0.2, 2, "Vers 7 km, sous ≈ 300 °C, une faille traverse la roche : le quartz demeure cassant."),
+    pt(220, 0.2, 3, "À chaque glissement, la roche se broie en fragments anguleux, que des fluides recimentent ensuite (de l'Hercynien à l'actuel)."),
   ], src: ["scholz"] };
   COND.pseudotachylite = { type: "faille", fusionSeche: true, chemin: [
-    pt(270, 0.25, 1, "Une roche sèche, vers 9 km (≈ 270 °C), dans le domaine cassant."),
-    pt(1150, 0.25, 2, "Un séisme fait glisser les deux lèvres de la faille à ≈ 1 m/s : en quelques secondes, le frottement porte une mince tranche de roche au-delà de 1 000 °C."),
-    pt(270, 0.28, 3, "La tranche fondue se fige en verre en quelques secondes à minutes : la chaleur se perd aussitôt dans la roche froide qui l'entoure.", { bande: "trempe" }),
+    pt(270, 0.25, 1, "Vers 9 km (≈ 270 °C), une roche sèche se situe dans le domaine cassant."),
+    pt(1150, 0.25, 2, "Lorsqu'un séisme fait glisser à ≈ 1 m/s les deux lèvres de la faille, le frottement élève en quelques secondes au-delà de 1 000 °C une mince tranche de roche."),
+    pt(270, 0.28, 3, "La tranche fondue se change en verre en quelques secondes à quelques minutes ; sa chaleur est aussitôt absorbée par la roche froide qui l'entoure.", { bande: "trempe" }),
   ], src: ["scholz", "sibson"] };
   // impact
   COND.impactite = { type: "choc", chemin: [
-    { P: 0.1, T: 15, n: 1, t: "Un astéroïde d'≈ 1,5 km arrive à ≈ 20 km/s sur le socle du Limousin, qui est à la pression et à la température de la surface." },
-    { P: 12, T: 140, n: 2, t: "L'onde de choc traverse l'astéroïde en ≈ 0,1 s (1,5 km ÷ 20 km/s) ; dans le socle, le quartz choqué de Rochechouart a enregistré 10–15 GPa, et la roche en garde ≈ 100–150 °C." },
-    { P: 80, T: 2000, n: 3, t: "Près du point d'impact, au-delà de ≈ 60 GPa, la roche fond (plus de 1 500 °C) : verre et brèches remplissent le cratère en quelques minutes." },
-    { P: 80, T: 15, n: 4, t: "Le verre et les brèches refroidissent en quelques années à quelques milliers d'années ; le cratère (≈ 20 km), formé il y a 206,9 Ma, a été effacé par l'érosion, ses brèches restent." },
-  ], note: "Courbe : température qui reste dans une roche cristalline dense après le passage de l'onde, selon la pression atteinte (French 1998). Chaque point du chemin correspond à des roches de plus en plus proches du point d'impact.", src: ["french1998", "stoffler"] };
+    { P: 0.1, T: 15, n: 1, t: "Un astéroïde d'≈ 1,5 km arrive à ≈ 20 km/s sur le socle du Limousin, qui se trouve dans les conditions de pression et de température de surface." },
+    { P: 12, T: 140, n: 2, t: "En ≈ 0,1 s (1,5 km ÷ 20 km/s), l'onde de choc traverse l'astéroïde ; le quartz choqué de Rochechouart, dans le socle, a enregistré 10 à 15 GPa, et la roche en conserve une élévation de ≈ 100 à 150 °C." },
+    { P: 80, T: 2000, n: 3, t: "Au voisinage immédiat de l'impact, où la pression dépasse ≈ 60 GPa, la roche fond (plus de 1 500 °C) : verre et brèches comblent le cratère en quelques minutes." },
+    { P: 80, T: 15, n: 4, t: "Le cratère (≈ 25 km), formé il y a 206,9 Ma, a disparu sous l'érosion ; les brèches, elles, demeurent, et le verre et les brèches se refroidissent en quelques années à quelques milliers d'années." },
+  ], note: "Courbe : température conservée dans une roche cristalline compacte après le passage de l'onde, en fonction de la pression atteinte (French 1998). Chaque point représente une roche plus proche du point d'impact.", src: ["french1998", "stoffler"] };
 
   // ═════ S sédimentaires ═════
   // q(o) : point quelconque ; n = numéro de l'étape (état atteint à la fin de l'étape) ; sans coordonnées = étape sans position
@@ -1611,340 +1615,340 @@
   // ── évaporites ──
   COND.gypse = { type: "saumure", sels: ["gypse"], chemin: [
     q({ F: 1, C: 1.84 }, 0, "", { lab: "eau de mer" }),
-    q({ F: 3.8, C: 7.0 }, 1, "L'eau de mer entre dans un bassin presque fermé ; quand les trois quarts de l'eau se sont évaporés (× 3,8), le gypse dissous atteint ≈ 7 g par kilogramme d'eau : au-delà, il cristallise. Dans l'eau douce, il sature dès ≈ 2,4 g ; dans l'eau de mer, les autres ions retardent sa saturation."),
-    q({ F: 7, C: 7.0 }, 2, "Tant que le bassin est réalimenté et que la saumure reste entre × 3,8 et × 10,6, tout le gypse qui arrive en plus cristallise : les bancs s'empilent, sur des milliers d'années (Montmartre, Priabonien, ≈ 37–34 Ma)."),
+    q({ F: 3.8, C: 7.0 }, 1, "L'eau de mer s'introduit dans un bassin presque clos ; une fois les trois quarts de l'eau évaporés (× 3,8), le gypse dissous atteint ≈ 7 g par kilogramme d'eau, et tout excédent cristallise. Dans l'eau douce, la saturation survient dès ≈ 2,4 g ; dans l'eau de mer, la présence des autres ions la retarde."),
+    q({ F: 7, C: 7.0 }, 2, "Tant que le bassin reçoit de nouveaux apports et que la saumure reste entre × 3,8 et × 10,6, le gypse supplémentaire cristallise : les bancs s'accumulent pendant des milliers d'années (Montmartre, Priabonien, ≈ 37 à 34 Ma)."),
   ] };
   COND.sel = { type: "saumure", sels: ["halite"], chemin: [
     q({ F: 1, C: 28.4 }, 0, "", { lab: "eau de mer" }),
-    q({ F: 10.6, C: 301 }, 1, "Carbonates puis gypse précipitent d'abord ; à × 10,6, quand il ne reste que 9 % de l'eau, le sel dissous atteint ≈ 300 g par kilogramme d'eau : la halite cristallise."),
-    q({ F: 30, C: 301 }, 2, "Tant que le bassin est réalimenté, tout le sel qui arrive en plus cristallise : les cubes de halite naissent en surface et au fond, et s'empilent en bancs (Keuper de Lorraine, ≈ 220 Ma)."),
-    q({}, 3, "Enfoui sous d'autres couches, le sel, moins dense et plastique, flue comme un glacier et peut monter en dômes (Varangéville, dernière mine de sel gemme active de France)."),
+    q({ F: 10.6, C: 301 }, 1, "À × 10,6, le sel dissous atteint ≈ 300 g par kilogramme d'eau, quand il ne reste plus que 9 % de celle-ci : c'est alors la halite qui cristallise, après les carbonates et le gypse."),
+    q({ F: 30, C: 301 }, 2, "Tant que le bassin est alimenté, tout excédent de sel cristallise : des cubes de halite apparaissent à la surface et au fond, puis s'empilent en bancs (Keuper de Lorraine, Carnien, ≈ 230 Ma)."),
+    q({}, 3, "Enfoui sous des kilomètres de couches, le sel se comporte comme un glacier : moins dense et plastique, il s'écoule et monte en dômes (bassin d'Aquitaine, mer du Nord). En Lorraine, peu enfoui, il est resté en couches horizontales, exploitées à Varangéville, dernière mine de sel gemme active de France."),
   ] };
   COND.sylvinite = { type: "saumure", sels: ["sylvite", "halite"], chemin: [
     q({ F: 1, C: 0.79 }, 0, "", { lab: "eau de mer" }),
-    q({ F: 65, C: 51 }, 1, "Après le gypse (× 3,8) et le sel (× 10,6), au-delà de ≈ × 65, il ne reste que 1,5 % de l'eau : le potassium dissous atteint ≈ 50 g par kilogramme d'eau (compté en sylvite) et les premiers sels de potassium cristallisent (bassin potassique d'Alsace, 35–30 Ma)."),
-    q({ F: 100, C: 51 }, 2, "Halite et sels de potassium précipitent ensemble : c'est la sylvinite ; une partie de la sylvite vient de la transformation de la carnallite."),
+    q({ F: 65, C: 51 }, 1, "Passé le gypse (× 3,8) puis le sel (× 10,6), et au-delà de ≈ × 65, l'eau ne représente plus que 1,5 % : le potassium dissous monte à ≈ 50 g par kilogramme d'eau (compté en sylvite) et les premiers sels de potassium apparaissent (bassin potassique d'Alsace, Rupélien, de 34 à 31 Ma)."),
+    q({ F: 100, C: 51 }, 2, "La sylvinite résulte de la précipitation conjointe de halite et de sels de potassium ; la carnallite, en se transformant, fournit une partie de la sylvite."),
   ] };
   COND.cargneule = { type: "saumure", sels: ["gypse"], selsVisibles: ["gypse"], xmin: 0.01, xmax: 20, ymin: 0.01, eauDouce: true, chemin: [
     q({ F: 1, C: 1.84 }, 0, "", { lab: "eau de mer" }),
-    q({ F: 3.8, C: 7.0 }, 1, "Au Trias (Keuper, ≈ 220 Ma), des lagunes s'évaporent : dès × 3,8, le gypse cristallise avec les boues de dolomie."),
-    q({ F: 0.03, C: 0.012 }, 2, "Bien plus tard, vers 40–30 Ma, les nappes alpines glissent sur ces couches tendres et les broient en brèche : l'eau souterraine, douce (presque sans gypse dissous), peut désormais y circuler.", { lab: "eau souterraine", saut: true }),
-    q({ F: 0.03, C: 2.4 }, 3, "L'eau souterraine, douce, dissout le gypse, mais pas plus de ≈ 2,4 g par kilogramme d'eau ; comme elle se renouvelle sans cesse, tout le gypse finit par partir : il reste un squelette de dolomie criblé de cellules vides, soudé par de la calcite."),
+    q({ F: 3.8, C: 7.0 }, 1, "Au Trias (Keuper, ≈ 220 Ma), dans des lagunes en voie d'évaporation, le gypse cristallise dès × 3,8 avec les boues de dolomie."),
+    q({ F: 0.03, C: 0.012 }, 2, "Vers 40 à 30 Ma, les nappes alpines écrasent ces couches tendres en brèche, et l'eau souterraine, douce et presque exempte de gypse, peut alors y circuler.", { lab: "eau souterraine", saut: true }),
+    q({ F: 0.03, C: 2.4 }, 3, "Douce, l'eau souterraine dissout le gypse sans dépasser ≈ 2,4 g par kilogramme d'eau ; se renouvelant sans cesse, elle élimine finalement tout le gypse. Chargée de sulfate, elle change aussi une partie de la dolomie en calcite : il subsiste un réseau de cloisons de calcite autour de cellules vides, avec des restes de fragments de dolomie."),
   ] };
   COND.anhydrite = { type: "anhydrite", chemin: [
     q({ F: 1, T: 28 }, 0, "", { lab: "eau de mer" }),
-    q({ F: 3.8, T: 30 }, 1, "Dans une lagune presque fermée du Trias (250–200 Ma), l'eau de mer s'évapore jusqu'à × 3,8 : le sulfate de calcium précipite, sous forme de gypse tant que la saumure reste sous ≈ 47 °C (directement en anhydrite dans les saumures les plus chaudes et les plus salées)."),
-    q({ F: 4, T: 70 }, 2, "Enfoui sous 1 à 2 km de couches (230–150 Ma), le gypse chauffe : au-delà de ≈ 45–58 °C selon la salinité de l'eau qui l'imprègne, il perd son eau et devient anhydrite."),
-    q({ F: 0.1, T: 15 }, 3, "L'anhydrite forme une mosaïque de cristaux aux clivages à angle droit ; ramenée près de la surface, au contact de l'eau douce, elle reprend de l'eau et regonfle en gypse."),
+    q({ F: 3.8, T: 30 }, 1, "Le gypse précipite tant que la saumure reste sous ≈ 47 °C : dans une lagune presque fermée du Trias (250 à 200 Ma), l'eau de mer s'évapore jusqu'à × 3,8 ; dans les saumures les plus chaudes et les plus salées, c'est directement l'anhydrite."),
+    q({ F: 4, T: 70 }, 2, "Dans 1 à 2 km de couches (de 230 à 150 Ma), le gypse se réchauffe ; passé ≈ 45 à 58 °C, selon la salinité de l'eau qui l'imprègne, il se déshydrate pour devenir anhydrite."),
+    q({ F: 0.1, T: 15 }, 3, "L'anhydrite constitue une mosaïque de cristaux dont les clivages se coupent à angle droit ; ramenée près de la surface, au contact de l'eau douce, elle refixe de l'eau et redevient gypse."),
   ] };
   COND.dolomie = { type: "mgca", chemin: [
-    q({ F: 1.2, R: 5.13 }, 1, "Dans une lagune chaude, l'eau de mer (magnésium ÷ calcium ≈ 5) dépose des boues calcaires (Jurassique des Causses, ≈ 165 Ma)."),
+    q({ F: 1.2, R: 5.13 }, 1, "Des boues calcaires se déposent dans une lagune chaude (Jurassique des Causses, ≈ 165 Ma). Le chemin part de l'eau de mer actuelle, où le rapport magnésium ÷ calcium vaut environ 5 ; au Jurassique, il était plus bas, entre 1 et 2."),
     q({ F: 3.8, R: 5.13 }), q({ F: 4.5, R: MGCA(4.5) }), q({ F: 5.2, R: MGCA(5.2) }),
-    q({ F: 6, R: MGCA(6) }, 2, "L'évaporation concentre l'eau ; dès × 3,8, le gypse cristallise et retire du calcium : le rapport magnésium ÷ calcium de la saumure dépasse 10."),
-    q({ F: 6, R: 3 }, 3, "Plus dense, la saumure s'infiltre dans les boues calcaires : son magnésium y remplace une partie du calcium et la calcite devient dolomite ; la saumure, appauvrie en magnésium, voit son rapport retomber."),
-    q({}, 4, "Dissoute inégalement, la dolomie donne des tours et des arches : Montpellier-le-Vieux (depuis quelques millions d'années)."),
+    q({ F: 6, R: MGCA(6) }, 2, "En s'évaporant, l'eau se concentre ; dès × 3,8, le gypse cristallise et prélève du calcium, si bien que le rapport magnésium ÷ calcium de la saumure dépasse 10."),
+    q({ F: 6, R: 3 }, 3, "Plus dense, la saumure s'infiltre dans les boues calcaires : le magnésium remplace une partie du calcium et la calcite se transforme en dolomite ; appauvrie en magnésium, la saumure voit alors son rapport diminuer."),
+    q({}, 4, "La dolomie, dissoute de façon inégale, prend la forme de tours et d'arches : Montpellier-le-Vieux (depuis quelques millions d'années)."),
   ] };
   // ── silice ──
   COND.silex = { type: "silice", chemin: [
-    q({ T: 12, C: 0.5 }, 1, "Dans la mer de la craie, éponges et radiolaires fabriquent des squelettes d'opale dans une eau très pauvre en silice (moins de 1 mg/L) : c'est la vie qui la concentre."),
+    q({ T: 12, C: 0.5 }, 1, "Dans la mer de la craie, éponges et radiolaires bâtissent des squelettes d'opale à partir d'une eau très pauvre en silice (moins de 1 mg/L) : le vivant est donc à l'origine de cette concentration."),
     q({ T: 12, C: 90 }),
-    q({ T: 14, C: 25 }, 2, "Enfouie sous quelques mètres de boue, l'opale se dissout dans l'eau des pores jusqu'à ≈ 90 mg/L, puis se redépose autour de certains points : des rognons de silex, en lits réguliers."),
-    q({ T: 20, C: 10 }, 3, "La silice remplace peu à peu la craie : de l'opale, puis de la calcédoine ; l'eau tend vers la saturation du quartz (≈ 10 mg/L) et les fantômes des spicules restent visibles."),
-    q({}, 4, "La craie s'use et se dissout ; le silex, très dur, reste : galets des plages normandes, et outils des premiers hommes."),
+    q({ T: 14, C: 25 }, 2, "Des rognons de silex apparaissent en lits réguliers : sous quelques mètres de boue, l'opale se dissout dans l'eau des pores (jusqu'à ≈ 90 mg/L), avant de se redéposer en certains points."),
+    q({ T: 20, C: 10 }, 3, "Peu à peu, la silice se substitue à la craie : d'abord l'opale, puis la calcédoine ; l'eau tend vers la saturation en quartz (≈ 10 mg/L), et les fantômes des spicules demeurent visibles."),
+    q({}, 4, "L'usure et la dissolution de la craie laissent subsister le silex, très dur : c'est ce qui compose les galets des plages normandes et les outils des premiers hommes."),
   ] };
   COND.radiolarite = { type: "silice", chemin: [
-    q({ T: 20, C: 0.3 }, 1, "Au-dessus de l'océan alpin, les radiolaires bâtissent leur squelette d'opale dans des eaux de surface presque sans silice (Jurassique supérieur, 165–145 Ma)."),
-    q({ T: 2, C: 8 }, 2, "Sous la profondeur de compensation (plus de 4 km), la calcite se dissout ; seule l'opale atteint le fond, froid (≈ 2 °C), où une boue rouge s'accumule de quelques mètres par million d'années."),
+    q({ T: 20, C: 0.3 }, 1, "Les radiolaires façonnent leur squelette d'opale dans des eaux de surface pratiquement dénuées de silice, au-dessus de l'océan alpin (Jurassique supérieur, de 165 à 145 Ma)."),
+    q({ T: 2, C: 8 }, 2, "La calcite se dissout au-delà de la profondeur de compensation (plus de 4 km) ; seule l'opale atteint le fond, où, à ≈ 2 °C, une boue rouge s'accumule à raison de quelques mètres par million d'années."),
     q({ T: 2, C: 73 }), q({ T: 20, C: 105 }),
-    q({ T: 40, C: 150 }, 3, "Enfouie sous des calcaires puis des schistes, la boue chauffe et son eau reste saturée en opale ; vers 40 °C, l'opale-A devient opale-CT."),
-    q({ T: 60, C: 27 }, 4, "Vers 50–60 °C, l'opale-CT recristallise en quartz : la silice dissoute retombe vers la saturation du quartz et la boue devient une roche très dure, rougie par l'hématite (le jaspe)."),
+    q({ T: 40, C: 150 }, 3, "Enfouie sous des calcaires puis des schistes, la boue s'échauffe et reste saturée en opale ; vers 40 °C, l'opale-A passe à l'état d'opale-CT."),
+    q({ T: 60, C: 27 }, 4, "À 50 à 60 °C, l'opale-CT recristallise en quartz ; la silice dissoute revient à saturation, et la boue se durcit en une roche rougie par l'hématite (le jaspe)."),
   ] };
   COND.diatomite = { type: "silice", xlab: "Température de l'eau (°C)", chemin: [
-    q({ T: 15, C: 20 }, 1, "Dans les lacs de cratère du Massif central, riches en silice venue des roches volcaniques (≈ 20 mg/L), les diatomées fabriquent leur coque d'opale (frustule)."),
-    q({ T: 12, C: 90 }, 2, "À leur mort, les frustules tombent au fond : une partie se dissout dans l'eau des pores jusqu'à la saturation de l'opale (≈ 90 mg/L) ; des lits blancs s'accumulent, quelques millimètres par an."),
-    q({ T: 25, C: 117 }, 3, "Jamais chauffée au-delà d'une trentaine de degrés, l'opale n'a pas recristallisé : les frustules restent intacts et la roche, pleine de vides, est très légère (15–2 Ma)."),
+    q({ T: 15, C: 20 }, 1, "Les diatomées, qui tirent leur silice de roches volcaniques, bâtissent dans les lacs de cratère du Massif central (≈ 20 mg/L) leur coque d'opale (frustule)."),
+    q({ T: 12, C: 90 }, 2, "Une fois mortes, les coques tombent au fond ; une partie se dissout dans l'eau des pores jusqu'à saturer en opale (≈ 90 mg/L), et des lits blancs se forment, de quelques millimètres par an."),
+    q({ T: 25, C: 117 }, 3, "N'ayant jamais dépassé une trentaine de degrés, l'opale n'a pas recristallisé : les frustules demeurent intacts, et la roche, criblée de vides, est très légère (de 15 à 2 Ma)."),
   ] };
   COND.gaize = { type: "silice", chemin: [
-    q({ T: 14, C: 0.5 }, 1, "Sur le fond de la mer albienne (113–100,5 Ma), les éponges fabriquent des spicules d'opale ; argile et grains verts de glauconie s'y mêlent."),
-    q({ T: 16, C: 98 }, 2, "Spicules, sable fin, argile et glauconie s'accumulent en un sable argileux ; dans l'eau des pores, une partie des spicules se dissout jusqu'à la saturation de l'opale."),
+    q({ T: 14, C: 0.5 }, 1, "Des éponges édifient des spicules d'opale sur le fond de la mer albienne (de 113 à 100,5 Ma), où se mêlent argile et grains verts de glauconie."),
+    q({ T: 16, C: 98 }, 2, "Un sable argileux se forme par accumulation de spicules, de sable fin, d'argile et de glauconie ; dans l'eau des pores, une part des spicules se dissout jusqu'à saturation de l'opale."),
     q({ T: 38, C: 145 }),
-    q({ T: 40, C: 80 }, 3, "Enfouie sous les craies du Crétacé supérieur, vers 40 °C, la silice se redépose en opale-CT entre les grains : elle les soude sans combler les vides."),
-    q({ T: 40, C: 80 }, 4, "Une roche légère et poreuse, dure pourtant, dont on a bâti les villages d'Argonne."),
+    q({ T: 40, C: 80 }, 3, "Sous les craies du Crétacé supérieur, vers 40 °C, la silice se redépose en opale-CT entre les grains, qui se soudent sans que les vides soient comblés."),
+    q({ T: 40, C: 80 }, 4, "Légère et poreuse, cette roche n'en est pas moins dure : c'est avec elle qu'on a bâti les villages d'Argonne."),
   ] };
   COND.meuliere = { type: "silice", xlab: "Température de l'eau (°C)", chemin: [
-    q({ T: 18, C: 5 }, 1, "À l'Oligocène (≈ 30 Ma), des lacs déposent les calcaires de Brie et de Beauce ; leur eau contient peu de silice."),
+    q({ T: 18, C: 5 }, 1, "Les calcaires de Brie et de Beauce sont déposés à l'Oligocène (≈ 30 Ma) par des lacs à eau pauvre en silice."),
     q({ T: 22, C: 110 }),
-    q({ T: 22, C: 20 }, 2, "Quand les lacs s'assèchent, l'altération des argiles libère de la silice : l'eau atteint la saturation de l'opale, puis opale et calcédoine remplacent peu à peu le calcaire (34–15 Ma) ; le calcaire restant se dissout et la meulière devient caverneuse.", { bande: "silicification" }),
+    q({ T: 22, C: 20 }, 2, "Lorsque les lacs s'assèchent, l'altération des argiles libère de la silice : l'eau atteint la saturation en opale, puis opale et calcédoine substituent peu à peu le calcaire (de 34 à 15 Ma) ; le calcaire résiduel se dissout et la meulière prend un aspect caverneux.", { bande: "silicification" }),
   ] };
   // ── calcite ──
   COND.travertin = { type: "calcite", chemin: [
     q({ pco2: 0.03, Ca: 12 }, 0, "", { lab: "eau de pluie" }),
-    q({ pco2: 0.03, Ca: 125 }, 1, "L'eau de pluie traverse le sol, où racines et microbes l'enrichissent en CO₂ (≈ 3 % de l'air du sol) : elle dissout le calcaire jusqu'à l'équilibre, ≈ 125 mg de calcium par litre à 10 °C."),
+    q({ pco2: 0.03, Ca: 125 }, 1, "Au sein du sol, racines et microbes enrichissent l'eau de pluie en CO₂ (≈ 3 % de l'air du sol) ; celle-ci dissout le calcaire jusqu'à l'équilibre, soit ≈ 125 mg de calcium par litre à 10 °C."),
     q({ pco2: 0.0004, Ca: 125 }),
-    q({ pco2: 0.0004, Ca: 45 }, 2, "À la source et dans les cascades, le CO₂ s'échappe vers l'air (0,04 %) : l'eau porte alors 4 à 5 fois plus de calcium que l'équilibre ; la calcite précipite sur les mousses jusqu'à ce que l'eau se rapproche de l'équilibre."),
-    q({ pco2: 0.0004, Ca: 45 }, 3, "Lit après lit, la calcite enrobe mousses et brindilles, qui pourrissent en laissant des vides : une roche litée et poreuse (cascades pétrifiantes d'Auvergne et du Jura)."),
+    q({ pco2: 0.0004, Ca: 45 }, 2, "À la source et dans les cascades, le CO₂ se dégage vers l'air (0,04 %) : l'eau contient alors 4 à 5 fois plus de calcium que l'équilibre ne le permet, et la calcite précipite sur les mousses jusqu'à un retour vers l'équilibre."),
+    q({ pco2: 0.0004, Ca: 45 }, 3, "Une roche litée et poreuse se forme lorsque la calcite enrobe mousses et brindilles, lit après lit, et que celles-ci pourrissent en laissant des vides (cascades pétrifiantes du Jura)."),
   ] };
   COND.calcrete = { type: "calcite", chemin: [
     q({ pco2: 0.03, Ca: 125 }, 0, "", { lab: "eau du sol" }),
     q({ pco2: 0.03, Ca: 250 }),
-    q({ pco2: 0.005, Ca: 70 }, 1, "Sous un climat à saison sèche marquée (moins de 760 mm de pluie par an), l'eau du sol remonte et s'évapore : son calcium dépasse l'équilibre ; près de la surface, elle perd aussi son CO₂ : la calcite précipite en nodules."),
-    q({}, 2, "Au fil des dizaines de milliers d'années, les nodules grossissent et se soudent en dalle (Pléistocène, 2,6 Ma – 11 700 ans)."),
-    q({}, 3, "Une croûte dure de quelques décimètres à quelques mètres : nodules de calcite soudés dans une calcite fine, avec des grains de sable (Costières de Nîmes, Crau)."),
+    q({ pco2: 0.005, Ca: 70 }, 1, "Dans un climat à saison sèche marquée (moins de 760 mm de pluie par an), la pluie dissout le calcaire près de la surface ; plus bas, l'eau perd son CO₂ et les racines la pompent : son calcium dépasse l'équilibre et la calcite précipite en nodules. Près d'une nappe, l'eau qui remonte par capillarité en dépose aussi."),
+    q({}, 2, "Pendant des dizaines de milliers d'années, les nodules grandissent et s'agglomèrent en une dalle (Pléistocène, de 2,6 Ma à 11 700 ans)."),
+    q({}, 3, "Croûte dure de quelques décimètres à quelques mètres, faite de nodules de calcite liés par une calcite fine et de grains de sable (Costières de Nîmes, Crau)."),
   ] };
   COND.breche_sedimentaire = { type: "calcite", chemin: [
-    q({}, 1, "Une couche de calcaire se plisse et se soulève ; de ses falaises tombent des blocs qui ne roulent que sur quelques centaines de mètres : ils restent anguleux et s'entassent sans tri (fin du Crétacé)."),
+    q({}, 1, "Une couche de calcaire se plisse et se soulève ; des blocs tombent de ses falaises et ne roulent que sur quelques centaines de mètres : anguleux, ils s'entassent sans classement (fin du Crétacé)."),
     q({ pco2: 0.03, Ca: 125 }, 0, "", { lab: "eau d'infiltration" }),
     q({ pco2: 0.001, Ca: 125 }),
-    q({ pco2: 0.001, Ca: 40 }, 2, "L'eau de pluie, chargée de calcaire dissous (≈ 125 mg de calcium par litre) et d'argile rouge, s'infiltre dans l'éboulis ; dans ses vides, elle perd son CO₂ et devient sursaturée : la calcite précipite et soude les blocs. L'éboulis meuble devient une roche : la brèche."),
-    q({}, 3, "Sciée et polie, la brèche du Tholonet montre ses fragments anguleux dans une boue rouge durcie : le « marbre » du Tholonet."),
+    q({ pco2: 0.001, Ca: 40 }, 2, "L'éboulis devient une roche, la brèche, lorsque l'eau de pluie, chargée de calcaire dissous (≈ 125 mg de calcium par litre) et d'argile rouge, s'infiltre dans ses vides, y perd son CO₂ et devient sursaturée : la calcite précipite et soude les blocs."),
+    q({}, 3, "Polie après sciage, la brèche du Tholonet révèle des fragments anguleux dans une boue rouge durcie : c'est le « marbre » du Tholonet."),
   ] };
   // ── apatite ──
   COND.phosphorite = { type: "apatite", chemin: [
-    q({}, 1, "L'eau de pluie, acidifiée par le CO₂ du sol, dissout le calcaire et creuse poches et conduits (karst, dès le Lutétien, ≈ 45 Ma)."),
-    q({ pH: 4.5, P: 100 }, 2, "Les poches se remplissent d'argiles et de restes de vertébrés ; l'eau qui traverse le guano des chauves-souris devient acide (pH ≈ 4–5) et se charge de phosphate, des dizaines à des centaines de mg par litre, sans rien précipiter."),
+    q({}, 1, "Creusant poches et conduits, l'eau de pluie, rendue acide par le CO₂ du sol, dissout le calcaire (karst, dès le Lutétien, ≈ 45 Ma)."),
+    q({ pH: 4.5, P: 100 }, 2, "Des argiles et des restes de vertébrés comblent les poches ; l'eau qui percole à travers le guano de chauves-souris s'acidifie (pH ≈ 4 à 5) et entraîne des phosphates, à raison de quelques dizaines à quelques centaines de mg par litre, sans précipitation."),
     ...[5, 5.5, 6, 6.5, 7].map((ph) => q({ pH: ph, P: Math.min(100, 1.4 * Papatite(ph)) })),
-    q({ pH: 7.5, P: 0.0007 }, 3, "Au contact du calcaire, cette eau se neutralise : dès pH ≈ 5, elle devient sursaturée et l'apatite précipite ; à pH 7,5, il ne reste presque plus de phosphate dissous : nodules et croûtes de phosphorite (42–27 Ma)."),
-    q({}, 4, "Grains phosphatés, os et dents de mammifères dans un ciment de calcite : exploitée comme engrais au XIXᵉ siècle, elle a livré des milliers de fossiles (Quercy)."),
+    q({ pH: 7.5, P: 0.0007 }, 3, "Au contact du calcaire, l'eau se neutralise : à partir de pH ≈ 5, elle est sursaturée et l'apatite précipite ; vers pH 7,5, les phosphates dissous sont presque épuisés, d'où la formation de nodules et de croûtes de phosphorite (de 42 à 23 Ma)."),
+    q({}, 4, "Un ciment de calcite emprisonne des grains phosphatés, des os et des dents de mammifères : roche exploitée comme engrais au XIXᵉ siècle, qui a livré des milliers de fossiles (Quercy)."),
   ] };
   // ── fer ──
   COND.roche_ferrifere = { type: "ehph", systeme: "fer", chemin: [
     q({ pH: 6.5, Eh: -0.3 }, 0, "", { lab: "fer dissous" }),
-    q({ pH: 8, Eh: 0.45 }, 1, "Dans l'océan sans oxygène de l'Archéen, le fer reste dissous (Fe²⁺) ; les courants le remontent vers les plateaux, où l'oxygène produit par les cyanobactéries l'oxyde : les oxydes de fer, insolubles, précipitent (vers 2 500 Ma)."),
-    q({ pH: 8, Eh: -0.3 }, 2, "Selon l'explication la plus répandue, quand l'oxygène manque, le fer reste dissous et seule la silice se dépose ; quand il revient, un nouveau lit d'oxydes de fer précipite : lits de fer et de silice alternent, ce sont les fers rubanés (3 800–1 800 Ma)."),
-    q({}, 3, "En France, la roche ferrifère la plus exploitée s'est formée autrement : la minette de Lorraine, oolithes de fer déposées dans une mer peu profonde et oxygénée du Jurassique (Aalénien, vers 175 Ma)."),
+    q({ pH: 8, Eh: 0.45 }, 1, "Archéen : dans un océan privé d'oxygène, le fer demeure dissous (Fe²⁺). Transporté vers les plateaux par les courants, il s'oxyde au contact de l'oxygène issu des cyanobactéries, et les oxydes insolubles qui en résultent précipitent (vers 2 500 Ma)."),
+    q({ pH: 8, Eh: -0.3 }, 2, "D'après l'explication la plus répandue, en l'absence d'oxygène le fer reste dissous et seule la silice se dépose ; quand l'oxygène revient, un nouveau lit d'oxydes de fer précipite. Ces alternances de lits de fer et de silice forment les fers rubanés (de 3 800 à 1 800 Ma)."),
+    q({}, 3, "La roche ferrifère la plus exploitée en France, la minette lorraine, s'est formée autrement : des oolithes ferrugineuses se sont déposées dans une mer peu profonde et oxygénée du Jurassique (Aalénien, vers 175 Ma)."),
   ] };
   // ── carbonates marins : ion carbonate et saturation ──
   COND.craie = { type: "mer", chemin: [
-    q({ z: 20 }, 1, "Loin des côtes, l'eau de surface d'une mer chaude porte environ cinq fois plus d'ion carbonate que la saturation : des algues microscopiques (coccolithophoridés) en font de minuscules plaques de calcite (Cénomanien–Campanien, 100,5–72,2 Ma)."),
+    q({ z: 20 }, 1, "Au large, l'eau de surface d'une mer chaude présente un excès d'ion carbonate, environ cinq fois la saturation ; des coccolithophoridés, algues microscopiques, en tirent de minuscules plaques de calcite (du Cénomanien au Campanien, de 100,5 à 72,2 Ma)."),
     q({ z: 50 }), q({ z: 100 }),
-    q({ z: 150 }, 2, "À leur mort, les plaques tombent au fond, entre 50 et 300 m : l'eau y reste largement sursaturée, rien ne se dissout ; une boue blanche presque pure s'accumule, ≈ 30 m par million d'années, et la silice des éponges s'y regroupe en rognons de silex."),
-    q({}, 3, "Restée peu enfouie (quelques centaines de mètres), la craie n'est presque pas cimentée : elle garde jusqu'à 40 % de vides."),
-    q({}, 4, "Au microscope : des coccolithes par milliards, quelques coquilles de foraminifères, presque pas de ciment ; une roche blanche, tendre et poreuse."),
-    q({}, 5, "La mer de la craie s'est retirée, la région s'est soulevée et l'érosion a dégagé la craie ; la Manche en sape le pied : falaises, arche et aiguille d'Étretat."),
+    q({ z: 150 }, 2, "À leur mort, ces plaques sédimentent entre 50 et 300 m de profondeur ; l'eau reste sursaturée et rien ne se dissout. Il s'y dépose une boue blanche presque pure (≈ 30 m par million d'années), dont la silice apportée par les éponges se regroupe en rognons de silex."),
+    q({}, 3, "Peu enfouie (quelques centaines de mètres), la craie est à peine cimentée : elle conserve jusqu'à 40 % de vides."),
+    q({}, 4, "À l'examen microscopique, on distingue des coccolithes par milliards, quelques coquilles de foraminifères et presque aucun ciment ; la roche est blanche, tendre et poreuse."),
+    q({}, 5, "Après le retrait de la mer de la craie et le soulèvement de la région, l'érosion a dégagé la craie ; la Manche en ronge désormais le pied, façonnant falaises, arche et aiguille d'Étretat."),
   ] };
   COND.tuffeau = { type: "mer", chemin: [
-    q({ z: 10 }, 1, "Au Turonien (93,9–89,8 Ma), une mer peu profonde couvre la Touraine : sursaturée en calcite, son eau nourrit coquillages, bryozoaires et éponges ; les rivières y apportent sable fin et micas."),
-    q({ z: 60 }, 2, "Débris de coquilles, spicules d'éponges, sable fin, micas et grains verts de glauconie s'accumulent ensemble sur la plate-forme : le mélange ne contient qu'environ 50 % de calcite."),
-    q({}, 3, "Peu enfoui (quelques centaines de mètres), le tuffeau n'est que faiblement soudé."),
-    q({}, 4, "Un peu de calcite et d'opale soude à peine les grains : une pierre légère et tendre, facile à tailler, la pierre des châteaux de la Loire."),
+    q({ z: 10 }, 1, "Au Turonien (de 93,9 à 89,8 Ma), la Touraine est couverte par une mer peu profonde, sursaturée en calcite ; coquillages, bryozoaires et éponges y prospèrent, et les rivières y charrient sable fin et micas."),
+    q({ z: 60 }, 2, "Sur la plate-forme s'accumulent ensemble débris de coquilles, spicules d'éponges, sable fin, micas et grains verts de glauconie : le mélange ne compte qu'environ 50 % de calcite."),
+    q({}, 3, "Enfoui sur quelques centaines de mètres seulement, le tuffeau reste faiblement cimenté."),
+    q({}, 4, "Calcite et opale ne font qu'effleurer la cohésion des grains : pierre légère et tendre, aisée à tailler, celle des châteaux de la Loire."),
   ] };
   COND.falun = { type: "mer", chemin: [
-    q({ z: 5 }, 1, "Au Miocène (20–10 Ma), une mer chaude et très peu profonde relie la Bretagne au Bassin parisien : son eau, très sursaturée en calcite, nourrit coquillages, bryozoaires et oursins ; des requins y chassent."),
-    q({ z: 15 }, 2, "Vagues et courants de marée brisent les coquilles et trient les débris : ils s'accumulent en bancs de sable coquillier, de quelques mètres par million d'années."),
-    q({}, 3, "Recouvert seulement de sables et de limons récents, le falun n'a jamais été assez enfoui pour se cimenter : il reste meuble."),
-    q({}, 4, "Un sable de coquilles brisées : on l'épandait sur les champs (le « falunage ») ; on y trouve des dents de requins."),
+    q({ z: 5 }, 1, "Au Miocène (de 20 à 10 Ma), une mer chaude et très peu profonde relie la Bretagne au Bassin parisien. Très sursaturée en calcite, cette eau fait prospérer coquillages, bryozoaires et oursins, et les requins viennent y chasser."),
+    q({ z: 15 }, 2, "Les vagues et les courants de marée fragmentent les coquilles et trient les débris ; ceux-ci forment des bancs de sable coquillier, à raison de quelques mètres par million d'années."),
+    q({}, 3, "Peu enfoui, le falun est souvent resté meuble ; par endroits (Anjou), un ciment de calcite déposé près de la surface en a fait un grès coquillier assez solide pour y creuser des caves."),
+    q({}, 4, "Sable de coquilles brisées, épandu jadis sur les champs (c'est le « falunage ») ; on en extrait aussi des dents de requins."),
   ] };
   COND.marne = { type: "mer", chemin: [
-    q({}, 1, "Sur les terres voisines, l'eau altère les roches : les rivières apportent à la mer des argiles très fines (Jurassique, ≈ 162 Ma)."),
+    q({}, 1, "Sur les terres voisines, l'altération de la roche par l'eau libère des argiles très fines, que les rivières conduisent à la mer (Jurassique, ≈ 162 Ma)."),
     q({ z: 15 }, 0, "", { lab: "plancton" }),
     q({ z: 60 }),
-    q({ z: 150 }, 2, "Au large, en eau calme, l'argile décante pendant que les plaques de calcite du plancton, fabriquées en surface dans une eau sursaturée, tombent au fond : les deux se déposent ensemble, 35 à 65 % de calcite."),
-    q({}, 3, "L'enfouissement tasse la boue et chasse l'eau : elle durcit en marne (160–100 Ma)."),
-    q({}, 4, "Des lits un peu plus calcaires alternent avec des lits un peu plus argileux : une roche tendre, qui se délite à l'air (badlands des Terres Noires)."),
+    q({ z: 150 }, 2, "Au large et en eau calme, argile et plaques de calcite du plancton se déposent ensemble : les plaques, fabriquées en surface dans une eau sursaturée, tombent au fond. La roche contient 35 à 65 % de calcite."),
+    q({}, 3, "L'enfouissement comprime la boue et en expulse l'eau : elle se durcit en marne (de 160 à 100 Ma)."),
+    q({}, 4, "Une roche tendre, qui se délite à l'air (badlands des Terres Noires), alterne des lits un peu plus calcaires avec des lits un peu plus argileux."),
   ] };
   // ── enfouissement ──
   const E = (tmax, zmax, seuils, chemin, o) => Object.assign({ type: "enfouissement", tmax, zmax, seuils, chemin }, o || {});
   COND.calcaire = E(175, 2, [], [
-    q({ age: 167, z: 0 }, 1, "Dans une mer chaude et peu profonde, sursaturée en calcite, coquillages, coraux et algues bâtissent leur squelette (168–166 Ma)."),
-    q({ age: 163, z: 0.05 }, 2, "À leur mort, leurs débris et la boue calcaire couvrent le fond, sur quelques dizaines de mètres (Bathonien)."),
-    q({ age: 100, z: 1.5 }, 3, "Enfouie sous d'autres couches, la boue se tasse ; la calcite la cimente très tôt, dès les premières centaines de mètres : elle devient calcaire (163–100 Ma).", { bande: "cimentation par la calcite" }),
-    q({ age: 40, z: 0.05 }, 4, "La mer se retire et le continent se soulève : l'érosion enlève les couches du dessus et le calcaire revient à l'air libre (100–40 Ma)."),
-    q({ age: 0, z: 0 }, 5, "L'eau de pluie chargée de CO₂ le dissout le long des fissures : lapiaz, pertes, galeries et grottes (depuis 40 Ma)."),
+    q({ age: 167, z: 0 }, 1, "Coquillages, coraux et algues élaborent leur squelette (de 168 à 166 Ma) dans une mer chaude et peu profonde, sursaturée en calcite."),
+    q({ age: 163, z: 0.05 }, 2, "Une fois morts, leurs débris et la boue calcaire recouvrent le fond sur quelques dizaines de mètres (Bathonien)."),
+    q({ age: 72, z: 1.5 }, 3, "Sous d'autres couches (Crétacé inférieur, puis craie du Crétacé supérieur), la boue se compacte ; la calcite, qui la cimente dès les premières centaines de mètres, en fait un calcaire (de 163 à 72 Ma).", { bande: "cimentation par la calcite" }),
+    q({ age: 40, z: 0.05 }, 4, "La mer de la craie se retire à la fin du Crétacé ; au Cénozoïque, les bordures du Bassin parisien (Bourgogne, Lorraine, Normandie) se soulèvent, l'érosion ôte les couches supérieures et le calcaire se retrouve à l'air libre (de 72 à 40 Ma)."),
+    q({ age: 0, z: 0 }, 5, "Lapiaz, pertes, galeries et grottes naissent quand l'eau de pluie chargée de CO₂ attaque le calcaire le long des fissures (depuis 40 Ma)."),
   ], { src: ["plummer"] });
   COND.gres = E(490, 4, ["quartz"], [
-    q({}, 1, "Un vieux massif s'altère et s'érode : les feldspaths et les micas se changent en argiles, le quartz résiste (vers 480 Ma)."),
-    q({}, 2, "Les rivières emportent les grains vers la mer : ils s'arrondissent et se trient en chemin."),
-    q({ age: 470, z: 0.05 }, 3, "Le sable armoricain se dépose sur une plateforme marine peu profonde, à l'Ordovicien (478–470 Ma)."),
-    q({ age: 400, z: 2.0 }, 4, "D'autres couches le recouvrent (≈ 30 m par million d'années) : enfoui vers 2 km, il se tasse ; ses vides passent de ≈ 40 % à ≈ 26 %."),
-    q({ age: 330, z: 2.6 }, 5, "Au-delà de ≈ 70–80 °C, du quartz précipite autour des grains et les soude, pendant des dizaines de millions d'années : le sable devient grès.", { bande: "cimentation par le quartz" }),
-    q({ age: 300, z: 2.8 }, 6, "La collision hercynienne raccourcit et plisse la série (320–300 Ma) ; la croûte épaissie se soulève (isostasie) : le fond de la mer passe au-dessus du niveau de l'eau et la mer se retire."),
+    q({}, 1, "Un vieux massif s'altère et se dégrade : feldspaths et micas se transforment en argiles, tandis que le quartz persiste (vers 480 Ma)."),
+    q({}, 2, "Les rivières entraînent les grains vers la mer : en chemin, ils s'arrondissent et se classent."),
+    q({ age: 470, z: 0.05 }, 3, "À l'Ordovicien (de 478 à 470 Ma), le sable armoricain se dépose sur une plate-forme marine peu profonde."),
+    q({ age: 400, z: 2.0 }, 4, "Enfoui vers 2 km sous d'autres couches (≈ 30 m par million d'années), le sable se compacte : ses vides tombent de ≈ 40 % à ≈ 26 %."),
+    q({ age: 330, z: 2.6 }, 5, "Pendant des dizaines de millions d'années, au-delà de ≈ 70 à 80 °C, le quartz se dépose autour des grains et les soude : le sable se change en grès.", { bande: "cimentation par le quartz" }),
+    q({ age: 300, z: 2.8 }, 6, "Raccourcie et plissée par la collision hercynienne (de 320 à 300 Ma), la série voit sa croûte épaissie se soulever par isostasie ; le fond de la mer émerge alors au-dessus du niveau de l'eau, et la mer se retire."),
     q({ age: 270, z: 0.3 }),
-    q({ age: 0, z: 0 }, 7, "L'érosion rabote la chaîne ; allégée, la croûte remonte (isostasie) : le grès affleure et, plus dur que les roches voisines, reste en crêtes (Crozon, monts d'Arrée)."),
-    q({}, 0, "Le grès de Fontainebleau, lui, a été cimenté près de la surface par des eaux chargées de silice."),
+    q({ age: 0, z: 0 }, 7, "Rabotée par l'érosion, la chaîne laisse la croûte, allégée, remonter par isostasie ; le grès affleure et, plus dur que les roches voisines, subsiste en crêtes (Crozon, monts d'Arrée)."),
+    q({}, 0, "Près de la surface, des eaux chargées de silice ont cimenté le grès de Fontainebleau."),
   ], { labDroite: true, src: ["paxton", "thiry"] });
   COND.conglomerat = E(9, 0.5, [], [
     q({ age: 8, z: 0 }),
-    q({ age: 5, z: 0 }, 1, "Les Alpes avancent et se soulèvent ; torrents et rivières roulent les blocs, qui s'arrondissent, et les étalent en cônes au pied de la chaîne (8–5 Ma)."),
-    q({ age: 2.5, z: 0.3 }, 2, "Le bassin s'enfonce le long de la faille de la Durance : de nouveaux cônes recouvrent nos galets, enfouis peu à peu sous ≈ 350 m de dépôts."),
-    q({ age: 1.8, z: 0.35 }, 3, "L'eau qui circule entre les galets, vers 20 °C, dépose un ciment de calcite dans le sable qui les entoure : les vides se comblent, le gravier devient poudingue.", { bande: "cimentation par la calcite" }),
-    q({ age: 0, z: 0 }, 4, "La sédimentation cesse ; la Durance creuse le plateau de 400 m et le ruissellement découpe le poudingue en colonnes : les Pénitents des Mées (depuis 1,8 Ma)."),
+    q({ age: 5, z: 0 }, 1, "Les Alpes s'élèvent : torrents et rivières façonnent des blocs arrondis, puis les étalent en cônes au pied de la chaîne (de 8 à 5 Ma)."),
+    q({ age: 2.5, z: 0.3 }, 2, "Au fil du jeu de la faille de la Durance, le bassin s'affaisse : de nouveaux cônes ensevelissent nos galets sous ≈ 350 m de dépôts."),
+    q({ age: 1.8, z: 0.35 }, 3, "Vers 20 °C, l'eau qui circule entre les galets précipite de la calcite dans le sable environnant ; les vides se comblent et le gravier se mue en poudingue.", { bande: "cimentation par la calcite" }),
+    q({ age: 0, z: 0 }, 4, "La sédimentation prend fin ; la Durance entaille le plateau sur 400 m, et le ruissellement sculpte le poudingue en colonnes : ce sont les Pénitents des Mées (depuis 1,8 Ma)."),
   ], { src: ["valensole"] });
   COND.arkose = E(310, 3, ["quartz"], [
-    q({ age: 290, z: 0 }, 1, "La chaîne hercynienne s'étire : des bassins s'effondrent le long de failles ; sous un climat sec, de rares orages arrachent au granite voisin sables et graviers, qui restent anguleux et gardent leurs feldspaths (300–290 Ma)."),
-    q({ age: 230, z: 1.8 }, 2, "D'autres dépôts les recouvrent (grès rouges du Permien, grès et argiles du Trias) : enfouis vers 1,8 km (≈ 60 °C), ils se tassent."),
-    q({ age: 150, z: 1.8 }, 3, "Vers 60 °C, des argiles et un peu de silice se déposent entre les grains et les soudent : le sable devient arkose, sans atteindre les 70–80 °C où le quartz cimenterait vraiment.", { bande: "cimentation" }),
-    q({ age: 0, z: 0 }, 4, "La région se soulève et l'érosion enlève, pendant des dizaines de millions d'années, les couches du dessus : l'arkose affleure en bordure du Massif central."),
+    q({ age: 290, z: 0 }, 1, "Dans une chaîne hercynienne en extension, des bassins s'effondrent le long de failles ; par climat sec, quelques orages arrachent sables et graviers au granite voisin : anguleux, les grains conservent leurs feldspaths (de 300 à 290 Ma)."),
+    q({ age: 230, z: 1.8 }, 2, "Enfouis vers 1,8 km (≈ 60 °C) sous d'autres dépôts (grès rouges du Permien, grès et argiles du Trias), ils se compactent."),
+    q({ age: 150, z: 1.8 }, 3, "Vers 60 °C, argiles et silice en faible quantité se déposent entre les grains et les soudent : le sable devient arkose, sans atteindre les 70 à 80 °C qui permettraient au quartz de vraiment cimenter.", { bande: "cimentation" }),
+    q({ age: 0, z: 0 }, 4, "Pendant des dizaines de millions d'années, la région se soulève et l'érosion ôte les couches supérieures : l'arkose affleure en bordure du Massif central."),
   ]);
-  COND.grauwacke = E(490, 8, ["quartz", "anchizone"], [
-    q({ age: 480, z: 0 }, 1, "Au bord d'un bassin marin profond, un séisme fait dévaler la pente à sable et boue : une avalanche sous-marine (courant de turbidité) dépose un banc mal trié (vers 480 Ma)."),
-    q({ age: 460, z: 0.8 }, 2, "Des centaines de bancs granoclassés, pleins de matrice argileuse, s'empilent au fond du bassin (480–460 Ma)."),
-    q({ age: 350, z: 7 }, 3, "Enfouis à 6–7 km, les bancs se tassent ; vers 200–300 °C, la boue entre les grains se change en chlorite et en mica : c'est le très faible métamorphisme (460–350 Ma)."),
+  COND.grauwacke = E(575, 8, ["quartz", "anchizone"], [
+    q({ age: 560, z: 0 }, 1, "Un séisme, au bord d'un bassin marin profond, déclenche une avalanche sous-marine à sable et boue (courant de turbidité) qui dépose un banc mal classé (Briovérien, vers 560 Ma)."),
+    q({ age: 540, z: 0.8 }, 2, "Au fond du bassin s'empilent des centaines de bancs granoclassés, riches en matrice argileuse (de 560 à 540 Ma)."),
+    q({ age: 350, z: 7 }, 3, "À 200 à 300 °C, la boue entre les grains, enfouie entre 6 et 7 km sous les dépôts du Paléozoïque, se mue en chlorite et en mica, tandis que les bancs se compactent : très faible métamorphisme (de 540 à 350 Ma)."),
     q({ age: 280, z: 1 }),
-    q({ age: 0, z: 0 }, 4, "La collision hercynienne plisse et soulève la série ; l'érosion rabote la chaîne et la grauwacke finit par affleurer."),
-    q({ age: 0, z: 0 }, 5, "Un grès sombre et mal trié : des grains anguleux de quartz et de feldspath noyés dans une matrice verte d'argile et de chlorite."),
+    q({ age: 0, z: 0 }, 4, "La collision hercynienne plisse et soulève la série ; rabotée par l'érosion, la chaîne finit par exposer la grauwacke."),
+    q({ age: 0, z: 0 }, 5, "Mal classé et sombre, ce grès présente des grains anguleux de quartz et de feldspath noyés dans une matrice verte d'argile et de chlorite."),
   ], { src: ["heezen"] });
   COND.siltite = E(510, 6, ["quartz", "anchizone"], [
-    q({}, 1, "Sur un vieux massif, l'eau altère les roches : grains fins de quartz, paillettes de mica et argiles partent avec les rivières (vers 500 Ma)."),
-    q({ age: 466, z: 0.05 }, 2, "Plus loin que le sable, en eau plus calme, les limons se déposent en lits fins : un grain de 20 µm met ≈ 47 minutes à tomber d'un mètre d'eau calme (vers 470 Ma)."),
-    q({ age: 350, z: 4.5 }, 3, "D'autres couches les recouvrent sur plusieurs kilomètres : tassés et cimentés, les limons deviennent une roche dure, la siltite (466–350 Ma)."),
+    q({}, 1, "Sur un vieux massif, l'altération envoie dans les rivières grains fins de quartz, paillettes de mica et argiles (vers 500 Ma)."),
+    q({ age: 466, z: 0.05 }, 2, "Au-delà du sable, en eau plus calme, les limons forment des lits fins : un grain de 20 µm met ≈ 47 minutes à tomber d'un mètre d'eau calme (vers 470 Ma)."),
+    q({ age: 350, z: 4.5 }, 3, "Recouverts sur plusieurs kilomètres par d'autres couches, les limons, tassés et cimentés, deviennent une roche dure, la siltite (de 466 à 350 Ma)."),
     q({ age: 270, z: 0.5 }),
-    q({ age: 0, z: 0 }, 4, "La collision hercynienne plisse et soulève la série ; l'érosion rabote la chaîne et la siltite finit par affleurer."),
-    q({ age: 0, z: 0 }, 5, "Des lits de limon et d'argile, fins comme du papier, cimentés : une roche dure qui se débite en plaquettes."),
+    q({ age: 0, z: 0 }, 4, "La collision hercynienne plisse et soulève la série ; l'érosion ronge la chaîne jusqu'à faire affleurer la siltite."),
+    q({ age: 0, z: 0 }, 5, "Plaquettes : des lits de limon et d'argile, fins comme du papier, cimentés, forment une roche dure."),
   ], { src: ["ferguson"] });
   COND.molasse = E(32, 2.5, ["quartz"], [
-    q({ age: 20, z: 0 }, 1, "Les Alpes avancent et se soulèvent ; les orages les érodent et les rivières étalent sables et galets au pied de la chaîne (30–20 Ma)."),
-    q({ age: 10, z: 1.3 }, 2, "La chaîne pèse sur la plaque, qui fléchit : le bassin s'enfonce, surtout près de la chaîne, et continue de se remplir ; nos sables s'enfouissent sous ≈ 1,5 km de débris (20–8 Ma)."),
-    q({ age: 8, z: 1.5 }, 3, "Enfouie à 1,5 km (≈ 55 °C), la molasse n'est que partiellement cimentée par la calcite : un grès tendre, facile à tailler ; elle n'a pas atteint les 70–80 °C où le quartz soude les grains.", { bande: "cimentation partielle" }),
-    q({ age: 0, z: 0 }, 4, "Le bassin cesse de se remplir ; les rivières (Isère, Rhône) creusent et la molasse affleure sur les flancs des vallées (depuis 8 Ma)."),
+    q({ age: 20, z: 0 }, 1, "Au pied de la chaîne, les Alpes s'élevant, les orages les érodent et les rivières étalent sables et galets (de 30 à 20 Ma)."),
+    q({ age: 10, z: 1.3 }, 2, "Sous le poids de la chaîne, la plaque fléchit : le bassin s'enfonce, surtout près de la chaîne, et se remplit sans cesse ; nos sables sont enfouis sous ≈ 1,5 km de débris (de 20 à 8 Ma)."),
+    q({ age: 8, z: 1.5 }, 3, "À 1,5 km (≈ 55 °C), la molasse n'est que partiellement cimentée par la calcite : c'est un grès tendre, facile à tailler, qui n'a pas atteint les 70 à 80 °C nécessaires à la soudure des grains par le quartz.", { bande: "cimentation partielle" }),
+    q({ age: 0, z: 0 }, 4, "Le bassin ne se comble plus ; les rivières (Isère, Rhône) entaillent la vallée et mettent à découvert la molasse sur ses flancs (depuis 8 Ma)."),
   ]);
   COND.flysch = E(95, 6, ["quartz"], [
-    q({ age: 90, z: 0 }, 1, "Au bord d'un océan qui se ferme, un séisme fait dévaler la pente à sable et boue : une avalanche sous-marine dépose un banc de sable (vers 90 Ma)."),
-    q({ age: 70, z: 1.0 }, 2, "Entre deux avalanches, la boue retombe lentement : des centaines d'alternances régulières s'empilent (90–70 Ma)."),
-    q({ age: 35, z: 4 }, 3, "Les alternances s'enfouissent à plusieurs kilomètres au fond du bassin (≈ 130 °C) : le quartz cimente les bancs de grès (70–35 Ma)."),
-    q({ age: 0, z: 0 }, 4, "Prises dans la collision (Alpes, Pyrénées), elles sont plissées et soulevées ; l'érosion les découpe en falaises et en crêtes."),
-    q({ age: 0, z: 0 }, 5, "Des bancs de grès fin, à base nette, alternent avec des lits d'argile ; sur les bancs, des traces de vers en méandres : les Helminthoïdes."),
+    q({ age: 90, z: 0 }, 1, "Quand l'océan se referme, un séisme provoque sur le talus une avalanche sous-marine à sable et boue, qui dépose un banc de sable (vers 90 Ma)."),
+    q({ age: 70, z: 1.0 }, 2, "Dans l'intervalle, la boue se dépose lentement : il s'accumule des centaines de couches alternées et régulières (de 90 à 70 Ma)."),
+    q({ age: 35, z: 4 }, 3, "Enfouies à plusieurs kilomètres au fond du bassin (≈ 130 °C), les alternances voient le quartz cimenter les bancs de grès (de 70 à 35 Ma)."),
+    q({ age: 0, z: 0 }, 4, "Plissées et soulevées par la collision (Alpes, Pyrénées), ces roches sont découpées par l'érosion en falaises et en crêtes."),
+    q({ age: 0, z: 0 }, 5, "Des bancs de grès fin, à base nette, alternent avec des lits d'argile ; des traces de vers en méandres marquent la surface des bancs : ce sont les Helminthoïdes."),
   ], { src: ["heezen"] });
   COND.houille = E(330, 8, ["lignite", "subbitumineux", "houille", "anthracite"], [
-    q({ age: 315, z: 0 }, 1, "Au Carbonifère supérieur (323–299 Ma), d'immenses forêts de fougères arborescentes poussent dans des marécages équatoriaux ; dans l'eau sans oxygène, la tourbe s'accumule."),
-    q({ age: 305, z: 1.5 }, 2, "Les bassins houillers s'enfoncent vite : la tourbe est recouverte, couche après couche, et passe au stade du lignite."),
-    q({ age: 295, z: 4.5 }, 3, "Portée à ≈ 100–200 °C (3 à 6 km), la tourbe perd son eau et ses matières volatiles : houille (Nord, Lorraine, Saint-Étienne)."),
-    q({ age: 295, z: 4.5 }, 4, "Un charbon noir, en lits brillants et mats."),
+    q({ age: 315, z: 0 }, 1, "Au Carbonifère supérieur (de 323 à 299 Ma), d'immenses forêts de lycophytes géants (Lepidodendron, Sigillaria), de calamites et de fougères arborescentes croissent dans des marécages équatoriaux ; dans une eau privée d'oxygène, la tourbe s'accumule."),
+    q({ age: 305, z: 1.5 }, 2, "Les bassins houillers subissent un enfoncement rapide : la tourbe est recouverte couche par couche et atteint le stade du lignite."),
+    q({ age: 295, z: 4.5 }, 3, "Au-delà de ≈ 100 à 200 °C (de 3 à 6 km), la tourbe se déshydrate et perd ses matières volatiles : elle devient houille (Nord, Lorraine, Saint-Étienne)."),
+    q({ age: 295, z: 4.5 }, 4, "Charbon noir, aux lits brillants alternant avec des lits mats."),
     q({ age: 270, z: 1.5 }),
-    q({ age: 0, z: 0.4 }, 5, "La collision hercynienne plisse les bassins ; l'érosion enlève des kilomètres de roches : la houille arrive à quelques centaines de mètres de la surface, où on l'exploite en mine."),
+    q({ age: 0, z: 0.4 }, 5, "Plissés par la collision hercynienne, les bassins sont ensuite dégagés par l'érosion, qui ôte des kilomètres de roches : la houille, à quelques centaines de mètres de la surface, est exploitée en mine."),
   ]);
-  COND.lignite = E(75, 2.5, ["lignite", "subbitumineux"], [
-    q({ age: 72, z: 0 }, 1, "Au Crétacé supérieur (≈ 72 Ma), des forêts marécageuses couvrent des bassins continentaux : la tourbe s'accumule."),
-    q({ age: 60, z: 0.3 }, 2, "La tourbe est recouverte de sédiments (70–60 Ma)."),
-    q({ age: 30, z: 1.2 }, 3, "Restée à moins de ≈ 50 °C (≈ 1,2 km), elle ne dépasse pas le stade du lignite : on y reconnaît encore le bois (60–30 Ma)."),
-    q({ age: 30, z: 1.2 }, 4, "Restée tiède, la tourbe n'a perdu qu'une partie de son eau."),
-    q({ age: 0, z: 0.2 }, 5, "Les plis de la Provence et l'érosion ramènent la couche à quelques centaines de mètres de la surface : on l'a exploitée en mine, à Gardanne, jusqu'en 2003."),
+  COND.lignite = E(80, 2.5, ["lignite", "subbitumineux"], [
+    q({ age: 75, z: 0 }, 1, "Au Campanien (≈ 75 Ma), des forêts marécageuses couvrent le bassin lacustre de Fuveau et Gardanne : la tourbe s'y accumule."),
+    q({ age: 60, z: 0.3 }, 2, "Des sédiments recouvrent la tourbe (de 74 à 60 Ma)."),
+    q({ age: 30, z: 1.2 }, 3, "Restée sous ≈ 50 °C (≈ 1,2 km), elle ne dépasse pas le stade du lignite : le bois y est encore reconnaissable (de 60 à 30 Ma)."),
+    q({ age: 30, z: 1.2 }, 4, "Demeurée tiède, la tourbe n'a perdu qu'un peu de son eau."),
+    q({ age: 0, z: 1.0 }, 5, "Les plis de la Provence et l'érosion ramènent la couche à l'affleurement au sud du bassin, à Fuveau ; elle plonge vers le nord : à Gardanne, on l'exploitait à plus de 1 000 m de profondeur (puits Yvon-Morandat), jusqu'en 2003."),
   ]);
   COND.anthracite = E(330, 8, ["lignite", "subbitumineux", "houille", "anthracite"], [
-    q({ age: 315, z: 0 }, 1, "Forêts houillères du Carbonifère (320–300 Ma) : la tourbe s'accumule."),
-    q({ age: 305, z: 1.5 }, 2, "La tourbe est enfouie sous des kilomètres de sédiments."),
-    q({ age: 290, z: 6.6 }, 3, "Au-delà de ≈ 200 °C (≈ 6,5 km), presque toute la matière volatile est partie : il reste un carbone presque pur."),
-    q({ age: 290, z: 6.6 }, 4, "Un charbon noir et brillant, presque sans matière volatile."),
+    q({ age: 315, z: 0 }, 1, "Des forêts houillères du Carbonifère (de 320 à 300 Ma) accumulent de la tourbe."),
+    q({ age: 305, z: 1.5 }, 2, "Sous des kilomètres de sédiments, la tourbe se trouve enfouie."),
+    q({ age: 290, z: 6.6 }, 3, "Au-delà de ≈ 200 °C (≈ 6,5 km), la matière volatile s'échappe presque entièrement : il subsiste un carbone quasi pur."),
+    q({ age: 290, z: 6.6 }, 4, "Charbon noir et brillant, presque dépourvu de matière volatile."),
     q({ age: 200, z: 3.5 }), q({ age: 30, z: 1.5 }),
-    q({ age: 0, z: 0.3 }, 5, "La formation des Alpes plisse et soulève la série ; l'érosion dégage le charbon, exploité à La Mure jusqu'en 1997."),
+    q({ age: 0, z: 0.3 }, 5, "L'érosion dégage le charbon, exploité à La Mure jusqu'en 1997, après que la formation des Alpes a plissé et soulevé la série."),
   ]);
   COND.schiste_bitumineux = E(190, 5.5, ["huile"], [
-    q({ age: 182, z: 0 }, 1, "Au Toarcien (≈ 182 Ma), le plancton prolifère dans une mer dont le fond manque d'oxygène."),
-    q({ age: 175, z: 0.2 }, 2, "Sans oxygène au fond, la matière organique n'est pas détruite : la boue devient noire et feuilletée, lit après lit."),
-    q({ age: 100, z: 1.6 }, 3, "Restée à moins de ≈ 2 km (≈ 60 °C), la roche n'a pas atteint la fenêtre à pétrole (≈ 100–170 °C) : le kérogène est intact, d'où la distillation nécessaire pour en tirer de l'huile."),
-    q({ age: 0, z: 0 }, 4, "La région se soulève et l'érosion ramène la couche à l'affleurement dans les Causses ; en Lorraine, elle reste sous quelques centaines de mètres."),
+    q({ age: 182, z: 0 }, 1, "Au Toarcien (≈ 182 Ma), le plancton se multiplie dans une mer dont le fond est dépourvu d'oxygène."),
+    q({ age: 175, z: 0.2 }, 2, "En l'absence d'oxygène au fond, la matière organique ne se détruit pas : la boue devient noire et feuilletée, lit après lit."),
+    q({ age: 100, z: 1.6 }, 3, "Ne dépassant pas ≈ 2 km (≈ 60 °C), la roche n'atteint pas la fenêtre à pétrole (≈ 100 à 170 °C) : le kérogène reste intact, et il faut le distiller pour en extraire de l'huile."),
+    q({ age: 0, z: 0 }, 4, "Le soulèvement régional et l'érosion ramènent la couche à l'affleurement dans les Causses et au pied des côtes de Moselle ; sous les plateaux lorrains, elle demeure à quelques centaines de mètres de profondeur."),
   ]);
   // ── courant d'eau (Hjulström) ──
   COND.sable = { type: "courant", autres: [{ pts: [[0.002, 60], [0.002, 0.0004]], lab: "argiles : au large" }], chemin: [
     q({ d: 0.2, v: 150 }, 0, "", { lab: "rivière" }),
-    q({ d: 0.2, v: 60 }, 1, "L'eau altère les roches des terres émergées : les feldspaths deviennent argile, le quartz reste en grains ; les rivières emportent tout vers la mer (vers 34 Ma)."),
-    q({ d: 0.2, v: 1.5 }, 2, "À la côte, le courant faiblit : sous ≈ 2 cm/s, les grains de sable de 0,2 mm tombent au fond et forment des bancs très purs, pendant que les argiles restent en suspension et partent au large (Rupélien, 33,9–27,3 Ma)."),
-    q({}, 3, "Recouvert seulement de quelques dizaines de mètres de calcaires, il n'a jamais été assez enfoui ni chauffé pour se cimenter : il reste meuble."),
-    q({}, 4, "Des grains de quartz arrondis et triés, qui se touchent sans être soudés : l'eau circule librement entre eux (sables de Fontainebleau)."),
+    q({ d: 0.2, v: 60 }, 1, "L'eau altère les roches des terres émergées : les feldspaths se transforment en argile, tandis que le quartz subsiste sous forme de grains ; les rivières entraînent le tout vers la mer (vers 34 Ma)."),
+    q({ d: 0.2, v: 1.5 }, 2, "Sur le littoral, le courant ralentit : sous ≈ 2 cm/s, les grains de sable de 0,2 mm sédimentent et forment des bancs très purs, tandis que les argiles, en suspension, gagnent le large (Rupélien, de 33,9 à 27,3 Ma)."),
+    q({}, 3, "Trop peu enfoui et jamais suffisamment chauffé, il reste meuble, n'ayant été recouvert que de quelques dizaines de mètres de calcaires."),
+    q({}, 4, "Quartz arrondi et trié, le sable de Fontainebleau laisse ses grains se toucher sans se souder : l'eau circule librement entre eux."),
   ] };
   COND.argile = { type: "courant", autres: [{ pts: [[0.2, 60], [0.2, 1.5]], lab: "sable : près du rivage" }], chemin: [
     q({ d: 0.002, v: 60 }, 0, "", { lab: "rivière" }),
-    q({ d: 0.002, v: 20 }, 1, "L'eau de pluie altère les roches des terres émergées : feldspaths et micas se changent en minéraux argileux, plus petits que 2 µm, que les rivières emportent en suspension (vers 56 Ma)."),
-    q({ d: 0.002, v: 0.0004 }, 2, "Une particule de 2 µm met environ 3 jours à tomber d'un mètre d'eau calme (0,0004 cm/s) : l'argile ne se dépose qu'au large, là où l'eau ne bouge plus (Yprésien, 56–48 Ma)."),
-    q({}, 3, "D'autres couches la recouvrent : la boue perd son eau et se tasse, mais, peu enfouie, elle reste une argile tendre."),
-    q({}, 4, "Des lits d'argile très fine, parfois un peu plus silteux : une roche tendre, plastique quand elle est mouillée (argiles des Flandres)."),
+    q({ d: 0.002, v: 20 }, 1, "Sur les terres émergées, l'eau de pluie altère les roches : feldspaths et micas se transforment en minéraux argileux de moins de 2 µm, que les rivières emportent en suspension (vers 56 Ma)."),
+    q({ d: 0.002, v: 0.0004 }, 2, "Il faut environ 3 jours à une particule de 2 µm pour tomber d'un mètre d'eau calme (0,0004 cm/s) ; l'argile reste donc longtemps en suspension et se dépose surtout au large, où l'eau reste immobile ; dans l'eau salée, ses paillettes s'agglomèrent en flocons qui tombent plus vite (Yprésien, de 56 à 48 Ma)."),
+    q({}, 3, "Recouverte par d'autres couches, la boue perd son eau et se compacte ; peu enfouie, elle reste néanmoins une argile tendre."),
+    q({}, 4, "Lits d'argile très fine, parfois un peu plus silteux : roche tendre, plastique à l'état mouillé (argiles des Flandres)."),
   ] };
   COND.alluvions = { type: "courant", autres: [{ pts: [[0.5, 180], [0.5, 5]], lab: "sable" }, { pts: [[0.02, 180], [0.02, 0.02]], lab: "limon" }], chemin: [
     q({ d: 20, v: 250 }, 0, "", { lab: "crue" }),
-    q({ d: 20, v: 180 }, 1, "Les versants s'érodent et livrent des débris de toutes tailles ; en crue, le courant dépasse 1 à 2 m/s : la rivière arrache et roule graviers et galets."),
-    q({ d: 20, v: 40 }, 2, "Quand le courant faiblit, chaque grain se dépose à sa vitesse : les graviers de 2 cm sous ≈ 65 cm/s, au fond du chenal ; les sables sur les bancs, sous ≈ 7 cm/s ; les limons seulement à la décrue, en eau presque calme."),
-    q({}, 3, "À chaque cycle glaciaire, la rivière comble puis recreuse sa vallée : les terrasses s'étagent (depuis ≈ 2,6 Ma)."),
-    q({}, 4, "Des galets et graviers roulés, du sable et du limon, triés par le courant et jamais cimentés (Val de Loire, plaine d'Alsace)."),
+    q({ d: 20, v: 180 }, 1, "Les versants se dégradent et fournissent des débris de toutes tailles ; en crue, le courant atteint 1 à 2 m/s et la rivière arrache puis roule graviers et galets."),
+    q({ d: 20, v: 40 }, 2, "À mesure que le courant faiblit, les grains sédimentent chacun à sa propre vitesse ; graviers de 2 cm au fond du chenal dès ≈ 65 cm/s, sables sur les bancs sous ≈ 7 cm/s, limons seulement à la décrue, en eau presque immobile."),
+    q({}, 3, "Des terrasses s'échelonnent (depuis ≈ 2,6 Ma), car la rivière, à chaque cycle glaciaire, comble puis recreuse sa vallée."),
+    q({}, 4, "Triés par le courant, roulés, galets, graviers, sables et limons ne sont jamais cimentés (Val de Loire, plaine d'Alsace)."),
   ] };
   COND.colluvions = { type: "courant", chemin: [
     q({ d: 0.05, v: 80 }, 0, "", { lab: "ruissellement" }),
-    q({ d: 0.05, v: 15 }, 1, "Le défrichement met le sol à nu ; lors des orages, l'eau ruisselle sur la pente et entraîne le sol, aidée par les labours (depuis le Néolithique, ≈ 7 000 ans)."),
-    q({ d: 0.05, v: 0.1 }, 2, "Au pied du versant, le ruissellement s'étale et ralentit : le sol se dépose après quelques dizaines à centaines de mètres de trajet, trop court pour que les grains soient triés."),
+    q({ d: 0.05, v: 15 }, 1, "Le défrichement dénude le sol ; lors des orages, l'eau ruisselle sur la pente et entraîne la terre, les labours aidant (depuis le Néolithique, ≈ 7 000 ans)."),
+    q({ d: 0.05, v: 0.1 }, 2, "Le ruissellement ralenti, au pied du versant, étale le sol sur quelques dizaines à centaines de mètres ; le parcours est trop court pour que les grains se classent."),
   ] };
   COND.vase_tangue = { type: "courant", autres: [{ pts: [[0.15, 50], [0.15, 1]], lab: "tangue" }], chemin: [
     q({ d: 0.004, v: 50 }, 0, "", { lab: "courant de marée" }),
-    q({ d: 0.004, v: 0.001 }, 1, "À l'étale, le courant s'arrête : les particules fines, agrégées en flocons qui tombent plus vite qu'elles, se déposent ; vasières puis prés salés (baie du Mont-Saint-Michel)."),
-    q({}, 2, "À chaque étale, une fine pellicule de vase ; aux marées plus fortes, du sable coquillier, la tangue, qui se dépose dès que le courant tombe sous ≈ 1 cm/s : des lits alternent."),
+    q({ d: 0.004, v: 0.001 }, 1, "Au moment de l'étale, le courant s'arrête : des particules fines, agglomérées en flocons plus rapides à tomber que les particules isolées, se déposent ; apparaissent vasières, puis prés salés (baie du Mont-Saint-Michel)."),
+    q({}, 2, "À chaque étale, une fine pellicule de vase se dépose ; lors des marées plus fortes, le sable coquillier, dit tangue, se dépose dès que le courant tombe sous ≈ 1 cm/s : il en résulte une alternance de lits."),
   ] };
   // ── vent ──
   COND.dunes = { type: "vent", chemin: [
     q({ d: 0.3, v: 5 }, 0, "", { lab: "plage" }),
-    q({ d: 0.3, v: 40 }, 1, "Dès ≈ 30 km/h, le vent déplace par bonds les grains de 0,1 à 0,5 mm pris aux plages : la dune avance de 1 à 5 m par an (dune du Pilat)."),
-    q({ d: 0.3, v: 15 }, 2, "Le vent laisse les graviers (il faudrait plus de 70 km/h pour un grain de 2 mm) et emporte au loin les poussières : le sable des dunes est très bien trié ; sous ≈ 30 km/h, il s'arrête."),
+    q({ d: 0.3, v: 40 }, 1, "Dès ≈ 30 km/h, le vent fait sauter par bonds les grains de 0,1 à 0,5 mm prélevés sur les plages : la dune progresse de 1 à 5 m par an (dune du Pilat)."),
+    q({ d: 0.3, v: 15 }, 2, "Le vent écarte les graviers (plus de 70 km/h seraient nécessaires pour un grain de 2 mm) et disperse au loin les poussières : le sable des dunes est très bien classé ; sous ≈ 30 km/h, son transport cesse."),
   ] };
   COND.loess = { type: "vent", chemin: [
-    q({ d: 0.03, v: 10 }, 1, "Pendant la dernière glaciation, au bord des glaciers, les eaux de fonte étalent des limons (10 à 60 µm) sur des plaines nues et sèches."),
-    q({ d: 0.03, v: 70 }, 2, "Les vents forts, au-delà de ≈ 35 km/h pour ces grains collants, les arrachent et les gardent en suspension : ils voyagent sur des centaines de kilomètres (115 000–11 700 ans)."),
-    q({ d: 0.03, v: 3 }, 3, "Quand le vent faiblit sous ≈ 7 km/h, et que l'herbe de la steppe le freine, les limons retombent en placages de plusieurs mètres (collines du Kochersberg, Alsace)."),
+    q({ d: 0.03, v: 10 }, 1, "Durant la dernière glaciation, sur les marges des glaciers, les eaux de fonte déposent des limons (10 à 60 µm) sur des plaines dénudées et desséchées."),
+    q({ d: 0.03, v: 70 }, 2, "Au-delà de ≈ 35 km/h, pour ces grains collants, les vents forts les soulèvent et les maintiennent en suspension : ils se déplacent sur des centaines de kilomètres (de 115 000 à 11 700 ans)."),
+    q({ d: 0.03, v: 3 }, 3, "Lorsque le vent tombe sous ≈ 7 km/h, freiné par l'herbe de la steppe, les limons retombent en couches de plusieurs mètres (collines du Kochersberg, Alsace)."),
   ] };
   // ── climat ──
   const K = (villes, domaines, labDomaines, chemin, o) => Object.assign({ type: "climat", villes, domaines, labDomaines, chemin }, o || {});
   COND.tourbe = K(["Brest", "Mont Aigoual", "Chamonix", "Paris"], [[-2, 13, 1, 2.5]], ["tourbières hautes"], [
-    q({ T: 7, ai: 1.6 }, 1, "Là où il pleut plus que l'eau ne s'évapore (pluie ÷ évapotranspiration supérieure à 1), sous climat frais, le sol reste gorgé d'eau : les sphaignes prospèrent (Jura, monts d'Arrée)."),
-    q({ T: 7, ai: 1.6 }, 2, "L'eau stagnante, acide et pauvre en oxygène, bloque la décomposition : les végétaux morts s'accumulent, environ un millimètre par an, depuis la fin de la dernière glaciation (11 700 ans)."),
-    q({}, 0, "Les tourbières basses peuvent aussi exister sous climat plus sec, alimentées par une nappe."),
+    q({ T: 7, ai: 1.6 }, 1, "Là où les précipitations excèdent l'évapotranspiration (rapport supérieur à 1), sous climat frais, le sol demeure gorgé d'eau : les sphaignes y prospèrent (Jura, monts d'Arrée)."),
+    q({ T: 7, ai: 1.6 }, 2, "Stagnante, acide et dépourvue d'oxygène, l'eau bloque toute décomposition : environ un millimètre de végétaux morts s'accumule chaque année depuis la fin de la dernière glaciation (11 700 ans)."),
+    q({}, 0, "Sous climat plus sec, des tourbières basses peuvent aussi se développer, alimentées par une nappe."),
   ], { src: ["charman"] });
   COND.alterite = K(["Brest", "Clermont-Ferrand"], [[5, 30, 0.65, 2.5]], ["altération par hydrolyse"], [
-    q({ T: 24, ai: 1.3 }, 1, "Au Paléogène (66–23 Ma), sous un climat tropical humide, l'altération creuse des profils épais de dizaines de mètres dans les granites."),
-    q({ T: 24, ai: 1.3 }, 2, "L'eau infiltrée hydrolyse feldspaths et biotite, qui se changent en argiles ; le quartz reste intact."),
-    q({ T: 12, ai: 0.96 }, 3, "Aujourd'hui, à Rennes (12 °C, pluie ≈ évapotranspiration), l'arénisation continue, plus lentement : beaucoup de profils sont hérités."),
-    q({ T: 12, ai: 0.96 }, 4, "Du granite il reste le quartz, des feldspaths à demi altérés et des micas, dans des argiles d'altération : un sable grossier qui s'effrite à la main."),
+    q({ T: 24, ai: 1.3 }, 1, "Sous climat tropical humide (de 66 à 23 Ma, au Paléogène), l'altération creuse dans les granites des profils épais de plusieurs dizaines de mètres."),
+    q({ T: 24, ai: 1.3 }, 2, "L'eau infiltrée hydrolyse feldspaths et biotite en argiles, alors que le quartz demeure intact."),
+    q({ T: 12, ai: 0.96 }, 3, "À Rennes aujourd'hui (12 °C, pluie ≈ évapotranspiration), l'arénisation se poursuit, mais plus lentement : beaucoup de profils sont hérités."),
+    q({ T: 12, ai: 0.96 }, 4, "Il subsiste du granite le quartz, des feldspaths partiellement altérés et des micas, pris dans des argiles d'altération : un sable grossier qui se désagrège sous la main."),
   ]);
   COND.terra_rossa = K(["Marseille", "Nice"], [[13, 18, 0.45, 0.9]], ["terra rossa"], [
-    q({ T: 15.1, ai: 0.55 }, 1, "Sous le climat méditerranéen, ici Montpellier (15,1 °C ; pluie = 55 % de l'évapotranspiration, étés secs), l'eau dissout le calcaire ; ses 2 à 5 % d'impuretés restent sur place."),
-    q({ T: 15.1, ai: 0.55 }, 2, "Il faut dissoudre des dizaines de mètres de calcaire pour un mètre d'argile ; les étés secs favorisent l'hématite, qui la rougit (du Néogène à aujourd'hui)."),
-    q({ T: 15.1, ai: 0.55 }, 3, "Une argile rouge, avec des nodules d'oxydes de fer et quelques grains rescapés : les impuretés du calcaire dissous."),
+    q({ T: 15.1, ai: 0.55 }, 1, "À Montpellier (15,1 °C ; pluie égale à 55 % de l'évapotranspiration, étés secs), sous climat méditerranéen, l'eau dissout le calcaire, et les impuretés, de 2 à 5 %, restent sur place."),
+    q({ T: 15.1, ai: 0.55 }, 2, "Dissoudre des dizaines de mètres de calcaire ne donne qu'un seul mètre d'argile ; les étés secs favorisent l'hématite, qui la colore en rouge (du Néogène à aujourd'hui)."),
+    q({ T: 15.1, ai: 0.55 }, 3, "Des nodules d'oxydes de fer et quelques grains résiduels forment une argile rouge : ce sont les impuretés du calcaire dissous."),
   ]);
   COND.argile_silex = K([], [[10, 22, 0.65, 2]], ["dissolution de la craie"], [
-    q({ T: 17, ai: 1.1 }, 1, "Au Néogène (23–2,6 Ma), sous un climat plus chaud et plus humide qu'aujourd'hui, les eaux de pluie dissolvent la craie des plateaux."),
-    q({ T: 12.7, ai: 0.77 }, 2, "La calcite part en solution ; silex et argiles, insolubles, restent : la dissolution continue sous le climat actuel (Paris : 12,7 °C ; pluie = 77 % de l'évapotranspiration)."),
-    q({ T: 12.7, ai: 0.77 }, 3, "Des silex, intacts ou brisés, dans une argile brun-rouge : tout ce que la craie contenait d'insoluble coiffe les plateaux du Pays de Caux."),
+    q({ T: 17, ai: 1.1 }, 1, "Sous un climat plus chaud et plus humide qu'aujourd'hui, les pluies du Néogène (de 23 à 2,6 Ma) attaquent la craie des plateaux."),
+    q({ T: 12.7, ai: 0.77 }, 2, "La calcite passe en solution, tandis que silex et argiles, insolubles, demeurent en place : la dissolution se poursuit sous le climat actuel (Paris : 12,7 °C ; pluie égale à 77 % de l'évapotranspiration)."),
+    q({ T: 12.7, ai: 0.77 }, 3, "Silex entiers ou brisés, emballés dans une argile brun-rouge : tout l'insoluble de la craie coiffe les plateaux du pays de Caux."),
   ]);
   COND.laterite = K(["Toulouse"], [[22, 30, 0.65, 1.8]], ["cuirasses\nlatéritiques"], [
-    q({ T: 25, ai: 1.1 }, 1, "Au Paléogène (66–34 Ma), le Sud-Ouest connaît un climat tropical à saison sèche : la pluie lessive cations et silice sur des dizaines de mètres."),
-    q({ T: 25, ai: 1.1 }, 2, "Oxydes de fer et d'aluminium, insolubles, s'accumulent ; les saisons sèches les durcissent en cuirasse."),
-    q({ T: 13.7, ai: 0.98 }, 3, "Aujourd'hui, à Bordeaux (13,7 °C, pluie ≈ évapotranspiration), le climat ne permet plus d'en former : ces cuirasses sont fossiles."),
+    q({ T: 25, ai: 1.1 }, 1, "Pendant le Paléogène (de 66 à 34 Ma), le Sud-Ouest subit un climat tropical à saison sèche : sur des dizaines de mètres, la pluie entraîne cations et silice."),
+    q({ T: 25, ai: 1.1 }, 2, "Les saisons sèches transforment en cuirasse les oxydes de fer et d'aluminium insolubles qui s'accumulent."),
+    q({ T: 13.7, ai: 0.98 }, 3, "À Bordeaux aujourd'hui (13,7 °C, pluie ≈ évapotranspiration), le climat ne permet plus de telles formations : ces cuirasses sont fossiles."),
   ]);
   COND.bauxite = K([], [[22, 30, 1, 2.5]], ["bauxites"], [
-    q({ T: 26, ai: 1.7 }, 1, "Au Crétacé « moyen » (125–90 Ma), la Provence est tropicale et très pluvieuse (plus de 22 °C, pluie supérieure à l'évapotranspiration) : l'eau traverse sans cesse le sol et emporte d'abord les cations, puis la silice des argiles."),
-    q({ T: 26, ai: 1.7 }, 2, "Il reste les hydroxydes d'aluminium (gibbsite) et de fer : il faut des millions d'années pour faire une bauxite."),
-    q({ T: 15.9, ai: 0.42 }, 3, "Aujourd'hui, à Marseille (15,9 °C ; pluie = 42 % de l'évapotranspiration), le climat est bien trop sec : les bauxites des Baux-de-Provence sont héritées d'un autre climat."),
+    q({ T: 26, ai: 1.7 }, 1, "Pendant le Crétacé « moyen » (de 125 à 90 Ma), la Provence reçoit un climat tropical et très arrosé (plus de 22 °C, pluie supérieure à l'évapotranspiration) : l'eau, qui ne cesse de traverser le sol, emporte d'abord les cations, puis la silice des argiles."),
+    q({ T: 26, ai: 1.7 }, 2, "Ne subsistent que les hydroxydes d'aluminium (gibbsite) et de fer : la formation d'une bauxite exige des millions d'années."),
+    q({ T: 15.9, ai: 0.42 }, 3, "Le climat actuel de Marseille (15,9 °C ; pluie égale à 42 % de l'évapotranspiration) est trop sec : les bauxites des Baux-de-Provence ont été formées sous un autre climat."),
   ], { src: ["bardossy"] });
   COND.moraine = K(["Chamonix"], [], [], [
-    q({ T: 2, ai: 0.86 }, 1, "Au Würm, il fait 10 à 12 °C de moins qu'aujourd'hui en France : le glacier du Rhône descend des Alpes jusqu'aux portes de Lyon ; à sa base, il arrache des blocs, les traîne et broie la roche en farine."),
-    q({ T: 12.8, ai: 0.86 }, 2, "Le climat se réchauffe : le glacier fond et recule par à-coups (fin du Würm, jusqu'à 11 700 ans) ; chaque arrêt laisse un arc de moraine."),
-    q({ T: 12.8, ai: 0.86 }, 3, "Blocs, cailloux et farine de roche sans aucun tri : contrairement à l'eau et au vent, la glace ne trie pas (Lyon aujourd'hui : 12,8 °C)."),
-  ], { note: "Le rapport pluie ÷ évapotranspiration du Würm est mal connu : le point du glacier est placé à la valeur actuelle de Lyon, seule la température est décalée.", src: ["dmg"] });
+    q({ T: 2, ai: 0.86 }, 1, "Au Würm, la France est plus froide de 10 à 12 °C qu'aujourd'hui : le glacier du Rhône s'étend des Alpes jusqu'aux portes de Lyon ; à sa base, il arrache des blocs, les traîne et réduit la roche en farine."),
+    q({ T: 12.8, ai: 0.86 }, 2, "Le réchauffement fait fondre le glacier, qui recule par à-coups (fin du Würm, jusqu'à 11 700 ans) ; chaque pause laisse un arc de moraine."),
+    q({ T: 12.8, ai: 0.86 }, 3, "Blocs, cailloux et farine de roche sans aucun classement : à la différence de l'eau et du vent, la glace ne classe pas (Lyon aujourd'hui : 12,8 °C)."),
+  ], { note: "On ignore le rapport pluie ÷ évapotranspiration du Würm : le glacier est donc placé à la valeur actuelle de Lyon, seule la température étant décalée.", src: ["dmg"] });
   COND.eboulis = K(["Chamonix"], [[-5, 8, 0.5, 2.5]], ["climat froid :\ngel et dégel"], [
-    q({ T: 2, ai: 0.9 }, 1, "Pendant la dernière glaciation (10 à 12 °C de moins qu'aujourd'hui), gel et dégel se succèdent une bonne partie de l'année : l'eau qui gèle dans les fissures les élargit, les fragments se détachent et s'entassent au pied des falaises (grèzes de Charente, Causses)."),
-    q({ T: 5.2, ai: 2.0 }, 2, "Aujourd'hui encore, en montagne (Chamonix : 5,2 °C), le gel éclate les parois : les talus des Alpes sont actifs, anguleux, mal triés et non cimentés ; cimenté, un éboulis deviendrait une brèche. Les grèzes de Charente, elles, sont fossiles."),
-  ], { note: "Le rapport pluie ÷ évapotranspiration de la dernière glaciation est mal connu : le premier point n'indique que la température.", src: ["dmg"] });
+    q({ T: 2, ai: 0.9 }, 1, "Durant la dernière glaciation (10 à 12 °C de moins qu'aujourd'hui), la succession de gel et de dégel occupe une bonne partie de l'année ; les fissures, élargies par l'eau gelée, libèrent des fragments qui s'amoncellent au pied des falaises (grèzes de Charente, Causses)."),
+    q({ T: 5.2, ai: 2.0 }, 2, "Encore aujourd'hui, à Chamonix (5,2 °C), le gel fait éclater les parois ; les talus alpins, actifs, anguleux, mal classés et non cimentés le montrent ; cimentés, ils deviendraient brèche. Les grèzes de Charente, elles, sont fossiles."),
+  ], { note: "On connaît mal le rapport pluie ÷ évapotranspiration de la dernière glaciation : le premier point ne donne que la température.", src: ["dmg"] });
   COND.tillite = K([], [], [], [
-    q({ T: -40, ai: 1.25 }, 1, "Vers 640 Ma, la Terre est presque entièrement gelée, l'équateur aussi froid que l'Antarctique actuel : la glace avance sur la plate-forme d'Otavi (Namibie), arrache des blocs, les traîne et broie la roche en farine ; là où elle se met à flotter, elle lâche tout, pêle-mêle.", { lab: "Terre gelée" }),
-    q({ T: 45, ai: 1.25 }, 2, "Vers 635 Ma, le climat bascule : le CO₂ accumulé par les volcans pendant la glaciation réchauffe brutalement la Terre ; la glace fond, la mer remonte et noie la moraine, et des calcaires de mer chaude se déposent directement dessus.", { lab: "effet de serre extrême" }),
-    q({}, 3, "D'autres couches recouvrent la moraine : sous leur poids, blocs, sable et farine se tassent et l'eau est chassée (635–540 Ma)."),
-    q({}, 4, "Durcie, la moraine est devenue une tillite : blocs et graviers de toutes tailles, certains rayés par la glace, dans une pâte de farine de roche."),
-  ], { note: "Les deux climats sortent de l'échelle de l'atlas : les points sont posés au bord du diagramme. Pour une Terre gelée, le rapport pluie ÷ évapotranspiration n'a pas de sens : ils sont placés à mi-hauteur.", src: ["ghaub", "hoffman1998"] });
+    q({ T: -40, ai: 1.25 }, 1, "Vers 640 Ma, la Terre est presque entièrement gelée, jusqu'à un équateur aussi froid que l'Antarctique actuel : sur la plate-forme d'Otavi (Namibie), la glace avance, arrache des blocs, les traîne et réduit la roche en farine ; là où elle flotte, elle libère tout pêle-mêle.", { lab: "Terre gelée" }),
+    q({ T: 45, ai: 1.25 }, 2, "Vers 635 Ma, un basculement climatique intervient : le CO₂ accumulé par les volcans pendant la glaciation réchauffe brusquement la planète ; la glace fond, la mer submerge la moraine, et des calcaires de mer chaude s'y déposent aussitôt.", { lab: "effet de serre extrême" }),
+    q({}, 3, "Sous le poids d'autres couches, la moraine voit ses blocs, son sable et sa farine se tasser, et l'eau s'échapper (de 635 à 540 Ma)."),
+    q({}, 4, "La moraine s'est durcie en tillite : elle renferme blocs et graviers de toutes tailles, dont certains rayés par la glace, pris dans une pâte de farine de roche."),
+  ], { note: "Les deux climats dépassent l'échelle de l'atlas : les points sont placés au bord du diagramme. Une Terre gelée n'a pas de sens pour le rapport pluie ÷ évapotranspiration : les points sont donc posés à mi-hauteur.", src: ["ghaub", "hoffman1998"] });
 
   // ─────────────────────────────── 7. installation ───────────────────────────────
   F._fc2 = { DIAG, COND, COURBES, graphique, axes, chemin, etiquette, etiquettesChemin, autour, leLong, courbe, polygone, bande, rendre, legende, largeur, echelle, D, nb, esc, pt };
   Object.assign(SOURCES, {
     french1998: "Métamorphisme de choc : French B. M. (1998), <i>Traces of Catastrophe</i>, Lunar and Planetary Institute, contribution 954, fig. 4.1 et tableau 4.2 (d'après Stöffler 1971 et 1984) : pression de l'onde et température qui reste après son passage, pour une roche cristalline dense ; métamorphisme ordinaire sous 3–5 GPa et 1 000 °C.",
-    graniteSec: "Solidus du granite : mesuré avec eau de 0,05 à 1 GPa ; plus près de la surface, faute d'eau sous pression, il remonte vers le solidus du granite sec (≈ 950 °C) : ce prolongement, en tirets, est indicatif.",
-    echelleRacine: "Diagrammes pression–température des roches magmatiques : échelle verticale en racine carrée de la pression, qui dilate les premiers kilomètres, où se passent la plupart des étapes.",
-    gradients: "Pointillés fins : température atteinte en profondeur pour un gradient de 10, 30 ou 60 °C par kilomètre (subduction froide, collision, voisinage d'un magma).",
-    geotherme: "Géotherme moyen : 10 °C en surface et 30 °C par kilomètre.",
-    etapes: "Chemins schématiques ; chaque pastille marque l'état atteint à la fin de l'étape de même numéro dans l'animation (pastilles accolées : étapes aux mêmes conditions ; numéro cerclé dans la liste : étape sans position propre sur le diagramme).",
+    graniteSec: "Le solidus du granite, mesuré avec de l'eau de 0,05 à 1 GPa, rejoint à faible profondeur, faute d'eau sous pression, celui du granite sec (≈ 950 °C) : ce prolongement, en tirets, n'est qu'indicatif.",
+    echelleRacine: "Diagrammes pression-température des roches magmatiques : l'échelle verticale suit la racine carrée de la pression, ce qui dilate les premiers kilomètres, où se déroule l'essentiel des étapes.",
+    gradients: "Traits fins en pointillés : températures atteintes en profondeur avec un gradient de 10, 30 ou 60 °C par kilomètre (subduction froide, collision, voisinage d'un magma).",
+    geotherme: "Géotherme moyen : 10 °C à la surface, avec un gradient de 30 °C par kilomètre.",
+    etapes: "Les chemins sont schématiques : chaque pastille indique l'état où l'on se trouve à la fin de l'étape de même numéro dans l'animation (pastilles juxtaposées pour les étapes aux mêmes conditions ; numéro cerclé dans la liste pour une étape sans emplacement propre sur le diagramme).",
     millero2008: "Composition de l'eau de mer : Millero F. J. et al. (2008), <i>Deep-Sea Research I</i> 55, 50. Par litre d'eau : de quoi former 1,84 g de gypse (limité par le calcium), 28,4 g de halite et 0,79 g de sylvite ; magnésium ÷ calcium ≈ 5 (en moles).",
-    saumurePalier: "Au-delà d'un seuil, la concentration cesse de monter : ce qui arrive en plus cristallise (tracé simplifié en palier ; en réalité, le calcium baisse un peu après le gypse, le sodium après le sel). Gypse dans l'eau pure : ≈ 2,4 g/L à 25 °C.",
-    anhydriteCalc: "Courbe gypse ⇄ anhydrite : Hardie (1967) donne 58 °C dans l'eau pure et 18 °C dans une saumure saturée en sel ; entre les deux, calcul de l'atlas (équation de van 't Hoff) avec l'activité de l'eau d'une eau de mer concentrée (≈ 0,98 à × 1, 0,93 à × 3,8, 0,75 à × 10,6).",
-    mgcaCalc: "Rapport magnésium ÷ calcium de la saumure : calcul de l'atlas à produit de solubilité du gypse constant, sans coefficients d'activité (ordre de grandeur : ≈ 5 dans l'eau de mer, ≈ 10 à × 6, ≈ 28 à × 10,6).",
-    lindsay1979: "Solubilité de l'hydroxyapatite : Ca₅(PO₄)₃OH + 7 H⁺ = 5 Ca²⁺ + 3 H₂PO₄⁻ + H₂O, log K = 14,46 (Lindsay W. L. 1979, <i>Chemical Equilibria in Soils</i>, Wiley) ; courbe calculée par l'atlas pour 100 mg de calcium par litre, sans coefficients d'activité.",
+    saumurePalier: "Passé un seuil, la concentration cesse de croître : l'apport supplémentaire cristallise (tracé simplifié en palier ; en réalité, le calcium décroît un peu après le gypse, le sodium après le sel). Gypse dans l'eau pure : ≈ 2,4 g/L à 25 °C.",
+    anhydriteCalc: "Courbe gypse ⇄ anhydrite : Hardie (1967) situe la transition à 58 °C dans l'eau pure et à 18 °C dans une saumure saturée en sel ; entre ces deux valeurs, l'atlas calcule la courbe (équation de van 't Hoff) à partir de l'activité de l'eau d'une eau de mer concentrée (≈ 0,98 à × 1, 0,93 à × 3,8, 0,75 à × 10,6).",
+    mgcaCalc: "Rapport magnésium ÷ calcium de la saumure : l'atlas le calcule en supposant constant le produit de solubilité du gypse et en négligeant les coefficients d'activité (ordre de grandeur : ≈ 5 dans l'eau de mer, ≈ 10 à × 6, ≈ 28 à × 10,6).",
+    lindsay1979: "Ca₅(PO₄)₃OH + 7 H⁺ = 5 Ca²⁺ + 3 H₂PO₄⁻ + H₂O : l'hydroxyapatite présente un log K de 14,46 (Lindsay W. L. 1979, <i>Chemical Equilibria in Soils</i>, Wiley). L'atlas calcule la courbe pour 100 mg de calcium par litre, en négligeant les coefficients d'activité.",
     mucci1983: "Saturation de la calcite : produit de solubilité de Mucci A. (1983), <i>American Journal of Science</i> 283, 780, corrigé de la pression (Millero F. J. 1995, <i>Geochimica et Cosmochimica Acta</i> 59, 661), pour 10,28 mmol de calcium par kg (≈ 42 µmol/kg d'ion carbonate en surface, ≈ 90–100 vers 4 km) ; calcul de l'atlas.",
     broecker1982: "Ion carbonate mesuré : profil schématique de l'Atlantique actuel, ≈ 230 µmol/kg en surface et ≈ 110 en profondeur (Broecker W. S. et Peng T.-H. 1982, <i>Tracers in the Sea</i>, Lamont-Doherty) ; le Pacifique, plus pauvre (≈ 70–80), dissout la calcite moins profond.",
     zhang1961: "Mise en mouvement des grains : formule de Zhang Ruijin (1961), valable des argiles cohésives aux galets, U = (h/d)^0,14 [17,6 (ρs − ρ)/ρ d + 6,05 × 10⁻⁷ (10 + h)/d^0,72]^0,5 (unités du système international), calculée pour 1 m d'eau.",
     hjulstrom: "Diagramme de Hjulström F. (1935), <i>Bulletin of the Geological Institution of the University of Upsala</i> 25, 221 ; courbes recalculées par l'atlas : mise en mouvement (Zhang 1961) ; dépôt quand le courant tombe sous la vitesse de chute du grain (Ferguson et Church 2004).",
     shaolu2000: "Vent : seuil de mise en mouvement de Shao Y. et Lu H. (2000), <i>Journal of Geophysical Research</i> 105, 22 437 ; un grain reste en suspension tant que le vent dépasse sa vitesse de chute (Bagnold R. A. 1941, <i>The Physics of Blown Sand and Desert Dunes</i>) ; vitesse du vent à 10 m calculée pour un sol sableux nu (rugosité 0,1 mm).",
-    dmg: "Dernier maximum glaciaire (vers 21 000 ans) : en France, températures moyennes annuelles inférieures de 10 à 12 °C aux actuelles (Wikipédia, « Dernier maximum glaciaire »).",
+    dmg: "Au dernier maximum glaciaire (vers 21 000 ans), les températures moyennes annuelles de la France étaient inférieures de 10 à 12 °C aux actuelles (Wikipédia, « Dernier maximum glaciaire »).",
     hoffman1998: "« Terre boule de neige » et calcaires de fin de glaciation : Hoffman P. F., Kaufman A. J., Halverson G. P. et Schrag D. P. (1998), <i>Science</i> 281, 1342.",
   });
   const courbesMagma = (c) => c.courbes || (c.echelle === "croute" ? ["graniteEau", "peridotite"] : c.echelle === "profond" ? ["peridotite", "diamant"] : ["peridotite"]);

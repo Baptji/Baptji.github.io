@@ -269,7 +269,7 @@
     allophane: "Sphérules : Parfitt R. L. (2009), <i>Clay Minerals</i> 44, p. 135–155.",
     hisingerite: "Sphères : Eggleton R. A. et Tilley D. B. (1998), <i>Clays and Clay Minerals</i> 46, p. 400–413.",
   };
-  const ech = (vrai) => `Dessin à l'échelle : chaque feuillet à son épaisseur vraie. ${vrai}`;
+  const ech = (vrai) => `Feuillets représentés à leur épaisseur réelle, à l'échelle : ${vrai}`;
 
   function definition(cle) {
     const f = EB.ARGILES3D[cle][0], sp = espece(cle), oct = OCT[sp] || OCT[f] || "Al";
@@ -286,10 +286,9 @@
         const d = dEtat(E.halloysite, i, j, u), F = [];
         spirale(F, { r0: 80, tours: 12, d, couches: [[2.1, C.Al, "O"], [2.2, C.T, "T"]], L: 420, eau: d > 7.3 });
         return { F, legende: legendeFeuillet("Al") + (d > 7.3 ? puce(C.eau, "eau entre les feuillets", EAU_A) : ""),
-          note: `Le feuillet 1:1 de l'halloysite s'enroule sur lui-même en spirale : sa couche tétraédrique (bleue), plus large, reste
-            à l'extérieur, sa couche d'aluminium à l'intérieur ; le canal central est bordé d'Al–OH, la surface extérieure de Si–O–Si.
-            Tube dessiné : 12 tours, canal de 16 nm, ${NM(2 * (80 + 12 * d))} nm de diamètre, coupé à 42 nm de long. ${ech("Les vrais tubes mesurent 30 à 190 nm de diamètre extérieur (canal de 10 à 100 nm) et 0,5 à plusieurs µm de long ; certaines halloysites forment des sphères.")}
-            ${d > 7.3 ? "État « 1 couche d'eau » : feuillets espacés de 10 Å." : "État « sèche » : feuillets espacés de 7,2 Å."} ${REF.halloysite}` };
+          note: `L'halloysite porte un feuillet 1:1 qui se roule en spirale : la couche tétraédrique, plus large (bleue), se place à l'extérieur, la couche d'aluminium à l'intérieur. Le canal central est tapissé d'Al-OH, la surface externe de Si-O-Si.
+            Tube dessiné : 12 tours, canal de 16 nm, ${NM(2 * (80 + 12 * d))} nm de diamètre, coupé à 42 nm de long. ${ech("Certaines halloysites forment des sphères ; les tubes, eux, ont 30 à 190 nm de diamètre extérieur (canal de 10 à 100 nm) et 0,5 à plusieurs µm de long.")}
+            ${d > 7.3 ? "Dans l'état « 1 couche d'eau », les feuillets sont écartés de 10 Å." : "État « sèche » : feuillets espacés de 7,2 Å."} ${REF.halloysite}` };
       } };
     if (s === "chrysotile") return {
       titre: "Chrysotile enroulé en fibre", vue: [18, -38], axe: [0, 1, 0],
@@ -297,9 +296,8 @@
         const F = [];
         spirale(F, { r0: 37, tours: 12, d: 7.3, couches: [[2.2, C.T, "T"], [2.1, C.Mg, "O"]], L: 360 });
         return { F, legende: legendeFeuillet("Mg"),
-          note: `Le feuillet 1:1 du chrysotile s'enroule en fibrille creuse, à l'inverse de l'halloysite : sa couche de magnésium,
-            plus large que la couche tétraédrique, reste à l'extérieur. Fibrille dessinée : canal de 7,5 nm, 25 nm de diamètre
-            (12 tours), coupée à 36 nm de long. ${ech("Les vraies fibrilles mesurent 25 nm de diamètre (canal de 7 à 8 nm) et des µm à des cm de long, groupées en faisceaux : c'est l'amiante blanc.")} ${REF.chrysotile}` };
+          note: `Chez le chrysotile, le feuillet 1:1 forme une fibrille creuse, au sens inverse de l'halloysite : la couche de magnésium, plus large que la couche tétraédrique, demeure à l'extérieur.
+            Fibrille dessinée : canal de 7,5 nm, 25 nm de diamètre (12 tours), coupée à 36 nm de long. ${ech("Les fibrilles réelles ont 25 nm de diamètre (canal de 7 à 8 nm) pour une longueur de quelques µm à quelques cm ; regroupées en faisceaux, elles forment l'amiante blanc.")} ${REF.chrysotile}` };
       } };
     if (s === "antigorite") return {
       titre: "Antigorite, feuillets ondulés", vue: [22, -30], axe: [0, 1, 0],
@@ -316,9 +314,8 @@
           }
         }
         return { F, legende: legendeFeuillet("Mg"),
-          note: `Dans l'antigorite, la couche de magnésium, continue, ondule ; la couche tétraédrique change de côté à chaque
-            demi-onde (tous les 21 à 22 Å), toujours du côté creux. Rayon de courbure ≈ 75 Å, d'où des ondes très plates. Bloc
-            dessiné : 8 ondes (35 nm) sur 6 feuillets. ${ech("Les vrais cristaux sont des lamelles de quelques µm.")} ${REF.antigorite}` };
+          note: `Chez l'antigorite, la couche de magnésium n'est pas plane : elle se courbe en continu, tandis que la couche tétraédrique bascule de côté à chaque demi-onde (tous les 21 à 22 Å), toujours sur la face concave. Le rayon de courbure, ≈ 75 Å, rend les ondes très aplaties.
+            Bloc dessiné : 8 ondes (35 nm) sur 6 feuillets. ${ech("Les cristaux réels forment des lamelles de quelques µm.")} ${REF.antigorite}` };
       } };
 
     // — fibres : sépiolite, palygorskite —
@@ -344,10 +341,8 @@
           // le prisme est dans le plan (x, z) ; la fibre s'allonge selon z : on la couche le long de x pour la vue
           F.forEach((fc) => { fc.p = fc.p.map(([x, y, z]) => [z, y, x]); fc.n = [fc.n[2], fc.n[1], fc.n[0]]; });
           return { F, legende: legendeFeuillet(octF) + puce(C.eau, "canal (eau « zéolitique »)", EAU_A),
-            note: `Pas de feuillets plans : la couche tétraédrique, continue, pointe alternativement vers le haut et vers le bas tous
-              les ${sep ? "trois" : "deux"} rubans de chaînes ; les couches octaédriques ne forment que des rubans, en damier, et laissent
-              entre elles des canaux de ${sep ? "3,7 × 10,6" : "3,7 × 6,4"} Å où loge l'eau. La fibre s'allonge le long des canaux.
-              Fibre dessinée : ${NM(larg)} × ${NM(nR * hR)} nm, coupée à ${NM(L)} nm. ${ech("Les vraies fibres mesurent 10 à 30 nm de large et 1 à 10 µm de long.")} ${REF.fibres}` };
+            note: `Le squelette ne comporte aucun feuillet plan. Une couche tétraédrique continue s'oriente alternativement vers le haut puis vers le bas, à chaque série de ${sep ? "trois" : "deux"} rubans de chaînes ; les couches octaédriques ne forment que des rubans disposés en damier, et ménagent des canaux de ${sep ? "3,7 × 10,6" : "3,7 × 6,4"} Å où loge l'eau. La fibre s'étire le long de ces canaux.
+              Fibre dessinée : ${NM(larg)} × ${NM(nR * hR)} nm, coupée à ${NM(L)} nm. ${ech("Une fibre réelle atteint 1 à 10 µm de long pour 10 à 30 nm de large.")} ${REF.fibres}` };
         } };
     }
 
@@ -360,9 +355,8 @@
         centres.forEach(([y, z]) => cylindre(F, y, z, [[5.9, 8.1, C.T], [8.1, 10.1, C.Al]], L));
         F.forEach((fc) => { fc.p = fc.p.map(([x, y, z]) => [x - L / 2, y, z]); });
         return { F, legende: puce(C.Al, "couche d'aluminium <small>Al, O, OH, à l'extérieur</small>") + puce(C.T, "tétraèdres SiO₃(OH) <small>à l'intérieur</small>"),
-          note: `Chaque tube est un seul feuillet refermé : aluminium à l'extérieur, silicium à l'intérieur, 2 nm de diamètre (canal
-            de 1 nm). Les tubes se rangent en faisceaux, à 2,2–2,3 nm d'axe à axe. Faisceau dessiné : 7 tubes coupés à 26 nm.
-            ${ech("Les vrais faisceaux comptent des dizaines à des centaines de tubes, longs de quelques µm.")} ${REF.imogolite}` };
+          note: `Un seul feuillet, refermé sur lui-même, forme chaque tube : aluminium à l'extérieur, silicium à l'intérieur, 2 nm de diamètre (canal de 1 nm). Ces tubes se regroupent en faisceaux, leurs axes distants de 2,2 à 2,3 nm. Faisceau dessiné : 7 tubes coupés à 26 nm.
+${ech("Des dizaines à des centaines de tubes, longs de quelques µm, se regroupent en faisceaux réels.")} ${REF.imogolite}` };
       } };
     if (f === "allophane") return {
       titre: "Allophane, sphères creuses", vue: [16, -30], axe: [0, 1, 0],
@@ -419,9 +413,9 @@
           + (octB !== octA ? puce(C[octB], `couche octaédrique <small>${NOM_OCT[octB]}</small>`) : "")
           + (espA.type === "hydroxyde" ? puce(C[espA.oct], `feuillet d'hydroxyde de la ${nomA}`) : C[espA.type] ? puce(C[espA.type], `${espA.type}⁺ entre les feuillets de ${nomA}`) : "")
           + puce(C.eau, `eau entre les feuillets de ${nomB}`, EAU_A),
-        note: (i, j, u) => `Un même cristal empile des feuillets de ${nomA} et de ${nomB} ${X.regulier ? "en alternance stricte" : "au hasard"} ;
-          seuls les espaces de ${nomB} prennent l'eau (${NM(dEtat(liste, i, j, u))} nm d'un feuillet de ${nomB} au suivant dans l'état
-          choisi). Cristal dessiné : 9 feuillets, 34 nm de large. ${ech("Les vrais cristaux sont des plaquettes de 0,1 à 1 µm.")}` });
+        note: (i, j, u) => `Un seul cristal superpose des feuillets de ${nomA} et de ${nomB} ${X.regulier ? "en alternance stricte" : "au hasard"} ;
+          seuls les espaces de ${nomB} accueillent l'eau (${NM(dEtat(liste, i, j, u))} nm séparent un feuillet de ${nomB} du suivant, selon l'état retenu).
+          Cristal dessiné : 9 feuillets, 34 nm de large. ${ech("Les cristaux réels se présentent sous forme de plaquettes de 0,1 à 1 µm.")}` });
     }
 
     if (["kaolinite", "dickite", "nacrite"].includes(f) && !(s === "halloysite" || s === "endellite")) {
@@ -429,52 +423,51 @@
       return plaque({ titre: "Cristal de kaolin", R, contour: ctr("hexa", R, 1, f === "kaolinite" ? 1.08 : 1.3),
         niveaux: () => Array.from({ length: n }, () => ({ f: feuillet("11", "Al"), d: COU[f].d, esp: { type: "vide" } })),
         legende: () => legendeFeuillet("Al"),
-        note: () => `Les feuillets 1:1 restent plans et s'empilent en plaquettes pseudo-hexagonales, elles-mêmes souvent empilées en
-          « livrets ». ${f === "dickite" ? "La dickite forme des cristaux plus gros et plus épais que la kaolinite. " : f === "nacrite" ? "La nacrite forme des plaquettes plus allongées, souvent plus grosses que celles de la kaolinite. " : ""}Plaquette dessinée : ${n} feuillets,
-          ${NM(2 * R)} nm de large. ${ech("Une vraie plaquette de kaolinite mesure 0,1 à 2 µm de large et compte des dizaines à des centaines de feuillets.")} ${REF.kaolin}` });
+        note: () => `Restant plans, les feuillets 1:1 se superposent en plaquettes pseudo-hexagonales ; souvent, ces plaquettes forment elles-mêmes des « livrets ». ${f === "dickite" ? "La dickite produit des cristaux de plus grande taille et d'épaisseur accrue par rapport à la kaolinite." : f === "nacrite" ? "Les plaquettes de nacrite sont plus allongées et souvent plus grosses que celles de la kaolinite." : ""}Plaquette dessinée : ${n} feuillets,
+          ${NM(2 * R)} nm de large. ${ech("La kaolinite se présente en plaquettes de 0,1 à 2 µm de large, empilant des dizaines à des centaines de feuillets.")} ${REF.kaolin}` });
     }
     if (fam === "11") {   // serpentines planes et 1:1 riches en fer ou nickel
       const n = 10, R = 150;
       return plaque({ titre: "Plaquette de serpentine", R, contour: ctr("hexa", R),
         niveaux: () => Array.from({ length: n }, () => ({ f: feuillet("11", oct), d: COU[f].d, esp: { type: "vide" } })),
         legende: () => legendeFeuillet(oct),
-        note: () => `Feuillets 1:1 plans, empilés en plaquettes, tenus par des liaisons hydrogène. Plaquette dessinée : ${n} feuillets,
-          30 nm de large. ${ech("Les vrais cristaux mesurent de 0,1 à quelques µm.")}` });
+        note: () => `Maintenus entre eux par des liaisons hydrogène, des feuillets 1:1 plans forment des plaquettes. Plaquette dessinée : ${n} feuillets,
+          30 nm de large. ${ech("Les cristaux réels mesurent de 0,1 à quelques µm.")}` });
     }
     if (fam === "neutre") {
       const n = 10, R = 180;
       return plaque({ titre: "Plaquette de talc", R, contour: ctr("irr", R, 7),
         niveaux: () => Array.from({ length: n }, () => ({ f: feuillet("21", oct), d: COU[f].d, esp: { type: "vide" } })),
         legende: () => legendeFeuillet(oct),
-        note: () => `Feuillets 2:1 neutres, simplement posés les uns sur les autres (forces de van der Waals) : ils glissent, d'où
-          la douceur du talc. Plaquette dessinée : ${n} feuillets, 36 nm de large. ${ech("Les vraies plaquettes mesurent du µm au mm.")}` });
+        note: () => `Sans charge, les feuillets 2:1 reposent simplement les uns sur les autres (forces de van der Waals) et glissent, ce qui explique
+          la douceur du talc. Plaquette dessinée : ${n} feuillets, 36 nm de large. ${ech("Les plaquettes réelles mesurent de quelques µm à quelques mm.")}` });
     }
     if (fam === "mica") {
       const n = s === "sericite" ? 8 : 10, R = s === "sericite" ? 120 : 180;
       return plaque({ titre: "Plaquette de mica", R, contour: ctr("hexa", R),
         niveaux: () => Array.from({ length: n }, () => ({ f: feuillet("21", oct), d: COU[f].d, esp: { type: cat } })),
         legende: () => legendeFeuillet(oct) + puce(C[cat], `${cat === "Ca" ? "Ca²⁺" : cat + "⁺"} entre les feuillets`),
-        note: () => `Feuillets 2:1 verrouillés par des ions ${cat === "Ca" ? "Ca²⁺" : cat + "⁺"} : ils restent plans et forment des plaquettes
+        note: () => `Bloqués par des ions ${cat === "Ca" ? "Ca²⁺" : cat + "⁺"}, les feuillets 2:1 demeurent plans et composent des plaquettes
           hexagonales qui se clivent en lames. Plaquette dessinée : ${n} feuillets, ${NM(2 * R)} nm de large. ${ech(s === "sericite"
-            ? "La séricite est faite de paillettes de quelques µm." : "Un vrai cristal de mica mesure du mm au dm.")}` });
+            ? "La séricite se présente en paillettes de quelques µm." : "Un cristal réel de mica va du millimètre au décimètre.")}` });
     }
     if (fam === "chlorite") {
       const n = 7, R = 170, oh = ["sudoite", "donbassite", "cookeite"].includes(sp) ? "Al" : oct;
       return plaque({ titre: "Plaquette de chlorite", R, contour: ctr("hexa", R),
         niveaux: () => Array.from({ length: n }, () => ({ f: feuillet("21", oct), d: COU[f].d, esp: { type: "hydroxyde", oct: oh } })),
         legende: () => legendeFeuillet(oct) + (oh !== oct ? puce(C[oh], "feuillet d'hydroxyde <small>Al, OH</small>") : puce(C[oh], `feuillet d'hydroxyde <small>${NOM_OCT[oh]}, OH</small>`)),
-        note: () => `Chaque feuillet 2:1 est soudé au suivant par un feuillet d'hydroxyde : l'empilement est rigide et ne gonfle pas.
-          Plaquette dessinée : ${n} feuillets, 34 nm de large. ${ech("Les vrais cristaux mesurent du µm au mm.")}` });
+        note: () => `Un feuillet d'hydroxyde relie chaque feuillet 2:1 au suivant : l'ensemble, rigide, ne gonfle pas.
+          Plaquette dessinée : ${n} feuillets, 34 nm de large. ${ech("Les cristaux réels mesurent de quelques µm à quelques mm.")}` });
     }
     if (f === "vermiculite") {
       const n = 8, R = 200;
       return plaque({ titre: "Plaquette de vermiculite", R, change: true, contour: ctr("irr", R, 21, 1.05),
         niveaux: (i, j, u) => Array.from({ length: n }, () => ({ f: feuillet("21", "Mg"), d: dEtat(E.vermiculite, i, j, u), esp: { type: "eau" } })),
         legende: () => legendeFeuillet("Mg") + puce(C.eau, "Mg²⁺ et eau entre les feuillets", EAU_A),
-        note: (i, j, u) => `Feuillets 2:1 fortement chargés, séparés par Mg²⁺ et au plus deux couches d'eau : l'ensemble gonfle peu
-          (espacement ${NM(dEtat(E.vermiculite, i, j, u))} nm dans l'état choisi). Chauffée brutalement, l'eau se vaporise et écarte les
-          paquets de feuillets en accordéon : c'est la vermiculite expansée. Plaquette dessinée : ${n} feuillets, 40 nm de large.
-          ${ech("Les vraies paillettes de vermiculite mesurent du mm au cm.")}` });
+        note: (i, j, u) => `Très chargés, les feuillets 2:1 sont tenus à distance par Mg²⁺ et deux couches d'eau au maximum : le gonflement reste faible
+          (espacement ${NM(dEtat(E.vermiculite, i, j, u))} nm selon l'état retenu). Sous l'effet d'un chauffage brusque, la vapeur d'eau écarte les
+          paquets comme un accordéon : on obtient la vermiculite expansée. Plaquette dessinée : ${n} feuillets, 40 nm de large.
+          ${ech("Les paillettes réelles de vermiculite vont du millimètre au centimètre.")}` });
     }
     if (f === "illite" || f === "glauconite" || f === "celadonite") {
       const n = 8, R = 150, gonfle = f !== "celadonite";
@@ -482,9 +475,9 @@
         niveaux: (i, j, u) => Array.from({ length: n }, (x, k) => (gonfle && k === 4 ? { f: feuillet("21", oct), d: dEtat(E.faible, i, j, u), esp: { type: "eau" } }
           : { f: feuillet("21", oct), d: COU[f].d, esp: { type: "K" } })),
         legende: () => legendeFeuillet(oct) + puce(C.K, "K⁺ entre les feuillets") + (gonfle ? puce(C.eau, "espace sans potassium, avec eau", EAU_A) : ""),
-        note: (i, j, u) => `Des paquets de quelques feuillets 2:1 verrouillés par K⁺, en ${f === "illite" ? "lattes et plaquettes" : "plaquettes"}
-          à bords irréguliers${gonfle ? " ; un espace a perdu son potassium et prend l'eau (" + NM(dEtat(E.faible, i, j, u)) + " nm dans l'état choisi), d'où le gonflement faible" : ""}.
-          Particule dessinée : ${n} feuillets. ${ech(f === "glauconite" ? "Les cristaux de glauconite, de moins d'un µm, s'agrègent en grains verts arrondis de 0,1 à 1 mm." : "Les vraies particules mesurent 0,1 à 1 µm de large et 2 à 20 feuillets d'épaisseur.")}` });
+        note: (i, j, u) => `Quelques feuillets 2:1 seulement, bloqués par K⁺, forment des paquets en ${f === "illite" ? "lattes et plaquettes" : "plaquettes"}
+          aux bords irréguliers${gonfle ? " ; un espace, ayant perdu son potassium, accueille l'eau (" + NM(dEtat(E.faible, i, j, u)) + " nm selon l'état retenu), d'où un gonflement faible" : ""}.
+          Particule dessinée : ${n} feuillets. ${ech(f === "glauconite" ? "La glauconite forme des grains verts arrondis de 0,1 à 1 mm, agrégats de cristaux inférieurs au micromètre." : "Les particules réelles ont 0,1 à 1 µm de large et empilent 2 à 20 feuillets.")}` });
     }
     if (fam === undefined && ["montmorillonite", "hectorite", "nontronite"].includes(f)) {   // smectites
       const latte = ["nontronite", "hectorite", "swinefordite"].includes(sp);
@@ -493,10 +486,10 @@
       return plaque({ titre: "Tactoïde de smectite", R, change: true, ondule: 7, etire: latte ? 2.2 : 1,
         niveaux: (i, j, u) => Array.from({ length: n }, () => ({ f: feuillet("21", oct), d: dEtat(E.smectite, i, j, u), esp: { type: "eau" } })),
         legende: () => legendeFeuillet(oct) + puce(C.eau, "cations et eau entre les feuillets", EAU_A),
-        note: (i, j, u) => `Feuillets 2:1 très fins (1 nm) et souples, ${latte ? "en lattes" : "en flocons"} ondulés, empilés à quelques-uns
-          en « tactoïdes », chacun tourné au hasard par rapport au suivant (empilement turbostratique). Entre eux, cations et eau :
-          ${NM(dEtat(E.smectite, i, j, u))} nm d'un feuillet au suivant dans l'état choisi. Tactoïde dessiné : ${n} feuillets, ${NM(2 * R)} nm
-          de large. ${ech("Les vrais feuillets mesurent 0,1 à 1 µm de large pour 1 nm d'épaisseur : 100 à 1 000 fois plus larges qu'épais.")}` });
+        note: (i, j, u) => `Très fins (1 nm), souples, ${latte ? "en lattes" : "en flocons"} ondulés, les feuillets 2:1 se groupent à quelques-uns
+          en « tactoïdes », chacun orienté au hasard par rapport au suivant (empilement turbostratique). Entre eux se logent cations et eau :
+          ${NM(dEtat(E.smectite, i, j, u))} nm séparent un feuillet du suivant, selon l'état retenu. Tactoïde dessiné : ${n} feuillets, ${NM(2 * R)} nm
+          de large. ${ech("Un feuillet réel n'a que 1 nm d'épaisseur pour 0,1 à 1 µm de largeur : il est 100 à 1 000 fois plus large qu'épais.")}` });
     }
     return null;
   }

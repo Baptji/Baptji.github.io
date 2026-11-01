@@ -94,8 +94,7 @@
       const somme = ici.reduce((a, x) => a + x.s.pct, 0);
       lignes += `<h3 class="rs-tr" id="rocsurf-${t.k}">${t.nom}<span>${ici.length} roche${ici.length > 1 ? "s" : ""}${t.k === "abs" ? "" : ` · ${pctTxt(somme)} du territoire à elles toutes`}</span></h3>`;
       if (t.k === "abs") {
-        lignes += `<p class="sub">Moins de 0,5 km² sur toute la carte au 1/50 000 : la roche n'affleure pas en France (on la suit à l'étranger), n'est connue
-          que par sondages et mines (sel gemme, anhydrite, sels potassiques), ou ne porte pas son propre nom sur la carte (elle est comptée avec la formation qui la contient).</p>
+        lignes += `<p class="sub">Moins de 0,5 km² sur l'ensemble de la carte au 1/50 000. Cette roche n'affleure guère en France : on l'étudie à l'étranger, ou seulement par sondages et mines (sel gemme, anhydrite, sels potassiques). Elle peut aussi n'être pas nommée sur la carte, comptée alors avec la formation qui la renferme.</p>
           <div class="rs-abs">` + ici.map((x) => {
             const etr = x.r.regions && x.r.regions.length && x.r.regions.every((g) => g.etranger);
             return `<a href="#roche/${x.r.id}" class="rs-abs-i"><span class="sw" style="background:${x.r.swatch}"></span>${x.r.nom}${etr ? `<small>absente de France</small>` : ""}</a>`;
@@ -114,8 +113,8 @@
             <span class="rs-barre"><i style="width:${l}%"></i></span>
             <span class="rs-val"><b>${pctTxt(x.s.pct)}</b><small>${kmTxt(x.s.km2)}</small></span></summary>
           <div class="rs-detail">
-            <p><b>Plus grandes formations de la carte rangées sous cette roche :</b></p><ul>${forms}</ul>${plus}
-            <a href="#roche/${x.r.id}" class="rs-fiche">Voir sa fiche →</a>
+            <p><b>Principales formations de la carte classées sous cette roche :</b></p><ul>${forms}</ul>${plus}
+            <a href="#roche/${x.r.id}" class="rs-fiche">Ouvrir la fiche complète →</a>
           </div></details>`;
       });
     });
@@ -170,7 +169,7 @@
       surfaces calculées par l'atlas (formule de l'aire sphérique, rayon terrestre moyen 6 371 km). Total obtenu : ${nf(T, 0)} km²
       (superficie officielle de la France métropolitaine : 543 940 à 551 695 km² selon la source).</p>`;
 
-    document.title = "Roches par surface — Atlas géologique";
+    document.title = "Roches par surface · Atlas Sol";
   }
 
   window.RochesSurface = { vue, choisir, boutons, menu, page, rang, TRANCHES };

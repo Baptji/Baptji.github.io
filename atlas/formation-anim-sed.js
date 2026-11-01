@@ -299,7 +299,7 @@
     const jaugeTexte = (v) => p.jauge ? `${String(p.jauge.unite === "%" || !p.jauge.unite ? nombre(v) : (Math.round(v * 10) / 10)).replace(".", ",")} ${p.jauge.unite || "%"}` : `${nombre(v)} %`;
     return {
       fond: tx.defs + rect(0, 0, W, H, "#f3f1ea") + txt(X, 17, p.titre || "Dans la roche, à la loupe")
-        + `<text x="${X}" y="${r1(Y + LH + 12)}" class="fa-leg">${vue}. Même schéma que « Texture de la roche », plus bas.</text>`,
+        + `<text x="${X}" y="${r1(Y + LH + 12)}" class="fa-leg">${vue}. Reprise du schéma de « Texture de la roche », plus bas.</text>`,
       anim(t, ta) {
         const e = fen(t, 0.06, 0.9);
         let contenu;
@@ -376,7 +376,7 @@
         const v = lerp(VIDES[0], VIDES[1], t);
         s += L.dans(rect(LX - LR, LY - LR, 2 * LR, 2 * LR, "#f4f1ea") + texDansDisque(tx, LX, LY, LR, ech, texDessin(tx, v, VIDES[0]))) + L.bord;
         s += line(RX - 10, gY, LX - LR * 0.7, LY + LR * 0.7, "rgba(39,48,45,.35)", 0.8, { "stroke-dasharray": "3 2" });
-        const lt = p.loupeTexte || ["à la loupe : sous le poids des couches,", "les grains se tassent, l'eau est chassée"];
+        const lt = p.loupeTexte || ["à la loupe : sous le poids des couches superposées,", "les grains se resserrent et l'eau est expulsée"];
         s += txt(TX, LY + LR + 13, lt[0], { a: "middle", petit: true }) + txt(TX, LY + LR + 23, lt[1], { a: "middle", petit: true })
           + txt(TX, LY + LR + 36, `vides : ${Math.round(v)} %`, { a: "middle" });
         return s;
@@ -434,7 +434,7 @@
         s += poly([[RX - 1, gY], [RX - 8, gY - 4.5], [RX - 8, gY + 4.5]], "#c0392b");
         s += txt(RX + 36, gY + 3.5, z > 0.02 ? `${z < 1 ? nombre(Math.round(z * 100) * 10) + " m" : dec(z) + " km"} · ${Math.round(T)} °C` : "à l'affleurement");
         s += compteur(408, 18, lerp(p.age0 ?? 100, p.age1 ?? 0, e));
-        s += bulle(292, 58, (p.moteur || ["la région se soulève lentement ;", "pluie et rivières enlèvent le dessus"]));
+        s += bulle(292, 58, (p.moteur || ["la région se soulève lentement ;", "la pluie et les rivières emportent la partie supérieure"]));
         s += txt(8, 14, e < 0.9 ? "le dessus s'érode : la roche se rapproche de la surface" : (p.titreFin || "la roche affleure"));
         if (p.zFin && e > 0.9) s += txt(RX + 36, gY + 16, p.texteFin || "", { petit: true });
         return s;
@@ -607,15 +607,15 @@
         if (pe > 0 && p.penitents !== false) s += grp(penitents(64, 24, 168, 84, R) + line(150, 108, XS + 4, sol(XS + 4) - 2, "#27302d", 0.8, { "stroke-dasharray": "3 2" }), pe);
         // textes
         s += line(XV - 36, 238, XV - 36, 238, "none", 0);
-        const TT = p.titres || ["la chaîne alpine avance et se soulève ; les orages l'érodent", "torrents et rivières roulent les blocs : en chemin, ils s'arrondissent", "au pied de la chaîne, les galets s'étalent en cônes, lit après lit",
-          "le bassin s'enfonce le long de la faille : les cônes s'empilent", "les rivières ne déposent plus : elles creusent", "la Durance a creusé 400 m : le poudingue affleure"];
+        const TT = p.titres || ["la chaîne alpine progresse et se soulève ; les orages en assurent l'érosion", "torrents et rivières charrient les blocs, qui s'arrondissent en cours de route", "au pied de la chaîne, les galets s'accumulent en cônes, strate après strate",
+          "le bassin s'affaisse le long de la faille : les cônes se superposent", "les rivières cessent de déposer et entaillent le substrat", "la Durance a entaillé 400 m : le poudingue affleure"];
         const titre = phase === 1 ? (T < 0.15 ? TT[0] : T < 0.3 ? TT[1] : TT[2]) : phase === 2 ? TT[3] : T < 0.86 ? TT[4] : TT[5];
         s += txt(8, 14, titre);
         if (phase < 3) s += GR ? txt(XA - 4, 236, LB.moteur, { a: "end", petit: true, clair: true }) : txt(398, 232, LB.moteur, { a: "middle", petit: true, clair: true });
         if (phase === 2 && !GR && !p.flexure) s += txt(XF + 12, 232, LB.faille, { petit: true, clair: true, op: fen(T, 0.46, 0.5) });
         if (phase === 2 && !GR && !p.flexure) s += fleche(XF + 20, 180, XF + 20, 196, { c: "#c0392b", sw: 1.8, pointe: 6, op: 0.8 });
         if (phase === 2 && p.flexure) for (const x of [220, 280]) s += fleche(x, 196, x, 214, { c: "#c0392b", sw: 1.8, pointe: 6, op: 0.8 * fen(T, 0.46, 0.5) });
-        if (phase === 2 && p.flexure) s += txt(8, 27, "(la plaque fléchit sous le poids de la chaîne : flèches rouges)", { petit: true, op: fen(T, 0.46, 0.5) });
+        if (phase === 2 && p.flexure) s += txt(8, 27, "(sous le poids de la chaîne, la plaque se courbe : flèches rouges)", { petit: true, op: fen(T, 0.46, 0.5) });
         if (T > 0.8) s += txt(XV, yFond - 4, LB.riviere || "Durance", { a: "middle", petit: true, op: fen(T, 0.8, 0.84) }) + rect(XV - 8, yFond - 1.5, 16, 2.5, "#5d9cc6");
         s += txt(20, 160, LB.ouest, { petit: true, op: 0.8 });
         s += compteur(412, 14, phase === 1 ? lerp(AG[0], AG[1], T / 0.45) : phase === 2 ? lerp(AG[1], AG[2], (T - 0.45) / 0.27) : lerp(AG[2], AG[3], (T - 0.72) / 0.28));
@@ -646,7 +646,7 @@
     for (let i = 0; i < 5; i++) { const xx = x + 14 + i * 24 + R() * 10; d += ell(xx, base + 3, 3, 3.6, "#5d8a45"); }
     d += rect(x, y, w, 23, "rgba(255,255,255,.85)");
     s += `<g clip-path="url(#${k})">${d}</g>` + rect(x, y, w, h, "none", { rx: 5, stroke: "#27302d", "stroke-width": 1 });
-    s += `<text x="${r1(x + 6)}" y="${r1(y + 10)}" class="fa-leg">Les Pénitents des Mées (≈ 100 m) :</text><text x="${r1(x + 6)}" y="${r1(y + 19)}" class="fa-leg">le poudingue découpé par le ruissellement</text>`;
+    s += `<text x="${r1(x + 6)}" y="${r1(y + 10)}" class="fa-leg">Pénitents des Mées (≈ 100 m) :</text><text x="${r1(x + 6)}" y="${r1(y + 19)}" class="fa-leg">poudingue entaillé par les eaux de ruissellement</text>`;
     return s;
   }
   SCENES.piemontCone = (p, roche) => piemont(Object.assign({ _roche: roche }, p), 0, 0.45);
@@ -729,7 +729,7 @@
           // cycles de gel et de dégel : l'eau des fissures gèle la nuit (bleu) et gonfle, le bloc se détache au dégel
           for (let k = 0; k < 5; k++) { const y = relief(188) + 10 + k * 20; s += pline([[178, y], [184, y + 3], [188, y + 1]], gel ? "#9fd0ea" : "#6d5c48", 1.8); }
           s += grp(rect(0, 0, W, H, "#1c2a44"), gel ? 0.18 : 0) + (gel ? circ(430, 36, 7, "#eef3f5") : soleil(430, 40, 9));
-          s += txt(8, 27, gel ? "la nuit, l'eau gèle dans les fissures et gonfle d'environ 9 %" : "le jour, la glace fond : les fragments décollés tombent", { petit: true });
+          s += txt(8, 27, gel ? "la nuit, l'eau gèle dans les fissures et gonfle d'environ 9 %" : "au fil de la journée, la glace fond et les fragments détachés chutent", { petit: true });
         } else {
           s += grp(nuage(120 + 3 * Math.sin(ta * 0.3), 30, 1, true) + pluie(96, 38, 60, 120, ta, 14, "eb1", relief), 0.9);
           s += soleil(446, 50, 10);
@@ -742,16 +742,16 @@
           const o = fen(T, 0.3, 0.35), v = phase === 1 ? 35 : lerp(35, 6, fen(T, 0.55, 0.95));
           const L = loupe(388, 96, 46, { vers: [XN, YN], rVers: 3 });
           s += grp(L.fond + L.dans(texDansDisque(tx, 388, 96, 46, 0.42, texDessin(tx, v, 35))) + L.bord
-            + txt(388, 154, phase === 1 ? "anguleux, pas triés, pleins de vides" : "l'argile et la calcite comblent les vides", { a: "middle", petit: true })
+            + txt(388, 154, phase === 1 ? "anguleux, pas triés, pleins de vides" : "l'argile et la calcite remplissent les vides", { a: "middle", petit: true })
             + txt(388, 165, `vides : ${Math.round(v)} %`, { a: "middle", petit: true }), o);
         }
         // textes
         const titre = p.froid ? "sous climat froid, la falaise se débite en fragments qui s'entassent à son pied" : phase === 1 ? (T < 0.2 ? "compression : une couche de calcaire se plisse et se soulève"
-          : "des blocs tombent de la falaise et ne roulent que sur une courte distance")
-          : T < 0.75 ? "l'éboulis s'épaissit ; l'eau de pluie s'y infiltre" : "chargée de calcaire et d'argile, elle soude les blocs : la brèche";
+          : "de la falaise, des blocs tombent et ne roulent que sur une courte distance")
+          : T < 0.75 ? "l'éboulis s'épaissit ; l'eau de pluie s'y infiltre" : "elle cimente les blocs, qui deviennent une brèche, chargée de calcaire et d'argile";
         s += txt(8, 14, titre);
         if (hT > 30) s += txt(XC - 8 + hT * PENTE * 0.62, SOL - 5, phase === 1 ? "éboulis (meuble)" : T < 0.8 ? "éboulis" : "brèche (cimentée)", { a: "middle", petit: true, clair: true });
-        if (phase === 2) s += bulle(232, 204, ["tant qu'il est meuble, c'est un éboulis ;", "une fois cimenté, c'est une roche : une brèche"], { op: fen(T, 0.6, 0.66) });
+        if (phase === 2) s += bulle(232, 204, ["tant qu'il reste meuble, il s'agit d'un éboulis ;", "une fois cimenté, il devient roche : c'est une brèche"], { op: fen(T, 0.6, 0.66) });
         s += compteur(410, 16, phase === 1 ? lerp(72, 67, T / 0.5) : lerp(67, 62, (T - 0.5) / 0.5), { libelle: p.libelleAge });
         return s;
       },
@@ -787,7 +787,7 @@
         s += `<clipPath id="${clipB}"><polygon points="${P(rocP.concat([[W, H], [0, H]]))}"/></clipPath>` + poly(rocP.concat([[W, H], [0, H]]), "#cdc7ba");
         let li = ""; for (let k = 1; k < 10; k++) li += pline(rocP.map(([x, y]) => [x, y + k * 8 + (x > 250 ? (x - 250) * 0.05 * k * 0.2 : 0)]), "rgba(120,110,95,.35)", 0.8);
         li += rect(0, 212, W, 30, "#b79f94") + txt(8, 232, "socle cristallin", { petit: true, clair: true });
-        s += `<g clip-path="url(#${clipB})">${li}</g>` + txt(12, 176, "plate-forme de calcaires et de dolomies (Otavi)", { petit: true, op: 1 - fen(T, 0.8, 0.9) * 0 });
+        s += `<g clip-path="url(#${clipB})">${li}</g>` + txt(12, 176, "plate-forme faite de calcaires et de dolomies (groupe d'Otavi)", { petit: true, op: 1 - fen(T, 0.8, 0.9) * 0 });
         // la moraine : bourrelet à la ligne d'échouage + placage sur la plate-forme laissé par le recul
         const bour = fen(T, 0.25, 0.9), plac = fen(T, 0.55, 0.9);
         const mor = (x) => { const b = 18 * bour * Math.exp(-(((x - XG + 8) / 26) ** 2)), pl = x < XG ? 4 * plac : 0; return Math.max(b, pl); };
@@ -833,7 +833,7 @@
           d += poly(blocs[5].f(0.15, bx, 70, 14, 0.2), "#b5ab9a", { stroke: "#5a5248", "stroke-width": 0.9 });
           for (let k = 0; k < 5; k++) d += line(bx - 11, 70 + k * 2.2, bx + 11, 71 + k * 2.2, "rgba(255,255,255,.8)", 0.6);
           d += fleche(226, 34, 250, 34, { c: "#5c7f93", sw: 1.3, pointe: 5 });
-          s += grp(L.fond + L.dans(d) + L.bord + txt(262, 124, "à la base : le bloc raye la roche", { a: "middle", petit: true }) + txt(262, 134, "et se raye (stries) ; poussière = farine", { a: "middle", petit: true }), o);
+          s += grp(L.fond + L.dans(d) + L.bord + txt(262, 124, "à la base : le bloc rabote la roche", { a: "middle", petit: true }) + txt(262, 134, "et se raye (stries) ; la poussière forme une farine", { a: "middle", petit: true }), o);
         }
         // loupe de la moraine (fin de phase 1 et phase 2) : la tillite future, non triée, gorgée d'eau
         const XN = XG - 8, YN = roc(XN) - 6 * bour;
@@ -842,15 +842,15 @@
           const o = fen(T, 0.45, 0.5);
           const L = loupe(118, 84, 40, { vers: [XN, YN], rVers: 3 });
           s += grp(L.fond + L.dans(texDansDisque(tx, 118, 84, 40, 0.45, texDessin(tx, 32, 32))) + L.bord
-            + txt(118, 136, "la moraine : blocs, sable et farine", { a: "middle", petit: true }) + txt(118, 146, "mêlés, sans aucun tri", { a: "middle", petit: true }), o);
+            + txt(118, 136, "la moraine : blocs, sable et farine glaciaire", { a: "middle", petit: true }) + txt(118, 146, "mêlés, sans aucun tri", { a: "middle", petit: true }), o);
         }
         if (cap > 1) s += txt(300, roc(300) - mor(300) - cap - 5, "calcaires de fin de glaciation", { a: "middle", petit: true });
         if (bour > 0.4 && phase === 1) s += txt(XG + 6, roc(XG) + 14, "moraine", { petit: true, clair: true });
         if (phase === 1) s += txt(XG + 22, mer - 16, "la glace flotte", { petit: true });
         const titre = phase === 1 ? (T < 0.14 ? "la Terre est presque entièrement gelée : la glace avance sur la plate-forme"
           : T < 0.4 ? "à sa base, elle arrache des blocs, les traîne et broie la roche en farine"
-            : "là où elle se met à flotter, elle lâche tout, pêle-mêle : une moraine")
-          : T < 0.8 ? "le climat bascule : la glace fond et recule, la mer remonte" : "sur la moraine noyée se déposent des calcaires de mer chaude";
+            : "dès qu'elle flotte, elle lâche tout en vrac : une moraine")
+          : T < 0.8 ? "le climat bascule : la glace fond et recule, la mer remonte" : "des calcaires d'eau chaude se déposent sur la moraine noyée";
         s += txt(8, 14, titre);
         if (phase === 2 && chaud > 0.3) s += soleil(446, 50, 10 * chaud);
         s += compteur(412, phase === 1 ? 32 : 32, phase === 1 ? lerp(645, 636, T / 0.5) : lerp(636, 635, (T - 0.5) / 0.5));
@@ -923,17 +923,17 @@
           for (let k = 0; k < 8; k++) { const x0 = 214 + ((k * 11 + ta * 5) % 76); d += line(x0, 66 + (k % 4) * 2, x0 + 8, 66 + (k % 4) * 2, "#6d6555", 0.7); }
           const bx = 240 + ((ta * 5) % 24); d += poly(blocs[5].f(0.15, bx, 55, 12, 0.2), "#b5ab9a", { stroke: "#5a5248", "stroke-width": 0.9 });
           for (let k = 0; k < 4; k++) d += line(bx - 9, 55 + k * 2.2, bx + 9, 56 + k * 2.2, "rgba(255,255,255,.8)", 0.6);
-          s += grp(L.fond + L.dans(d) + L.bord + txt(250, 106, "à la base : blocs traînés, roche rayée,", { a: "middle", petit: true }) + txt(250, 115, "poussière de roche (farine)", { a: "middle", petit: true }), o);
+          s += grp(L.fond + L.dans(d) + L.bord + txt(250, 106, "à la base : blocs charriés, roche striée,", { a: "middle", petit: true }) + txt(250, 115, "poussière de roche (farine)", { a: "middle", petit: true }), o);
         }
         if (tx && (phase === 2 || T > 0.4)) {
           s += circ(XN, YN, 2.6, "#c0392b", { stroke: "#fff", "stroke-width": 1 });
           const o = fen(T, 0.4, 0.46), L = loupe(410, 80, 36, { vers: [XN, YN], rVers: 3 });
-          s += grp(L.fond + L.dans(texDansDisque(tx, 410, 80, 36, p.echelleLoupe || 0.4, texDessin(tx, 30, 30))) + L.bord + txt(410, 126, p.texteLoupe || "la moraine : tout mêlé, sans tri", { a: "middle", petit: true }), o);
+          s += grp(L.fond + L.dans(texDansDisque(tx, 410, 80, 36, p.echelleLoupe || 0.4, texDessin(tx, 30, 30))) + L.bord + txt(410, 126, p.texteLoupe || "la moraine : matériaux mêlés, sans tri", { a: "middle", petit: true }), o);
         }
         if (phase === 2 && T > 0.7) s += txt(215, sol(215) + 16, "arcs de moraines", { a: "middle", petit: true, clair: true });
         if (phase === 1 && T > 0.3) s += txt(XF + 6, sol(XF) + 16, "moraine frontale", { a: "middle", petit: true, clair: true });
         s += txt(400, sol(400) + 16, "plaine d'épandage", { a: "middle", petit: true, clair: true });
-        const TT = p.titres || ["le glacier descend des Alpes sur la plaine", "à sa base, il arrache des blocs et broie la roche en farine", "devant lui, il pousse un bourrelet de débris mêlés", "le climat se réchauffe : il fond et recule par à-coups", "à chaque arrêt, un arc de moraine ; un lac dans le creux"];
+        const TT = p.titres || ["un glacier issu des Alpes gagne la plaine", "à sa base, il déchausse des blocs et pulvérise la roche", "il refoule devant lui un bourrelet de débris hétérogènes", "le réchauffement fait fondre le glacier, qui recule par paliers", "à chaque arrêt, un arc morainique ; un lac occupe la dépression"];
         s += txt(8, 14, phase === 1 ? (T < 0.1 ? TT[0] : T < 0.3 ? TT[1] : TT[2]) : T < 0.75 ? TT[3] : TT[4]);
         s += compteur(412, 30, 0, { libelle: phase === 1 ? (p.agesTexte || ["il y a ≈ 25 000 ans", ""])[0] : (p.agesTexte || ["", "il y a ≈ 18 000 ans"])[1] });
         return s;
@@ -993,7 +993,7 @@
         s += fleche(140, 58, 190, 58, { sw: 2.2, pointe: 7 }) + txt(165, 50, "vent", { a: "middle", petit: true });
         s += txt(345, 185, "placage de lœss", { a: "middle", clair: true }) + txt(345, 196, "plus épais à l'abri du vent", { a: "middle", petit: true, clair: true });
         s += txt(440, 110, "steppe froide", { a: "middle", petit: true });
-        s += compteur(330, 20, 0, { libelle: `il y a ≈ ${nombre(Math.round(lerp(30000, 12000, clamp(t)) / 500) * 500)} ans`, sous: "le lœss s'épaissit de ≈ 0,1 à 1 mm par an" });
+        s += compteur(330, 20, 0, { libelle: `il y a ≈ ${nombre(Math.round(lerp(30000, 12000, clamp(t)) / 500) * 500)} ans`, sous: "le lœss gagne ≈ 0,1 à 1 mm d'épaisseur par an" });
         return s;
       },
     };
@@ -1099,8 +1099,8 @@
           s += grp(L.fond + L.dans(texDansDisque(tx, lx, ly, 28, p.echelleLoupe || 0.4, texDessin(tx, p.videsLoupe || 40, 40))) + L.bord
             + txt(lx, ly + 38, p.texteLoupe || "", { a: "middle", petit: true }), o);
         }
-        const titre = phase === 1 ? (T < 0.25 ? "sur le relief, l'eau de pluie altère la roche et libère grains et argiles" : "la rivière emporte grains et argiles jusqu'à la mer")
-          : T < 0.62 ? "à l'embouchure, chaque grain tombe plus ou moins loin selon sa taille" : (p.titreDepot || "lit après lit, la zone suivie s'épaissit");
+        const titre = phase === 1 ? (T < 0.25 ? "sur le relief, l'eau de pluie altère la roche et libère grains et argiles" : "la rivière charrie grains et argiles jusqu'au littoral")
+          : T < 0.62 ? "à l'embouchure, chaque grain tombe plus ou moins loin selon sa taille" : (p.titreDepot || "strate après strate, la zone suivie s'épaissit");
         s += txt(8, MER + 150 - 2, "", {});
         s += `<text x="8" y="14" class="fa-lab">${titre}</text>`;
         if (p.ages) s += compteur(412, 14, phase === 1 ? lerp(p.ages[0], p.ages[1], T / 0.5) : lerp(p.ages[1], p.ages[2], (T - 0.5) / 0.5), { libelle: p.libelleAge });
@@ -1172,18 +1172,18 @@
           let d = rect(354, 64, 72, 72, "#5d5a50");
           for (let k = 0; k < 90; k++) { const v = (k % 10) / 9, rr = lerp(3.2, 0.7, v); d += circ(356 + ((k * 37) % 70), 134 - v * 52 + ((k * 13) % 5), rr, melange("#efe6d2", "#b9ad92", v)); }
           d += rect(354, 64, 72, 16, "#5d5a50");
-          s += grp(L.fond + L.dans(d) + L.bord + txt(390, 148, "un banc : grossier en bas, fin en haut ;", { a: "middle", petit: true })
+          s += grp(L.fond + L.dans(d) + L.bord + txt(390, 148, "un banc granoclassé : grossier à la base, fin au sommet ;", { a: "middle", petit: true })
             + txt(390, 158, "puis la boue retombe lentement", { a: "middle", petit: true }), o);
         }
         if (phase === 2 && tx) {
           const o = fen(T, 0.56, 0.62), L = loupe(392, 86, 34, { vers: [410, yTop + 5], rVers: 3 });
           s += grp(L.fond + L.dans(texDansDisque(tx, 392, 86, 34, p.echelleLoupe || 0.4, texDessin(tx, 15, 15))) + L.bord + txt(392, 131, p.texteLoupe || "", { a: "middle", petit: true }), o);
-          if (nb > 3) s += txt(W - 6, 212, "des centaines de bancs (quelques-uns dessinés)", { a: "end", petit: true, clair: true });
+          if (nb > 3) s += txt(W - 6, 212, "des centaines de bancs (quelques-uns seulement sont dessinés)", { a: "end", petit: true, clair: true });
         }
         s += txt(120, 90, "plateau", { petit: true, clair: true }) + txt(214, 150, "pente", { petit: true, clair: true }) + txt(300, 228, "fond du bassin, 2 à 4 km d'eau", { petit: true, clair: true });
         const titre = phase === 1 ? (T < 0.27 ? "le delta déverse sable et boue au rebord du plateau : le tas grossit"
-          : T < 0.36 ? "un séisme : le tas s'effondre et dévale la pente" : "sur le fond, le nuage ralentit et dépose un banc")
-          : "à chaque séisme, une avalanche : les bancs s'empilent";
+          : T < 0.36 ? "un séisme : le tas s'effondre et dévale la pente" : "sur le fond, le nuage freine et laisse un banc")
+          : "à chaque séisme, une avalanche : les bancs s'accumulent";
         s += txt(8, 14, titre);
         if (p.ages) s += compteur(412, 14, phase === 1 ? lerp(p.ages[0], p.ages[1], T / 0.5) : lerp(p.ages[1], p.ages[2], (T - 0.5) / 0.5));
         return s;
@@ -1284,16 +1284,16 @@
         // milieu : vagues, côte, cratère, profondeur de compensation
         let v = ""; for (let x = 0; x < W; x += 12) v += `<path d="M${x} ${r1(SURF + Math.sin(x / 13 + ta * 2.2) * (mil === "faluns" ? 1.8 : 1))} q3 -2 6 0 t6 0" fill="none" stroke="#ffffff" stroke-opacity=".7" stroke-width="1"/>`;
         s += v;
-        if (mil === "cotier") { s += poly([[0, SURF - 8], [60, SURF - 4], [120, SURF + 1], [0, SURF + 1]], "#b9a88a") + pline([[20, SURF - 6], [60, SURF - 2], [110, SURF + 1]], "#5b95c6", 1.8); for (let i = 0; i < 20; i++) { const u = (i / 20 + ta * 0.15) % 1; s += circ(110 + u * 200, SURF + 6 + u * u * 120, 1.1, "#d9c48f", { opacity: op((1 - u) * 1.2) }); } s += txt(6, SURF - 12, "la rivière apporte sable fin et micas", { petit: true }); }
+        if (mil === "cotier") { s += poly([[0, SURF - 8], [60, SURF - 4], [120, SURF + 1], [0, SURF + 1]], "#b9a88a") + pline([[20, SURF - 6], [60, SURF - 2], [110, SURF + 1]], "#5b95c6", 1.8); for (let i = 0; i < 20; i++) { const u = (i / 20 + ta * 0.15) % 1; s += circ(110 + u * 200, SURF + 6 + u * u * 120, 1.1, "#d9c48f", { opacity: op((1 - u) * 1.2) }); } s += txt(6, SURF - 12, "la rivière apporte du sable fin et des micas", { petit: true }); }
         if (mil === "faluns") for (let i = 0; i < 6; i++) { const u = (i / 6 + ta * 0.2) % 1, x = 40 + u * 400; s += fleche(x, 120 + Math.sin(ta + i) * 3, x + 18 * Math.sin(ta * 0.8), 120 + Math.sin(ta + i) * 3, { c: "rgba(255,255,255,.7)", sw: 1.2, pointe: 4 }); }
         if (mil === "lac") { s += poly([[0, SURF - 30], [30, SURF - 36], [70, SURF - 2], [70, SURF + 2], [0, SURF + 2]], "#6f6258") + poly([[410, SURF + 2], [410, SURF - 2], [450, SURF - 38], [480, SURF - 30], [480, SURF + 2]], "#6f6258"); s += txt(4, SURF - 3, "cratère", { petit: true, clair: true }); }
         if (mil === "faluns") { const xr = ((ta * 22) % 620) - 70, yr = 90 + 6 * Math.sin(ta * 0.7); s += `<path d="M${r1(xr)} ${r1(yr)} q14 -7 34 -2 l8 -8 l-1 9 q6 1 10 1 l9 -7 l-3 8 l3 8 l-9 -6 q-12 5 -26 4 l-5 6 l-1 -6 q-12 -2 -19 -7 z" fill="#8c98a0" opacity=".85"/>` + (xr > 20 && xr < 440 ? txt(xr + 22, yr - 12, "requin", { a: "middle", petit: true, clair: true }) : ""); }
-        if (mil === "ocean") { s += line(0, 150, W, 150, "#ffffff", 1, { "stroke-dasharray": "5 4", opacity: 0.7 }) + txt(8, 146, "profondeur de compensation : la calcite se dissout", { petit: true, clair: true }); }
+        if (mil === "ocean") { s += line(0, 150, W, 150, "#ffffff", 1, { "stroke-dasharray": "5 4", opacity: 0.7 }) + txt(8, 146, "sous la profondeur de compensation, la calcite se dissout", { petit: true, clair: true }); }
         // loupes : l'organisme (phase 1), puis la roche (phase 2)
         if (phase === 1 && T > 0.12) {
           const k = vie[0], o = fen(T, 0.12, 0.18), L = loupe(390, 96, 38, { fond: mil === "lac" ? "#e2efe9" : "#e6f1f6" });
           s += grp(L.fond + L.dans(dessinOrganisme(k, 390, 96, 20, ta)) + L.bord + txt(390, 146, ORG[k].nom, { a: "middle", petit: true }) + txt(390, 156, ORG[k].taille, { a: "middle", petit: true })
-            + (k === "coccolithes" ? txt(390, 166, "(en bas à droite : une plaque tombée)", { a: "middle", petit: true }) : ""), o);
+            + (k === "coccolithes" ? txt(390, 166, "(en bas à droite : une plaque effondrée)", { a: "middle", petit: true }) : ""), o);
         }
         if (phase === 2 && tx && yN != null) {
           s += circ(XN, yN, 2.6, "#c0392b", { stroke: "#fff", "stroke-width": 1 });
@@ -1304,7 +1304,7 @@
         s += txt(8, 14, phase === 1 ? (T < 0.3 ? TT[0] : TT[1]) : TT[2] || TT[1]);
         if (p.labFond) s += txt(8, H - 8, p.labFond, { petit: true, clair: true });
         if (p.ages) s += compteur(412, 14, phase === 1 ? lerp(p.ages[0], p.ages[1], T / 0.5) : lerp(p.ages[1], p.ages[2], (T - 0.5) / 0.5), { libelle: p.libelleAge });
-        if (p.silex && phase === 2 && T > 0.85) s += txt(240, yTop - 6, "la silice des éponges se regroupe en rognons : le silex", { a: "middle", petit: true, clair: true });
+        if (p.silex && phase === 2 && T > 0.85) s += txt(240, yTop - 6, "la silice issue des éponges s'agglomère en rognons : le silex", { a: "middle", petit: true, clair: true });
         return s;
       },
     };
@@ -1336,7 +1336,7 @@
         const xpied = 262 - 30 * e;
         const f = []; for (let x = 0; x <= xpied; x += 3) f.push([x, falaise(x, e)]);
         s += poly(f.concat([[xpied, MER + 6], [W, MER + 14], [W, H], [0, H]]), "#f1eee6");
-        s += rect(xpied, MER, W - xpied, 14, "rgba(120,180,215,.85)") + txt(W - 8, MER + 38, "platier : la craie rabotée par la mer", { a: "end", petit: true });
+        s += rect(xpied, MER, W - xpied, 14, "rgba(120,180,215,.85)") + txt(W - 8, MER + 38, "platier : la craie rabotée par la houle", { a: "end", petit: true });
         const Rs = alea("fcs");
         for (let k = 0; k < 9; k++) { const y = 74 + k * 13; s += line(0, y, 250 - 30 * e + (y - 60) * 0.1, y, "rgba(150,140,120,.35)", 0.8); for (let i = 0; i < 14; i++) { const x = 8 + i * 17 + (k % 2) * 8 + (Rs() - 0.5) * 7, keep = Rs() > 0.25, rx = 2.2 + Rs() * 2; if (keep && x < 244 - 30 * e) s += ell(x, y - 3, rx, 1.3 + Rs() * 0.6, "#3b3a3d"); } }
         s += vegetation((x) => falaise(x, e), 2, 236 - 30 * e, alea("fcv"), { pas: 20 });
@@ -1350,8 +1350,8 @@
         // vagues qui frappent le pied
         for (let i = 0; i < 5; i++) { const u = (i / 5 + ta * 0.4) % 1; s += `<path d="M ${r1(xf + 40 - u * 40)} ${r1(MER - 2 + Math.sin(u * 6))} q 4 -4 8 0" fill="none" stroke="#fff" stroke-width="1.4" opacity="${op(1 - u)}"/>`; }
         s += fleche(xf + 44, MER - 10, xf + 8, MER - 10, { c: "#27302d", sw: 1.4, pointe: 5 });
-        s += txt(8, 14, p.titre || "la mer sape le pied de la falaise ; des pans tombent, la craie recule");
-        s += bulle(292, 28, p.lignes || ["la craie se dissout et s'use vite ;", "le silex, très dur, reste : il fait", "les galets de la plage"]);
+        s += txt(8, 14, p.titre || "la mer attaque la base de la falaise ; des pans s'effondrent et la craie recule");
+        s += bulle(292, 28, p.lignes || ["la craie se dissout et s'érode rapidement ;", "le silex, très dur, subsiste : il forme", "les galets de la plage"]);
         s += txt(12, 70, "craie et lits de silex", { petit: true });
         s += txt(300, MER + 20, "galets de silex", { petit: true, clair: true });
         s += compteur(412, 14, 0, { libelle: "aujourd'hui" });
@@ -1366,82 +1366,82 @@
   const E = (court, titre, quand, duree, scene, p, extra) => Object.assign({ court, titre, quand, scene, p: p || {} }, duree ? { duree } : {}, extra || {});
   const poser = (id, o) => { if (ROCHES_F[id]) Object.assign(ROCHES_F[id], o); };
 
-  SOURCES.valensole = "Poudingue de Valensole : cônes de déjection coalescents de la paléo-Durance, de la paléo-Bléone et de la paléo-Asse, galets bien arrondis venus des Alpes (calcaires subalpins, flysch, roches cristallines), plus de 800 m de dépôts au sondage des Mées, plateau à environ 400 m au-dessus de la Durance : Planet-Terre (ENS de Lyon), « Les Pénitents des Mées », 2020. Bassin d'avant-pays de la collision alpine, subsidence commandée par la faille de la Durance, poudingues à ciment gréseux, porosité de 1 à 5 % : fiche de la masse d'eau FRDG209, Agence de l'eau Rhône-Méditerranée, 2014. Surface du plateau datée à 1,8 Ma : Wikipédia, « Plateau de Valensole ». La profondeur de la couche suivie (≈ 350 m) est estimée d'après sa position sous le plateau.";
+  SOURCES.valensole = "Poudingue de Valensole : formé par la coalescence de cônes issus des paléo-Durance, paléo-Bléone et paléo-Asse. Ses galets, bien arrondis, proviennent des Alpes (calcaires subalpins, flysch, roches cristallines) ; le sondage des Mées traverse plus de 800 m de sédiments, et le plateau domine la Durance d'environ 400 m (Planet-Terre, ENS de Lyon, « Les Pénitents des Mées », 2020). Dépôt d'avant-pays de la collision alpine, enfoncé le long de la faille de la Durance, il présente un ciment gréseux et une porosité de 1 à 5 % (fiche de la masse d'eau FRDG209, Agence de l'eau Rhône-Méditerranée, 2014). Plateau daté de 1,8 Ma (Wikipédia, « Plateau de Valensole »). Pour la couche suivie (≈ 350 m), la profondeur est estimée d'après sa position sous le plateau.";
 
   poser("conglomerat", {
-    exemple: "Exemple suivi : le poudingue de Valensole et les Pénitents des Mées (Alpes-de-Haute-Provence), débris des Alpes accumulés entre 8 et 1,8 million d'années.",
+    exemple: "Exemple suivi : poudingue de Valensole et Pénitents des Mées (Alpes-de-Haute-Provence), où des débris alpins se déposent entre 8 et 1,8 million d'années.",
     anim: [
-      E("Érosion, cône", "Les Alpes avancent et se soulèvent ; les orages les érodent, torrents et rivières roulent les blocs, qui s'arrondissent, et les étalent en cônes au pied de la chaîne", "De 8 à 5 millions d'années", "3 millions d'années", "piemontCone", {}, { allonge: 2 }),
-      E("Enfouissement", "Le bassin s'enfonce le long de la faille de la Durance : de nouveaux cônes recouvrent nos galets, enfouis peu à peu sous ≈ 350 m de dépôts", "De 5 millions à 1,8 million d'années", "3 millions d'années", "piemontEnfouissement", {}),
-      E("Cimentation", "L'eau qui circule entre les galets dépose un ciment de calcite dans le sable qui les entoure : les vides se comblent, le gravier devient poudingue", "Pendant l'enfouissement, vers 20 °C", null, "loupeRoche",
-        { titre: "Dans le poudingue, à la loupe", lignes: ["L'eau de pluie infiltrée dissout", "un peu les galets calcaires, puis", "redépose la calcite dans les vides", "du sable entre les galets : tout", "se soude. Les galets, eux, ne", "changent pas."], vides: [25, 3], temperature: [20, 20] }),
-      E("Incision", "La sédimentation cesse ; la Durance creuse le plateau de 400 m et le ruissellement découpe le poudingue en colonnes : les Pénitents des Mées", "De 1,8 million d'années à aujourd'hui", "1,8 million d'années", "piemontIncision", {}),
+      E("Érosion, cône", "Les Alpes montent et se soulèvent ; l'érosion orageuse, puis les torrents et les rivières qui roulent les blocs, les arrondit avant de les étaler en cônes au pied de la chaîne", "De 8 à 5 millions d'années", "3 millions d'années", "piemontCone", {}, { allonge: 2 }),
+      E("Enfouissement", "Le long de la faille de la Durance, le bassin s'enfonce : de nouveaux cônes ensevelissent nos galets, peu à peu sous ≈ 350 m de sédiments", "De 5 millions à 1,8 million d'années", "3 millions d'années", "piemontEnfouissement", {}),
+      E("Cimentation", "L'eau qui circule entre les galets dépose un ciment de calcite dans le sable environnant : les vides se comblent et le gravier devient poudingue", "Pendant l'enfouissement, vers 20 °C", null, "loupeRoche",
+        { titre: "Dans le poudingue, à la loupe", lignes: ["L'eau de pluie infiltrée dissout", "légèrement les galets calcaires, puis", "précipite de nouveau la calcite dans les vides", "du sable entre les galets : l'ensemble", "se cimente. Les galets, eux, ne", "changent pas."], vides: [25, 3], temperature: [20, 20] }),
+      E("Incision", "Le dépôt cesse ; la Durance creuse 400 m dans le plateau, et le ruissellement dégage le poudingue en colonnes : ce sont les Pénitents des Mées", "De 1,8 million d'années à aujourd'hui", "1,8 million d'années", "piemontIncision", {}),
     ],
     animCurseur: "depart",
     cond: { type: "enfouissement", tmax: 9, zmax: 1, seuils: [], chemin: [
-      { age: 8, z: 0, n: 1, t: "Les Alpes s'érodent : les rivières roulent les galets et les étalent en cônes au pied de la chaîne." },
-      { age: 5, z: 0.02, n: 2, t: "Nos galets se déposent ; le bassin s'enfonce le long de la faille de la Durance." },
+      { age: 8, z: 0, n: 1, t: "Les rivières alpines usent la montagne, charrient les galets et les étalent en cônes au pied de la chaîne." },
+      { age: 5, z: 0.02, n: 2, t: "Nos galets se mettent en place tandis que le long de la faille de la Durance le bassin s'enfonce." },
       { age: 2.3, z: 0.3, n: 3, t: "Sous ≈ 350 m de dépôts (≈ 20 °C), l'eau qui circule dépose un ciment de calcite." },
-      { age: 1.8, z: 0.35, n: 4, t: "La sédimentation cesse ; la Durance creuse le plateau : le poudingue revient à l'air libre sur le flanc de la vallée." },
+      { age: 1.8, z: 0.35, n: 4, t: "Le dépôt s'interrompt ; la Durance entaille le plateau, et le poudingue revient à l'air libre sur le versant de la vallée." },
       { age: 0, z: 0 }] },
     src: ["gradient", "valensole"],
   });
 
-  SOURCES.tholonet = "Brèche du Tholonet : fragments très anguleux et non polis (trajet très court), éboulis cimentés par des eaux chargées de calcaire et d'argile au pied d'un relief né à la fin du Crétacé ; appelée à tort « marbre », exploitée dès le XVIIIᵉ siècle pour les demeures d'Aix et de Marseille : B. de l'Esp, « Le marbre du Tholonet », 2018 ; brèches bégudiennes à daniennes à matrice argileuse orangée, dépôts contemporains du soulèvement : Accro2Géologie, « La Sainte-Victoire ». Brèche = au moins 50 % d'éléments anguleux de plus de 2 mm : Wikipédia, « Brèche (roche) ».";
-  SOURCES.ghaub = "Tillite du Ghaub : bourrelet de moraine déposé à la ligne d'échouage d'un inlandsis, sur le bas du talus de la plate-forme carbonatée d'Otavi (Namibie), vers 635 Ma, à basse latitude : Domack E. W. et Hoffman P. F. (2011), <i>GSA Bulletin</i> 123, 1448–1477 ; calcaires de fin de glaciation (Maieberg) posés directement sur la moraine, glaciation presque planétaire (« Terre boule de neige ») : Hoffman P. F. et al. (1998), <i>Science</i> 281, 1342. Profondeur d'enfouissement schématique.";
+  SOURCES.tholonet = "Au pied d'un relief né à la fin du Crétacé, la brèche du Tholonet est formée d'éboulis anguleux, non polis (parcours très court), cimentés par des eaux chargées de calcaire et d'argile. Mal nommée « marbre », elle sert depuis le XVIIIᵉ siècle aux demeures d'Aix et de Marseille (B. de l'Esp, « Le marbre du Tholonet », 2018). Les brèches bégudiennes à daniennes, à matrice argileuse orangée, sont contemporaines du soulèvement (Accro2Géologie, « La Sainte-Victoire »). Une brèche compte au moins 50 % d'éléments anguleux de plus de 2 mm (Wikipédia, « Brèche (roche) »).";
+  SOURCES.ghaub = "Tillite du Ghaub : bourrelet de moraine déposé à la ligne d'échouage d'un inlandsis, sur le bas du talus de la plate-forme carbonatée d'Otavi (Namibie), vers 635 Ma et à basse latitude (Domack E. W. et Hoffman P. F., 2011, <i>GSA Bulletin</i> 123, p. 1448 à 1477). Des calcaires de fin de glaciation (Maieberg) reposent directement sur la moraine, témoins d'une glaciation presque planétaire, la « Terre boule de neige » (Hoffman P. F. et al., 1998, <i>Science</i> 281, 1342). Profondeur d'enfouissement schématique.";
 
   if (window.Textures && Textures._ROCHES && Textures._ROCHES.breche_sedimentaire) Object.assign(Textures._ROCHES.breche_sedimentaire, {
     grains: [
-      { cle: "calcite", ab: "Cal", nom: "Calcaire clair", fond: "#ece4d2", taches: "#cfc2a6", part: 0.36, role: "fragments des bancs de calcaire du relief" },
-      { cle: "gris:calcite", ab: "Cal", nom: "Calcaire gris", fond: "#cac7be", taches: "#aeaa9f", part: 0.15, role: "fragments d'autres bancs du même relief" },
+      { cle: "calcite", ab: "Cal", nom: "Calcaire clair", fond: "#ece4d2", taches: "#cfc2a6", part: 0.36, role: "fragments issus des strates calcaires de la butte" },
+      { cle: "gris:calcite", ab: "Cal", nom: "Calcaire gris", fond: "#cac7be", taches: "#aeaa9f", part: 0.15, role: "fragments d'autres strates du même relief" },
       { cle: "dolomite", ab: "Dol", nom: "Dolomie", fond: "#dcc6a0", taches: "#c2a97e", part: 0.07, role: "fragments beiges" },
       { cle: "quartz", ab: "Qz", nom: "Silex", fond: "#8f877c", part: 0.03, role: "éclats sombres" },
     ],
-    liant: { titre: "Matrice : boue durcie entre les clastes", nom: "Matrice", fond: "#b57a58", taches: ["#9e6446", "#c79070", "#e8dcc6"], role: "argile rougie par l'oxyde de fer, cimentée par de la calcite" },
+    liant: { titre: "Matrice : boue durcie entre les clastes", nom: "Matrice", fond: "#b57a58", taches: ["#9e6446", "#c79070", "#e8dcc6"], role: "argile teintée de rouge par l'oxyde de fer, cimentée à la calcite" },
   });
   poser("breche_sedimentaire", {
-    exemple: "Exemple suivi : la brèche du Tholonet, au pied de la montagne Sainte-Victoire (Provence), éboulis cimentés il y a environ 70 à 60 millions d'années, polie sous le nom de « marbre du Tholonet ».",
+    exemple: "Exemple suivi : au pied de la Sainte-Victoire (Provence), la brèche du Tholonet : ces éboulis, cimentés voilà 70 à 60 millions d'années, ont été polis sous le nom de « marbre du Tholonet ».",
     anim: [
-      E("Éboulis", "Une couche de calcaire se plisse et se soulève ; de ses falaises tombent des blocs qui ne roulent que sur quelques centaines de mètres : ils restent anguleux et s'entassent sans tri", "À la fin du Crétacé", "des millions d'années", "eboulisChute", {}, { allonge: 1.3 }),
-      E("Cimentation", "L'éboulis s'épaissit ; l'eau de pluie, chargée de calcaire dissous et d'argile rouge, s'y infiltre et comble les vides : l'éboulis meuble devient une roche, la brèche", "Au début du Paléogène, près de la surface", "des millions d'années", "eboulisCimentation", {}, { allonge: 1.2 }),
-      E("Brèche", "Sciée et polie, elle montre ses fragments anguleux dans une boue rouge durcie : c'est le « marbre » du Tholonet", "Aujourd'hui", null, "loupeRoche",
-        { titre: "Dans la brèche, à la loupe", lignes: ["Des fragments anguleux, de toutes", "tailles, dans une boue rouge durcie.", "Polie, elle a été vendue sous le", "nom de « marbre du Tholonet »", "pour orner les demeures d'Aix", "dès le XVIIIᵉ siècle."], vides: [6, 1] }),
+      E("Éboulis", "Un banc calcaire se plisse et remonte ; ses falaises lâchent des blocs qui ne roulent que sur quelques centaines de mètres : anguleux, ils s'entassent sans trier", "À la fin du Crétacé", "des millions d'années", "eboulisChute", {}, { allonge: 1.3 }),
+      E("Cimentation", "L'éboulis s'alourdit ; l'eau de pluie, chargée de calcaire dissous et d'argile rouge, s'y infiltre et remplit les vides : le matériau meuble se transforme en roche, la brèche", "Au Paléogène inférieur, non loin de la surface", "des millions d'années", "eboulisCimentation", {}, { allonge: 1.2 }),
+      E("Brèche", "Une fois sciée et polie, elle révèle des fragments anguleux emprisonnés dans une boue rouge durcie : voilà le « marbre » du Tholonet", "Aujourd'hui", null, "loupeRoche",
+        { titre: "Dans la brèche, à la loupe", lignes: ["Des fragments anguleux, de toutes", "dimensions variées, dans une boue rouge durcie.", "Une fois polie, elle a été commercialisée sous le", "nom de « marbre du Tholonet »", "pour orner les demeures d'Aix", "dès le XVIIIᵉ siècle."], vides: [6, 1] }),
     ],
     cond: { type: "grains", agents: ["gravité (éboulis)", "ruissellement"], grains: [[2, 1000]], legende: [
-      "Au pied des falaises, les blocs tombés ne voyagent que de quelques centaines de mètres : ils restent anguleux et ne sont pas triés.",
-      "L'eau de pluie chargée de calcaire et d'argile s'infiltre dans l'éboulis et comble ses vides : l'éboulis devient brèche.",
-      "Sciée et polie, la brèche du Tholonet a été utilisée comme pierre d'ornement sous le nom de « marbre »."] },
+      "Au pied des falaises, les blocs éboulés ne parcourent que quelques centaines de mètres : ils demeurent anguleux et non triés.",
+      "De l'eau de pluie, chargée de calcaire et d'argile, pénètre l'éboulis et en comble les vides : il se mue en brèche.",
+      "Débitée et polie, la brèche du Tholonet a servi de pierre d'ornement sous le nom de « marbre »."] },
     src: ["tholonet"],
   });
 
   poser("tillite", {
-    exemple: "Exemple suivi : la tillite du Ghaub (Namibie), moraine laissée il y a 635 millions d'années par une glaciation presque planétaire, au bord de la plate-forme d'Otavi.",
+    exemple: "Exemple suivi : la tillite du Ghaub (Namibie), une moraine abandonnée il y a 635 millions d'années lors d'une glaciation presque planétaire, en bordure de la plate-forme d'Otavi.",
     anim: [
-      E("Glacier", "La Terre est presque entièrement gelée ; la glace avance sur la plate-forme, arrache des blocs, les traîne, les raye et broie la roche en farine ; là où elle se met à flotter, elle lâche tout, pêle-mêle", "Vers 640 millions d'années", "des millions d'années", "inlandsisAvance", {}, { allonge: 1.3 }),
-      E("Fonte", "Le climat bascule : la glace fond et recule, la mer remonte et noie la moraine ; des calcaires de mer chaude se déposent directement dessus", "Vers 635 millions d'années", "quelques milliers d'années", "inlandsisFonte", {}, { allonge: 1.2 }),
-      E("Enfouissement", "D'autres couches recouvrent la moraine : sous leur poids, blocs, sable et farine se tassent et l'eau est chassée", "De 635 à 540 millions d'années", "près de 100 millions d'années", "enfouissementSed",
+      E("Glacier", "La Terre est presque entièrement prise dans les glaces ; l'inlandsis progresse sur la plate-forme, déchausse des blocs, les traîne, raye la roche et la pulvérise ; là où il flotte, il lâche le tout en vrac", "Vers 640 millions d'années", "des millions d'années", "inlandsisAvance", {}, { allonge: 1.3 }),
+      E("Fonte", "Le climat change : la glace fond et recule, la mer envahit la moraine et y dépose directement des calcaires d'eau chaude", "Vers 635 millions d'années", "quelques milliers d'années", "inlandsisFonte", {}, { allonge: 1.2 }),
+      E("Enfouissement", "Des couches supérieures écrasent la moraine : blocs, sable et farine se compactent et chassent leur eau", "De 635 à 540 millions d'années", "près de 100 millions d'années", "enfouissementSed",
         { couches: [[635, 600, "#e8d7c3", "calcaires de fin de glaciation"], [600, 540, "#9aa28f", "schistes et grès"]], age0: 635, age1: 540, zmax: 2, nomRoche: "la moraine", couleurRoche: "#9a978c", vides: [32, 8], grainClair: "#e3dcd0", grainFonce: "#6f685e",
-          loupeTexte: ["à la loupe : la farine se tasse", "entre les blocs, l'eau est chassée"], echelleLoupe: 0.45 }),
-      E("Tillite", "Durcie, la moraine est devenue une tillite : des blocs et des graviers de toutes tailles, certains rayés par la glace, dans une pâte de farine de roche", "Depuis 540 millions d'années", null, "loupeRoche",
-        { titre: "Dans la tillite, à la loupe", lignes: ["Des fragments de toutes tailles,", "anguleux, parfois rayés, dans une", "pâte grise : la farine de roche", "broyée par la glace, tassée puis", "cimentée. Aucun tri : c'est la", "signature d'un dépôt glaciaire."], vides: [8, 1] }),
+          loupeTexte: ["à la loupe : la farine se compacte", "entre les blocs, l'eau est expulsée"], echelleLoupe: 0.45 }),
+      E("Tillite", "Consolidée, la moraine est devenue tillite : blocs et graviers de toutes tailles, dont certains striés par la glace, noyés dans une pâte de farine rocheuse", "Depuis 540 millions d'années", null, "loupeRoche",
+        { titre: "Dans la tillite, à la loupe", lignes: ["Des fragments de toutes tailles,", "anguleux, parfois rayés, dans une", "pâte grise : la farine de roche", "broyée par la glace, compactée puis", "cimentée. Aucun tri : c'est la", "signature d'un dépôt glaciaire."], vides: [8, 1] }),
     ],
     cond: { type: "grains", agents: ["glacier"], grains: [[0.001, 3000]], legende: [
-      "La glace arrache des blocs, les traîne sur la roche (stries) et broie la roche en une farine fine.",
-      "Là où elle se met à flotter, elle lâche tout ensemble, sans trier : une moraine. À la fonte, la mer la recouvre de calcaires.",
-      "Enfouie sous d'autres couches, la moraine se tasse, perd son eau et se cimente : c'est une tillite."] },
+      "L'inlandsis déchausse des blocs, les traîne sur la roche (stries) et la réduit en une fine farine.",
+      "Lorsqu'il flotte, le glacier relâche tout en vrac, sans tri : une moraine. À la fonte, la mer recouvre le dépôt de calcaires.",
+      "Enfouie sous d'autres couches, la moraine se compacte, perd son eau et se cimente : il s'agit d'une tillite."] },
     src: ["ghaub"],
   });
 
 
   poser("argile", {
     anim: [
-      E("Altération", "Sur les terres émergées, l'eau de pluie altère les roches : feldspaths et micas se changent en minéraux argileux, plus petits que 2 µm ; les rivières les emportent", "Vers 56 millions d'années", null, "littoralErosion", { cible: "argile", ages: [57, 56, 48] }),
-      E("Décantation", "À l'embouchure, le sable tombe vite, près du rivage ; l'argile, qui met environ 3 jours à tomber d'un mètre d'eau calme, ne se dépose qu'au large, là où l'eau ne bouge plus", "De 56 à 48 millions d'années", "8 millions d'années", "littoralDepot",
-        { cible: "argile", ages: [57, 56, 48], texteLoupe: "boue d'argile : paillettes gorgées d'eau", videsLoupe: 60, echelleLoupe: 0.5, titreDepot: "au large, en eau calme, l'argile décante : une boue fine s'accumule" }),
-      E("Enfouissement", "D'autres couches la recouvrent : la boue perd son eau et se tasse, mais, peu enfouie, elle reste une argile tendre", "Depuis 48 millions d'années", null, "enfouissementSed",
-        { couches: [[48, 34, "#d8cdb0", "Éocène : sables"], [34, 20, "#c9bfa5", "Oligocène"]], age0: 48, age1: 20, zmax: 0.5, nomRoche: "l'argile", couleurRoche: "#8f9194", vides: [60, 35], grainClair: "#b9bfc4", grainFonce: "#6f7780", echelleLoupe: 0.5,
-          loupeTexte: ["à la loupe : les paillettes se couchent", "et se serrent, l'eau est chassée"] }),
-      E("Argile", "Des lits d'argile très fine, parfois un peu plus silteux : une roche tendre, plastique quand elle est mouillée", "Aujourd'hui", null, "loupeRoche",
+      E("Altération", "Sur les terres émergées, l'eau de pluie désagrège les roches : feldspaths et micas se transforment en minéraux argileux de moins de 2 µm, que les rivières emportent", "Vers 56 millions d'années", null, "littoralErosion", { cible: "argile", ages: [57, 56, 48] }),
+      E("Décantation", "À l'embouchure, le sable se dépose rapidement, près du rivage ; l'argile, qu'il faut environ 3 jours pour parcourir un mètre d'eau calme, reste longtemps en suspension et se dépose surtout au large, là où l'eau est immobile ; dans l'eau salée, ses paillettes s'agglomèrent en flocons qui tombent plus vite (vasières des estuaires)", "De 56 à 48 millions d'années", "8 millions d'années", "littoralDepot",
+        { cible: "argile", ages: [57, 56, 48], texteLoupe: "boue d'argile : paillettes gorgées d'eau", videsLoupe: 60, echelleLoupe: 0.5, titreDepot: "au large, dans une eau tranquille, l'argile se dépose : une boue fine s'accumule" }),
+      E("Enfouissement", "Des strates la surmontent : la boue expulse son eau et se compacte, mais, peu enfouie, elle demeure une argile tendre", "Depuis 48 millions d'années", null, "enfouissementSed",
+        { couches: [[48, 34, "#d8cdb0", "Éocène : sables"], [34, 20, "#c9bfa5", "Oligocène à Miocène inférieur"]], age0: 48, age1: 20, zmax: 0.5, nomRoche: "l'argile", couleurRoche: "#8f9194", vides: [60, 35], grainClair: "#b9bfc4", grainFonce: "#6f7780", echelleLoupe: 0.5,
+          loupeTexte: ["à la loupe : les paillettes se couchent", "et se serrent, l'eau est expulsée"] }),
+      E("Argile", "Lits d'argile très fine, parfois un peu plus silteux : roche tendre, plastique à l'état humide", "Aujourd'hui", null, "loupeRoche",
         { mode: "depot", titre: "Dans l'argile, au microscope", eauFond: "#cfdde3", particule: "#9a9c9c", nomDessous: "eau calme au-dessus du fond",
           lignes: ["Des lits de paillettes d'argile,", "trop fines pour être vues à l'œil,", "alternent avec des lits un peu plus", "silteux, apportés par les crues.", "Elles se déposent une à une, en", "eau calme, au fil des millénaires."] }),
     ],
@@ -1449,17 +1449,17 @@
   });
 
   SOURCES.heezen = "Courant de turbidité du séisme des Grands Bancs (Terre-Neuve, 1929), qui a rompu les câbles sous-marins les uns après les autres : Heezen B. C. et Ewing M. (1952), <i>American Journal of Science</i> 250, 849.";
-  SOURCES.fontainebleau = "Sables de Fontainebleau : mer peu profonde du Rupélien, sable de quartz très pur, cimenté par endroits en grès (rochers de la forêt) : Wikipédia, « Sables de Fontainebleau ».";
+  SOURCES.fontainebleau = "Sables de Fontainebleau : sable de quartz très pur déposé dans une mer peu profonde au Rupélien, parfois cimenté en grès (les rochers de la forêt) (Wikipédia, « Sables de Fontainebleau »).";
 
   poser("sable", {
     anim: [
-      E("Altération", "Sur les terres émergées, l'eau altère les roches : les feldspaths deviennent argile, le quartz, presque inaltérable, reste en grains ; les rivières emportent tout vers la mer", "Vers 34 millions d'années", null, "littoralErosion", { cible: "sable", ages: [35, 34, 28] }),
-      E("Tri", "À la côte, vagues et courants lavent le sable : les argiles partent au large, les grains de quartz, plus lourds, restent près du rivage en bancs très purs", "Au Rupélien (33,9–27,3 Ma)", "des millions d'années", "littoralDepot",
-        { cible: "sable", ages: [35, 34, 28], texteLoupe: "des grains de quartz lavés et triés", videsLoupe: 40, echelleLoupe: 0.42, titreDepot: "près du rivage, lit après lit, un sable de quartz presque pur" }),
-      E("Resté meuble", "Recouvert seulement de quelques dizaines de mètres de calcaires, il n'a jamais été assez enfoui ni chauffé pour se cimenter : il reste meuble", "Depuis 28 millions d'années", "des dizaines de millions d'années", "enfouissementSed",
+      E("Altération", "Sur les terres émergées, l'eau désagrège les roches : les feldspaths deviennent argile, tandis que le quartz, quasi inaltérable, persiste en grains ; les cours d'eau acheminent le tout jusqu'à la mer", "Vers 34 millions d'années", null, "littoralErosion", { cible: "sable", ages: [35, 34, 28] }),
+      E("Tri", "Au littoral, houle et courants nettoient le sable : les argiles s'éloignent au large, les grains de quartz, plus lourds, s'attardent sur la côte en bancs très purs", "Au Rupélien (33,9 à 27,3 Ma)", "des millions d'années", "littoralDepot",
+        { cible: "sable", ages: [35, 34, 28], texteLoupe: "des grains de quartz lavés et triés", videsLoupe: 40, echelleLoupe: 0.42, titreDepot: "au voisinage du rivage, strate après strate, un sable de quartz presque pur" }),
+      E("Resté meuble", "Coiffé d'à peine quelques dizaines de mètres de calcaire, il n'a jamais été assez enfoui ni chauffé pour se cimenter : il demeure meuble", "Depuis 28 millions d'années", "des dizaines de millions d'années", "enfouissementSed",
         { couches: [[28, 20, "#d8cdb0", "calcaires de Beauce"]], age0: 28, age1: 5, zmax: 0.15, nomRoche: "les sables", couleurRoche: "#efe6cf", vides: [40, 38], surface: ["plateau", "#9dbb86"], grainClair: "#fbf6ea", grainFonce: "#c9b98a",
-          loupeTexte: ["à la loupe : des grains de quartz", "jamais soudés, le sable reste meuble"], echelleLoupe: 0.42 }),
-      E("Sable", "Des grains de quartz arrondis et triés, qui se touchent sans être soudés : l'eau circule librement entre eux", "Aujourd'hui", null, "loupeRoche",
+          loupeTexte: ["à la loupe : des grains de quartz", "non soudés, le sable reste meuble"], echelleLoupe: 0.42 }),
+      E("Sable", "Des grains de quartz arrondis et calibrés, en contact sans soudure : l'eau circule librement entre eux", "Aujourd'hui", null, "loupeRoche",
         { mode: "fixe", titre: "Dans le sable, au microscope", lignes: ["Des grains de quartz arrondis,", "de même taille, qui se touchent", "sans être soudés : l'eau circule", "entre eux. Par endroits, de la", "silice les a soudés : ce sont les", "rochers de grès de la forêt."] }),
     ],
     src: ["ferguson", "fontainebleau"],
@@ -1467,128 +1467,128 @@
 
   poser("siltite", {
     anim: [
-      E("Altération", "Sur un vieux massif, l'eau altère les roches : grains fins de quartz, paillettes de mica et argiles partent avec les rivières", "Vers 500 millions d'années", null, "littoralErosion", { cible: "limon", ages: [502, 500, 466] }),
-      E("Dépôt", "Plus loin que le sable, là où l'eau est plus calme, les limons (quelques centièmes de millimètre) se déposent : un grain de 20 µm met environ 47 minutes à tomber d'un mètre", "Vers 470 millions d'années", "des millions d'années", "littoralDepot",
-        { cible: "limon", ages: [502, 500, 466], texteLoupe: "limons et paillettes de mica, en lits fins", videsLoupe: 45, echelleLoupe: 0.45, titreDepot: "au milieu du plateau, les limons se déposent en lits fins" }),
-      E("Enfouissement", "D'autres couches les recouvrent sur plusieurs kilomètres : tassés et cimentés, les limons deviennent une roche dure, la siltite", "De 466 à 350 millions d'années", "plus de 100 millions d'années", "enfouissementSed",
-        { couches: [[466, 420, "#7e8278", "Ordovicien–Silurien : schistes"], [420, 350, "#9aa28f", "Dévonien : schistes et grès"]], age0: 466, age1: 350, zmax: 4, nomRoche: "les limons", couleurRoche: "#9a9585", grainFonce: "#6b6a5c", grainClair: "#d9d3c4", vides: [45, 10], rythme: "≈ 35 m de dépôts par million d'années", echelleLoupe: 0.45,
-          loupeTexte: ["à la loupe : les lits se serrent,", "l'eau est chassée"] }),
-      E("Plissement, érosion", "La collision hercynienne plisse et soulève la série ; l'érosion rabote la chaîne pendant des centaines de millions d'années et la siltite finit par affleurer", "De 320 millions d'années à aujourd'hui", "320 millions d'années", "plissementErosion",
+      E("Altération", "Sur un massif ancien, l'eau désagrège la roche ; grains fins de quartz, paillettes de mica et argiles sont entraînés par les cours d'eau", "Vers 500 millions d'années", null, "littoralErosion", { cible: "limon", ages: [502, 500, 466] }),
+      E("Dépôt", "Plus loin que le sable, en eau calme, se déposent les limons (quelques centièmes de millimètre) : un grain de 20 µm met près de 47 minutes à tomber d'un mètre", "Vers 470 millions d'années", "des millions d'années", "littoralDepot",
+        { cible: "limon", ages: [502, 500, 466], texteLoupe: "lits minces de limons et de paillettes de mica", videsLoupe: 45, echelleLoupe: 0.45, titreDepot: "au centre du plateau, les limons forment des lits minces" }),
+      E("Enfouissement", "Des strates les surmontent sur plusieurs kilomètres : compactés et cimentés, les limons deviennent une roche dure, la siltite", "De 466 à 350 millions d'années", "plus de 100 millions d'années", "enfouissementSed",
+        { couches: [[466, 420, "#7e8278", "Ordovicien-Silurien : schistes"], [420, 350, "#9aa28f", "Dévonien : schistes et grès"]], age0: 466, age1: 350, zmax: 4, nomRoche: "les limons", couleurRoche: "#9a9585", grainFonce: "#6b6a5c", grainClair: "#d9d3c4", vides: [45, 10], rythme: "≈ 35 m de dépôts par million d'années", echelleLoupe: 0.45,
+          loupeTexte: ["à la loupe : les lits se resserrent,", "l'eau est chassée"] }),
+      E("Plissement, érosion", "La collision hercynienne plie et relève la série ; durant des centaines de millions d'années, l'érosion aplanit la chaîne jusqu'à mettre la siltite à nu", "De 320 millions d'années à aujourd'hui", "320 millions d'années", "plissementErosion",
         { ages: [320, 300], couleurCouche: "#9a9585", grains: "#d9d3c4", nomCouche: "siltite", creteNom: " " }),
-      E("Siltite", "Des lits de limon et d'argile, fins comme du papier, cimentés : une roche dure qui se débite en plaquettes", "Aujourd'hui", null, "loupeRoche",
+      E("Siltite", "Roche dure, fendue en plaquettes, faite de lits de limon et d'argile minces comme du papier, cimentés entre eux", "Aujourd'hui", null, "loupeRoche",
         { mode: "fixe", titre: "Dans la siltite, au microscope", lignes: ["Des lits de grains de limon (clairs)", "et d'argile (sombres), chacun", "déposé par une crue ou une", "tempête, puis soudés par", "l'enfouissement."] }),
     ],
     cond: { type: "enfouissement", tmax: 520, zmax: 6, seuils: ["quartz", "anchizone"], chemin: [
-      { age: 500, z: 0, n: 1, t: "L'eau altère un vieux massif : grains fins de quartz, micas et argiles partent avec les rivières." },
-      { age: 470, z: 0, n: 2, t: "Plus loin que le sable, en eau plus calme, les limons se déposent en lits fins." },
-      { age: 466, z: 0.1, n: 3, t: "D'autres couches les recouvrent : tassés et cimentés à plusieurs kilomètres, ils deviennent siltite." },
-      { age: 320, z: 4, n: 4, t: "La collision hercynienne plisse la série ; l'érosion rabote la chaîne et la siltite remonte peu à peu vers la surface." },
+      { age: 500, z: 0, n: 1, t: "Sur un massif ancien, l'eau désagrège la roche : grains fins de quartz, micas et argiles sont entraînés par les cours d'eau." },
+      { age: 470, z: 0, n: 2, t: "Au-delà du sable, en eau plus calme, les limons se déposent en lits fins." },
+      { age: 466, z: 0.1, n: 3, t: "Des strates les surmontent : compactés et cimentés sous plusieurs kilomètres, ils passent à l'état de siltite." },
+      { age: 320, z: 4, n: 4, t: "La collision hercynienne plie la série ; l'érosion rabote la chaîne, et la siltite gagne lentement la surface." },
       { age: 270, z: 0.5 }, { age: 0, z: 0 }] },
     src: ["gradient", "ferguson"],
   });
 
   poser("marne", {
     anim: [
-      E("Altération", "Sur les terres voisines, l'eau altère les roches : les rivières apportent à la mer des argiles très fines", "Au Jurassique (≈ 162 Ma)", null, "littoralErosion", { cible: "marne", plancton: true, ages: [163, 162, 158] }),
-      E("Dépôt", "Au large, en eau calme, l'argile décante pendant que les plaques de calcite du plancton tombent de la surface : les deux se déposent ensemble, 35 à 65 % de calcite", "Au Jurassique (≈ 160 Ma)", "des millions d'années", "littoralDepot",
-        { cible: "marne", plancton: true, ages: [163, 162, 158], texteLoupe: "argile et calcite du plancton, mêlées", videsLoupe: 60, echelleLoupe: 0.45, titreDepot: "argile des rivières et calcite du plancton tombent ensemble" }),
-      E("Enfouissement", "L'enfouissement tasse la boue et chasse l'eau : elle durcit en marne", "De 160 à 100 millions d'années", "des dizaines de millions d'années", "enfouissementSed",
+      E("Altération", "Sur les terres proches, l'eau désagrège les roches : les cours d'eau transportent vers la mer des argiles très fines", "Au Jurassique (≈ 162 Ma)", null, "littoralErosion", { cible: "marne", plancton: true, ages: [163, 162, 158] }),
+      E("Dépôt", "Loin des côtes, l'argile se dépose lentement tandis que les plaques de calcite du plancton tombent de la surface : ensemble, elles forment un sédiment à 35 à 65 % de calcite", "Au Jurassique (≈ 160 Ma)", "des millions d'années", "littoralDepot",
+        { cible: "marne", plancton: true, ages: [163, 162, 158], texteLoupe: "argile et calcite du plancton, mêlées", videsLoupe: 60, echelleLoupe: 0.45, titreDepot: "argile fluviale et calcite planctonique sédimentent de concert" }),
+      E("Enfouissement", "Sous l'effet de l'enfouissement, la boue se compacte, expulse son eau et se durcit en marne", "De 160 à 100 millions d'années", "des dizaines de millions d'années", "enfouissementSed",
         { couches: [[160, 145, "#9aa28f", "Jurassique supérieur"], [145, 100, "#c9bfa5", "Crétacé inférieur"]], age0: 160, age1: 100, zmax: 1.5, nomRoche: "la boue marneuse", couleurRoche: "#8e918b", grainFonce: "#6b6a5c", grainClair: "#d9d3c4", vides: [60, 25], rythme: "≈ 25 m par million d'années", echelleLoupe: 0.45,
-          loupeTexte: ["à la loupe : la boue se tasse", "et perd son eau"] }),
-      E("Marne", "Des lits un peu plus calcaires alternent avec des lits un peu plus argileux : une roche tendre, qui se délite à l'air (badlands des Terres Noires)", "Aujourd'hui", null, "loupeRoche",
+          loupeTexte: ["à la loupe : la boue se compacte", "et perd son eau"] }),
+      E("Marne", "Des lits légèrement plus calcaires se succèdent à des lits légèrement plus argileux : roche tendre, qui se désagrège à l'air (badlands des Terres Noires)", "Aujourd'hui", null, "loupeRoche",
         { mode: "depot", titre: "Dans la marne, au microscope", eauFond: "#d8e2e4", particule: "#ffffff", nomDessous: "eau calme au-dessus du fond",
-          lignes: ["Argile (sombre) et calcite du", "plancton (claire) se déposent", "ensemble ; selon les années,", "l'une ou l'autre domine : des lits", "alternent. À l'air, la marne se", "délite : les Terres Noires."] }),
+          lignes: ["Argile (sombre) et calcite du", "plancton (claire) se déposent", "ensemble ; selon les années,", "l'un ou l'autre domine : des lits", "alternent. À l'air, la marne se", "délite : les Terres Noires."] }),
     ],
   });
 
   poser("grauwacke", {
     anim: [
-      E("Avalanche", "Au bord d'un bassin marin profond, un delta déverse sable et boue au rebord du plateau ; un séisme fait s'effondrer le tas, qui dévale la pente en avalanche sous-marine (courant de turbidité)", "Vers 480 millions d'années", "quelques heures pour une avalanche", "turbiditeUne", { ages: [482, 480, 460] }, { allonge: 1.2 }),
-      E("Bancs", "À chaque avalanche, un banc de sable mal trié, plein de boue, se dépose au fond ; des centaines de bancs s'empilent", "De 480 à 460 millions d'années", "20 millions d'années", "turbiditePile",
-        { ages: [482, 480, 460], texteLoupe: "grains anguleux noyés dans la boue", echelleLoupe: 0.45 }),
-      E("Enfouissement", "Enfouis à plusieurs kilomètres, les bancs se tassent ; vers 200–300 °C, la boue entre les grains se change en chlorite et en mica (très faible métamorphisme)", "De 460 à 350 millions d'années", "110 millions d'années", "enfouissementSed",
-        { couches: [[460, 420, "#7e8278", "Ordovicien–Silurien : schistes"], [420, 360, "#9aa28f", "Dévonien : schistes et grès"]], age0: 460, age1: 350, zmax: 6, nomRoche: "les sables mal triés", couleurRoche: "#8d8a7c", grainFonce: "#6b6a5c", grainClair: "#d9d3c4", vides: [30, 3], surface: ["mer profonde", "#3f6f95"], rythme: "≈ 50 m de dépôts par million d'années", echelleLoupe: 0.45,
+      E("Avalanche", "Sur la bordure d'un bassin marin profond, un delta déverse sable et boue ; un séisme provoque l'effondrement de ce tas, qui glisse en avalanche sous-marine (courant de turbidité).", "Vers 560 millions d'années", "quelques heures pour une avalanche", "turbiditeUne", { ages: [562, 560, 540] }, { allonge: 1.2 }),
+      E("Bancs", "Chaque avalanche dépose au fond un banc de sable mal calibré et chargé de boue ; les centaines de bancs s'accumulent", "De 560 à 540 millions d'années", "20 millions d'années", "turbiditePile",
+        { ages: [562, 560, 540], texteLoupe: "grains anguleux noyés dans la boue", echelleLoupe: 0.45 }),
+      E("Enfouissement", "À plusieurs kilomètres de profondeur, les bancs se compactent ; entre 200 et 300 °C, la boue située entre les grains se transforme en chlorite et en mica (très faible métamorphisme)", "De 540 à 350 millions d'années", "190 millions d'années", "enfouissementSed",
+        { couches: [[540, 445, "#7e8278", "Cambrien-Ordovicien : grès et schistes"], [445, 360, "#9aa28f", "Silurien-Dévonien : schistes et grès"]], age0: 540, age1: 350, zmax: 6, nomRoche: "les sables mal triés", couleurRoche: "#8d8a7c", grainFonce: "#6b6a5c", grainClair: "#d9d3c4", vides: [30, 3], surface: ["mer profonde", "#3f6f95"], rythme: "≈ 30 m de dépôts par million d'années", echelleLoupe: 0.45,
           loupeTexte: ["à la loupe : la boue entre les grains", "durcit et verdit (chlorite)"] }),
-      E("Plissement, érosion", "La collision hercynienne plisse et soulève la série ; l'érosion rabote la chaîne et la grauwacke finit par affleurer", "De 350 millions d'années à aujourd'hui", "350 millions d'années", "plissementErosion",
+      E("Plissement, érosion", "La collision hercynienne plie et relève la série ; l'érosion aplanit la chaîne, jusqu'à faire affleurer la grauwacke", "De 350 millions d'années à aujourd'hui", "350 millions d'années", "plissementErosion",
         { ages: [340, 300], couleurCouche: "#8d8a7c", grains: "#d9d3c4", nomCouche: "grauwacke", creteNom: "crête de grauwacke" }),
-      E("Grauwacke", "Un grès sombre et mal trié : des grains anguleux de quartz et de feldspath noyés dans une matrice verte d'argile et de chlorite", "Aujourd'hui", null, "loupeRoche",
+      E("Grauwacke", "Grès sombre, mal classé, où des grains anguleux de quartz et de feldspath baignent dans une matrice verdâtre d'argile et de chlorite", "Aujourd'hui", null, "loupeRoche",
         { mode: "fixe", titre: "Dans la grauwacke, au microscope", lignes: ["Des grains anguleux, jamais", "lavés : l'avalanche a tout déposé", "d'un coup, sable et boue mêlés.", "Chauffée, la boue est devenue", "chlorite et mica (vert)."] }),
     ],
     cond: { type: "enfouissement", tmax: 520, zmax: 8, seuils: ["quartz", "anchizone"], chemin: [
-      { age: 480, z: 0, n: 1, t: "Sable et boue s'accumulent au rebord du plateau, puis dévalent la pente en avalanches sous-marines." },
-      { age: 470, z: 0.1, n: 2, t: "Des centaines de bancs granoclassés, pleins de matrice argileuse, s'empilent au fond du bassin." },
-      { age: 460, z: 0.5, n: 3, t: "Enfouis à plusieurs kilomètres, ils atteignent le très faible métamorphisme : la matrice devient chlorite et mica." },
-      { age: 350, z: 6, n: 4, t: "La collision hercynienne plisse la série ; l'érosion de la chaîne ramène peu à peu la grauwacke vers la surface." },
+      { age: 480, z: 0, n: 1, t: "Au rebord du plateau, sable et boue s'amassent puis dévalent la pente en avalanches sous-marines." },
+      { age: 470, z: 0.1, n: 2, t: "Au fond du bassin s'empilent des centaines de bancs granoclassés, à matrice argileuse abondante." },
+      { age: 460, z: 0.5, n: 3, t: "Une fois enfouis à plusieurs kilomètres, ils gagnent le très faible métamorphisme : la matrice se transforme en chlorite et en mica." },
+      { age: 350, z: 6, n: 4, t: "Sous la collision hercynienne, la série se plisse ; l'érosion, en rabotant la chaîne, rapproche peu à peu la grauwacke de la surface." },
       { age: 280, z: 1 }, { age: 0, z: 0 }] },
     src: ["gradient", "walderhaug", "heezen"],
   });
 
   poser("flysch", {
     anim: [
-      E("Avalanche", "Au bord d'un océan qui se ferme, sable et boue s'accumulent au rebord du plateau ; un séisme les fait dévaler la pente en avalanche sous-marine", "Vers 90 millions d'années", "quelques heures pour une avalanche", "turbiditeUne", { ages: [92, 90, 70] }, { allonge: 1.2 }),
-      E("Alternances", "Chaque avalanche dépose un banc de sable ; entre deux, la boue retombe lentement : des centaines d'alternances régulières", "De 90 à 70 millions d'années", "20 millions d'années", "turbiditePile",
+      E("Avalanche", "Sur la marge d'un océan en train de se refermer, sable et boue s'accumulent au bord du plateau ; un séisme les précipite en avalanche sous-marine", "Vers 90 millions d'années", "quelques heures pour une avalanche", "turbiditeUne", { ages: [92, 90, 70] }, { allonge: 1.2 }),
+      E("Alternances", "Chaque avalanche laisse un banc de sable ; dans l'intervalle, la boue sédimente lentement : il en résulte des centaines d'alternances régulières", "De 90 à 70 millions d'années", "20 millions d'années", "turbiditePile",
         { ages: [92, 90, 70], texteLoupe: "bancs de grès fin et lits d'argile", echelleLoupe: 0.3 }),
-      E("Enfouissement", "Les alternances s'accumulent au fond du bassin et s'enfouissent à plusieurs kilomètres", "De 70 à 35 millions d'années", "35 millions d'années", "enfouissementSed",
-        { couches: [[70, 50, "#9aa28f", "Paléocène : flysch"], [50, 35, "#8a8a7c", "Éocène : flysch"]], age0: 70, age1: 35, zmax: 4, nomRoche: "les bancs de flysch", couleurRoche: "#b8b19c", grainFonce: "#6b6a5c", grainClair: "#d9d3c4", vides: [35, 10], surface: ["mer profonde", "#3f6f95"], rythme: "≈ 100 m de dépôts par million d'années", echelleLoupe: 0.3,
+      E("Enfouissement", "Ces alternances s'entassent au fond du bassin, puis gagnent plusieurs kilomètres de profondeur", "De 70 à 35 millions d'années", "35 millions d'années", "enfouissementSed",
+        { couches: [[70, 56, "#9aa28f", "Maastrichtien à Paléocène : flysch"], [56, 35, "#8a8a7c", "Éocène : flysch"]], age0: 70, age1: 35, zmax: 4, nomRoche: "les bancs de flysch", couleurRoche: "#b8b19c", grainFonce: "#6b6a5c", grainClair: "#d9d3c4", vides: [35, 10], surface: ["mer profonde", "#3f6f95"], rythme: "≈ 100 m de dépôts par million d'années", echelleLoupe: 0.3,
           loupeTexte: ["à la loupe : bancs et lits", "se tassent et durcissent"] }),
-      E("Plissement, érosion", "Prises dans la collision (Alpes, Pyrénées), les alternances sont plissées et soulevées ; l'érosion les découpe en falaises et en crêtes", "De 35 millions d'années à aujourd'hui", "35 millions d'années", "plissementErosion",
+      E("Plissement, érosion", "Happées par la collision (Alpes, Pyrénées), les alternances se plissent puis s'élèvent ; l'érosion les sculpte en falaises et en crêtes", "De 35 millions d'années à aujourd'hui", "35 millions d'années", "plissementErosion",
         { ages: [35, 20], couleurCouche: "#c9c2ab", grains: "#6b6a5c", nomCouche: "flysch", creteNom: "crête de flysch" }),
-      E("Flysch", "Des bancs de grès fin, à base nette, alternent avec des lits d'argile ; sur les bancs, des traces de vers en méandres : les Helminthoïdes", "Aujourd'hui", null, "loupeRoche",
+      E("Flysch", "Bancs de grès fin à base franche, alternés de lits argileux ; à leur surface, des traces de vers en méandres : les Helminthoïdes", "Aujourd'hui", null, "loupeRoche",
         { mode: "fixe", titre: "Dans le flysch, surface sciée", lignes: ["Un banc de grès par avalanche,", "un lit d'argile entre deux :", "des centaines de répétitions.", "Les « Helminthoïdes » sont des", "traces de vers qui fouillaient", "la boue du fond."] }),
     ],
     cond: { type: "enfouissement", tmax: 110, zmax: 6, seuils: ["quartz"], chemin: [
-      { age: 92, z: 0, n: 1, t: "Au bord d'un océan qui se ferme, sable et boue dévalent la pente en avalanches sous-marines." },
-      { age: 88, z: 0.1, n: 2, t: "Des centaines d'alternances de bancs de grès et de lits d'argile s'empilent." },
-      { age: 70, z: 1, n: 3, t: "Elles s'enfouissent à plusieurs kilomètres au fond du bassin." },
-      { age: 35, z: 4, n: 4, t: "Prises dans la collision, elles sont plissées et soulevées ; l'érosion les ramène à la surface." },
+      { age: 92, z: 0, n: 1, t: "Sur la marge d'un océan en fermeture, sable et boue dévalent la pente en avalanches sous-marines." },
+      { age: 88, z: 0.1, n: 2, t: "S'empilent alors des centaines d'alternances de bancs gréseux et de lits argileux." },
+      { age: 70, z: 1, n: 3, t: "Au fond du bassin, elles gagnent plusieurs kilomètres de profondeur." },
+      { age: 35, z: 4, n: 4, t: "Engagées dans la collision, elles se plissent puis remontent ; l'érosion les remet au jour." },
       { age: 0, z: 0 }] },
     src: ["gradient", "walderhaug", "heezen"],
   });
 
   poser("arkose", {
     anim: [
-      E("Érosion, cône", "La chaîne hercynienne s'étire : des bassins s'effondrent le long de failles. Sous un climat sec, de rares orages arrachent au granite voisin sable et graviers : transportés sur une courte distance, les grains restent anguleux et les feldspaths n'ont pas le temps de s'altérer", "De 300 à 290 millions d'années", "10 millions d'années", "piemontCone",
+      E("Érosion, cône", "L'étirement de la chaîne hercynienne ouvre des bassins affaissés le long de failles. En climat sec, quelques orages arrachent au granite voisin sables et graviers ; parcourant peu de chemin, les grains restent anguleux et les feldspaths ne se transforment guère", "De 300 à 290 millions d'années", "10 millions d'années", "piemontCone",
         { style: "granite", sec: true, galets: ["#f1ede4", "#e2ad94", "#e2ad94", "#f1ede4", "#d9b3a3", "#ebe7de"], ages4: [300, 290, 230, 0],
           labels: { ouest: "socle", moteur: "faille : le bassin s'effondre", nos: "nos sables" },
           zooms: [["arraché : anguleux", 0], ["roulé : encore anguleux", 0.08], ["au bout : à peine émoussé", 0.22]],
-          titres: ["la chaîne hercynienne s'étire : un bassin s'effondre le long d'une faille", "de rares orages arrachent au granite sable et graviers", "ils s'étalent en cônes : grains anguleux, feldspaths intacts", "", "", ""] }, { allonge: 1.5 }),
-      E("Enfouissement", "D'autres dépôts les recouvrent (grès rouges du Permien, grès et argiles du Trias) ; enfouis vers 1,8 km, ils se tassent", "De 290 à 230 millions d'années", "60 millions d'années", "enfouissementSed",
+          titres: ["la chaîne hercynienne s'allonge : un bassin s'affaisse sur une faille", "de rares orages détachent du granite sable et graviers", "ils forment des cônes d'étalement : grains anguleux, feldspaths intacts", "", "", ""] }, { allonge: 1.5 }),
+      E("Enfouissement", "D'autres sédiments les couvrent (grès rouges du Permien, grès et argiles du Trias) ; à environ 1,8 km de profondeur, ils se resserrent", "De 290 à 230 millions d'années", "60 millions d'années", "enfouissementSed",
         { couches: [[290, 260, "#b9876c", "Permien : grès rouges"], [260, 230, "#cfa98c", "Trias : grès et argiles"]], age0: 290, age1: 230, zmax: 1.8, nomRoche: "les sables à feldspaths", couleurRoche: "#dcbfa6", grainFonce: "#e2ad94", grainClair: "#f1ede4", vides: [38, 24], surface: ["plaine sèche", "#d9c29a"], rythme: "≈ 30 m de dépôts par million d'années", echelleLoupe: 0.5,
-          loupeTexte: ["à la loupe : grains de quartz (gris)", "et de feldspath (roses) se tassent"] }),
-      E("Cimentation", "Vers 60 °C, des argiles et un peu de silice se déposent entre les grains et les soudent : le sable devient arkose", "Pendant l'enfouissement", null, "loupeRoche",
+          loupeTexte: ["à la loupe : grains de quartz (gris)", "et de feldspath (roses) se compactent"] }),
+      E("Cimentation", "Vers 60 °C, argiles et un peu de silice précipitent entre les grains et les lient : le sable se transforme en arkose", "Pendant l'enfouissement", null, "loupeRoche",
         { titre: "Dans l'arkose, au microscope", vides: [24, 8], temperature: [55, 64], lignes: ["Des grains anguleux, à peine usés :", "quartz gris et feldspath rose, qui", "sous un climat humide serait", "devenu argile. L'eau qui circule", "dépose argiles et silice entre", "eux : le sable devient roche."] }),
-      E("Remontée", "La région se soulève et l'érosion enlève, pendant des dizaines de millions d'années, les couches du dessus : l'arkose affleure en bordure du Massif central", "De 150 millions d'années à aujourd'hui", "150 millions d'années", "exhumationSed",
+      E("Remontée", "La région se soulève ; durant des dizaines de millions d'années, l'érosion décape les couches supérieures : l'arkose affleure en bordure du Massif central", "De 150 millions d'années à aujourd'hui", "150 millions d'années", "exhumationSed",
         { couches: [[290, 260, "#b9876c", "Permien : grès rouges"], [260, 230, "#cfa98c", "Trias : grès et argiles"]], age0: 150, age1: 0, zmax: 1.8, nomRoche: "l'arkose", couleurRoche: "#dcbfa6", grainFonce: "#e2ad94", grainClair: "#f1ede4",
-          moteur: ["le Massif central se soulève ;", "pluie et rivières enlèvent le dessus"], titreFin: "l'arkose affleure : grès roses à feldspaths" }),
+          moteur: ["le Massif central se soulève ;", "la pluie et les rivières emportent la partie supérieure"], titreFin: "l'arkose affleure : grès roses à feldspaths" }),
     ],
     cond: { type: "enfouissement", tmax: 320, zmax: 4, seuils: ["quartz"], chemin: [
-      { age: 300, z: 0, n: 1, t: "La chaîne hercynienne s'étire : des bassins s'effondrent ; sous un climat sec, les granites voisins s'érodent vite, sans que leurs feldspaths s'altèrent." },
-      { age: 290, z: 0.05, n: 2, t: "Les sables anguleux, riches en feldspath, remplissent le bassin ; d'autres dépôts les recouvrent." },
-      { age: 230, z: 1.8, n: 3, t: "Enfouis vers 1,8 km (≈ 60 °C), ils sont tassés et soudés par des argiles et de la silice." },
-      { age: 150, z: 1.8, n: 4, t: "La région se soulève ; l'érosion enlève les couches du dessus et l'arkose revient à la surface." },
+      { age: 300, z: 0, n: 1, t: "Sous l'effet de l'étirement hercynien, des bassins s'affaissent ; en climat sec, le granite voisin s'use rapidement, sans que ses feldspaths ne se dégradent." },
+      { age: 290, z: 0.05, n: 2, t: "Le bassin se comble de sables anguleux riches en feldspath ; d'autres sédiments les surmontent." },
+      { age: 230, z: 1.8, n: 3, t: "À environ 1,8 km (≈ 60 °C), ils sont compactés et liés par des argiles et de la silice." },
+      { age: 150, z: 1.8, n: 4, t: "La région se soulève ; l'érosion décape les strates supérieures, et l'arkose revient au jour." },
       { age: 0, z: 0 }] },
     src: ["gradient"],
   });
 
   poser("molasse", {
     anim: [
-      E("Érosion, dépôt", "Les Alpes avancent et se soulèvent ; les orages les érodent et les rivières étalent sables et galets au pied de la chaîne", "De 30 à 20 millions d'années", "10 millions d'années", "piemontCone",
+      E("Érosion, dépôt", "Les Alpes progressent et se relèvent ; l'érosion orageuse, puis les rivières, étalent sables et galets au pied du massif", "De 30 à 20 millions d'années", "10 millions d'années", "piemontCone",
         { xs: 230, flexure: true, ages4: [30, 20, 8, 0], labels: { ouest: "Massif central", nos: "nos sables", riviere: "Isère" },
-          titres: ["les Alpes avancent et se soulèvent ; les orages les érodent", "torrents et rivières emportent galets, sables et boues", "au pied de la chaîne, le bassin se remplit de leurs débris, lit après lit", "", "", ""] }, { allonge: 1.5 }),
-      E("Bassin d'avant-pays", "La chaîne pèse sur la plaque, qui fléchit : le bassin s'enfonce, surtout près de la chaîne, et continue de se remplir ; nos sables s'enfouissent sous ≈ 1,5 km de débris", "De 20 à 8 millions d'années", "12 millions d'années", "piemontEnfouissement",
+          titres: ["les Alpes progressent et se relèvent ; l'érosion orageuse les attaque", "torrents et cours d'eau entraînent galets, sables et boues", "au pied du massif, le bassin se comble de leurs débris, couche après couche", "", "", ""] }, { allonge: 1.5 }),
+      E("Bassin d'avant-pays", "Le poids de la chaîne fait fléchir la plaque : le bassin plonge, surtout près du massif, et se comble ; nos sables disparaissent sous ≈ 1,5 km de débris", "De 20 à 8 millions d'années", "12 millions d'années", "piemontEnfouissement",
         { xs: 230, flexure: true, mpx: 40, ages4: [30, 20, 8, 0], videsLoupe: [38, 28], echelleLoupe: 0.5, labels: { ouest: "Massif central", nos: "nos sables", riviere: "Isère" },
-          titres: ["", "", "", "la plaque fléchit sous la chaîne : le bassin s'enfonce et se remplit", "", ""] }),
-      E("Cimentation partielle", "Enfouie à 0,5–2 km, la molasse n'est que partiellement cimentée par la calcite : un grès tendre, facile à tailler", "Pendant l'enfouissement", null, "loupeRoche",
-        { titre: "Dans la molasse, au microscope", vides: [28, 18], temperature: [45, 55], lignes: ["Des grains de sable (quartz, calcaire,", "feldspath) à peine soudés par un", "peu de calcite : bien des vides", "restent ouverts. La roche reste", "tendre, facile à tailler : une pierre", "de construction des Alpes du Nord."] }),
-      E("Incision", "Le bassin cesse de se remplir ; les rivières (Isère, Rhône) creusent et la molasse affleure sur les flancs des vallées", "De 8 millions d'années à aujourd'hui", "8 millions d'années", "piemontIncision",
+          titres: ["", "", "", "sous la chaîne, la plaque se courbe ; le bassin s'abaisse et se remplit", "", ""] }),
+      E("Cimentation partielle", "Entre 0,5 et 2 km de profondeur, la molasse n'a reçu qu'un ciment calcitique partiel : grès tendre, aisément taillable", "Pendant l'enfouissement", null, "loupeRoche",
+        { titre: "Dans la molasse, au microscope", vides: [28, 18], temperature: [45, 55], lignes: ["Des grains de sable (quartz, calcaire,", "feldspath) à peine soudés par un", "peu de calcite : de nombreux vides subsistent", "restent ouverts. La roche reste", "tendre, facile à tailler : une pierre", "matériau de construction des Alpes du Nord."] }),
+      E("Incision", "Le comblement du bassin s'arrête ; l'Isère et le Rhône entaillent le terrain, et la molasse apparaît sur les versants des vallées", "De 8 millions d'années à aujourd'hui", "8 millions d'années", "piemontIncision",
         { xs: 230, flexure: true, mpx: 40, penitents: false, ages4: [30, 20, 8, 0], labels: { ouest: "Massif central", nos: "nos sables", riviere: "Isère" },
-          titres: ["", "", "", "", "les rivières ne déposent plus : elles creusent", "la vallée recoupe la molasse : elle affleure sur ses flancs"] }),
+          titres: ["", "", "", "", "les rivières cessent de déposer et entaillent le substrat", "la vallée entaille la molasse, qui se découvre sur ses versants"] }),
     ],
     cond: { type: "enfouissement", tmax: 40, zmax: 3, seuils: [], chemin: [
-      { age: 30, z: 0, n: 1, t: "Les Alpes se soulèvent et s'érodent ; les rivières étalent sables et galets au pied de la chaîne." },
-      { age: 20, z: 0.05, n: 2, t: "Sous le poids de la chaîne, la plaque fléchit : le bassin s'enfonce et se remplit de kilomètres de débris." },
-      { age: 10, z: 1.3, n: 3, t: "Enfouie vers 1,5 km, la molasse n'est que partiellement cimentée : grès tendres et marnes." },
-      { age: 8, z: 1.5, n: 4, t: "Le bassin cesse de se remplir ; les rivières creusent et la molasse revient à l'affleurement." },
+      { age: 30, z: 0, n: 1, t: "Les Alpes montent et s'usent ; au pied du massif, les rivières répartissent sables et galets." },
+      { age: 20, z: 0.05, n: 2, t: "Chargée par la chaîne, la plaque s'affaisse : le bassin descend et se remplit sur des kilomètres d'épaisseur de débris." },
+      { age: 10, z: 1.3, n: 3, t: "À environ 1,5 km de profondeur, la molasse reste en partie non cimentée : grès tendres alternant avec des marnes." },
+      { age: 8, z: 1.5, n: 4, t: "Le remplissage du bassin prend fin ; les cours d'eau creusent, et la molasse réapparaît en surface." },
       { age: 0, z: 0 }] },
     src: ["gradient"],
   });
@@ -1596,112 +1596,112 @@
   const CRAIE = ["#f4f1e9", "#fbf9f4"];
   poser("craie", {
     anim: [
-      E("Plancton", "Loin des côtes, dans une mer de 50 à 300 m, des algues microscopiques (coccolithophoridés) fabriquent de minuscules plaques de calcite ; les éponges du fond, des squelettes d'opale", "Du Cénomanien au Campanien (100,5–72,2 Ma)", null, "merVie",
+      E("Plancton", "Au large, sur 50 à 300 m d'eau, des algues microscopiques (coccolithophoridés) bâtissent de minuscules plaques de calcite ; sur le fond, les éponges construisent des squelettes d'opale", "Du Cénomanien au Campanien (100,5 à 72,2 Ma)", null, "merVie",
         { milieu: "large", vie: ["coccolithes", "eponges"], couleurs: CRAIE, ages: [92, 90, 86], labFond: "fond de la mer de la craie, 50 à 300 m",
-          titres: ["loin des côtes, la mer ne reçoit presque ni sable ni argile", "des algues microscopiques fabriquent des plaques de calcite", "plaques et débris tombent : une boue blanche s'accumule"] }),
-      E("Boue blanche", "À leur mort, les plaques tombent au fond : une boue blanche presque pure s'accumule, lit après lit ; la silice des éponges se regroupe en rognons de silex", "Pendant 28 millions d'années", "≈ 30 m par million d'années", "merDepot",
+          titres: ["au large, peu d'apports de sable ou d'argile parviennent à la mer", "de minuscules algues sécrètent des plaques de calcite", "plaques et débris se déposent : une boue blanche gagne le fond"] }),
+      E("Boue blanche", "Une fois mortes, les plaques sédimentent au fond : une boue blanche quasi pure s'empile couche après couche ; la silice des éponges se rassemble en rognons de silex", "Pendant 28 millions d'années", "≈ 30 m par million d'années", "merDepot",
         { milieu: "large", vie: ["coccolithes", "eponges"], couleurs: CRAIE, ages: [92, 90, 86], silex: true, labFond: "fond de la mer de la craie, 50 à 300 m", texteLoupe: "coccolithes et petites coquilles", videsLoupe: 45, echelleLoupe: 0.42,
-          titres: ["", "", "plaques et débris tombent : une boue blanche s'accumule"] }),
-      E("Enfouissement faible", "Restée peu enfouie, la craie n'est presque pas cimentée : elle garde jusqu'à 40 % de vides", "Depuis 72 millions d'années", null, "enfouissementSed",
+          titres: ["", "", "plaques et débris se déposent : une boue blanche gagne le fond"] }),
+      E("Enfouissement faible", "Restée peu enfouie, la craie est à peine cimentée : elle conserve jusqu'à 40 % de vides", "Depuis 72 millions d'années", null, "enfouissementSed",
         { couches: [[72, 50, "#d8c7a0", "Paléogène : sables et argiles"]], age0: 72, age1: 50, zmax: 0.4, nomRoche: "la craie", couleurRoche: "#f4f1e9", grainFonce: "#e6dfd0", grainClair: "#ffffff", vides: [55, 42], rythme: "peu enfouie", echelleLoupe: 0.42,
-          loupeTexte: ["à la loupe : la boue se tasse un peu,", "mais les vides restent nombreux"] }),
-      E("Craie", "Au microscope : des coccolithes par milliards, quelques coquilles de foraminifères, presque pas de ciment : une roche blanche, tendre et poreuse", "Aujourd'hui", null, "loupeRoche",
-        { titre: "Dans la craie, au microscope", vides: [42, 40], lignes: ["Une boue de coccolithes (plaques", "de calcite de quelques millièmes", "de mm) avec des coquilles de", "foraminifères. Presque rien ne", "les soude : la craie tache les", "doigts et boit l'eau."] }),
-      E("Falaises", "La mer de la craie s'est retirée, la région s'est soulevée et l'érosion a dégagé la craie ; aujourd'hui, la Manche en sape le pied : falaises, arche et aiguille d'Étretat", "Aujourd'hui", null, "falaiseCraie", {}),
+          loupeTexte: ["à la loupe : la boue se resserre légèrement,", "mais les vides restent nombreux"] }),
+      E("Craie", "Au microscope : coccolithes par milliards, rares coquilles de foraminifères, ciment presque absent ; roche blanche, tendre, poreuse", "Aujourd'hui", null, "loupeRoche",
+        { titre: "Dans la craie, au microscope", vides: [42, 40], lignes: ["Une boue de coccolithes (plaques", "de calcite de quelques millièmes", "de mm) avec des coquilles de", "foraminifères. Presque rien ne", "les lie : la craie teinte les", "doigts et boit l'eau."] }),
+      E("Falaises", "Le retrait de la mer de la craie, puis le soulèvement régional et l'érosion ont dégagé la craie ; aujourd'hui, la Manche en attaque le pied : falaises, arche et aiguille d'Étretat", "Aujourd'hui", null, "falaiseCraie", {}),
     ],
     src: ["photique"],
   });
 
   poser("silex", {
     anim: [
-      E("Éponges", "Dans la mer de la craie, les éponges fabriquent des squelettes d'opale (silice) dans une eau très pauvre en silice : c'est la vie qui la concentre", "Au Crétacé supérieur", null, "merVie",
+      E("Éponges", "Dans la mer de la craie, l'eau est très pauvre en silice, pourtant les éponges fabriquent des squelettes d'opale : c'est donc le vivant qui concentre cette silice", "Au Crétacé supérieur", null, "merVie",
         { milieu: "large", vie: ["eponges", "coccolithes"], couleurs: CRAIE, ages: [88, 87, 85], labFond: "fond de la mer de la craie",
-          titres: ["la mer de la craie, loin des côtes", "sur le fond, les éponges fabriquent des spicules d'opale", ""] }),
-      E("Rognons", "Enfouie sous quelques mètres de boue, l'opale se dissout dans l'eau des pores, puis se redépose autour de certains points : des rognons de silex, en lits réguliers", "Au Crétacé supérieur, dans la craie peu enfouie", "des milliers à des millions d'années", "merDepot",
+          titres: ["au large, dans la mer de la craie", "au fond, les éponges édifient des spicules d'opale", ""] }),
+      E("Rognons", "Dans l'eau des pores, située sous quelques mètres de boue, l'opale se dissout et reprécipite autour de points précis, en rognons de silex disposés en lits réguliers.", "Pendant le Crétacé supérieur, dans une craie peu enfouie", "des milliers à des millions d'années", "merDepot",
         { milieu: "large", vie: ["eponges", "coccolithes"], couleurs: CRAIE, ages: [88, 87, 85], silex: true, labFond: "fond de la mer de la craie", texteLoupe: "la silice remplace la craie", videsLoupe: 20, echelleLoupe: 0.45,
-          titres: ["", "", "la boue s'épaissit ; la silice migre et se concentre en rognons"] }),
-      E("Silex", "La silice remplace peu à peu la craie : de l'opale, puis de la calcédoine ; les fantômes des spicules et des coquilles restent visibles", "Pendant l'enfouissement", null, "loupeRoche",
+          titres: ["", "", "la boue se consolide ; la silice migre puis se rassemble en rognons"] }),
+      E("Silex", "Peu à peu, la silice se substitue à la craie : opale d'abord, calcédoine ensuite ; les spicules et les coquilles laissent leurs fantômes", "Pendant l'enfouissement", null, "loupeRoche",
         { mode: "croissance", dessous: "#f1eee6", nomDessous: "craie pas encore remplacée", titre: "Dans le silex, au microscope",
           lignes: ["La silice précipite dans les pores", "de la craie et la remplace grain", "à grain : calcédoine (fibres de", "quartz). Il reste des fantômes de", "spicules et de foraminifères."] }),
-      E("Galets", "La craie s'use et se dissout ; le silex, très dur, reste : galets des plages normandes, et outils des premiers hommes", "Aujourd'hui", null, "falaiseCraie",
-        { titre: "la craie recule ; ses silex, eux, restent sur la plage", lignes: ["le silex, dur, casse en éclats", "tranchants : c'est la pierre des", "outils de la préhistoire"] }),
+      E("Galets", "La craie disparaît peu à peu par érosion et dissolution ; le silex, d'une grande dureté, résiste : galets des plages normandes et outils préhistoriques", "Aujourd'hui", null, "falaiseCraie",
+        { titre: "la craie recule ; ses silex, eux, restent sur la plage", lignes: ["le silex, dur, se fracture en éclats", "tranchants : c'est la pierre des", "outils de la préhistoire"] }),
     ],
   });
 
   poser("tuffeau", {
     anim: [
-      E("Mer côtière", "Une mer peu profonde couvre la Touraine ; les rivières y apportent sable fin et micas ; coquillages, bryozoaires et éponges vivent sur le fond, où naît la glauconie verte", "Au Turonien (93,9–89,8 Ma)", null, "merVie",
-        { milieu: "cotier", vie: ["coquilles", "eponges", "glauconie"], couleurs: ["#ece2c4", "#e4d8b5"], ages: [93, 92, 90], labFond: "fond de la mer turonienne, quelques dizaines de mètres",
-          titres: ["une mer peu profonde couvre la Touraine", "coquillages, bryozoaires et éponges vivent sur le fond", ""] }),
-      E("Dépôt", "Débris de coquilles, spicules d'éponges, sable fin, micas et grains de glauconie s'accumulent ensemble : le mélange ne contient qu'environ 50 % de calcite", "Au Turonien", "≈ 20 m par million d'années", "merDepot",
+      E("Mer côtière", "La Touraine est couverte d'une mer peu profonde ; les cours d'eau y déposent sable fin et micas ; coquillages, bryozoaires et éponges peuplent le fond, où se forme la glauconie verte", "Au Turonien (93,9 à 89,8 Ma)", null, "merVie",
+        { milieu: "cotier", vie: ["coquilles", "eponges", "glauconie"], couleurs: ["#ece2c4", "#e4d8b5"], ages: [93, 92, 90], labFond: "fond de la mer du Turonien, sur quelques dizaines de mètres",
+          titres: ["une mer peu profonde couvre la Touraine", "coquillages, bryozoaires et éponges peuplent le fond", ""] }),
+      E("Dépôt", "Débris coquilliers, spicules, sable fin, micas et grains de glauconie se déposent ensemble : le mélange ne renferme qu'environ 50 % de calcite", "Au Turonien", "≈ 20 m par million d'années", "merDepot",
         { milieu: "cotier", vie: ["coquilles", "eponges", "glauconie"], couleurs: ["#ece2c4", "#e4d8b5"], ages: [93, 92, 90], labFond: "fond de la mer turonienne", texteLoupe: "coquilles, spicules, sable, glauconie", videsLoupe: 50, echelleLoupe: 0.42,
-          titres: ["", "", "débris de coquilles, spicules, sable fin et glauconie s'accumulent"] }),
-      E("Enfouissement faible", "Peu enfoui (quelques centaines de mètres), le tuffeau n'est que faiblement soudé", "Depuis 90 millions d'années", null, "enfouissementSed",
+          titres: ["", "", "débris coquilliers, spicules, sable fin et glauconie se déposent"] }),
+      E("Enfouissement faible", "Enfoui sur quelques centaines de mètres seulement, le tuffeau n'est que faiblement lié", "Depuis 90 millions d'années", null, "enfouissementSed",
         { couches: [[90, 66, "#e8e0c8", "Crétacé supérieur : craies"], [66, 40, "#d8c7a0", "Paléogène : sables et argiles"]], age0: 90, age1: 40, zmax: 0.4, nomRoche: "le tuffeau", couleurRoche: "#ece2c4", grainFonce: "#b8a57a", grainClair: "#fbf6ea", vides: [50, 45], rythme: "peu enfoui", echelleLoupe: 0.42,
           loupeTexte: ["à la loupe : un peu de calcite et", "d'opale soude à peine les grains"] }),
-      E("Tuffeau", "Un peu de calcite et d'opale soude à peine les grains : une pierre légère et tendre, facile à tailler, la pierre des châteaux de la Loire", "Aujourd'hui", null, "loupeRoche",
+      E("Tuffeau", "Calcite et opale lient à peine les grains : pierre légère, tendre, facile à tailler, celle des châteaux de la Loire", "Aujourd'hui", null, "loupeRoche",
         { titre: "Dans le tuffeau, au microscope", vides: [45, 42], lignes: ["Débris de coquilles, spicules,", "sable fin et glauconie verte,", "à peine soudés : beaucoup de", "vides. Pierre légère et tendre,", "taillée pour les châteaux ; les", "carrières sont devenues caves."] }),
     ],
   });
 
   poser("falun", {
     anim: [
-      E("Mer des faluns", "Une mer chaude et très peu profonde relie la Bretagne au Bassin parisien : coquillages, bryozoaires, requins ; vagues et courants de marée brisent les coquilles", "Au Miocène (20–10 Ma)", null, "merVie",
-        { milieu: "faluns", vie: ["coquilles"], couleurs: ["#e2d2a8", "#d8c592"], ages: [16, 15, 10], labFond: "fond de la mer des faluns, quelques mètres à quelques dizaines",
-          titres: ["une mer chaude et très peu profonde : la « mer des faluns »", "coquillages et bryozoaires ; vagues et marées brisent les coquilles", ""] }),
-      E("Bancs", "Les débris de coquilles, triés par les courants, s'accumulent en bancs de sable coquillier", "Au Miocène", "des mètres par million d'années", "merDepot",
+      E("Mer des faluns", "Bretagne et Bassin parisien étaient reliés par une mer chaude et très peu profonde, peuplée de coquillages, de bryozoaires et de requins ; la houle et les courants de marée brisaient les coquilles.", "Au Miocène (20 à 10 Ma)", null, "merVie",
+        { milieu: "faluns", vie: ["coquilles"], couleurs: ["#e2d2a8", "#d8c592"], ages: [16, 15, 10], labFond: "fond de la mer des faluns, à des profondeurs allant de quelques mètres à plusieurs dizaines",
+          titres: ["Mer chaude, très peu profonde, qu'on appelle « mer des faluns »", "coquillages et bryozoaires ; houle et marées fragmentent les coquilles", ""] }),
+      E("Bancs", "Les courants trient les débris coquilliers, qui forment des bancs de sable coquillier", "Au Miocène", "des mètres par million d'années", "merDepot",
         { milieu: "faluns", vie: ["coquilles"], couleurs: ["#e2d2a8", "#d8c592"], ages: [16, 15, 10], labFond: "fond de la mer des faluns", texteLoupe: "coquilles brisées et sable", videsLoupe: 45, echelleLoupe: 0.4,
-          titres: ["", "", "les débris triés s'accumulent en bancs de sable coquillier"] }),
-      E("Jamais cimenté", "Recouvert seulement de sables et de limons récents, le falun n'a jamais été assez enfoui pour se cimenter : il reste meuble", "Depuis 10 millions d'années", null, "enfouissementSed",
+          titres: ["", "", "les débris triés forment des bancs de sable coquillier"] }),
+      E("Peu enfoui", "Coiffé seulement de sables et de limons récents, le falun est souvent resté meuble ; par endroits (Anjou), un ciment de calcite déposé près de la surface en a fait un grès coquillier", "Depuis 10 millions d'années", null, "enfouissementSed",
         { couches: [[10, 0, "#c9b891", "sables et limons plus récents"]], age0: 10, age1: 0.1, zmax: 0.1, nomRoche: "le falun", couleurRoche: "#e2d2a8", grainFonce: "#b8a57a", grainClair: "#fbf6ea", vides: [45, 43], surface: ["plaine de la Loire", "#9dbb86"], rythme: "jamais enfoui profondément", echelleLoupe: 0.4,
-          loupeTexte: ["à la loupe : coquilles et sable", "jamais soudés"] }),
-      E("Falun", "Un sable de coquilles brisées, meuble : on l'épandait sur les champs (le « falunage ») ; on y trouve des dents de requins", "Aujourd'hui", null, "loupeRoche",
-        { mode: "fixe", titre: "Dans le falun, surface sciée", lignes: ["Coquilles entières et brisées,", "bryozoaires, grains de glauconie,", "dans un sable coquillier jamais", "soudé. On l'épandait sur les", "champs acides ; on y trouve des", "dents de requins."] }),
+          loupeTexte: ["à la loupe : coquilles et sable", "le plus souvent non soudés"] }),
+      E("Falun", "Sable meuble de coquilles brisées, épandu autrefois dans les champs (le « falunage ») ; on y trouve des dents de requins", "Aujourd'hui", null, "loupeRoche",
+        { mode: "fixe", titre: "Dans le falun, surface sciée", lignes: ["Coquilles entières et brisées,", "bryozoaires, grains de glauconie,", "dans un sable coquillier souvent", "meuble. On l'épandait sur les", "champs acides ; on y trouve des", "dents de requins."] }),
     ],
   });
 
   poser("radiolarite", {
     anim: [
-      E("Plancton siliceux", "Au-dessus de l'océan alpin, 4 km d'eau : en surface, les radiolaires bâtissent un squelette d'opale, le plancton calcaire des plaques de calcite", "Au Jurassique supérieur (165–145 Ma)", null, "merVie",
+      E("Plancton siliceux", "L'océan alpin porte 4 km d'eau. À la surface, les radiolaires élaborent un squelette d'opale ; le plancton calcaire, lui, fabrique des plaques de calcite", "Au Jurassique moyen et supérieur (165 à 145 Ma)", null, "merVie",
         { milieu: "ocean", vie: ["radiolaires", "coccolithes"], couleurs: ["#a4553c", "#b86a4e"], couleurFond: "#3e4b44", ages: [160, 158, 150], labFond: "fond de l'océan alpin, vers 4 km : basalte",
-          titres: ["l'océan alpin : 4 km d'eau au-dessus de fonds de basalte", "en surface, les radiolaires bâtissent un squelette d'opale", ""] }),
-      E("Boue rouge", "Sous la profondeur de compensation, la calcite se dissout : seule la silice atteint le fond, où une boue rouge s'accumule très lentement", "Au Jurassique supérieur", "quelques mètres par million d'années", "merDepot",
+          titres: ["l'océan alpin : 4 km d'eau surmontent des fonds basaltiques", "à la surface, les radiolaires construisent un squelette d'opale", ""] }),
+      E("Boue rouge", "Sous la profondeur de compensation, la calcite disparaît par dissolution ; seule la silice atteint le fond, où une boue rouge se dépose lentement", "Au Jurassique supérieur", "quelques mètres par million d'années", "merDepot",
         { milieu: "ocean", vie: ["radiolaires", "coccolithes"], couleurs: ["#a4553c", "#b86a4e"], couleurFond: "#3e4b44", ages: [160, 158, 150], labFond: "fond de l'océan alpin, vers 4 km : basalte", texteLoupe: "squelettes de radiolaires", videsLoupe: 30, echelleLoupe: 0.45,
-          titres: ["", "", "seule la silice atteint le fond : une boue rouge, très lente"] }),
-      E("Enfouissement", "Recouverte de calcaires puis de schistes, la boue s'enfouit ; vers 40 °C l'opale devient opale-CT, vers 50–60 °C elle recristallise en quartz", "De 150 à 100 millions d'années", "50 millions d'années", "enfouissementSed",
+          titres: ["", "", "seule la silice gagne le fond : une boue rouge, à très faible vitesse"] }),
+      E("Enfouissement", "Enfouie sous des calcaires puis des schistes, la boue passe vers 40 °C à l'opale-CT, puis, entre 50 et 60 °C, à du quartz recristallisé", "De 150 à 100 millions d'années", "50 millions d'années", "enfouissementSed",
         { couches: [[150, 120, "#c9bfa5", "calcaires pélagiques"], [120, 100, "#9aa28f", "schistes"]], age0: 150, age1: 100, zmax: 1.6, nomRoche: "la boue à radiolaires", couleurRoche: "#a4553c", grainFonce: "#7d3a28", grainClair: "#e9d3c4", vides: [50, 10], surface: ["océan profond", "#274f73"], rythme: "très lent", echelleLoupe: 0.45,
-          loupeTexte: ["à la loupe : l'opale recristallise", "en quartz et soude la roche"] }),
-      E("Radiolarite", "Recristallisée en quartz et rougie par l'hématite, la boue est devenue une roche très dure, le jaspe", "Aujourd'hui", null, "loupeRoche",
-        { mode: "fixe", titre: "Dans la radiolarite, au microscope", lignes: ["Des squelettes de radiolaires", "(ronds, clairs) dans une pâte de", "quartz très fin rougie par un peu", "d'hématite : le jaspe rouge des", "ophiolites du Queyras."] }),
+          loupeTexte: ["à la loupe : l'opale recristallise", "en quartz, et soude la roche"] }),
+      E("Radiolarite", "Quartz recristallisé et hématite rouge : la boue est devenue une roche très dure, le jaspe", "Aujourd'hui", null, "loupeRoche",
+        { mode: "fixe", titre: "Dans la radiolarite, au microscope", lignes: ["Des squelettes de radiolaires", "(ronds, clairs) dans une pâte de", "quartz très fin rougi par un peu", "d'hématite : le jaspe rouge des", "ophiolites du Queyras."] }),
     ],
   });
 
   poser("diatomite", {
     anim: [
-      E("Diatomées", "Dans les lacs de cratère, riches en silice venue des roches volcaniques, les diatomées, algues microscopiques, fabriquent leur coque (frustule) d'opale", "Entre 15 et 2 millions d'années", null, "merVie",
+      E("Diatomées", "Dans les lacs de cratère, alimentés en silice par les roches volcaniques, les diatomées, algues microscopiques, bâtissent une coque (frustule) d'opale", "Entre 15 et 2 millions d'années", null, "merVie",
         { milieu: "lac", vie: ["diatomees"], couleurs: ["#ebe9e1", "#f5f3ee"], couleurFond: "#5f554d", ages: [8.1, 8, 7.9], labFond: "fond du lac de cratère",
-          titres: ["un lac dans un cratère volcanique", "les diatomées fabriquent leur coque d'opale", ""] }),
-      E("Lits blancs", "À leur mort, les frustules tombent au fond : des lits blancs s'accumulent, quelques millimètres par an", "Entre 15 et 2 millions d'années", "des millimètres par an", "merDepot",
+          titres: ["un lac dans un cratère volcanique", "les diatomées édifient leur coque d'opale", ""] }),
+      E("Lits blancs", "Une fois mortes, les frustules gagnent le fond : des lits blancs grandissent, de quelques millimètres par an", "Entre 15 et 2 millions d'années", "des millimètres par an", "merDepot",
         { milieu: "lac", vie: ["diatomees"], couleurs: ["#ebe9e1", "#f5f3ee"], couleurFond: "#5f554d", ages: [8.1, 8, 7.9], labFond: "fond du lac de cratère", texteLoupe: "frustules de diatomées", videsLoupe: 60, echelleLoupe: 0.45,
           titres: ["", "", "les frustules tombent : des lits blancs s'accumulent"] }),
-      E("Diatomite", "Jamais chauffée au-delà d'une trentaine de degrés, l'opale n'a pas recristallisé : les frustules sont intacts et la roche, pleine de vides, est très légère", "Depuis le dépôt", null, "loupeRoche",
+      E("Diatomite", "L'opale, jamais chauffée au-delà d'une trentaine de degrés, n'a pas recristallisé : frustules intacts, roche légère criblée de vides", "Depuis le dépôt", null, "loupeRoche",
         { mode: "fixe", titre: "Dans la diatomite, au microscope", lignes: ["Des frustules de diatomées intacts,", "en opale, et un peu d'argile.", "Jamais chauffée, l'opale n'a pas", "recristallisé : la roche reste", "légère et pleine de vides. On s'en", "sert pour filtrer."] }),
     ],
   });
 
   poser("gaize", {
     anim: [
-      E("Éponges", "Sur le fond de la mer albienne, les éponges fabriquent des spicules d'opale ; argile et grains verts de glauconie s'y mêlent", "À l'Albien (113–100,5 Ma)", null, "merVie",
+      E("Éponges", "Au fond de la mer albienne, les éponges sécrètent des spicules d'opale, mêlés d'argile et de grains verts de glauconie", "À l'Albien (113 à 100,5 Ma)", null, "merVie",
         { milieu: "large", vie: ["eponges", "glauconie"], couleurs: ["#b9b39a", "#aaa488"], ages: [108, 107, 104], labFond: "fond de la mer albienne",
-          titres: ["la mer albienne recouvre l'Argonne", "sur le fond, les éponges fabriquent des spicules d'opale", ""] }),
-      E("Dépôt", "Spicules, sable fin, argile et glauconie s'accumulent en un sable argileux", "À l'Albien", "≈ 20 m par million d'années", "merDepot",
+          titres: ["la mer albienne recouvre l'Argonne", "au fond, les éponges édifient des spicules d'opale", ""] }),
+      E("Dépôt", "Spicules, sable fin, argile et glauconie se déposent pour former un sable argileux", "À l'Albien", "≈ 20 m par million d'années", "merDepot",
         { milieu: "large", vie: ["eponges", "glauconie"], couleurs: ["#b9b39a", "#aaa488"], ages: [108, 107, 104], labFond: "fond de la mer albienne", texteLoupe: "spicules, sable et glauconie", videsLoupe: 50, echelleLoupe: 0.45,
           titres: ["", "", "spicules, sable fin, argile et glauconie s'accumulent"] }),
-      E("Enfouissement", "Enfouie sous les craies du Crétacé supérieur, vers 40 °C, une partie des spicules se dissout et l'opale se redépose en opale-CT entre les grains", "De 100 à 70 millions d'années", null, "enfouissementSed",
+      E("Enfouissement", "Vers 40 °C, sous les craies du Crétacé supérieur, une part des spicules se dissout, et l'opale-CT se forme entre les grains", "De 100 à 70 millions d'années", null, "enfouissementSed",
         { couches: [[100, 85, "#e8e0c8", "Cénomanien : craie marneuse"], [85, 70, "#f1eee6", "craie"]], age0: 100, age1: 70, zmax: 1, nomRoche: "le sable à spicules", couleurRoche: "#b9b39a", grainFonce: "#5f8a4a", grainClair: "#e9e6d6", vides: [50, 40], echelleLoupe: 0.45,
           loupeTexte: ["à la loupe : les spicules se", "dissolvent en partie"] }),
-      E("Gaize", "L'opale-CT soude les grains sans combler les vides : une roche légère et poreuse, dure pourtant, dont on a bâti les villages d'Argonne", "Aujourd'hui", null, "loupeRoche",
-        { titre: "Dans la gaize, au microscope", vides: [40, 30], lignes: ["Des spicules d'éponges, du sable", "et de la glauconie verte, soudés", "par un voile d'opale-CT qui laisse", "beaucoup de vides : une pierre", "légère et poreuse."] }),
+      E("Gaize", "Ciment d'opale-CT : les grains sont soudés sans que les vides se comblent. Roche légère et poreuse mais dure, avec laquelle on a bâti les villages d'Argonne", "Aujourd'hui", null, "loupeRoche",
+        { titre: "Dans la gaize, au microscope", vides: [40, 30], lignes: ["Des spicules d'éponges, du sable", "et de glauconie verte, soudés", "par un voile d'opale-CT qui laisse", "beaucoup de vides : une pierre", "légère et poreuse."] }),
     ],
   });
 
@@ -1711,140 +1711,140 @@
   const SAUMURE = "#cfe3e6";
 
   poser("gypse", { anim: [ancien("gypse", 0),
-    E("Bancs de gypse", "Tant que le bassin est réalimenté et que la saumure reste entre × 3,8 et × 10,6, les cristaux de gypse naissent au fond et grandissent : les bancs s'empilent", "Au Priabonien", "des milliers d'années", "loupeRoche",
-      { mode: "croissance", dessous: SAUMURE, nomDessous: "saumure", titre: "Dans le gypse, au microscope", lignes: ["Des cristaux de gypse naissent", "dans la saumure et grandissent", "jusqu'à se toucher : une mosaïque", "de cristaux. Cuit vers 150 °C, le", "gypse perd son eau : c'est le", "plâtre (« de Paris »)."] })] });
+    E("Bancs de gypse", "Tant que le bassin reçoit de l'eau neuve et que la saumure demeure entre × 3,8 et × 10,6, du gypse cristallise au fond et grossit, et les bancs s'accumulent", "Au Priabonien", "des milliers d'années", "loupeRoche",
+      { mode: "croissance", dessous: SAUMURE, nomDessous: "saumure", titre: "Dans le gypse, au microscope", lignes: ["Des cristaux de gypse naissent", "dans la saumure et grandissent", "jusqu'à se toucher. Cuit vers", "150 °C, le gypse perd les trois", "quarts de son eau : c'est le", "plâtre (« de Paris »)."] })] });
 
   poser("anhydrite", { anim: [ancien("anhydrite", 0),
-    E("Gypse", "Dans la lagune, le sulfate de calcium précipite : surtout du gypse, qui contient de l'eau dans ses cristaux", "Au Trias", "des milliers d'années", "enfouissementSed",
+    E("Gypse", "Dans la lagune, le sulfate de calcium cristallise, surtout sous forme de gypse, minéral qui emprisonne de l'eau", "Au Trias", "des milliers d'années", "enfouissementSed",
       { couches: [[230, 200, "#c9bfa5", "Trias : argiles et dolomies"], [200, 150, "#9aa28f", "Jurassique : marnes et calcaires"]], age0: 230, age1: 150, zmax: 1.8, nomRoche: "le gypse", couleurRoche: "#f2efe8", grainClair: "#ffffff", grainFonce: "#d8d2c4", vides: [8, 2], echelleLoupe: 0.45,
-        loupeTexte: ["vers 42–58 °C (1 à 1,5 km), le gypse", "perd son eau et devient anhydrite"] }, { court: "Enfouissement", titre: "Enfoui sous d'autres couches, le gypse chauffe : au-delà de ≈ 42–58 °C (1 à 1,5 km), il perd son eau et devient anhydrite", quand: "De 230 à 150 millions d'années", duree: "80 millions d'années" }),
-    E("Anhydrite", "L'anhydrite forme une mosaïque de cristaux aux clivages à angle droit ; ramenée près de la surface, elle reprend de l'eau et regonfle en gypse", "Depuis 150 millions d'années", null, "loupeRoche",
+        loupeTexte: ["vers 42 à 58 °C (1 à 1,5 km), le gypse", "perd son eau et devient anhydrite"] }, { court: "Enfouissement", titre: "Enfoui sous d'autres couches, le gypse chauffe : au-delà de ≈ 42 à 58 °C (1 à 1,5 km), il perd son eau et devient anhydrite", quand: "De 230 à 150 millions d'années", duree: "80 millions d'années" }),
+    E("Anhydrite", "L'anhydrite constitue une mosaïque de cristaux à clivages orthogonaux ; ramenée près de la surface, elle fixe de l'eau et devient gypse", "Depuis 150 millions d'années", null, "loupeRoche",
       { mode: "croissance", dessous: "#fbfaf6", nomDessous: "gypse pas encore transformé", titre: "Dans l'anhydrite, au microscope", lignes: ["En perdant son eau, le gypse se", "change en cristaux d'anhydrite,", "plus denses. Revenue près de la", "surface, l'anhydrite reprend de", "l'eau et gonfle : elle soulève", "parfois routes et tunnels."] })] });
 
   poser("sel", { anim: [ancien("sel", 0),
-    E("Bancs de sel", "Il ne reste que 9 % de l'eau : les cubes de halite naissent en surface et au fond, puis s'empilent en bancs", "Au Keuper", "des milliers d'années", "loupeRoche",
+    E("Bancs de sel", "Il ne reste plus que 9 % de l'eau : des cubes de halite se forment en surface comme au fond, puis s'accumulent en couches", "Au Keuper", "des milliers d'années", "loupeRoche",
       { mode: "croissance", dessous: SAUMURE, nomDessous: "saumure", titre: "Dans le sel gemme, surface sciée", lignes: ["Des cristaux de halite (sel de", "cuisine) grandissent dans la", "saumure jusqu'à se toucher ; un", "peu de gypse et d'argile entre", "eux. Il ne reste alors que 9 %", "de l'eau de mer de départ."] }),
     ancien("sel", 2)] });
 
   poser("sylvinite", { anim: [ancien("sylvinite", 0),
-    E("Sylvinite", "Au-delà de × 65, il ne reste que 1,5 % de l'eau : halite et sels de potassium précipitent ensemble ; une partie de la sylvite vient de la transformation de la carnallite", "À l'Oligocène", "des milliers d'années", "loupeRoche",
+    E("Sylvinite", "Au-delà de × 65, 1,5 % seulement de l'eau demeure : halite et sels potassiques précipitent ensemble, et une part de la sylvite dérive de la carnallite", "À l'Oligocène", "des milliers d'années", "loupeRoche",
       { mode: "croissance", dessous: SAUMURE, nomDessous: "saumure très concentrée", titre: "Dans la sylvinite, surface sciée", lignes: ["Halite (blanche) et sylvite", "(rosée, chlorure de potassium)", "cristallisent dans les dernières", "gouttes de saumure. En Alsace,", "on l'a extraite comme engrais", "jusqu'en 2002."] })] });
 
   poser("dolomie", { anim: [ancien("dolomie", 0), ancien("dolomie", 1),
-    E("Dolomitisation", "Plus dense, la saumure s'infiltre dans les boues calcaires ; le magnésium remplace une partie du calcium : la calcite devient dolomite, en petits cristaux", "Au Jurassique, puis en profondeur", "des milliers à des millions d'années", "loupeRoche",
-      { mode: "croissance", dessous: "#f3efe4", nomDessous: "boue calcaire pas encore remplacée", titre: "Dans la dolomie, au microscope", lignes: ["Le magnésium de la saumure", "remplace une partie du calcium :", "des cristaux de dolomite naissent", "et gagnent toute la boue. La", "roche perd un peu de volume :", "de petits vides apparaissent."] }),
+    E("Dolomitisation", "Plus dense, la saumure pénètre les boues calcaires ; le magnésium se substitue à une partie du calcium, et la calcite cède la place à de petits cristaux de dolomite", "Au Jurassique, puis en profondeur", "des milliers à des millions d'années", "loupeRoche",
+      { mode: "croissance", dessous: "#f3efe4", nomDessous: "boue calcaire pas encore remplacée", titre: "Dans la dolomie, au microscope", lignes: ["Le magnésium de la saumure", "remplace une partie du calcium :", "des cristaux de dolomite naissent", "et gagnent toute la boue. La", "la roche perd un peu de volume :", "de petits vides apparaissent."] }),
     ancien("dolomie", 3)] });
 
   poser("cargneule", { anim: [ancien("cargneule", 0), ancien("cargneule", 1),
-    E("Dissolution", "L'eau souterraine, sans cesse renouvelée, dissout le gypse (2,4 g/L dans l'eau pure) : il reste un squelette de dolomie criblé de cellules vides, soudé par de la calcite", "Depuis quelques millions d'années", "des milliers à des millions d'années", "loupeRoche",
+    E("Dissolution", "Renouvelée sans cesse, l'eau souterraine dissout le gypse (2,4 g/L en eau pure) ; chargée de sulfate, elle change aussi la dolomie en calcite : il reste un réseau de cloisons de calcite criblé de cellules vides", "Depuis quelques millions d'années", "des milliers à des millions d'années", "loupeRoche",
       { mode: "fixe", titre: "Dans la cargneule, surface sciée", lignes: ["Des fragments de dolomie broyée,", "soudés par de la calcite ; les", "morceaux de gypse ont été", "dissous : il reste des cellules", "vides. D'où son aspect de roche", "« pourrie », criblée de trous."] })] });
 
   poser("phosphorite", { anim: [ancien("phosphorite", 0), ancien("phosphorite", 1), ancien("phosphorite", 2),
-    E("Phosphorite", "Grains phosphatés, os et dents de mammifères dans un ciment de calcite : exploitée comme engrais au XIXᵉ siècle, elle a livré des milliers de fossiles", "Aujourd'hui", null, "loupeRoche",
-      { mode: "fixe", titre: "Dans la phosphorite, au microscope", lignes: ["Des grains de phosphate (apatite)", "et des débris d'os et de dents,", "dans un ciment de calcite. Les", "poches du Quercy, vidées pour", "l'engrais vers 1870–1900, ont livré", "des milliers de fossiles."] })] });
+    E("Phosphorite", "Riche en grains phosphatés, en os et en dents de mammifères, cimentés par la calcite ; exploitée comme engrais au XIXᵉ siècle, elle a livré des milliers de fossiles", "Aujourd'hui", null, "loupeRoche",
+      { mode: "fixe", titre: "Dans la phosphorite, au microscope", lignes: ["Des grains de phosphate (apatite)", "ainsi que des débris d'os et de dents,", "liés par un ciment de calcite. Les", "poches du Quercy, vidées pour", "l'engrais vers 1870 à 1900, ont livré", "des milliers de fossiles."] })] });
 
   poser("roche_ferrifere", { anim: [ancien("roche_ferrifere", 0), ancien("roche_ferrifere", 1),
-    E("Minette de Lorraine", "En France, la roche ferrifère la plus exploitée s'est formée autrement : la minette de Lorraine, oolithes de fer déposées dans une mer peu profonde du Jurassique (Aalénien) — c'est elle que montre le schéma de texture", "Vers 175 millions d'années", null, "loupeRoche",
-      { mode: "fixe", titre: "Dans la minette de Lorraine, au microscope", lignes: ["Des oolithes : grains de fer", "(goethite) formés couche par couche", "en roulant sur le fond d'une mer", "peu profonde, avec des débris de", "coquilles. Le minerai de fer de", "la Lorraine jusqu'en 1997."] })] });
+    E("Minette de Lorraine", "En France, la roche ferrifère la plus exploitée a une autre origine : la minette de Lorraine, formée d'oolithes ferrugineuses déposées dans une mer peu profonde du Jurassique (Aalénien) ; c'est elle que représente le schéma de texture", "Vers 175 millions d'années", null, "loupeRoche",
+      { mode: "fixe", titre: "Dans la minette de Lorraine, au microscope", lignes: ["Des oolithes : grains de fer", "(goethite) formés couche par couche", "par roulement sur le fond d'une mer", "peu profonde, en présence de débris de", "coquilles. Ce minerai de fer", "la Lorraine jusqu'en 1997."] })] });
 
   poser("travertin", { anim: [ancien("travertin", 0), ancien("travertin", 1),
-    E("Travertin", "Lit après lit, la calcite enrobe mousses et brindilles, qui pourrissent en laissant des vides : une roche litée et poreuse", "Aujourd'hui", "quelques millimètres à centimètres par an", "loupeRoche",
-      { mode: "depot", eauFond: "#dcecf2", particule: "#ffffff", nomDessous: "eau de la cascade", titre: "Dans le travertin, surface sciée", lignes: ["Des lits compacts de calcite", "alternent avec des lits poreux :", "la calcite a enrobé des mousses", "qui ont pourri, laissant leurs", "moules vides. Scié, il donne une", "pierre de parement."] })] });
+    E("Travertin", "Couche après couche, la calcite enrobe mousses et brindilles, dont la décomposition laisse des vides : une roche litée et poreuse", "Aujourd'hui", "quelques millimètres à centimètres par an", "loupeRoche",
+      { mode: "depot", eauFond: "#dcecf2", particule: "#ffffff", nomDessous: "eau de la cascade", titre: "Dans le travertin, surface sciée", lignes: ["Des lits compacts de calcite", "alternent avec des lits poreux :", "la calcite a enrobé des mousses", "qui ont pourri, laissant leurs", "moules vides. Scié, il fournit une", "pierre de parement."] })] });
 
   const tourbe0 = ancien("tourbe", 0); tourbe0.p = Object.assign({}, tourbe0.p, { texte2: tourbe0.p.texte1 });   // pas d'enfouissement dans une tourbière
   poser("tourbe", { anim: [tourbe0,
-    E("Décomposition bloquée", "L'eau stagnante, acide et pauvre en oxygène, bloque la décomposition : les végétaux morts s'accumulent, environ un millimètre par an", "Depuis 11 700 ans", "≈ 1 mm par an", "loupeRoche",
+    E("Décomposition bloquée", "Dans une eau stagnante, acide et pauvre en oxygène, la décomposition est bloquée : les végétaux morts s'accumulent, à raison d'environ un millimètre par an", "Depuis 11 700 ans", "≈ 1 mm par an", "loupeRoche",
       { mode: "depot", eauFond: "#c8d6c0", particule: "#8a6a3f", nomDessous: "eau de la tourbière", jauge: { nom: ["oxygène"], de: 100, a: 5, max: 100, couleur: "#3f8fd2" }, titre: "Dans la tourbe, au microscope",
-        lignes: ["Des tissus végétaux à peine", "décomposés (sphaignes, racines)", "dans une matière brune très fine.", "Sans oxygène, les microbes ne", "les détruisent pas : 1 m de tourbe", "≈ 1 000 ans d'accumulation."] })] });
+        lignes: ["Des tissus végétaux à peine", "décomposés (sphaignes, racines)", "au sein d'une matière brune très fine.", "Sans oxygène, les microbes ne", "les détruisent pas : 1 m de tourbe", "≈ 1 000 ans d'accumulation."] })] });
 
   const rangCharbon = (id, i) => { const e = ancien(id, i); e.p = Object.assign({}, e.p, { rythme: " " }); return e; };
   poser("lignite", { anim: [ancien("lignite", 0), ancien("lignite", 1), rangCharbon("lignite", 2),
-    E("Lignite", "Restée tiède, la tourbe n'a perdu qu'une partie de son eau : on reconnaît encore le bois", "Depuis 30 millions d'années", null, "loupeRoche",
-      { mode: "fixe", titre: "Dans le lignite, au microscope", lignes: ["Des débris de bois encore", "reconnaissables dans un charbon", "brun, riche en eau. Le rang du", "charbon dépend de la chaleur", "subie : ici moins de ≈ 50 °C."] }),
-    E("Remontée", "Les plis de la Provence et l'érosion ramènent la couche à quelques centaines de mètres de la surface : on l'a exploitée en mine, à Gardanne, jusqu'en 2003", "De 30 millions d'années à aujourd'hui", "30 millions d'années", "exhumationSed",
-      { couches: [[60, 45, "#c9a98a", "Paléogène : argiles"], [45, 30, "#d8cdb0", "calcaires de lac"]], age0: 30, age1: 0, zmax: 1.2, zFin: 0.2, nomRoche: "le lignite", couleurRoche: "#3a2d22", grainClair: "#6b5236", grainFonce: "#1f1a17",
-        moteur: ["la Provence se plisse et se soulève ;", "l'érosion enlève une partie du dessus"], titreFin: "le lignite est à quelques centaines de mètres : on l'exploite en mine", texteFin: "(mine de Gardanne)" })],
-    cond: Object.assign({}, ROCHES_F.lignite.cond, { chemin: [...ROCHES_F.lignite.cond.chemin.slice(0, 3), { age: 30, z: 1.2, n: 4, t: "Les plis de la Provence et l'érosion ramènent le lignite à quelques centaines de mètres de la surface ; on l'a exploité en mine." }, { age: 0, z: 0.2 }] }) });
+    E("Lignite", "Demeurée peu chauffée, la tourbe n'a perdu qu'une partie de son eau : le bois reste reconnaissable", "Depuis 30 millions d'années", null, "loupeRoche",
+      { mode: "fixe", titre: "Dans le lignite, au microscope", lignes: ["Des débris de bois encore", "reconnaissables dans un charbon", "brune, riche en eau. Le rang du", "charbon dépend de la chaleur", "subie : ici moins de ≈ 50 °C."] }),
+    E("Remontée", "Les plis de la Provence et l'érosion ramènent la couche à l'affleurement au sud du bassin, à Fuveau ; elle plonge vers le nord : à Gardanne, on l'exploitait à plus de 1 000 m de profondeur (puits Yvon-Morandat), jusqu'en 2003", "De 30 millions d'années à aujourd'hui", "30 millions d'années", "exhumationSed",
+      { couches: [[60, 45, "#c9a98a", "Paléogène : argiles"], [45, 30, "#d8cdb0", "calcaires de lac"]], age0: 30, age1: 0, zmax: 1.2, zFin: 1.0, nomRoche: "le lignite", couleurRoche: "#3a2d22", grainClair: "#6b5236", grainFonce: "#1f1a17",
+        moteur: ["la Provence se plisse et s'élève ;", "l'érosion emporte une partie de la couverture"], titreFin: "à Gardanne, le lignite est à plus de 1 000 m : on l'exploite par puits", texteFin: "(puits Yvon-Morandat)" })],
+    cond: Object.assign({}, ROCHES_F.lignite.cond, { chemin: [...ROCHES_F.lignite.cond.chemin.slice(0, 3), { age: 30, z: 1.2, n: 4, t: "Plissements provençaux et érosion amènent le lignite à quelques centaines de mètres sous le sol ; il fut exploité en galerie." }, { age: 0, z: 0.2 }] }) });
 
   poser("houille", { anim: [ancien("houille", 0), ancien("houille", 1), rangCharbon("houille", 2),
-    E("Houille", "Portée à 100–200 °C, la tourbe a perdu eau et matières volatiles : un charbon noir, en lits brillants et mats", "Depuis 295 millions d'années", null, "loupeRoche",
-      { mode: "fixe", titre: "Dans la houille, au microscope", lignes: ["Des lits brillants (bois et écorces", "devenus vitrain) et des lits mats", "(débris fins, spores). Il n'y a", "presque plus d'eau : la houille", "brûle bien mieux que le lignite."] }),
-    E("Remontée", "La collision hercynienne plisse les bassins ; l'érosion enlève des kilomètres de roches : la houille arrive à quelques centaines de mètres de la surface, où on l'exploite en mine", "De 295 millions d'années à aujourd'hui", "295 millions d'années", "exhumationSed",
-      { couches: [[310, 300, "#6f6a60", "Carbonifère : grès et schistes"], [300, 290, "#9a8a70", "Stéphanien–Permien"]], age0: 290, age1: 0, zmax: 4, zFin: 0.4, gradient: 30, nomRoche: "la houille", couleurRoche: "#1f1a17", grainClair: "#4a4640", grainFonce: "#0f0d0c",
-        moteur: ["la chaîne hercynienne se plisse ;", "l'érosion enlève des km de roches"], titreFin: "la houille est à quelques centaines de mètres : on l'exploite en mine", texteFin: "(puits du Nord et de Lorraine)" })],
-    cond: Object.assign({}, ROCHES_F.houille.cond, { chemin: [...ROCHES_F.houille.cond.chemin.slice(0, 3), { age: 290, z: 4, n: 4, t: "La collision hercynienne plisse les bassins ; l'érosion enlève des kilomètres de roches et ramène la houille près de la surface, où on l'exploite en mine." }, { age: 0, z: 0.4 }] }) });
+    E("Houille", "Chauffée à 100 à 200 °C, la tourbe perd son eau et ses matières volatiles : elle devient un charbon noir, en lits brillants et mats", "Depuis 295 millions d'années", null, "loupeRoche",
+      { mode: "fixe", titre: "Dans la houille, au microscope", lignes: ["Les lits brillants (bois et écorces", "transformés en vitrain) et les lits mats", "(débris fins, spores). Il n'y a", "presque plus d'eau : la houille", "brûle nettement mieux que le lignite."] }),
+    E("Remontée", "La collision hercynienne plisse les bassins ; l'érosion décape plusieurs kilomètres de roches : la houille se retrouve à quelques centaines de mètres sous la surface, où elle s'exploite en mine", "De 295 millions d'années à aujourd'hui", "295 millions d'années", "exhumationSed",
+      { couches: [[310, 300, "#6f6a60", "Carbonifère : grès et schistes"], [300, 290, "#9a8a70", "Stéphanien-Permien"]], age0: 290, age1: 0, zmax: 4, zFin: 0.4, gradient: 30, nomRoche: "la houille", couleurRoche: "#1f1a17", grainClair: "#4a4640", grainFonce: "#0f0d0c",
+        moteur: ["la chaîne hercynienne se plisse ;", "l'érosion décape des kilomètres de roches"], titreFin: "la houille se trouve à quelques centaines de mètres : elle s'exploite en mine", texteFin: "(bassins du Nord et de Lorraine)" })],
+    cond: Object.assign({}, ROCHES_F.houille.cond, { chemin: [...ROCHES_F.houille.cond.chemin.slice(0, 3), { age: 290, z: 4, n: 4, t: "La collision hercynienne plisse les bassins ; l'érosion décape des kilomètres de roches et rapproche la houille de la surface, où elle est exploitée en mine." }, { age: 0, z: 0.4 }] }) });
 
   poser("anthracite", { anim: [ancien("anthracite", 0), ancien("anthracite", 1), rangCharbon("anthracite", 2),
-    E("Anthracite", "Au-delà de ≈ 200 °C, presque toute la matière volatile est partie : il reste un carbone presque pur, noir et brillant", "Depuis 290 millions d'années", null, "loupeRoche",
-      { mode: "fixe", titre: "Dans l'anthracite, au microscope", lignes: ["Un carbone presque pur, brillant,", "avec de rares lits d'argile. On", "n'y reconnaît plus rien des", "plantes : la chaleur a tout", "transformé."] }),
-    E("Remontée", "La formation des Alpes plisse la série et la soulève ; l'érosion dégage le charbon, exploité à La Mure jusqu'en 1997", "De 290 millions d'années à aujourd'hui", "290 millions d'années", "exhumationSed",
-      { couches: [[310, 300, "#6f6a60", "Carbonifère : grès et schistes"], [300, 290, "#9a8a70", "Stéphanien–Permien"]], age0: 290, age1: 0, zmax: 6.6, zFin: 0.3, gradient: 30, nomRoche: "l'anthracite", couleurRoche: "#141210", grainClair: "#3d3a36", grainFonce: "#000000",
-        moteur: ["la collision alpine plisse et soulève ;", "l'érosion enlève le dessus"], titreFin: "l'anthracite est à quelques centaines de mètres : on l'exploite", texteFin: "(mine de La Mure)" })],
-    cond: Object.assign({}, ROCHES_F.anthracite.cond, { chemin: [...ROCHES_F.anthracite.cond.chemin.slice(0, 3), { age: 290, z: 6.6, n: 4, t: "Plus tard, la formation des Alpes plisse et soulève la série ; l'érosion ramène l'anthracite près de la surface (La Mure)." }, { age: 0, z: 0.3 }] }) });
+    E("Anthracite", "Au-delà de ≈ 200 °C, la quasi-totalité de la matière volatile a disparu : il subsiste un carbone presque pur, noir et brillant", "Depuis 290 millions d'années", null, "loupeRoche",
+      { mode: "fixe", titre: "Dans l'anthracite, au microscope", lignes: ["Un carbone presque pur, brillant,", "accompagné de rares lits d'argile. On", "n'y reconnaît plus rien des", "plantes : la chaleur a tout", "transformé."] }),
+    E("Remontée", "L'orogenèse alpine plie et relève la série ; l'érosion met à nu le charbon, extrait à La Mure jusqu'en 1997", "De 290 millions d'années à aujourd'hui", "290 millions d'années", "exhumationSed",
+      { couches: [[310, 300, "#6f6a60", "Carbonifère : grès et schistes"], [300, 290, "#9a8a70", "Stéphanien-Permien"]], age0: 290, age1: 0, zmax: 6.6, zFin: 0.3, gradient: 30, nomRoche: "l'anthracite", couleurRoche: "#141210", grainClair: "#3d3a36", grainFonce: "#000000",
+        moteur: ["la collision alpine plisse et redresse ;", "l'érosion enlève le dessus"], titreFin: "l'anthracite se trouve à quelques centaines de mètres : il s'exploite", texteFin: "(mine de La Mure)" })],
+    cond: Object.assign({}, ROCHES_F.anthracite.cond, { chemin: [...ROCHES_F.anthracite.cond.chemin.slice(0, 3), { age: 290, z: 6.6, n: 4, t: "Plus tard, l'orogenèse alpine plisse et soulève la série ; l'érosion rapproche l'anthracite de la surface (La Mure)." }, { age: 0, z: 0.3 }] }) });
 
   poser("schiste_bitumineux", { anim: [ancien("schiste_bitumineux", 0),
-    E("Boue noire", "Sans oxygène au fond, la matière organique n'est pas détruite : la boue devient noire et feuilletée, lit après lit", "Pendant le dépôt", "des milliers d'années par lit", "loupeRoche",
-      { mode: "depot", eauFond: "#3d4a4f", particule: "#6f8f4a", nomDessous: "eau du fond, sans oxygène", titre: "Dans le schiste bitumineux, au microscope", lignes: ["Des lits riches en matière", "organique (noirs) alternent avec", "des lits d'argile et de silt : le", "plancton mort n'a pas été détruit.", "Il se débite en feuillets", "(« schistes carton »)."] }),
+    E("Boue noire", "En l'absence d'oxygène au fond, la matière organique se conserve : la boue devient noire et feuilletée, lit après lit", "Pendant le dépôt", "des milliers d'années par lit", "loupeRoche",
+      { mode: "depot", eauFond: "#3d4a4f", particule: "#6f8f4a", nomDessous: "eau du fond, sans oxygène", titre: "Dans le schiste bitumineux, au microscope", lignes: ["Des lits riches en matière", "organique (noirs) alternent avec", "des lits d'argile et de silt : le", "plancton mort s'est conservé.", "Il se débite en feuillets", "(« schistes carton »)."] }),
     rangCharbon("schiste_bitumineux", 2),
-    E("Remontée", "La région se soulève et l'érosion ramène la couche à l'affleurement, dans les Causses ; en Lorraine, elle reste sous quelques centaines de mètres", "De 100 millions d'années à aujourd'hui", "100 millions d'années", "exhumationSed",
+    E("Remontée", "Le relief s'élève et l'érosion ramène la couche à l'affleurement dans les Causses et au pied des côtes de Moselle ; sous les plateaux lorrains, elle reste à quelques centaines de mètres", "De 100 millions d'années à aujourd'hui", "100 millions d'années", "exhumationSed",
       { couches: [[180, 150, "#9aa28f", "Jurassique : marnes et calcaires"], [150, 100, "#c9bfa5", "Crétacé inférieur"]], age0: 100, age1: 0, zmax: 1.6, zFin: 0, nomRoche: "la boue noire", couleurRoche: "#2f2d29", grainClair: "#6f6a60", grainFonce: "#141210",
-        moteur: ["la région se soulève ;", "pluie et rivières enlèvent le dessus"], titreFin: "les schistes carton affleurent (Causses)" })],
-    cond: Object.assign({}, ROCHES_F.schiste_bitumineux.cond, { chemin: [...ROCHES_F.schiste_bitumineux.cond.chemin.slice(0, 3), { age: 100, z: 1.6, n: 4, t: "La région se soulève ; l'érosion ramène la roche à l'affleurement (Causses) ou près de la surface (Lorraine)." }, { age: 0, z: 0 }] }) });
+        moteur: ["la région se soulève ;", "la pluie et les rivières emportent la partie supérieure"], titreFin: "les schistes carton affleurent (Causses)" })],
+    cond: Object.assign({}, ROCHES_F.schiste_bitumineux.cond, { chemin: [...ROCHES_F.schiste_bitumineux.cond.chemin.slice(0, 3), { age: 100, z: 1.6, n: 4, t: "Le relief s'élève : l'érosion expose la roche dans les Causses, la rapproche de la surface en Lorraine." }, { age: 0, z: 0 }] }) });
 
   // altérations : la vue rapprochée finale devient le schéma de texture
   poser("bauxite", { anim: [ancien("bauxite", 0), ancien("bauxite", 1),
-    E("Bauxite", "Des pisolithes rouges de gibbsite (aluminium) et d'hématite (fer) : le minerai d'aluminium, nommé d'après les Baux-de-Provence ; aujourd'hui, sous un climat trop sec, elles sont héritées", "Depuis 90 millions d'années", null, "loupeRoche",
-      { mode: "fixe", titre: "Dans la bauxite, au microscope", lignes: ["Des pisolithes (grains ronds en", "couches) de gibbsite et d'hématite", "dans un fond de gibbsite et de", "kaolinite : tout le reste a été", "emporté par l'eau. Décrite aux", "Baux-de-Provence, d'où son nom."] })] });
+    E("Bauxite", "Des pisolithes rouges de boehmite (aluminium) et d'hématite (fer) : minerai d'aluminium dont le nom vient des Baux-de-Provence ; sous le climat actuel, trop sec, elles sont héritées", "Depuis 90 millions d'années", null, "loupeRoche",
+      { mode: "fixe", titre: "Dans la bauxite, au microscope", lignes: ["Des pisolithes (grains ronds en", "couches) de boehmite et d'hématite", "sur un fond de boehmite et de", "kaolinite : tout le reste a été", "emporté par l'eau. Décrite aux", "Baux-de-Provence, qui lui a donné son nom."] })] });
   poser("laterite", { anim: [ancien("laterite", 0), ancien("laterite", 1),
-    E("Cuirasse", "Les saisons sèches durcissent les oxydes de fer en cuirasse ; aujourd'hui (Bordeaux, 13,7 °C), elles sont fossiles", "Depuis 34 millions d'années", null, "loupeRoche",
-      { mode: "fixe", titre: "Dans la cuirasse, surface sciée", lignes: ["Des pisolithes d'oxydes de fer", "(goethite, hématite) soudés dans", "une argile rouge, avec quelques", "grains de quartz rescapés. Dure", "comme une brique : on en a fait", "des pierres de construction."] })] });
+    E("Cuirasse", "Les saisons sèches indurent les oxydes de fer en cuirasse ; sous le climat actuel de Bordeaux (13,7 °C), ces cuirasses sont fossiles", "Depuis 34 millions d'années", null, "loupeRoche",
+      { mode: "fixe", titre: "Dans la cuirasse, surface sciée", lignes: ["Des pisolithes d'oxydes de fer", "(goethite, hématite) soudés dans", "une argile rouge, avec quelques", "grains de quartz rescapés. Dure", "à l'image de la brique : on en a bâti", "des pierres de construction."] })] });
   poser("meuliere", { anim: [ancien("meuliere", 0),
-    E("Silicification", "Les lacs s'assèchent ; l'altération des argiles libère de la silice : opale puis calcédoine remplacent peu à peu le calcaire", "De 34 à 15 millions d'années", "des millions d'années", "loupeRoche",
-      { mode: "croissance", dessous: "#ece6d4", nomDessous: "calcaire pas encore remplacé", titre: "Dans la meulière, au microscope", lignes: ["La silice précipite dans le", "calcaire et le remplace : opale,", "puis calcédoine. Le calcaire qui", "restait s'est ensuite dissous :", "d'où les cavités. Dure et criblée", "de trous : la pierre des meules."] })] });
+    E("Silicification", "L'assèchement des lacs et l'altération des argiles libèrent de la silice ; l'opale, puis la calcédoine, remplacent peu à peu le calcaire", "De 34 à 15 millions d'années", "des millions d'années", "loupeRoche",
+      { mode: "croissance", dessous: "#ece6d4", nomDessous: "calcaire pas encore remplacé", titre: "Dans la meulière, au microscope", lignes: ["La silice précipite dans le", "calcaire et le remplace : opale,", "puis calcédoine. Le calcaire qui", "restait s'est ensuite dissous :", "d'où résultent les cavités. Roche dure et criblée", "de cavités : c'est la pierre des meules."] })] });
   poser("calcrete", { anim: [ancien("calcrete", 0), ancien("calcrete", 1),
-    E("Calcrète", "Des nodules de calcite soudés dans une calcite fine, avec des grains de sable : une croûte dure de quelques décimètres à quelques mètres", "Aujourd'hui", null, "loupeRoche",
-      { mode: "fixe", titre: "Dans la calcrète, au microscope", lignes: ["Des nodules de calcite (clairs)", "soudés par une calcite très fine,", "avec des grains de quartz des", "alluvions : la calcite précipitée", "quand l'eau du sol s'évapore."] })] });
+    E("Calcrète", "Une croûte dure, épaisse de quelques décimètres à quelques mètres, formée de nodules de calcite cimentés par une calcite très fine et de grains de sable", "Aujourd'hui", null, "loupeRoche",
+      { mode: "fixe", titre: "Dans la calcrète, au microscope", lignes: ["Des nodules de calcite (clairs)", "liés par une calcite très fine,", "avec des grains de quartz issus des", "alluvions : la calcite précipite", "quand l'eau du sol perd son CO₂."] })] });
   poser("alterite", { anim: [ancien("alterite", 0), ancien("alterite", 1), ancien("alterite", 2),
-    E("Arène", "Du granite il reste le quartz, des feldspaths à demi altérés et des micas, dans des argiles d'altération : un sable grossier qui s'effrite à la main", "Aujourd'hui", null, "loupeRoche",
-      { mode: "fixe", titre: "Dans l'arène, surface sciée", lignes: ["Grains de quartz intacts, feldspaths", "à demi changés en argile, paillettes", "de mica, dans les argiles", "d'altération : la place des grains", "du granite est gardée, mais plus", "rien ne les tient."] })] });
+    E("Arène", "Du granite subsistent le quartz, des feldspaths partiellement altérés et des micas, pris dans des argiles d'altération : un sable grossier qui se désagrège sous la main", "Aujourd'hui", null, "loupeRoche",
+      { mode: "fixe", titre: "Dans l'arène, surface sciée", lignes: ["Grains de quartz intacts, feldspaths", "à demi changés en argile, paillettes", "de mica, dans les argiles", "d'altération : la place des grains", "la signature du granite est conservée, mais plus", "rien ne les tient."] })] });
   poser("terra_rossa", { anim: [ancien("terra_rossa", 0), ancien("terra_rossa", 1),
-    E("Terra rossa", "Une argile rouge, avec des nodules d'oxydes de fer et quelques grains rescapés : les impuretés du calcaire dissous", "Aujourd'hui", null, "loupeRoche",
-      { mode: "fixe", titre: "Dans la terra rossa, au microscope", lignes: ["Argile rouge (kaolinite, illite)", "colorée par l'hématite, nodules", "de fer, grains de quartz : il a", "fallu dissoudre des dizaines de", "mètres de calcaire pour en faire", "un mètre."] })] });
+    E("Terra rossa", "Les impuretés du calcaire dissous forment une argile rouge où subsistent des nodules d'oxydes de fer et quelques grains résiduels", "Aujourd'hui", null, "loupeRoche",
+      { mode: "fixe", titre: "Dans la terra rossa, au microscope", lignes: ["Argile rouge (kaolinite, illite)", "colorée par l'hématite, nodules", "d'oxydes de fer, grains de quartz : il a", "fallu dissoudre des dizaines de", "mètres de calcaire pour en produire", "un mètre."] })] });
   poser("argile_silex", { anim: [ancien("argile_silex", 0), ancien("argile_silex", 1),
-    E("Argile à silex", "Des silex, intacts ou brisés, dans une argile brun-rouge : tout ce que la craie contenait d'insoluble", "Aujourd'hui", null, "loupeRoche",
-      { mode: "fixe", titre: "Dans l'argile à silex, surface sciée", lignes: ["Des rognons de silex (entiers ou", "cassés) dans une argile brun-rouge", "et un peu de sable : les résidus", "insolubles de la craie, restés sur", "place quand l'eau a emporté la", "calcite."] })] });
+    E("Argile à silex", "Des silex, entiers ou brisés, emballés dans une argile brun-rouge : c'est la fraction insoluble de la craie", "Aujourd'hui", null, "loupeRoche",
+      { mode: "fixe", titre: "Dans l'argile à silex, surface sciée", lignes: ["Des rognons de silex (intacts ou", "fracturés) dans une argile brun-rouge", "et un peu de sable : ce sont les résidus", "insolubles de la craie, demeurés sur", "place quand l'eau a emporté la", "calcite."] })] });
 
   // formations superficielles
   poser("alluvions", { anim: [ancien("alluvions", 0), ancien("alluvions", 1), ancien("alluvions", 2),
-    E("Alluvions", "Des galets et graviers roulés, du sable et du limon : triés par le courant, jamais cimentés", "Aujourd'hui", null, "loupeRoche",
-      { mode: "fixe", titre: "Dans les alluvions, surface sciée", lignes: ["Galets et graviers arrondis par", "la rivière (quartz, calcaire,", "granite) dans un sable limoneux :", "le courant les a triés. Rien ne", "les soude : ce sont les graviers", "qu'on extrait des vallées."] })] });
+    E("Alluvions", "Galets et graviers émoussés, sable et limon : triés par le courant, sans jamais être cimentés", "Aujourd'hui", null, "loupeRoche",
+      { mode: "fixe", titre: "Dans les alluvions, surface sciée", lignes: ["Galets et graviers arrondis par", "la rivière (quartz, calcaire,", "granite) dans un sable limoneux :", "le courant les a classés. Rien ne", "les lie : ce sont les graviers", "qu'on extrait des vallées."] })] });
   poser("colluvions", { anim: [ancien("colluvions", 0),
-    E("Accumulation", "Déplacé sur quelques dizaines à centaines de mètres, le sol n'est pas trié : il s'accumule au pied du versant", "Depuis le Néolithique", null, "loupeRoche",
-      { mode: "fixe", titre: "Dans les colluvions, au microscope", lignes: ["Des grains de quartz et des débris", "de calcaire dans une terre fine", "(argile, limon, matière organique) :", "le sol du haut du versant, glissé", "vers le bas sans être trié."] })] });
+    E("Accumulation", "Le sol, déplacé sur quelques dizaines à quelques centaines de mètres, ne subit aucun classement et s'accumule au pied du versant", "Depuis le Néolithique", null, "loupeRoche",
+      { mode: "fixe", titre: "Dans les colluvions, au microscope", lignes: ["Grains de quartz et débris", "de calcaire, emballés dans une terre fine", "(argile, limon, matière organique) :", "le sol de la partie haute du versant, entraîné", "vers le bas sans avoir été classé."] })] });
   poser("eboulis", { anim: [
-    E("Gel et dégel", "Sous climat froid, l'eau qui gèle dans les fissures gonfle d'environ 9 % et les élargit ; au dégel, les fragments se détachent, tombent et s'entassent au pied de la falaise, les plus gros roulant le plus loin", "Depuis la dernière glaciation", "des milliers d'années", "eboulisChute",
+    E("Gel et dégel", "Sous climat froid, l'eau gelée dans les fissures augmente de 9 % environ de volume et les élargit ; au dégel, les fragments se détachent et chutent, puis s'accumulent au pied de la falaise, les plus volumineux allant le plus loin", "Depuis la dernière glaciation", "des milliers d'années", "eboulisChute",
       { froid: true, libelleAge: "depuis ≈ 115 000 ans" }, { allonge: 1.2 }),
-    E("Talus", "Les fragments restent anguleux, mal triés et non cimentés : un éboulis ; cimenté, il deviendrait une brèche", "Aujourd'hui", null, "loupeRoche",
-      { mode: "fixe", titre: "Dans l'éboulis, surface sciée", lignes: ["Des blocs de calcaire anguleux, de", "toutes tailles, qui n'ont roulé", "que de quelques mètres, dans un peu", "de terre fine. Rien ne les soude :", "c'est un éboulis. Cimenté, il", "deviendrait une brèche."] })] });
+    E("Talus", "Anguleux, mal classés et non cimentés, ces fragments forment un éboulis ; si un ciment les liait, ils constitueraient une brèche", "Aujourd'hui", null, "loupeRoche",
+      { mode: "fixe", titre: "Dans l'éboulis, surface sciée", lignes: ["Des blocs de calcaire anguleux, de", "toutes tailles, qui n'ont roulé", "d'à peine quelques mètres, pris dans un peu", "de terre fine. Aucun liant ne les unit :", "c'est un éboulis. Cimenté, il", "deviendrait une brèche."] })] });
   poser("moraine", { anim: [
-    E("Glacier", "Au Würm, le glacier du Rhône descend des Alpes jusqu'aux portes de Lyon ; à sa base, il arrache des blocs, les traîne et broie la roche en farine ; il pousse devant lui un bourrelet de débris", "Pendant le Würm (≈ 25 000 ans)", "des milliers d'années", "glacierTerreAvance",
-      { texteLoupe: "la moraine : tout mêlé, sans tri", agesTexte: ["il y a ≈ 25 000 ans", "il y a ≈ 18 000 ans"] }, { allonge: 1.2 }),
-    E("Fonte", "Le climat se réchauffe : le glacier fond et recule par à-coups ; chaque arrêt laisse un arc de moraine ; blocs erratiques et farine glaciaire restent pêle-mêle", "À la fin du Würm", "quelques milliers d'années", "glacierTerreFonte",
-      { texteLoupe: "la moraine : tout mêlé, sans tri", agesTexte: ["il y a ≈ 25 000 ans", "il y a ≈ 18 000 ans"] }),
-    E("Moraine", "Blocs, cailloux et farine de roche sans aucun tri, certains fragments rayés : contrairement à l'eau ou au vent, la glace ne trie pas", "Depuis la fonte", null, "loupeRoche",
-      { mode: "fixe", titre: "Dans la moraine, surface sciée", lignes: ["Fragments de toutes tailles", "(quartz, calcaire, granite,", "gneiss), parfois rayés, dans une", "matrice meuble de farine de roche :", "la glace dépose tout ensemble,", "sans rien trier."] })] });
+    E("Glacier", "Lors du Würm, la langue du glacier du Rhône atteint les portes de Lyon depuis les Alpes ; à sa base, il ravine le socle, en extrait des blocs qu'il traîne et écrase en farine, et repousse devant lui un bourrelet de débris", "Pendant le Würm (≈ 25 000 ans)", "des milliers d'années", "glacierTerreAvance",
+      { texteLoupe: "la moraine : matériaux mêlés, sans tri", agesTexte: ["il y a ≈ 25 000 ans", "il y a ≈ 18 000 ans"] }, { allonge: 1.2 }),
+    E("Fonte", "Le réchauffement provoque un recul du glacier par à-coups, chaque pause déposant un arc de moraine ; les blocs erratiques et la farine glaciaire restent mêlés sans ordre", "À la fin du Würm", "quelques milliers d'années", "glacierTerreFonte",
+      { texteLoupe: "la moraine : matériaux mêlés, sans tri", agesTexte: ["il y a ≈ 25 000 ans", "il y a ≈ 18 000 ans"] }),
+    E("Moraine", "Blocs, cailloux et farine de roche sans aucun classement, certains fragments striés : à la différence de l'eau ou du vent, la glace ne classe pas", "Depuis la fonte", null, "loupeRoche",
+      { mode: "fixe", titre: "Dans la moraine, surface sciée", lignes: ["Fragments de toutes tailles", "(quartz, calcaire, granite,", "gneiss), parfois rayés, dans une", "matrice meuble formée de farine de roche :", "la glace dépose tout ensemble,", "sans rien trier."] })] });
   poser("loess", { anim: [
-    E("Plaines nues", "Au bord des glaciers, les eaux de fonte étalent des limons sur des plaines nues et sèches", "Pendant la dernière glaciation", null, "glacierTerreFonte",
-      { loess: true, texteLoupe: "limons des plaines d'épandage", agesTexte: ["", "il y a ≈ 20 000 ans"], titres: ["", "", "", "au bord du glacier, les eaux de fonte étalent des limons", "le vent balaie la plaine nue et emporte les limons"] }),
-    E("Vent", "Le vent soulève les limons de 10 à 60 µm de la plaine nue et les porte sur des dizaines à des centaines de kilomètres ; ils retombent sur les collines de la steppe froide, en placage plus épais à l'abri du vent", "De ≈ 30 000 à 11 700 ans", "des dizaines de milliers d'années", "ventLoess", {}),
-    E("Lœss", "Des placages de plusieurs mètres de limons très bien triés, un peu calcaires, qui donnent des sols très fertiles", "Depuis 11 700 ans", null, "loupeRoche",
-      { mode: "fixe", titre: "Dans le lœss, au microscope", lignes: ["Grains de limon (10 à 60 µm),", "surtout du quartz, très bien triés", "par le vent, liés par un peu de", "calcite et d'argile. En Alsace,", "il porte des sols parmi les plus", "fertiles de France."] })] });
+    E("Plaines nues", "En bordure des glaciers, les eaux de fonte déposent des limons sur des plaines dénudées et desséchées", "Pendant la dernière glaciation", null, "glacierTerreFonte",
+      { loess: true, texteLoupe: "limons des plaines d'épandage", agesTexte: ["", "il y a ≈ 20 000 ans"], titres: ["", "", "", "sur les marges du glacier, les eaux de fonte déposent des limons", "le vent arrache les limons à la plaine dénudée et les entraîne"] }),
+    E("Vent", "Arrachés à la plaine nue par le vent, les limons de 10 à 60 µm sont transportés sur des dizaines à des centaines de kilomètres ; ils se déposent sur les collines de la steppe froide, en couches plus épaisses à l'abri du vent", "De ≈ 30 000 à 11 700 ans", "des dizaines de milliers d'années", "ventLoess", {}),
+    E("Lœss", "Des couches de plusieurs mètres de limons très bien classés, légèrement calcaires, qui forment des sols très fertiles", "Depuis 11 700 ans", null, "loupeRoche",
+      { mode: "fixe", titre: "Dans le lœss, au microscope", lignes: ["Grains de limon (10 à 60 µm),", "surtout du quartz, très bien classé", "emportés par le vent, agglutinés par une faible quantité de", "calcite et d'argile. En Alsace,", "il supporte des sols parmi les plus", "fertiles de France."] })] });
   poser("dunes", { anim: [ancien("dunes", 0),
-    E("Tri", "Le vent laisse les graviers et emporte les poussières : le sable des dunes est très bien trié, ses grains mats et arrondis", "Aujourd'hui", null, "loupeRoche",
-      { mode: "fixe", titre: "Dans le sable de dune, au microscope", lignes: ["Grains de quartz arrondis, de", "même taille : le vent ne soulève", "que les grains de 0,1 à 0,5 mm.", "Quelques débris de coquilles", "venus de la plage. Rien ne les", "soude : la dune avance."] })] });
+    E("Tri", "Le vent écarte les graviers et disperse les poussières : le sable des dunes, à grains mats et émoussés, est très bien classé", "Aujourd'hui", null, "loupeRoche",
+      { mode: "fixe", titre: "Dans le sable de dune, au microscope", lignes: ["Grains de quartz arrondis, de", "de même taille : le vent ne soulève", "que les grains de 0,1 à 0,5 mm.", "Quelques débris de coquilles", "issus de la plage. Aucun liant ne les", "soude : la dune avance."] })] });
   poser("vase_tangue", { anim: [ancien("vase_tangue", 1),
-    E("Lits", "À chaque étale, une fine pellicule de vase se dépose ; aux marées plus fortes, du sable coquillier (la tangue) : des lits alternent", "À chaque marée", null, "loupeRoche",
-      { mode: "depot", eauFond: "#cfdfe3", particule: "#b9a88a", nomDessous: "eau de mer à l'étale", titre: "Dans la tangue, au microscope", lignes: ["Des lits de sable fin coquillier", "(la tangue, clair) alternent avec", "des lits de vase (sombre) : chaque", "marée ajoute sa pellicule. La", "tangue servait à amender les", "champs de Normandie."] })] });
+    E("Lits", "À chaque étale, une fine pellicule de vase se dépose ; lors des marées plus fortes, du sable coquillier (la tangue) se dépose : il en résulte une alternance de lits", "À chaque marée", null, "loupeRoche",
+      { mode: "depot", eauFond: "#cfdfe3", particule: "#b9a88a", nomDessous: "eau de mer à l'étale", titre: "Dans la tangue, au microscope", lignes: ["Lits de sable fin coquillier", "(la tangue, clair) alternent avec", "alternant avec des lits de vase sombre : chaque", "marée ajoute sa pellicule. La", "tangue servait à amender les", "champs de Normandie."] })] });
 
   // évaporites : une pastille par ÉTAPE (le curseur va de la pastille n à la n + 1 pendant l'étape n) ; les autres points
   // du chemin restent dans la légende, sans numéro

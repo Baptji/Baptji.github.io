@@ -81,18 +81,18 @@
     if (k === "air") B.xx = { a: "Xa", b: "Xb", k: "cov", v: 2, el: "O", p: "O=O" };
     const e = [], suite = O.suite;
     e.push({ A, B, L: k === "acide" ? { lX: { x: 230, y: 96, t: "Fe³⁺", m: 1 } } : { lX: { x: 237, y: 96, t: "O₂", m: 1 } }, h: { v: hv === null ? null : 0 },
-      titre: k === "air" ? "Le bord d'une marche du cristal" : "Le même bord, dans une eau acide de mine",
+      titre: k === "air" ? "Le bord d'une marche du cristal" : "La même marche de surface, dans une eau acide de mine",
       texte: k === "air"
-        ? (T.debut || "Chaque fer tient six soufres ; les soufres vont par paires (S₂), chacun lié à son jumeau et à trois fers. Au bord, on suit une paire (cerclée). L'eau contient de l'oxygène dissous, O₂.")
-        : (T.debutAcide || "Une eau acide (H⁺, en vert) chargée d'ions ferriques Fe³⁺ (en brun), comme celle qui sort des mines : c'est elle, et non l'oxygène, qui attaque le plus vite la pyrite."),
+        ? (T.debut || "Chaque fer est entouré de six soufres ; ceux-ci forment des paires (S₂), chacun lié à son jumeau et à trois fers. Au bord, on suit une paire (cerclée). L'eau contient de l'oxygène dissous (O₂).")
+        : (T.debutAcide || "Ce n'est pas l'oxygène qui attaque le plus rapidement la pyrite, mais une eau acide (H⁺, en vert) chargée d'ions ferriques Fe³⁺ (en brun), telle celle qui s'écoule des mines."),
     });
     const sur = [pc[0], pc[1] - 26];
     e.push(suite(e[0], {
-      titre: k === "air" ? "L'oxygène prend des électrons au cristal" : "Un ion Fe³⁺ prend un électron au cristal",
+      titre: k === "air" ? "L'oxygène prend des électrons au cristal" : "Un ion Fe³⁺ capte un électron du cristal",
       texte: (k === "air"
-        ? (T.air2 || "Une molécule d'O₂ se pose sur un fer de la surface et prend des électrons au cristal ; elle finira en eau. ")
-        : "Un ion Fe³⁺ se pose sur la surface et prend un électron : il redevient Fe²⁺. Il en faut quatorze pour défaire une unité FeS₂. ")
-        + (T.electrons || "La pyrite conduit les électrons : ils peuvent venir d'ailleurs, de la paire qu'on suit. C'est l'étape lente."),
+        ? (T.air2 || "Une molécule de dioxygène (O₂) se fixe sur un fer de la surface et capte des électrons du cristal ; elle finira sous forme d'eau.")
+        : "Un ion Fe³⁺ vient se poser sur la surface et y capte un électron, ce qui le ramène à l'état Fe²⁺. Quatorze de ces ions sont nécessaires pour défaire une unité FeS₂.")
+        + (T.electrons || "La pyrite conduit les électrons, qui peuvent provenir d'ailleurs, y compris de la paire suivie. C'est l'étape lente."),
       A: k === "air" ? { Xa: { x: sur[0] - 7, y: sur[1] }, Xb: { x: sur[0] + 7, y: sur[1] } } : { Xa: { x: sur[0], y: sur[1] } },
       L: { lX: { x: sur[0], y: sur[1] - 22, t: k === "air" ? "O₂ + électrons" : "Fe³⁺ → Fe²⁺", m: 1 } },
       h: Object.assign({ cours: true }, H),
@@ -102,8 +102,8 @@
     const Bn = { ss: 0 }; for (const id of Object.keys(B)) if (id.startsWith("f")) Bn[id] = 0;
     OX.forEach((id, i) => { Bn["so" + i] = { a: i < 4 ? "Sa" : "Sb", b: id, k: "cov", v: 1.5, el: "S", p: "S–O" }; });
     e.push(suite(e[1], {
-      titre: T.titreSoufre || "L'eau donne ses oxygènes au soufre",
-      texte: (k === "air" ? T.soufre : T.soufreAcide) || "Privés d'électrons, les deux soufres de la paire se séparent et prennent chacun quatre oxygènes, venus de l'eau (les isotopes le montrent) : deux ions sulfate SO₄²⁻ partent, et l'eau s'acidifie (H⁺).",
+      titre: T.titreSoufre || "L'eau cède ses oxygènes au soufre.",
+      texte: (k === "air" ? T.soufre : T.soufreAcide) || "Dépouillés de leurs électrons, les deux soufres se dissocient et s'entourent chacun de quatre oxygènes empruntés à l'eau, comme le montrent les isotopes. Il en résulte deux sulfates (SO₄²⁻) qui s'éloignent, tandis que l'eau devient acide (H⁺).",
       A: Object.assign(pos, { Sa: { x: c1[0], y: c1[1] }, Sb: { x: c2[0], y: c2[1] }, halo: { x: c1[0], y: c1[1], o: 0 },
         H1: { x: 400, y: 70, o: 1 }, H2: { x: 160, y: 120, o: 1 }, H3: { x: 352, y: 150, o: 1 } }),
       B: Bn, h: H,
@@ -114,14 +114,14 @@
       const g = { x: 440, y: 208 };   // retombé sur la terrasse, au pied de la marche
       e.push(suite(e[2], {
         titre: "Le fer part… et rouille sur place",
-        texte: "Privé de ses soufres, le fer passe dans l'eau (Fe²⁺). À l'air, il s'oxyde à son tour et retombe sur place : de la rouille, la goethite FeOOH. Ce qui part avec l'eau : du sulfate et de l'acidité.",
+        texte: "Une fois ses soufres enlevés, le fer se dissout en Fe²⁺. Au contact de l'air, celui-ci s'oxyde et se redépose près de la surface sous forme de goethite (FeOOH), c'est la rouille. Seuls le sulfate et l'acidité quittent donc le site avec l'eau.",
         A: { M: g, Wu: { x: g.x - 20, y: g.y - 10, a: 180 }, Wr: { x: g.x + 20, y: g.y - 10, a: 0 } },
         L: { lG: { x: g.x, y: g.y - 40, t: "FeOOH (goethite)", m: 1 } },
       }));
     } else {
       e.push(suite(e[2], {
         titre: "Le fer part avec l'eau",
-        texte: k === "air" ? T.ferAir : "Privé de ses soufres, le fer part entouré d'eau, en Fe²⁺. Dans l'eau acide, il y reste : avec le sulfate et les H⁺, il fait les eaux rouges et acides des mines.",
+        texte: k === "air" ? T.ferAir : "Dépourvu de ses soufres, le fer quitte la surface entouré d'eau, sous forme de Fe²⁺. En eau acide, il demeure en solution : associé au sulfate et aux H⁺, il forme les eaux rouges et acides des mines.",
         A: { M: m2, Wu: { x: m2.x, y: m2.y - LW, a: -90 }, Wr: { x: m2.x + LW, y: m2.y, a: 0 }, Wa: { x: m2.x, y: m2.y + LW, a: 90 }, Wb: { x: m2.x - LW, y: m2.y, a: 180 } },
         B: { wa: { a: "M", b: "Wa", k: "eau", v: VFS, p: "Fe–O" }, wb: { a: "M", b: "Wb", k: "eau", v: VFS, p: "Fe–O" } },
         L: { lM: { x: m2.x + 62, y: m2.y + 5, t: d.hydrate } },
@@ -135,19 +135,19 @@
     const duo = [
       { titre: "S–S", sous: `liaison ${O.nature("S–S")} (électrons partagés)`,
         schema: { type: "partage", a: "S", b: "S", aria: "Deux soufres partagent deux électrons" },
-        li: ["Les deux soufres d'une paire partagent deux électrons : une liaison simple, sans rien d'ionique.",
-          "Elle casse pourtant : privés d'électrons par l'oxydant, les deux soufres se séparent et prennent les oxygènes de l'eau."] },
+        li: ["Les deux soufres d'une paire mettent en commun deux électrons : il s'agit d'une liaison simple, sans composante ionique.",
+          "La liaison est pourtant rompue : l'oxydant a soustrait les électrons, si bien que les deux soufres se séparent et captent les oxygènes apportés par l'eau."] },
       { titre: "Fe–S", sous: `liaison ${O.nature("Fe–S")}`,
-        schema: { type: "partage", a: "Fe", b: "S", aria: "Le fer et le soufre partagent des électrons" },
-        li: [`Ionique ${O.fraction(O.ionicite("Fe", "S"))} seulement (Pauling) : la pyrite est presque covalente, d'où son éclat de métal.`,
-          "Les électrons y circulent d'un point à l'autre de la surface : c'est ce qui permet à l'oxydant de les prendre loin du soufre qui réagit."] },
+        schema: { type: "partage", a: "Fe", b: "S", aria: "Le fer et le soufre mettent en commun des électrons" },
+        li: [`Caractère ionique ${O.fraction(O.ionicite("Fe", "S"))} seul (Pauling) : la pyrite est presque covalente, ce qui explique son éclat métallique.`,
+          "Les électrons y circulent d'un point à l'autre de la surface : l'oxydant peut ainsi les prélever loin du soufre qui réagit."] },
     ];
     let barres = null;
     if (E.ea) {
       const [a, b] = E.ea, fac = (x) => String(Math.round(Math.exp((x * 1000) / 8.314 * (1 / 298.15 - 1 / 308.15)) * 10) / 10).replace(".", ",");
       barres = { titre: "Énergie d'activation de l'oxydation", unite: "kJ/mol", max: 100, graduations: [0, 25, 50, 75, 100], onglets: [{ k: "ea", nom: "Mesurée" }],
         rangs: [{ nom: (d.textes || {}).eaNom || "Par l'O₂ ou le Fe³⁺", el: "Fe", hachure: true, val: { ea: [a, b] }, txt: { ea: `${a} à ${b} kJ/mol` } }],
-        explic: { ea: `${(d.textes || {}).eaTexte || "Une énergie de réaction chimique, pas de simple diffusion"} : de 25 à 35 °C, l'oxydation va ${fac(a)} à ${fac(b)} fois plus vite.${E.eaPalandri ? ` Palandri et Kharaka retiennent ${String(E.eaPalandri).replace(".", ",")} kJ/mol.` : ""}` } };
+        explic: { ea: `${(d.textes || {}).eaTexte || "Il s'agit d'une énergie de réaction chimique, et non d'une simple diffusion."} : de 25 à 35 °C, l'oxydation est multipliée par ${fac(a)} à ${fac(b)}.${E.eaPalandri ? ` Palandri et Kharaka retiennent ${String(E.eaPalandri).replace(".", ",")} kJ/mol.` : ""}` } };
     }
     return { duo, barres, temps: null };
   }
@@ -156,7 +156,7 @@
     onglets: (d) => [{ k: "air", nom: (d.textes && d.textes.ongletAir) || "À l'air (O₂)" }, { k: "acide", nom: "Eau acide (Fe³⁺)" }],
     decor: (k, d, O) => decor(k, d, O, V), etapes: (k, d, O) => etapes(k, d, O, V), energie,
     legende: () => ({ "e:Ow": "oxygène venu de l'eau", "i:Fe3+": "ion ferrique Fe³⁺",
-      "t:avant": "atome juste devant le plan du dessin (en contour)", "t:arriere": "couche juste derrière le plan du dessin (plus petite, pâle)" }),
-    aria: (d) => `Coupe du bord d'un cristal de ${d.nom}, étape par étape`,
+      "t:avant": "atome placé en avant du plan de la figure, figuré en contour", "t:arriere": "couche située derrière le plan de la figure, plus petite et plus claire" }),
+    aria: (d) => `Vue en coupe du bord d'un cristal de ${d.nom}, étape après étape`,
   });
 })();

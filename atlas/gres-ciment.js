@@ -23,12 +23,12 @@
   const SRC = {
     pk2004: "Palandri J. L., Kharaka Y. K. (2004). A compilation of rate parameters of water-mineral interaction kinetics for application to geochemical modeling. <i>U.S. Geological Survey Open File Report</i> 2004-1068 (constantes de vitesse à 25 °C et énergies d'activation : quartz, calcite, kaolinite, hématite, gypse).",
     tp2005: "Turkington A. V., Paradise T. R. (2005). Sandstone weathering: a century of research and innovation. <i>Geomorphology</i> 67, 229–253 (synthèse : propriétés de la roche, dont le ciment, et facteurs du milieu).",
-    wells: "Wells T., Hancock G., Fryer J. Using laboratory simulations and gravestone measurements to estimate rates of sandstone weathering in the Hunter Valley, New South Wales, Australia (université de Newcastle, Australie). Grès du Trias, grains de quartz, ciment d'argile tachée de limonite ; pierres tombales de Wollombi : 0,3 à 1,8 mm en 100 ans, qui accélère avec l'âge ; gel–dégel au laboratoire : 1,2 mm en 100 ans pour 5 gels par an.",
+    wells: "Wells T., Hancock G., Fryer J. Using laboratory simulations and gravestone measurements to estimate rates of sandstone weathering in the Hunter Valley, New South Wales, Australia (université de Newcastle, Australie). Grès du Trias, grains de quartz, liant argileux teinté de limonite ; pierres tombales de Wollombi : de 0,3 à 1,8 mm en 100 ans, avec une cadence qui s'accélère au fil des ans ; gel-dégel en laboratoire : 1,2 mm en 100 ans pour 5 cycles annuels.",
     sancho2003: "Sancho C., Fort R., Belmonte A. (2003). Weathering rates of historic sandstone structures in semiarid environments (Ebro basin, NE Spain). <i>Catena</i> 53, 53–64 (murs de châteaux datés : 1 à 8 mm en 100 ans, cité par Wells et al.).",
     rihosek2016: "Řihošek J., Bruthans J., Mašín D., Filippi M., Carling G. T., Schweigstillová J. (2016). Gravity-induced stress as a factor reducing decay of sandstone monuments in Petra, Jordan. <i>Journal of Cultural Heritage</i> (ciments de kaolinite, hématite, goethite et un peu de calcite ; recul des façades 10 à 220 mm en 1 000 ans, jusqu'à 350 ; les sels servent de ciment et chaque pluie les dissout).",
     bruthans2014: "Bruthans J. et al. (2014). Sandstone landforms shaped by negative feedback between stress and erosion. <i>Nature Geoscience</i> 7, 597–601 (un sable sans ciment, « verrouillé » par ses contacts entre grains, tient debout tant qu'il est comprimé).",
     mott2003: "Mottershead D., Gorbushina A., Lucas G., Wright J. (2003). The influence of marine salts, aspect and microbes in the weathering of sandstone in two historic structures. <i>Building and Environment</i> 38, 1193–1204 (vitesse multipliée par 3 selon l'orientation d'un même édifice, par 1,6 en bord de mer).",
-    solub: "Solubilités dans l'eau à 10 °C calculées avec les constantes d'équilibre usuelles : calcite en équilibre avec le CO₂ de l'air (0,04 %) ou d'un sol (1 %) ; quartz ≈ 6 mg/L de silice ; gypse ≈ 2,4 g/L ; fer(III) ≈ 10⁻¹⁰ mol/L à pH neutre en présence d'oxygène ; fer(II) ≈ 5 mg/L dans l'eau d'un sol engorgé (valeur courante des nappes sans oxygène).",
+    solub: "À 10 °C, les solubilités, établies à partir des constantes d'équilibre usuelles, s'établissent ainsi : calcite à l'équilibre avec le CO₂ de l'air (0,04 %) ou du sol (1 %) ; quartz ≈ 6 mg/L de silice ; gypse ≈ 2,4 g/L ; fer(III) ≈ 10⁻¹⁰ mol/L à pH neutre, en présence d'oxygène ; fer(II) ≈ 5 mg/L dans une eau de sol engorgé, valeur habituelle des nappes sans oxygène.",
   };
   const ORDRE_SRC = ["tp2005", "pk2004", "solub", "wells", "sancho2003", "rihosek2016", "mott2003", "bruthans2014"];
   const cite = (...k) => k.map((x) => `<button type="button" class="gc-ref" data-src="${x}">${ORDRE_SRC.indexOf(x) + 1}</button>`).join("");
@@ -40,40 +40,40 @@
   const CIMENTS = [
     { id: "siliceux", nom: "Siliceux", court: "silice", mineral: "quartz", formule: "SiO₂", couleur: "#9fb8c9",
       rho: 2650, part: 0.10, ceq: { air: 0.006, sol: 0.006, engorge: 0.006 }, logk: -13.40, ea: 87.7e3, M: 0.0601,
-      tient: "Le quartz a poussé autour des grains (auréoles) jusqu'à les souder : grains et ciment sont le même minéral.",
-      cede: "Presque rien : la silice ne se dissout pas à l'échelle humaine. Seul le gel ouvre les fissures, comme dans un quartzite.",
-      exemple: "Grès de Fontainebleau, grès armoricain des crêtes bretonnes.",
-      phys: null, physNote: "comme le quartzite (fiche de l'Atlas) : seul le gel en détache des écailles", mesures: [] },
+      tient: "Des auréoles de quartz ont grandi autour des grains jusqu'à les réunir : liant et grains sont donc de même nature.",
+      cede: "Guère de perte : à l'échelle humaine, la silice reste en place. Seul le gel entrouvre des fentes, à l'instar du quartzite.",
+      exemple: "Exemples : grès de Fontainebleau et grès armoricain, qui dessinent les crêtes de Bretagne.",
+      phys: null, physNote: "comme pour le quartzite (fiche de l'Atlas) : il n'y a que le gel pour détacher des écailles", mesures: [] },
     { id: "ferrugineux", nom: "Ferrugineux", court: "oxydes de fer", mineral: "hématite", formule: "Fe₂O₃", couleur: "#b5523b",
       rho: 5260, part: 0.03, ceq: { air: 8e-9, sol: 8e-9, engorge: 0.0071 }, logk: -14.60, ea: 66.2e3, M: 0.1597, reduit: true,
-      tient: "Une pellicule rouge d'oxydes de fer enrobe chaque grain et colle les grains à leurs points de contact.",
-      cede: "À l'air, rien : le fer(III) est insoluble. Dans un sol engorgé, les bactéries le réduisent en fer(II) soluble et la pellicule part : le grès blanchit et se défait.",
-      exemple: "Grès rose des Vosges (pellicule d'hématite, avec un peu d'argile et de quartz).",
-      phys: [0.3, 1.8], physSrc: "wells", physNote: "gel–dégel, mesuré sur un grès à ciment d'argile et de limonite", mesures: ["wells"] },
+      tient: "Chaque grain porte une fine couche rouge d'oxydes de fer qui les lie au niveau des contacts.",
+      cede: "Hors d'un sol gorgé d'eau, rien ne bouge : le fer(III) ne se dissout pas. Mais sous eau, des bactéries le ramènent en fer(II) soluble ; la pellicule s'en va, le grès pâlit et s'effrite.",
+      exemple: "Le grès rose vosgien doit sa couleur à une pellicule d'hématite, à laquelle s'associent quelques argiles et du quartz.",
+      phys: [0.3, 1.8], physSrc: "wells", physNote: "mesures des cycles gel-dégel faites sur un grès au liant argileux et limoniteux", mesures: ["wells"] },
     { id: "argileux", nom: "Argileux", court: "argiles", mineral: "kaolinite", formule: "Al₂Si₂O₅(OH)₄", couleur: "#9aa77a",
       rho: 2600, part: 0.10, ceq: { air: 1.3e-5, sol: 1.3e-5, engorge: 1.3e-5 }, logk: -13.18, ea: 22.2e3, M: 0.2582,
-      tient: "Des paquets de petits feuillets d'argile bouchent les vides entre les grains, sans vraiment les souder.",
-      cede: "L'argile ne se dissout presque pas, mais elle boit l'eau, gonfle et se ramollit ; le gel et les sels font le reste.",
-      exemple: "Pierres tombales de Wollombi (Australie), façades de Petra (Jordanie).",
-      phys: [0.3, 1.8], physSrc: "wells", physNote: "gel–dégel, mesuré à Wollombi", mesures: ["wells", "rihosek2016"] },
+      tient: "Des amas de minuscules feuillets argileux comblent les interstices entre les grains sans les unir franchement.",
+      cede: "Quasi insoluble, l'argile n'en gonfle pas moins sous l'eau et perd de sa cohésion ; le gel et les sels parachèvent l'ouvrage.",
+      exemple: "Pierres tombales de Wollombi (Australie) et façades de Pétra (Jordanie) servent de référence.",
+      phys: [0.3, 1.8], physSrc: "wells", physNote: "gel-dégel, mesuré à Wollombi", mesures: ["wells", "rihosek2016"] },
     { id: "calcaire", nom: "Calcaire", court: "calcite", mineral: "calcite", formule: "CaCO₃", couleur: "#d8cfa6",
       rho: 2710, part: 0.20, ceq: { air: 0.060, sol: 0.175, engorge: 0.175 }, logk: -5.81, ea: 23.5e3, M: 0.1001,
-      tient: "De la calcite a cristallisé dans les vides et remplit tout l'espace entre les grains.",
-      cede: "La pluie, un peu acide à cause du CO₂, dissout la calcite comme elle dissout un calcaire : chaque grain libéré tombe.",
-      exemple: "Les molasses du pied des Alpes, grès calcaires du Bassin parisien.",
-      phys: [0.3, 1.8], physSrc: "wells", physNote: "le gel agit aussi, mais la dissolution va plus vite", mesures: [] },
+      tient: "De la calcite a cristallisé dans les pores et remplit tout l'espace entre les grains.",
+      cede: "La pluie, légèrement acide sous l'effet du CO₂, dissout la calcite comme elle dissout un calcaire : chaque grain libéré chute.",
+      exemple: "Les molasses au pied des Alpes, ainsi que les grès calcaires du Bassin parisien.",
+      phys: [0.3, 1.8], physSrc: "wells", physNote: "le gel agit également, mais la dissolution est plus rapide", mesures: [] },
     { id: "salin", nom: "Gypse ou sels", court: "gypse, sels", mineral: "gypse", formule: "CaSO₄·2H₂O", couleur: "#b9acd8",
       rho: 2310, part: 0.15, ceq: { air: 2.4, sol: 2.4, engorge: 2.4 }, logk: -2.79, ea: 0, M: 0.1722,
-      tient: "Des cristaux de gypse ou de sels poussent dans les vides quand l'eau s'évapore, surtout en climat sec.",
-      cede: "Chaque pluie les redissout en quelques minutes ; en séchant, les sels recristallisent et font éclater la surface.",
-      exemple: "Petra (Jordanie) ; croûtes de sel des grès de bord de mer.",
-      phys: [1, 22], physSrc: "rihosek2016", physNote: "recul des façades de Petra, sels compris", mesures: ["rihosek2016"] },
+      tient: "Des cristaux de gypse ou de sels croissent dans les vides lors de l'évaporation de l'eau, surtout en climat sec.",
+      cede: "En quelques minutes, chaque averse les dissout ; au séchage, ils cristallisent de nouveau et fendent la surface.",
+      exemple: "Au menu : Pétra (Jordanie) et les croûtes salines des grès côtiers.",
+      phys: [1, 22], physSrc: "rihosek2016", physNote: "recul des façades de Pétra, sels compris", mesures: ["rihosek2016"] },
   ];
   const C = Object.fromEntries(CIMENTS.map((c) => [c.id, c]));
   const MILIEUX = {
-    air: { nom: "À l'air", detail: "façade, rocher : la pierre sèche entre deux pluies (mouillée 30 % du temps), gel et sels possibles", w: 0.3 },
-    sol: { nom: "Dans un sol aéré", detail: "sous terre : toujours humide, CO₂ du sol (1 %), ni gel ni embruns", w: 1 },
-    engorge: { nom: "Dans un sol engorgé", detail: "sous la nappe : toujours mouillé, sans oxygène, le fer devient soluble", w: 1 },
+    air: { nom: "À l'air", detail: "façade ou rocher : entre deux averses, la pierre reste sèche (humide 30 % du temps), et gel comme sels sont possibles", w: 0.3 },
+    sol: { nom: "Dans un sol aéré", detail: "sous terre : eau constante, CO₂ du sol (1 %), aucun gel ni embruns", w: 1 },
+    engorge: { nom: "Dans un sol engorgé", detail: "sous la nappe : toujours noyé, sans oxygène, le fer passe en solution", w: 1 },
   };
   const T = 283.15, SURF = 10, AN = 3.156e7;
   const etat = { milieu: "air", q: 400, sel: "calcaire" };
@@ -161,14 +161,14 @@
     if (gres && gres.alteration) {
       const a = xl(gres.alteration.vmin * 100), b = xl(gres.alteration.vmax * 100);
       s += `<rect x="${a}" y="${Y0 - 8}" width="${b - a}" height="${CIMENTS.length * RH + 8}" class="gc-fiche"/>
-        <text x="${(a + b) / 2}" y="${Y0 - 13}" text-anchor="middle" class="gc-t2">fourchette de la fiche du grès</text>`;
+        <text x="${(a + b) / 2}" y="${Y0 - 13}" text-anchor="middle" class="gc-t2">fourchette relevée sur la fiche du grès</text>`;
     }
     for (let d = LMIN; d <= LMAX; d++) {
       const x = xl(Math.pow(10, d));
       s += `<line x1="${x}" y1="${Y0 - 4}" x2="${x}" y2="${H - 28}" class="gc-grille"/>
         <text x="${x}" y="${H - 12}" text-anchor="middle" class="gc-t2">${Math.pow(10, d).toLocaleString("fr-FR", { maximumFractionDigits: 4 })}</text>`;
     }
-    s += `<text x="${X0}" y="16" class="gc-t2">mm perdus en 100 ans — échelle logarithmique (chaque trait : ×10)</text>`;
+    s += `<text x="${X0}" y="16" class="gc-t2">perte en mm sur 100 ans, graduation logarithmique (un trait = ×10)</text>`;
     CIMENTS.forEach((c, i) => {
       const r = calcul(c.id), y = Y0 + i * RH + RH / 2 - 6, on = c.id === etat.sel;
       s += `<g class="gc-ligne${on ? " on" : ""}" data-gc="${c.id}" tabindex="0" role="button" aria-label="${c.nom} : détail du calcul">
@@ -200,26 +200,25 @@
     const ceqMg = c.ceq[etat.milieu] * 1000;
     const lim = r.limite === "solubilite"
       ? "C'est la <b>solubilité</b> qui limite : la réaction est assez rapide pour que l'eau reparte saturée ; plus il passe d'eau, plus le grès recule."
-      : "C'est la <b>réaction</b> qui limite : l'eau repart presque vide, le minéral n'a pas le temps de se dissoudre ; ajouter de l'eau ne change rien.";
-    const mes = c.mesures.map((k) => `<li>${{ wells: "Pierres tombales de Wollombi (Australie), ciment d'argile et de limonite : <b>0,3 à 1,8 mm</b> en 100 ans, de plus en plus vite avec l'âge.",
-      rihosek2016: "Façades de Petra (Jordanie), ciments de kaolinite et d'oxydes de fer, sels : <b>1 à 22 mm</b> en 100 ans, jusqu'à 35 mm par endroits." }[k]} ${cite(k)}</li>`).join("");
-    return `<h3><i class="gc-pastille" style="background:${c.couleur}"></i>Ciment ${c.court} — ${m.nom.toLowerCase()}, ${etat.q} mm d'eau par an</h3>
+      : "Ici, <b>la réaction</b> impose le rythme : l'eau repart presque vide sans que le minéral ait eu le temps de se dissoudre, si bien qu'un surcroît d'eau ne change rien.";
+    const mes = c.mesures.map((k) => `<li>${{ wells: "Pierres tombales de Wollombi (Australie), ciment d'argile et de limonite : <b>0,3 à 1,8 mm</b> en 100 ans, à un rythme qui s'accroît avec l'âge.",
+      rihosek2016: "À Pétra (Jordanie), kaolinite, oxydes de fer et sels érodent les façades de <b>1 à 22 mm</b> en 100 ans, jusqu'à 35 mm par endroits." }[k]} ${cite(k)}</li>`).join("");
+    return `<h3><i class="gc-pastille" style="background:${c.couleur}"></i>Ciment ${c.court} : ${m.nom.toLowerCase()}, ${etat.q} mm d'eau par an</h3>
       <ol class="gc-etapes">
-        <li><b>Combien l'eau peut en emporter.</b> Un litre d'eau dissout au plus <b>${nf(ceqMg)} mg</b> de ${c.mineral} ${cite("solub")}.
-          Avec ${etat.q} litres par m² et par an, cela fait au plus <b>${gm2(r.fsol)}</b>.</li>
-        <li><b>À quelle vitesse il se dissout.</b> ${c.reduit && etat.milieu === "engorge"
-          ? "Sans oxygène, des bactéries réduisent le fer(III) en fer(II) soluble : ce n'est plus la dissolution lente de l'oxyde qui compte, la réaction ne limite pas."
-          : `Mesurée au laboratoire : ${nf(r.k10)} mol par m² de minéral et par seconde à 10 °C ${cite("pk2004")}. Avec une surface réactive dix fois celle de la façade et une pierre mouillée ${Math.round(m.w * 100)} % du temps : au plus <b>${gm2(r.fcin)}</b>.`}</li>
-        <li><b>Le plus petit des deux gagne.</b> ${lim} Il part donc <b>${gm2(r.f)}</b>.</li>
-        <li><b>En épaisseur de roche.</b> Le ciment occupe environ ${Math.round(c.part * 100)} % du volume ; quand il est parti, les grains tombent.
-          Le grès recule de <b>${mmTxt(r.mm100)} en 100 ans</b> : un mètre de grès en <b>${unMetre(r.mm100)}</b>.</li>
-        <li><b>Comparé à l'usure physique.</b> ${phys
-          ? `Gel, sels, alternance humide–sec : <b>${nf(phys[0])} à ${nf(phys[1])} mm</b> en 100 ans (${c.physNote}${c.physSrc ? " " + cite(c.physSrc) : ""}).
-             Vitesse attendue : la plus rapide des deux, soit <b>${att[0] === att[1] ? nf(att[0]) : `${nf(att[0])} à ${nf(att[1])}`} mm en 100 ans</b>
-             — ${r.mm100 >= phys[1] ? "<b>c'est le ciment qui décide</b>." : r.mm100 >= phys[0] ? "ciment et climat font jeu égal." : "<b>c'est le climat qui décide</b>, le ciment n'y est presque pour rien."}`
-          : "Sous terre, ni gel ni embruns : seule la dissolution compte."}</li>
+        <li><b>Ce que l'eau peut en emporter.</b> Un litre d'eau dissout au plus <b>${nf(ceqMg)} mg</b> de ${c.mineral} ${cite("solub")}.
+          Pour ${etat.q} litres par m² et par an, cela représente au plus <b>${gm2(r.fsol)}</b>.</li>
+        <li><b>Vitesse de dissolution.</b> ${c.reduit && etat.milieu === "engorge"
+          ? "Privées d'oxygène, des bactéries transforment le fer(III) en fer(II), soluble : la dissolution lente de l'oxyde cesse alors de dicter la vitesse, qui n'est plus bridée par la réaction."
+          : `Au laboratoire, on mesure ${nf(r.k10)} mol par m² de minéral et par seconde à 10 °C ${cite("pk2004")}. Pour une surface réactive dix fois plus grande que celle de la façade et une pierre humide ${Math.round(m.w * 100)} % du temps, on obtient au maximum <b>${gm2(r.fcin)}</b>.`}</li>
+        <li><b>Le plus faible des deux termes l'emporte.</b> ${lim} Le recul s'établit donc à <b>${gm2(r.f)}</b>.</li>
+        <li><b>En épaisseur de roche.</b> Le ciment représente environ ${Math.round(c.part * 100)} % du volume ; une fois dissous, les grains se détachent.
+          Le grès s'use de <b>${mmTxt(r.mm100)} en 100 ans</b> : un mètre de grès s'use en <b>${unMetre(r.mm100)}</b>.</li>
+        <li><b>Comparaison avec l'usure physique.</b> ${phys
+          ? `Sous l'effet du gel, des sels et des cycles humide-sec, la pierre perd <b>${nf(phys[0])} à ${nf(phys[1])} mm</b>, soit ${c.physNote}${c.physSrc ? " " + cite(c.physSrc) : ""} sur 100 ans.
+             Le résultat retenu est le plus rapide des deux : <b>${att[0] === att[1] ? nf(att[0]) : `${nf(att[0])} à ${nf(att[1])}`} mm en 100 ans</b>, ${r.mm100 >= phys[1] ? "<b>c'est le ciment qui décide</b>." : r.mm100 >= phys[0] ? "ciment et climat font jeu égal." : "<b>le climat est le facteur décisif</b> ; le ciment n'intervient presque pas."}`
+          : "En souterrain, pas de gel ni d'embruns : la dissolution est le seul processus à l'œuvre."}</li>
       </ol>
-      <p class="gc-tient"><b>Ce qui le tient :</b> ${c.tient}<br><b>Ce qui le fait céder :</b> ${c.cede}</p>
+      <p class="gc-tient"><b>Ce qui le maintient :</b> ${c.tient}<br><b>Ce qui le désagrège :</b> ${c.cede}</p>
       ${mes ? `<p class="gc-mes-t"><b>Mesuré sur le terrain</b></p><ul class="gc-mes">${mes}</ul>` : ""}`;
   }
 
@@ -249,28 +248,28 @@
     const chips = Object.entries(MILIEUX).map(([k, m]) => `<button type="button" class="chip${k === etat.milieu ? " on" : ""}" data-milieu="${k}">${m.nom}</button>`).join("");
     return `<div class="gc-page">
     <div class="card rock-head">
-      <h1><span class="sw-big" style="background:#c99e6a"></span> Ce qui tient un grès : son ciment</h1>
+      <h1><span class="sw-big" style="background:#c99e6a"></span> Le ciment qui lie un grès</h1>
       <p class="sub crumb"><b class="gc-fil" data-aller="roches">Roches</b> <span>→</span> <b class="gc-fil" data-aller="roche/gres">Grès</b> <span>→</span> Son ciment
         <span class="badge outline">nouvelle page, à valider</span></p>
-      <p class="desc">Un grès, c'est du sable collé. Les grains sont presque tous du quartz, qui ne se dissout pratiquement pas : ce qui cède, c'est la colle entre eux. Selon le minéral qui sert de colle, un grès se défait en quelques siècles ou tient des millions d'années.</p>
+      <p class="desc">Le grès est formé de sable agglutiné. Quartz en majorité, les grains se dissolvent guère : c'est le liant qui cède en premier. Suivant le minéral faisant office de colle, la roche se délite en quelques siècles ou résiste pendant des millions d'années.</p>
     </div>
 
     <div class="card">
       <h2>Est-ce confirmé ?</h2>
-      <p><b>Oui pour la chimie.</b> Un grain n'a pas besoin d'être dissous pour partir : il suffit que son ciment le soit. La vitesse de dissolution d'un grès est donc celle de son ciment, et elle change d'un facteur de plus de dix millions d'un ciment à l'autre (calcul plus bas). Les synthèses sur l'altération des grès rangent la nature et la quantité du ciment parmi les propriétés de la roche qui comptent le plus, à côté de la porosité et de la taille des pores ${cite("tp2005")}.</p>
-      <p><b>Mais pas tout seul.</b> Quand le ciment ne se dissout presque pas (silice, oxydes de fer, argiles), la chimie devient si lente que ce sont le gel, les sels et l'alternance humide–sec qui fixent la vitesse : là, le climat et les pores comptent plus que le minéral du ciment ${cite("wells")}. Un même édifice s'use trois fois plus vite sur une face que sur une autre ${cite("mott2003")}, et un sable sans aucun ciment peut tenir debout s'il est assez comprimé ${cite("bruthans2014")}.</p>
-      <p class="gc-bilan"><b>En une phrase :</b> le ciment décide quand il est soluble (calcite, gypse, sels) ; quand il ne l'est pas, c'est le climat qui décide.</p>
+      <p><b>Oui pour la chimie.</b> Un grain se libère dès que son liant disparaît, sans passer lui-même en solution. La vitesse du grès épouse donc celle de son ciment, qui varie de plus de dix millions de fois d'un liant à l'autre (voir le calcul plus bas). Les travaux sur l'altération des grès comptent la nature et l'abondance du ciment parmi les critères majeurs, avec la porosité et la dimension des pores ${cite("tp2005")}.</p>
+      <p><b>Mais pas seul.</b> Si le liant résiste à la dissolution (silice, oxydes de fer, argiles), la chimie traîne tant que le gel, les sels et les alternances d'humidité deviennent maîtres du rythme : le climat et les pores l'emportent alors sur la nature du liant ${cite("wells")}. Une même paroi s'érode trois fois plus vite d'un côté que de l'autre ${cite("mott2003")}, et un sable dépourvu de liant tient debout pourvu qu'il soit assez tassé ${cite("bruthans2014")}.</p>
+      <p class="gc-bilan"><b>En somme :</b> le liant commande quand il se dissout (calcite, gypse, sels) ; quand il ne se dissout pas, le climat tranche.</p>
     </div>
 
     <div class="card">
-      <h2>Les cinq ciments, au microscope</h2>
-      <p class="sub">Grains de quartz en beige, vides en bleu, ciment en couleur. Clique sur un ciment pour voir son calcul.</p>
+      <h2>Les cinq ciments observés au microscope</h2>
+      <p class="sub">Quartz en beige, vides en bleu, liant en couleur. Un clic sur un liant révèle son calcul.</p>
       <div class="gc-cartes">${cartes()}</div>
     </div>
 
     <div class="card">
       <h2>Vitesse d'altération calculée</h2>
-      <p class="sub">Pour chaque ciment, la pastille donne la vitesse de dissolution <b>calculée</b> ; la bande grise, l'usure physique (gel, sels) <b>mesurée</b> sur des grès réels. Le grès s'use à la plus rapide des deux. Clique sur une ligne pour le détail du calcul.</p>
+      <p class="sub">Pour chaque liant, la pastille figure la dissolution <b>calculée</b>, la bande grise l'usure physique (gel, sels) <b>mesurée</b> sur des grès réels. Le grès cède selon la plus rapide des deux. Une ligne cliquée ouvre le détail.</p>
       <div class="gc-reglages">
         <div><span class="gc-reg-t">Où est le grès ?</span><div class="chips">${chips}</div><p class="gc-reg-d" data-milieu-d>${MILIEUX[etat.milieu].detail}</p></div>
         <label class="gc-eau"><span class="gc-reg-t">Eau qui passe sur la pierre : <b data-qv>${etat.q} mm par an</b></span>
@@ -279,14 +278,14 @@
       </div>
       <div class="gc-cadre" data-graph>${graphique()}</div>
       <div class="gc-detail" data-detail aria-live="polite">${detail(etat.sel)}</div>
-      <p class="note">Calcul d'ordre de grandeur : la part du ciment, la surface réactive et le temps mouillé changent d'une pierre à l'autre, et les vitesses du laboratoire surestiment souvent celles du terrain. Les écarts entre ciments (plusieurs facteurs de dix) sont, eux, robustes.</p>
+      <p class="note">Estimation d'ordre de grandeur : part du ciment, surface réactive et durée mouillée varient selon les pierres, et les vitesses de labo dépassent souvent celles du terrain. Les écarts entre liants, de plusieurs décades, restent en revanche solides.</p>
     </div>
 
     <div class="card">
       <h2>Ce qu'il faut retenir</h2>
-      <p class="sub">À l'air, en France (400 mm d'eau par an sur la pierre), du plus fragile au plus solide :</p>
+      <p class="sub">En France, sur la pierre (400 mm d'eau par an), du plus fragile au plus robuste :</p>
       ${verdicts()}
-      <p>Un grès à ciment de gypse ne survit qu'au désert : avec 10 mm d'eau par an, il recule déjà d'environ ${nf(calcul("salin", "air", 10).mm100)} mm en 100 ans. Le ciment calcaire fait du grès un calcaire très poreux : il redevient sable en quelques milliers à quelques dizaines de milliers d'années. Les ciments siliceux et ferrugineux ne craignent que le gel… sauf le ciment ferrugineux enfoui dans un sol engorgé, où le fer se dissout (choisis « Dans un sol engorgé » plus haut).</p>
+      <p>Un grès à liant gypseux ne tient que dans le désert : à 10 mm d'eau par an, il recule déjà d'environ ${nf(calcul("salin", "air", 10).mm100)} mm en 100 ans. Le liant calcaire ramène le grès à un calcaire poreux, qui redevient sable en quelques milliers à quelques dizaines de milliers d'années. Les liants siliceux et ferrugineux ne redoutent que le gel… hormis le fer enfoui dans un sol gorgé d'eau, qui se dissout (voir « Dans un sol engorgé » plus haut).</p>
     </div>
 
     <details class="card sources-roche"><summary><h2 style="display:inline">Sources</h2></summary>
@@ -340,7 +339,7 @@
   function page() {
     const main = document.getElementById("main");
     main.innerHTML = typoHTML(html());
-    document.title = "Ce qui tient un grès : son ciment — Atlas géologique";
+    document.title = "Le ciment qui lie un grès, Atlas Sol";
     monter(main);
     window.scrollTo({ top: 0 });
   }
@@ -363,6 +362,11 @@
       for (const k of [c.physSrc, ...c.mesures].filter(Boolean)) if (!SRC[k]) R.push(`${c.id} : source ${k} absente`);
       for (const m of Object.keys(MILIEUX)) if (!(c.ceq[m] > 0)) R.push(`${c.id} : solubilité ${m} manquante`);
     }
+    // D.8.2 : les valeurs « gresCiment » de la fiche du grès doivent rester égales à ce calcul (à 2 % près)
+    const gr = typeof ROCHES !== "undefined" && ROCHES.find((r) => r.id === "gres");
+    const attendus = [["ferrugineux", "engorge"], ["calcaire", "air"], ["salin", "air"]].map(([c, m]) => calcul(c, m, 400).mm100 / 100);
+    for (const x of ((gr && gr.alteration && gr.alteration.valeurs) || []).filter((x) => x.calcul === "gresCiment"))
+      if (!attendus.some((a) => Math.abs(x.v / a - 1) < 0.02)) R.push(`${x.v} mm/an, valeur de la fiche du grès, ne cadre plus avec le calcul`);
     for (const k of ORDRE_SRC) if (!SRC[k]) R.push(`source ${k} listée mais absente`);
     for (const k of Object.keys(SRC)) if (!ORDRE_SRC.includes(k)) R.push(`source ${k} absente de la liste`);
     return R;
@@ -370,6 +374,7 @@
 
   window.GresCiment = { page, calcul, controle, reperes, CIMENTS, MILIEUX, SRC };
   // repères de la réglette de la fiche du grès (rateStripSVG, app.js) : un trait par ciment, posé au chargement
+  // D.8.2 (22/10/2026) : la fiche a maintenant des valeurs nettes (data.js), dont trois reprennent ce calcul : plus de repères
   const g = typeof ROCHES !== "undefined" && ROCHES.find((r) => r.id === "gres");
-  if (g && g.alteration) g.alteration.reperes = reperes();
+  if (g && g.alteration && !g.alteration.valeurs) g.alteration.reperes = reperes();
 })();

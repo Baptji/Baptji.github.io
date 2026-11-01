@@ -117,8 +117,8 @@
     e.push({ A, B, L: {}, g: [4, 2], h: { v: hv === null ? null : 0 },
       titre: k === "eau" ? "Le bord d'une marche du cristal" : "Le même bord, dans l'acide",
       texte: k === "eau"
-        ? (T.debut || `Chaque silicium tient quatre oxygènes : un tétraèdre SiO₄. Les tétraèdres ne se touchent pas ; seuls les ${N.nom}s, qui tiennent chacun six oxygènes, les relient. Au bord, ${N.le} qu'on suit (cerclé) en a déjà perdu deux : l'eau occupe leur place.`)
-        : "L'acide libère dans l'eau des ions H⁺ (en vert) et des ions chlorure Cl⁻ (en gris), qui ne réagissent pas. Les H⁺ sont attirés par les oxygènes de la surface, chargés négativement.",
+        ? (T.debut || `Chaque silicium est entouré de quatre oxygènes et forme ainsi un tétraèdre SiO₄. Ces tétraèdres restent isolés : des cations, les ${N.nom}s, portant chacun six oxygènes, assurent la cohésion. En bordure, ${N.le} suivi (cerclé) a déjà perdu deux oxygènes, remplacés par de l'eau.`)
+        : "Dans l'eau, l'acide se dissocie en ions H⁺ (en vert) et en ions chlorure Cl⁻ (en gris), ces derniers restant inertes. Les protons se dirigent vers les oxygènes superficiels, porteurs d'une charge négative.",
     });
     const m1 = { x: M0[0] + 8, y: M0[1] - 6 };
     const hO = (q, an) => Object.assign(versA(q, an, 13), { t: "h" });
@@ -126,27 +126,27 @@
       const m2 = { x: 500, y: 96 }, t3 = posT(250, 92), v = m2P(0, NS - 1);
       e.push(suite(e[0], {
         titre: "Des H⁺ se posent sur les oxygènes",
-        texte: `Des H⁺ se fixent sur les oxygènes qui tiennent ${N.le} du bord : ses liaisons ${N.pM} s'affaiblissent. Mais à trois charges, ${N.le} ne s'échange pas vite contre des H⁺, comme le magnésium de l'olivine : il tient encore.${k === "eau" && T.eauH ? " " + T.eauH : ""}`,
+        texte: `Des H⁺ se fixent sur les oxygènes qui retiennent ${N.le} du bord, et ses liaisons ${N.pM} s'affaiblissent. Porteur de trois charges, ${N.le} ne s'échange pas rapidement contre des H⁺, à la différence du magnésium de l'olivine : il tient encore.${k === "eau" && T.eauH ? " " + T.eauH : ""}`,
         A: { Ha: hO(t0.T0, -60), Hb: hO(t0.T1, 60) }, B: { h0: oh("T0", "Ha"), h1: oh("T1", "Hb") },
         L: k === "eau" ? { lB: { x: 470, y: 46, t: "HCO₃⁻", m: 1 } } : {},
       }));
       e.push(suite(e[1], {
         titre: `Les liaisons ${N.pM} lâchent : c'est l'étape lente`,
-        texte: `Une à une, les liaisons ${N.pM} cèdent, et ${N.le} se détache. C'est l'étape lente : ${o.lettres || "durée non mesurée"} en moyenne par groupe ${d.formule} de la surface. ${k === "eau" ? (T.alSol || `Dans le sol, ${N.le} ne va pas loin : il se redépose aussitôt en Al(OH)₃ ou, avec la silice, en kaolinite.`) : `Dans l'acide, il part entouré d'eau : ${d.hydrate}.`}`,
+        texte: `Les liaisons ${N.pM} se rompent successivement, puis ${N.le} se libère. Cette rupture constitue l'étape lente, d'une durée moyenne de ${o.lettres || "durée non mesurée"} par groupe ${d.formule} de la surface. ${k === "eau" ? (T.alSol || `Dans le sol, ${N.le} se déplace peu : il précipite sur place en Al(OH)₃ ou, lorsque de la silice est présente, en kaolinite.`) : `Dans l'acide, il part entouré d'eau : ${d.hydrate}.`}`,
         A: Object.assign(autour(m2.x, m2.y, [["Wu", "h"], ["Wr", "d"], ["Wa", "b"], ["Wb", "g"]]), { halo: { x: m2.x, y: m2.y, o: 0 } }),
         B: { mUr: 0, mDr: 0, mV: 0, mA: 0, wa: we("Wa"), wb: we("Wb") }, g: [0, 6], h: Object.assign({ cours: true }, H),
         L: { lM: { x: m2.x + 62, y: m2.y + 5, t: k === "eau" ? "→ Al(OH)₃" : d.hydrate } },
       }));
       e.push(suite(e[2], {
         titre: "Le tétraèdre part aussitôt, entier",
-        texte: "D'autres H⁺ se posent ; plus rien ne retient le tétraèdre, qui part en silice dissoute, H₄SiO₄. Aucune liaison Si–O n'a cassé : dans ce cristal, aucun oxygène ne relie deux silicium.",
+        texte: "De nouveaux H⁺ s'associent au cristal, et le tétraèdre, privé de soutien, quitte la surface sous forme de silice dissoute (H₄SiO₄). Aucune liaison Si-O ne se rompt, car aucun oxygène n'unit ici deux silicium.",
         A: Object.assign({}, t3, { Ha: hO(t3.T0, -45), Hb: hO(t3.T1, 45), Hc: hO(t3.T2, -135), Hd: hO(t3.T3, 135) }),
         B: { c0: 0, c1: 0, c2: 0, c3: 0, tV: 0, tA: 0, h2: oh("T2", "Hc"), h3: oh("T3", "Hd") }, h: H,
         L: { lT: { x: 250, y: 140, t: "H₄SiO₄", m: 1 } },
       }));
       e.push(suite(e[3], {
         titre: "La marche recule d'un cran",
-        texte: `${majuscule(N.le)} voisin se retrouve au bord et tout recommence.${T["fin_" + k] ? " " + T["fin_" + k] : ""}`,
+        texte: `${majuscule(N.le)} voisin se retrouve en bordure, et le processus recommence.${T["fin_" + k] ? " " + T["fin_" + k] : ""}`,
         A: { Wn: { x: v[0] + LW, y: v[1], a: 0, o: 1 }, halo: { x: v[0], y: v[1], o: 1 } },
         B: { wn: { a: v, b: "Wn", k: "eau", v: N.vM, p: N.pM } }, h: H,
       }));
@@ -155,25 +155,25 @@
     if (T.reste) {   // 11/10/2026 : zircon : les H⁺ se posent, mais les liaisons Zr–O (une demi-liaison chacune, plus d'un tiers covalentes) tiennent ; rien ne part
       e.push(suite(e[0], {
         titre: "Des H⁺ se posent sur les oxygènes",
-        texte: `Des H⁺ se fixent sur les oxygènes qui tiennent ${N.le} du bord.${k === "eau" && T.eauH ? " " + T.eauH : ""}`,
+        texte: `Des H⁺ se fixent sur les oxygènes qui retiennent ${N.le} en bordure.${k === "eau" && T.eauH ? " " + T.eauH : ""}`,
         A: { Ha: hO(t0.T0, -60), Hb: hO(t0.T1, 60) }, B: { h0: oh("T0", "Ha"), h1: oh("T1", "Hb") },
         L: k === "eau" ? { lB: { x: 470, y: 46, t: "HCO₃⁻", m: 1 } } : {},
       }));
       e.push(suite(e[1], {
         titre: `${majuscule(N.le)} ne part pas`,
-        texte: `${T.reste} ${o.lettres ? "" : "Aucune vitesse de départ n'a été mesurée à 25 °C."}`.trim(),
+        texte: `${T.reste} ${o.lettres ? "" : "Nulle vitesse de départ n'a pu être mesurée à 25 °C."}`.trim(),
         h: Object.assign({ cours: true }, H),
       }));
       e.push(suite(e[2], {
         titre: "Les H⁺ repartent, la marche ne bouge pas",
-        texte: `Les H⁺ retournent à l'eau : le bord est le même qu'au début.${T["fin_" + k] ? " " + T["fin_" + k] : ""}`,
+        texte: `Les H⁺ regagnent l'eau : le bord redevient identique à celui du départ.${T["fin_" + k] ? " " + T["fin_" + k] : ""}`,
         A: { Ha: { t: "hp", x: 430, y: 120 }, Hb: { t: "hp", x: 470, y: 60 } }, B: { h0: 0, h1: 0 }, L: { lB: 0 }, h: H,
       }));
       return e;
     }
     e.push(suite(e[0], {
       titre: `Deux H⁺ prennent la place ${N.du}`,
-      texte: `Deux H⁺ se posent sur les oxygènes qui le tenaient : ${N.le} n'est plus retenu, la charge reste équilibrée (deux + pour deux +). Toute la surface s'échange ainsi en quelques minutes.${k === "eau" && T.eauH ? " " + T.eauH : ""}`,
+      texte: `Deux protons se fixent sur les oxygènes qui le retenaient : ${N.le} se libère, mais la neutralité électrique subsiste (deux charges positives remplacent deux charges positives). L'ensemble de la surface se renouvelle de la sorte en quelques minutes.${k === "eau" && T.eauH ? " " + T.eauH : ""}`,
       A: { Ha: hO(t0.T0, -60), Hb: hO(t0.T1, 60), M: m1, halo: Object.assign({}, m1, { o: 0 }), Wu: { x: m1.x, y: m1.y - LW, a: -90 }, Wr: versA(m1, -10), Wa: versA(m1, 50) },
       B: { mUr: 0, mDr: 0, h0: oh("T0", "Ha"), h1: oh("T1", "Hb"), wa: we("Wa") }, g: [2, 4],
       L: k === "eau" ? { lB: { x: 470, y: 46, t: "HCO₃⁻", m: 1 } } : {},
@@ -181,7 +181,7 @@
     const m2 = { x: 500, y: 96 };
     e.push(suite(e[1], {
       titre: `${majuscule(N.le)} s'en va, habillé d'eau`,
-      texte: `${majuscule(N.le)} part entouré de six molécules d'eau : ${d.hydrate}. Sous la surface, il reste une couche privée de ${N.nom}, épaisse de quelques atomes.`,
+      texte: `${majuscule(N.le)} quitte la surface entouré de six molécules d'eau : ${d.hydrate}. Sous elle subsiste une couche privée de ${N.nom}, épaisse de quelques atomes.`,
       A: autour(m2.x, m2.y, [["Wu", "h"], ["Wr", "d"], ["Wa", "b"], ["Wb", "g"]]),
       B: { mV: 0, mA: 0, wb: we("Wb") }, g: [0, 6],
       L: { lM: { x: m2.x + 62, y: m2.y + 5, t: d.hydrate } },
@@ -189,7 +189,7 @@
     const t3 = posT(250, 92);
     e.push(suite(e[2], {
       titre: "Le tétraèdre se détache, entier",
-      texte: `Deux autres H⁺ se posent ; le tétraèdre ne tient plus que par ses dernières liaisons ${N.pM}, qui lâchent une à une. C'est l'étape lente. Il part sous forme de silice dissoute, H₄SiO₄ : aucune de ses liaisons Si–O n'a cassé.`,
+      texte: `Deux nouveaux H⁺ se fixent, et le tétraèdre n'est plus retenu que par ses dernières liaisons ${N.pM}, qui se défont une à une. Il s'agit de l'étape lente : le tétraèdre se dissout en silice, H₄SiO₄, sans qu'aucune liaison Si-O ne soit brisée.`,
       A: Object.assign({}, t3, { Ha: hO(t3.T0, -45), Hb: hO(t3.T1, 45), Hc: hO(t3.T2, -135), Hd: hO(t3.T3, 135) }),
       B: { c0: 0, c1: 0, c2: 0, c3: 0, tV: 0, tA: 0, h2: oh("T2", "Hc"), h3: oh("T3", "Hd") },
       h: Object.assign({ cours: true }, H),
@@ -198,7 +198,7 @@
     const v = m2P(0, NS - 1);
     e.push(suite(e[3], {
       titre: "La marche recule d'un cran",
-      texte: `${majuscule(N.le)} voisin se retrouve au bord et tout recommence. ${k === "eau" ? "Dans un sol bien drainé, il" : "Il"} ne reste rien du cristal : ${d.la} se dissout entièrement en ${N.M}²⁺ et silice dissoute${k === "eau" ? ", avec le bicarbonate laissé par l'acide carbonique" : ""}.`,
+      texte: `${majuscule(N.le)} voisin se retrouve en bordure, et le processus recommence. ${k === "eau" ? "Dans un sol bien drainé, il" : "Il"} ne subsiste rien du cristal : ${d.la} se dissout entièrement en ${N.M}²⁺ et en silice dissoute${k === "eau" ? ", avec le bicarbonate laissé par l'acide carbonique" : ""}.`,
       A: { Wn: { x: v[0] + LW, y: v[1], a: 0, o: 1 }, halo: { x: v[0], y: v[1], o: 1 } },
       B: { wn: { a: v, b: "Wn", k: "eau", v: N.vM, p: N.pM } }, h: H,
     }));
@@ -241,14 +241,14 @@
     e.push({ A, B, L: {}, g: [6, 2], h: { v: hv === null ? null : 0 },
       titre: k === "eau" ? "Le bord d'une marche du cristal" : "Le même bord, dans l'acide",
       texte: k === "eau"
-        ? (T.debut || `Chaque silicium tient quatre oxygènes : un tétraèdre SiO₄. Les tétraèdres ne se touchent pas : les ${N.nomY}s, au centre d'octaèdres (six oxygènes), et les ${N.nom}s, qui en tiennent huit, les relient. Au bord, ${N.le} qu'on suit (cerclé) a perdu deux de ses oxygènes : l'eau occupe leur place.`)
-        : "L'acide libère dans l'eau des ions H⁺ (en vert) et des ions chlorure Cl⁻ (en gris), qui ne réagissent pas. Les H⁺ sont attirés par les oxygènes de la surface, chargés négativement.",
+        ? (T.debut || `Chaque silicium est entouré de quatre oxygènes, formant un tétraèdre SiO₄. Les tétraèdres sont reliés par des cations : les ${N.nomY}s, centrés sur des octaèdres (six oxygènes), et les ${N.nom}s, qui en comptent huit. En bordure, ${N.le} suivi (cerclé) a vu partir deux oxygènes, remplacés par l'eau.`)
+        : "Dans l'eau, l'acide se dissocie en ions H⁺ (en vert) et en ions chlorure Cl⁻ (en gris), ces derniers restant inertes. Les protons se dirigent vers les oxygènes superficiels, porteurs d'une charge négative.",
     });
     const m1 = { x: M0[0] + 8, y: M0[1] - 6 };
     const hO = (q, an) => Object.assign(versA(q, an, 13), { t: "h" });
     e.push(suite(e[0], {
       titre: `Deux H⁺ prennent la place ${N.du}`,
-      texte: `Deux H⁺ se posent sur les oxygènes qui le tenaient : ${N.le} n'est plus retenu. Les ${N.nom}s de la surface s'échangent ainsi les premiers, vite.${k === "eau" && T.eauH ? " " + T.eauH : ""}`,
+      texte: `Deux H⁺ se fixent sur les oxygènes qui le retenaient, et ${N.le} se détache. Les ${N.nom}s superficiels sont ainsi les premiers à s'échanger, et rapidement.${k === "eau" && T.eauH ? " " + T.eauH : ""}`,
       A: { Ha: hO(t0.T0, -60), Hb: hO(t0.T1, 60), M: m1, halo: Object.assign({}, m1, { o: 0 }), Wu: { x: m1.x, y: m1.y - LW, a: -90 }, Wr: versA(m1, -10), Wa: versA(m1, 50) },
       B: { mUr: 0, mDr: 0, h0: oh("T0", "Ha"), h1: oh("T1", "Hb"), wa: we("Wa") }, g: [4, 4],
       L: k === "eau" ? { lB: { x: 470, y: 46, t: "HCO₃⁻", m: 1 } } : {},
@@ -256,7 +256,7 @@
     const m2 = { x: d.hydrate.length > 10 ? 462 : 500, y: 96 };   // étiquette longue (« Ca²⁺ hydraté ») : le groupe se décale à gauche
     e.push(suite(e[1], {
       titre: `${Le} s'en va, habillé d'eau`,
-      texte: `${Le} part entouré de molécules d'eau : ${d.hydrate}.${k === "eau" && T.eauX ? " " + T.eauX : ""} Le reste tient encore : les tétraèdres sont accrochés aux octaèdres ${Y}O₆.`,
+      texte: `${Le} quitte la surface avec un cortège de molécules d'eau : ${d.hydrate}.${k === "eau" && T.eauX ? " " + T.eauX : ""} Le reste de la structure demeure solide, les tétraèdres étant toujours accrochés aux octaèdres ${Y}O₆.`,
       A: autour(m2.x, m2.y, [["Wu", "h"], ["Wr", "d"], ["Wa", "b"], ["Wb", "g"]]),
       B: { mV: 0, mV2: 0, mA: 0, mA2: 0, wb: we("Wb") }, g: [0, 6],
       L: { lM: { x: m2.x + 62, y: m2.y + 5, t: d.hydrate } },
@@ -264,7 +264,7 @@
     const t3 = posT(250, 92);
     e.push(suite(e[2], {
       titre: `Les liaisons ${N.pY} lâchent : le tétraèdre part`,
-      texte: `D'autres H⁺ se posent ; le tétraèdre ne tient plus que par les ${N.nomY}s des octaèdres voisins. Ce sont ces liaisons ${N.pY}, les plus solides après Si–O, qui cèdent en dernier : c'est l'étape lente. Le tétraèdre part en silice dissoute, H₄SiO₄, sans qu'aucune liaison Si–O ait cassé.`,
+      texte: `Les H⁺ continuent de s'associer, et le tétraèdre ne se maintient plus que grâce aux ${N.nomY}s des octaèdres voisins. Ces liaisons ${N.pY}, les plus résistantes après Si-O, se rompent en dernier : c'est l'étape lente. Le tétraèdre part alors en silice dissoute, H₄SiO₄, sans rupture de liaison Si-O.`,
       A: Object.assign({}, t3, { Ha: hO(t3.T0, -45), Hb: hO(t3.T1, 45), Hc: hO(t3.T2, -135), Hd: hO(t3.T3, 135) }),
       B: { c0: 0, c1: 0, c2: 0, c3: 0, tV: 0, tA: 0, h2: oh("T2", "Hc"), h3: oh("T3", "Hd") },
       h: Object.assign({ cours: true }, H),
@@ -273,8 +273,8 @@
     const v = m1P(0, NS);
     e.push(suite(e[3], {
       titre: k === "eau" || T.yReste ? `${majuscule(leY)} reste sur place` : `${majuscule(leY)} part à son tour`,
-      texte: k === "eau" ? (T.finSol || `Privé de ses tétraèdres, ${leY} ne part pas : avec un peu de silice, il se redépose sur place en kaolinite.`)
-        : (T.finAcide || `Dans l'acide, ${leY} part aussi, en ${Y}³⁺ : il ne reste rien du cristal.`),
+      texte: k === "eau" ? (T.finSol || `Dépourvu de ses tétraèdres, ${leY} ne s'éloigne pas : en présence d'un peu de silice, il se redépose sur place sous forme de kaolinite.`)
+        : (T.finAcide || `En milieu acide, ${leY} part également, sous forme de ${Y}³⁺ : il ne subsiste rien du cristal.`),
       A: { halo: { x: v[0], y: v[1], o: 1, r: 17 } },
       L: { lA: { x: v[0] + 4, y: v[1] - (T.finEtiq ? 44 : 30), t: T.finEtiq || (k === "eau" ? "→ kaolinite" : `→ ${Y}³⁺`), m: 1 } },
       h: H,
@@ -287,24 +287,24 @@
     const ratio = Math.round(N.vS / N.vM);
     const duo = V.g ? [
       { titre: "Si–O", sous: `liaison ${O.nature("Si–O")} (électrons en partie partagés)`,
-        schema: { type: "partage", a: "Si", b: "O", aria: "Silicium et oxygène partagent des électrons" },
-        li: [`Ionique ${O.fraction(O.ionicite("Si", "O"))} seulement (Pauling). Chaque liaison Si–O vaut presque une liaison simple entière.`,
-          "Elle ne casse pas ici : le tétraèdre part entier, en silice dissoute."] },
+        schema: { type: "partage", a: "Si", b: "O", aria: "Silicium et oxygène mettent en commun une partie de leurs électrons" },
+        li: [`Liaison à caractère ionique ${O.fraction(O.ionicite("Si", "O"))} seul selon Pauling. Chaque lien Si-O équivaut presque à une liaison simple complète.`,
+          "Elle ne se rompt pas ici : le tétraèdre quitte la surface d'un seul bloc, en silice dissoute."] },
       { titre: N.pY, sous: `liaison ${O.nature(N.pY)} (électrons en partie cédés)`,
         schema: { type: "don", a: N.Y, la: `${N.Y}${T.chargeY || "³⁺"}`, ra: 15, fa: 12, b: "O", aria: `${majuscule(O.art(N.Y, "le"))} cède ses électrons aux oxygènes` },
-        li: [`Ionique ${O.fraction(O.ionicite(N.Y, "O"))} (Pauling).${T.duoY ? "" : ` ${majuscule(O.art(N.Y, "le"))} répartit ses trois charges sur six oxygènes : chaque liaison vaut une demi-liaison simple.`}`,
-          T.duoY || T.duoM || `${majuscule(N.le)}, lui, répartit deux charges sur huit oxygènes (un quart de liaison chacune) : il part le premier. Ce sont les liaisons ${N.pY} qui fixent le rythme.`] },
+        li: [`Ionique ${O.fraction(O.ionicite(N.Y, "O"))} (Pauling).${T.duoY ? "" : `Porteur de trois charges, ${majuscule(O.art(N.Y, "le"))} les répartit sur six oxygènes : chaque liaison vaut une demi-liaison simple.`}`,
+          T.duoY || T.duoM || `Porteur de deux charges réparties sur huit oxygènes, soit un quart de liaison pour chacun, ${majuscule(N.le)} se détache le premier. Les liaisons ${N.pY} règlent donc le rythme.`] },
     ] : [
       { titre: "Si–O", sous: `liaison ${O.nature("Si–O")} (électrons en partie partagés)`,
-        schema: { type: "partage", a: "Si", b: "O", aria: "Silicium et oxygène partagent des électrons" },
-        li: T.liSi ? T.liSi.split(" | ") : [`Ionique ${O.fraction(O.ionicite("Si", "O"))} seulement (Pauling) : le silicium et l'oxygène gardent une bonne part de leurs électrons en commun.`,
-          `Chaque silicium répartit sa charge sur quatre oxygènes : chaque liaison Si–O vaut presque une liaison simple entière. L'eau ne la casse pas ici : le tétraèdre part entier.`] },
+        schema: { type: "partage", a: "Si", b: "O", aria: "Silicium et oxygène mettent en commun une partie de leurs électrons" },
+        li: T.liSi ? T.liSi.split(" | ") : [`Caractère ionique limité à ${O.fraction(O.ionicite("Si", "O"))} (Pauling) : silicium et oxygène conservent une part notable d'électrons en commun.`,
+          `Chaque silicium distribue sa charge sur quatre oxygènes, ce qui donne à chaque liaison Si-O une valeur voisine d'une liaison simple. L'eau ne parvient pas à la rompre : le tétraèdre se détache d'un seul tenant.`] },
       { titre: N.pM, sous: `liaison ${O.nature(N.pM)} (électrons cédés)`,
         schema: { type: "don", a: N.M, la: `${N.M}${T.charge || (T.alu3 ? "³⁺" : "²⁺")}`, ra: 17, fa: 12, b: "O", aria: `${majuscule(N.le)} cède ses électrons aux tétraèdres` },
-        li: T.liM ? T.liM.split(" | ").map((x) => x.replace("{ion}", O.fraction(O.ionicite(N.M, "O")))) : T.alu3 ? [`Ionique ${O.fraction(O.ionicite(N.M, "O"))} (Pauling), presque autant partagée que Si–O.`,
-          `${majuscule(N.le)} répartit ses trois charges sur six oxygènes : chaque liaison ${N.pM} vaut une demi-liaison simple, plus que Mg–O dans l'olivine (un tiers). C'est elle qui lâche, lentement : elle règle la vitesse.`]
-        : [`${majuscule(N.le)} a cédé ses deux électrons aux tétraèdres. Ionique ${O.fraction(O.ionicite(N.M, "O"))} (Pauling).`,
-          `Sa charge se répartit sur six oxygènes : chaque liaison ${N.pM} ne vaut qu'un tiers de liaison simple, ${O.lettres(ratio, true)} fois moins qu'une liaison Si–O. C'est elle qui lâche.`] },
+        li: T.liM ? T.liM.split(" | ").map((x) => x.replace("{ion}", O.fraction(O.ionicite(N.M, "O")))) : T.alu3 ? [`Caractère ionique ${O.fraction(O.ionicite(N.M, "O"))} (Pauling), presque aussi partagée que Si-O.`,
+          `Porteur de trois charges, ${majuscule(N.le)} les étale sur six oxygènes, de sorte que chaque liaison ${N.pM} atteint une demi-liaison simple, soit davantage que Mg-O dans l'olivine (un tiers). C'est elle qui se rompt lentement et détermine la vitesse.`]
+        : [`Les deux électrons de ${majuscule(N.le)} ont été transférés aux tétraèdres, ce qui traduit une liaison ionique ${O.fraction(O.ionicite(N.M, "O"))} (Pauling).`,
+          `Chaque liaison ${N.pM} ne représente qu'un tiers d'une liaison simple, soit ${O.lettres(ratio, true)} fois moins qu'une Si-O : elle se rompt la première, la charge du cation se diluant sur six oxygènes.`] },
     ];
     const EA = [["eaAcide", "dans l'acide (H⁺)", "dans l'acide"], ["eaNeutre", "vers la neutralité", "vers la neutralité"]].filter(([c]) => E[c] != null);
     let barres = null;
@@ -317,7 +317,7 @@
         onglets: [{ k: "ea", nom: "Mesurée" }],
         rangs: EA.map(([c, nom]) => { const [a, b] = iv(E[c]), plage = a !== b;
           return { nom: majuscule(nom), el: N.M, hachure: plage, val: { ea: plage ? [a, b] : [0, b] }, txt: { ea: plage ? `${fr1(a)} à ${fr1(b)} kJ/mol` : `${fr1(b)} kJ/mol` } }; }),
-        explic: { ea: `L'énergie qu'il faut fournir pour que la réaction se fasse : plus elle est grande, plus la chaleur accélère la dissolution. De 25 à 35 °C, la vitesse est multipliée par ${facs.join(", ")} : un sol chaud altère nettement plus vite l'olivine.` },
+        explic: { ea: `L'énergie d'activation, c'est-à-dire l'énergie à fournir pour que la réaction se produise, détermine la sensibilité à la chaleur. De 25 à 35 °C, la vitesse est multipliée par ${facs.join(", ")} : un sol chaud altère nettement plus vite l'olivine.` },
       };
     }
     let temps = null;
@@ -325,7 +325,7 @@
       const lent = d.onglets.eau.t > rep.eau.t, f = O.rond2(lent ? d.onglets.eau.t / rep.eau.t : rep.eau.t / d.onglets.eau.t);
       temps = {
         titre: "Ce qui règle la vitesse",
-        explic: `${T.tempsExplic || ""} ${majuscule(rep.la)} sert de repère. Barres : écart entre les valeurs publiées.`.trim(),
+        explic: `Le repère est ${T.tempsExplic || ""} ${majuscule(rep.la)} ; les barres traduisent l'écart entre valeurs publiées.`.trim(),
         rangees: [{ titre: "Une unité de la surface quitte le cristal, dans l'eau à 25 °C", fois: `environ ${nb(f, O)} fois plus ${lent ? "lent" : "rapide"} pour ${d.la}`,
           pts: [{ el: rep.cation, min: rep.eau.tmin, max: rep.eau.tmax, v: rep.eau.t, et: `${rep.nom} · ${rep.eau.court}`, ou: "haut" },
             { el: "Si", min: d.onglets.eau.tmin, max: d.onglets.eau.tmax, v: d.onglets.eau.t, et: `${d.nom} · ${d.onglets.eau.court}`, ou: "bas" }] }],
@@ -339,7 +339,7 @@
     decor: (k, d, O) => decor(k, d, O, V), etapes: (k, d, O) => etapes(k, d, O, V), energie: (d, O) => energie(d, O, V),
     jauge: (d) => ({ titre: `voisins du ${Liaisons.outils.nomEl(d.cation)} suivi`, n: V.n, classes: ["lp-j-o", "lp-j-ow"] }),
     legende: () => ({ "e:O": "oxygène du cristal", "i:Cl−": "Cl⁻, ne réagit pas",
-      "t:avant": "atome juste devant le plan du dessin (en contour)", "t:arriere": "couche juste derrière le plan du dessin (plus petite, pâle)" }),
-    aria: (d) => `Coupe du bord d'un cristal de ${d.nom}, étape par étape`,
+      "t:avant": "atome placé en avant du plan de la figure, figuré en contour", "t:arriere": "couche située derrière le plan de la figure, plus petite et plus claire" }),
+    aria: (d) => `Vue en coupe du bord d'un cristal de ${d.nom}, étape après étape`,
   });
 })();

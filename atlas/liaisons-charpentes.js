@@ -96,13 +96,13 @@
     e.push({ A, B, L: {}, h: { v: hv === null ? null : 0 },
       titre: T.titre0 || "Le bord d'une marche du cristal",
       texte: k === "eau"
-        ? (T.debut || "Chaque silicium tient quatre oxygènes, et chaque oxygène relie deux silicium : un réseau continu de liaisons Si–O. En surface, les oxygènes sans second silicium portent un H (Si–OH). Au bord, le silicium suivi (cerclé) n'est plus tenu que par deux ponts Si–O–Si.")
+        ? (T.debut || "Le réseau de liaisons Si-O est continu : chaque silicium s'entoure de quatre oxygènes, chaque oxygène en relie deux. En surface, les oxygènes dépourvus de second silicium s'ornent d'un H (Si-OH). Sur le bord, le silicium suivi (cerclé) ne demeure retenu que par deux ponts Si-O-Si.")
         : k === "acide" ? "Le même bord, dans une eau acide : des ions H⁺ (en vert) et des ions chlorure Cl⁻ (en gris), qui ne réagissent pas."
-        : "Le même bord, dans une eau basique, chargée d'ions hydroxyde OH⁻ (en rouge, avec leur H). Le silicium suivi (cerclé) n'est tenu que par deux ponts Si–O–Si.",
+        : "Sur ce même bord, plongé dans une eau basique où flottent des ions hydroxyde OH⁻ (en rouge, avec leur H), le silicium suivi (cerclé) ne retient plus que deux ponts Si-O-Si.",
     });
     if (modif) e.push(suite(e[0], {   // échange Na⁺ ⇄ H⁺ : rapide, pas chronométré
       titre: "Les H⁺ prennent la place du sodium",
-      texte: T.echange || "Les H⁺ de l'eau prennent la place des ions sodium, qui partent.",
+      texte: T.echange || "Les H⁺ de l'eau remplacent les ions sodium, lesquels quittent la structure.",
       A: { N: { x: 528, y: 100 }, Hr: { o: 1 } }, B: { nO: 0, hr: oh("Or", "Hr") },
       L: { lN: { x: 528, y: 132, t: "Na⁺", m: 1 } },
     }));
@@ -110,7 +110,7 @@
     const w1 = { x: p[0] - 20, y: p[1] - 14 };
     e.push(suite(e[e.length - 1], {
       titre: "L'eau casse un premier pont",
-      texte: `Une molécule d'eau se glisse contre le pont : son H passe sur l'oxygène du pont, son OH sur le silicium. La liaison Si–O cède : le pont devient deux Si–OH. C'est l'étape lente : pour un silicium de la surface, ses ponts cèdent en ${o.lettres || "un temps non mesuré"} en moyenne${k === "basique" ? ", bien plus vite qu'en eau pure" : k === "acide" ? ", bien plus vite qu'à pH 7" : ""}.`,
+      texte: `Une molécule d'eau s'accroche au pont : son H se fixe sur l'oxygène, son OH sur le silicium. Le pont, rompu par la liaison Si-O, se change en deux Si-OH. Étape lente : pour un silicium de la surface, ses ponts cèdent en ${o.lettres || "un temps non mesuré"} en moyenne${k === "basique" ? ", bien plus vite qu'en eau pure" : k === "acide" ? ", bien plus vite qu'à pH 7" : ""}.`,
       A: { W1: { t: "at", el: "Ow", x: w1.x, y: w1.y }, Hb: { x: w1.x - 9, y: w1.y - 9, o: 1 }, Ha: { x: ol[0] - 2, y: ol[1] - 13, o: 1 } },
       B: { sl: 0, s1: cov("TS", "W1"), h1: oh("W1", "Hb"), h2: oh("Ol", "Ha") },
       h: Object.assign({ cours: true }, H),
@@ -120,7 +120,7 @@
     const g = (id) => ({ x: (id.x ?? id[0]), y: (id.y ?? id[1]) });
     e.push(suite(e[e.length - 1], {
       titre: "Le second pont cède : silice dissoute",
-      texte: "Une deuxième molécule d'eau fait de même avec le dernier pont. Le silicium, entouré de quatre OH, part dans l'eau : c'est de la silice dissoute, H₄SiO₄.",
+      texte: "Une seconde molécule d'eau agit de même sur le dernier pont. Entouré de quatre OH, le silicium gagne la solution : il s'agit de silice dissoute, H₄SiO₄.",
       A: {
         TS: dep(g(p)), Ou: dep(g(A.Ou)), Hu: dep(g(A.Hu)), Or: dep(g(A.Or)), Hr: dep(g(A.Hr)), W1: dep(w1), Hb: dep({ x: w1.x - 9, y: w1.y - 9 }),
         W2: Object.assign({ t: "at", el: "Ow" }, dep(w2)), Hd: Object.assign(dep({ x: w2.x + 9, y: w2.y + 9 }), { o: 1 }),
@@ -131,7 +131,7 @@
     }));
     e.push(suite(e[e.length - 1], {
       titre: "Le voisin devient le bord",
-      texte: T.recule || `Là où étaient les ponts, les silicium voisins portent maintenant des Si–OH : ils sont au bord à leur tour, et tout recommence. Rien d'autre ne se forme : ${d.la} ne donne que de la silice dissoute.`,
+      texte: T.recule || `À l'emplacement des ponts, les silicium voisins portent désormais des Si-OH : ils se trouvent à leur tour au bord, et le processus recommence. Rien d'autre ne se forme : ${d.la} ne produit que de la silice dissoute.`,
       A: { halo: { x: pg[0], y: pg[1], o: 1 } },
     }));
     return e;
@@ -216,13 +216,13 @@
     e.push({ A, B, L: {}, h: { v: hv === null ? null : 0 },
       titre: k === "eau" ? "Le bord d'une marche du cristal" : "Le même bord, dans l'acide",
       texte: k === "eau"
-        ? (T.debut || `Un réseau de tétraèdres comme celui du quartz, mais un sur quatre porte un aluminium au lieu d'un silicium. L'aluminium n'a que trois charges positives : il manque une charge, apportée par un ion ${ion} logé dans les creux du réseau. Le silicium suivi (cerclé) tient par deux ponts, l'un vers un aluminium, l'autre vers un silicium.`)
-        : "L'acide libère dans l'eau des ions H⁺ (en vert) et des ions chlorure Cl⁻ (en gris), qui ne réagissent pas. Le même bord, le même silicium cerclé.",
+        ? (T.debut || `Dans une structure proche du quartz, un tétraèdre sur quatre accueille un aluminium au lieu du silicium. Comme l'aluminium ne compte que trois charges positives, un ion ${ion}, niché dans les cavités du réseau, comble le déficit. Le silicium suivi (cerclé) n'est plus fixé que par deux ponts : l'un vers un aluminium, l'autre vers un silicium.`)
+        : "En se dissociant, l'acide libère dans l'eau des ions H⁺ (en vert) et des ions chlorure Cl⁻ (en gris), ces derniers restant inactifs. Le même bord, avec le même silicium cerclé.",
     });
     const hO = (q, dx, dy) => ({ x: q[0] + dx, y: q[1] + dy, o: 1 });
     e.push(suite(e[0], {
       titre: deux(d) ? `Le ${nomC} s'échange contre deux H⁺` : `Le ${nomC} s'échange contre un H⁺`,
-      texte: `${deux(d) ? `Deux ions H⁺ prennent la place de l'ion ${ion} du bord : ils se fixent sur deux oxygènes` : `Un ion H⁺ prend la place de l'ion ${ion} du bord : il se fixe sur un oxygène`}, et le ${nomC} part dans l'eau. C'est rapide.${k === "eau" ? " Dans le sol, ces H⁺ viennent de l'acide carbonique (le CO₂ dissous), qui laisse un ion bicarbonate HCO₃⁻." : ""}`,
+      texte: `${deux(d) ? `Deux ions H⁺ se substituent à l'ion ${ion} du bord et se fixent sur deux oxygènes` : `Un ion H⁺ se substitue à l'ion ${ion} du bord et se fixe sur un oxygène`}, et le ${nomC} passe dans l'eau. Cette étape est rapide.${k === "eau" ? "En sol, ces protons ont pour origine le CO₂ dissous, qui engendre l'acide carbonique et libère ainsi un ion bicarbonate HCO₃⁻." : ""}`,
       A: Object.assign({ K: { x: 520, y: 110 }, Ha: hO(ol, 9, -10) }, deux(d) ? { Hk: hO(kb, 9, -10) } : {}),
       B: Object.assign({ k1: 0, k2: 0, k3: 0, k4: 0, hh: oh("Ol", "Ha") }, deux(d) ? { hk: oh(kb, "Hk") } : {}),
       L: Object.assign({ lK: { x: 520, y: 140, t: ion, m: 1 } }, k === "eau" ? { lB: { x: 470, y: 46, t: "HCO₃⁻", m: 1 } } : {}),
@@ -230,7 +230,7 @@
     const dA = [190, 70], ddx = dA[0] - pg[0], ddy = dA[1] - pg[1];
     e.push(suite(e[1], {
       titre: "L'aluminium part",
-      texte: `D'autres H⁺ se fixent sur les oxygènes qui tiennent l'aluminium. Ses liaisons Al–O, plus faibles que Si–O, lâchent une à une : l'aluminium part${k === "acide" ? ", entouré d'eau (Al³⁺)" : " ; dans le sol, il se redépose aussitôt avec la silice, en kaolinite"}. Le silicium suivi ne tient plus que par un pont${ALT ? ", vers un autre aluminium : Si–O–Al" : " Si–O–Si"}.`,
+      texte: `D'autres H⁺ s'accrochent aux oxygènes retenant l'aluminium. Ses liaisons Al-O, plus fragiles que les Si-O, cèdent successivement : l'aluminium quitte la structure${k === "acide" ? ", entouré d'eau (Al³⁺)" : " ; dans le sol, il se reprécipite aussitôt avec la silice, sous forme de kaolinite"}. Le silicium suivi n'a plus qu'un seul pont${ALT ? ", vers un autre aluminium : Si-O-Al" : " Si–O–Si"}.`,
       A: { AL: { x: dA[0], y: dA[1] }, Oa: { x: pg[0] - 4 + ddx, y: pg[1] - LH + ddy }, Hal: { x: pg[0] + 5 + ddx, y: pg[1] - LH - 9 + ddy }, Hx: hO(oL, 4, -13), Hy: hO(oD, 12, 4) },
       B: { a1: 0, a2: 0, a3: 0, hx: oh(oL, "Hx"), hy: oh(oD, "Hy") },
       L: { lA: { x: dA[0], y: dA[1] + 40, t: alPart, m: 1 } },
@@ -239,7 +239,7 @@
     const dep = (q) => ({ x: (q.x ?? q[0]) + dx, y: (q.y ?? q[1]) + dy });
     if (ALT) e.push(suite(e[2], {   // anorthite : le dernier pont tient par Al–O ; aucune liaison Si–O ne casse (Heřmanská et al. 2023, fig. 1)
       titre: "Le dernier pont lâche côté aluminium",
-      texte: `Un H⁺ se fixe sur l'oxygène du dernier pont : c'est la liaison Al–O qui cède, et l'oxygène reste au silicium. Entouré de quatre OH, le silicium part en silice dissoute, H₄SiO₄, sans qu'aucune liaison Si–O ait cassé. C'est l'étape lente : un groupe ${d.formule} de la surface part en ${o.lettres || "un temps non mesuré"} en moyenne.`,
+      texte: `Un H⁺ se place sur l'oxygène du dernier pont : la liaison Al-O se rompt, l'oxygène restant lié au silicium. Entouré de quatre OH, celui-ci se dissout sous forme de silice, H₄SiO₄, sans rupture d'aucune liaison Si-O. Étape lente : un groupe ${d.formule} de la surface disparaît en ${o.lettres || "un temps non mesuré"} en moyenne.`,
       A: { TS: dep(p), Ou: dep(A.Ou), Hu: dep(A.Hu), Or: dep(A.Or), Hr: dep(A.Hr), Ol: dep(ol), Ha: Object.assign(dep({ x: ol[0] + 9, y: ol[1] - 10 }), { o: 1 }),
         Ob: dep(ob), Hc: Object.assign(dep({ x: ob[0] + 13, y: ob[1] - 2 }), { o: 1 }), halo: { x: sort[0], y: sort[1], o: 0 } },
       B: { bb: 0, h4: oh("Ob", "Hc") }, h: Object.assign({ cours: true }, H),
@@ -247,7 +247,7 @@
     }));
     else e.push(suite(e[2], {
       titre: "L'eau casse le dernier pont",
-      texte: `Une molécule d'eau se glisse contre le dernier pont : son H passe sur l'oxygène du pont, son OH sur le silicium. Le silicium, entouré de quatre OH, part : silice dissoute, H₄SiO₄. C'est l'étape lente : un groupe ${d.formule} de la surface part en ${o.lettres || "un temps non mesuré"} en moyenne.`,
+      texte: `Une molécule d'eau s'approche du dernier pont : son H rejoint l'oxygène, son OH le silicium. Entouré de quatre OH, le silicium gagne la solution, sous forme de silice dissoute, H₄SiO₄. Étape lente : un groupe ${d.formule} de la surface disparaît en ${o.lettres || "un temps non mesuré"} en moyenne.`,
       A: { TS: dep(p), Ou: dep(A.Ou), Hu: dep(A.Hu), Or: dep(A.Or), Hr: dep(A.Hr), Ol: dep(ol), Ha: Object.assign(dep({ x: ol[0] + 9, y: ol[1] - 10 }), { o: 1 }),
         W2: Object.assign({ t: "at", el: "Ow" }, dep(w2)), Hd: Object.assign(dep({ x: w2.x + 9, y: w2.y + 9 }), { o: 1 }),
         Hc: { x: ob[0] + 13, y: ob[1] - 2, o: 1 }, halo: { x: sort[0], y: sort[1], o: 0 } },
@@ -256,7 +256,7 @@
     }));
     e.push(suite(e[3], {
       titre: "Le voisin devient le bord",
-      texte: T.recule || `Les tétraèdres voisins portent maintenant des OH : ils sont au bord à leur tour, et tout recommence. ${majuscule(d.la)} donne du ${nomC} et de la silice dissoute ; l'aluminium${k === "acide" ? " reste dissous tant que l'eau est acide" : " reste sur place, en argile"}.`,
+      texte: T.recule || `Les tétraèdres voisins se chargent désormais de groupes OH et deviennent à leur tour périphériques : le cycle se répète. ${majuscule(d.la)} engendre du ${nomC} ainsi que de la silice dissoute ; l'aluminium${k === "acide" ? " demeure en solution tant que l'eau reste acide" : " reste sur place, en argile"}.`,
       A: { halo: { x: P(1, NS)[0], y: P(1, NS)[1], o: 1 } }, h: H,
     }));
     return e;
@@ -265,20 +265,20 @@
   function energie(d, O) {
     const E = d.energie || {}, rep = d.repere, T = d.textes || {};
     const duo = [{ titre: "Si–O", sous: `liaison ${O.nature("Si–O")} (électrons en partie partagés)`,
-      schema: { type: "partage", a: "Si", b: "O", aria: "Silicium et oxygène partagent des électrons" },
-      li: [`Ionique ${O.fraction(O.ionicite("Si", "O"))} seulement (Pauling) : le silicium et l'oxygène gardent une bonne part de leurs électrons en commun.`,
+      schema: { type: "partage", a: "Si", b: "O", aria: "Silicium et oxygène mettent en commun une partie de leurs électrons" },
+      li: [`Caractère ionique limité à ${O.fraction(O.ionicite("Si", "O"))} (Pauling) : silicium et oxygène conservent une part notable d'électrons en commun.`,
         estF(d) ? (an(d) ? "Chaque oxygène relie un silicium à un aluminium : il n'y a aucun pont Si–O–Si, et pour libérer un silicium il suffit de casser les liaisons Al–O autour de lui."
-          : "Chaque oxygène relie deux tétraèdres : pour libérer un silicium, l'eau doit casser ses ponts Si–O–Si un à un.")
-          : T.duoSi || "Chaque oxygène relie deux silicium : il n'y a pas de liaison plus faible où le cristal céderait. Pour libérer un silicium, l'eau doit casser ses ponts Si–O–Si un à un."] }];
+          : "Chaque oxygène unit deux tétraèdres : pour dégager un silicium, il faut que l'eau défasse ses ponts Si-O-Si, un à un.")
+          : T.duoSi || "Aucune liaison n'est plus faible à un endroit donné, si bien que le cristal ne cède pas en premier : chaque oxygène relie deux silicium. Pour libérer un silicium, l'eau doit défaire ses ponts Si-O-Si l'un après l'autre."] }];
     if (T.modif) duo.push({ titre: "Na–O", sous: `liaison ${O.nature("Na–O")} (électron cédé)`,
-      schema: { type: "don", a: "Na", la: "Na⁺", ra: 17, fa: 12, b: "O", aria: "Le sodium cède son électron à l'oxygène" },
-      li: [`Ionique ${O.fraction(O.ionicite("Na", "O"))} (Pauling) : le sodium a cédé son électron, il n'est plus retenu que par attraction, une seule charge partagée entre plusieurs oxygènes.`,
-        "C'est la première à céder : les H⁺ prennent sa place bien avant que les ponts Si–O–Si ne cassent."] });
+      schema: { type: "don", a: "Na", la: "Na⁺", ra: 17, fa: 12, b: "O", aria: "Un électron passe du sodium à l'oxygène" },
+      li: [`Caractère ionique ${O.fraction(O.ionicite("Na", "O"))} (Pauling) : le sodium a cédé son électron, qu'il ne retient plus que par attraction ; sa charge unique se répartit entre plusieurs oxygènes.`,
+        "Elle se rompt la première : les H⁺ prennent sa place avant que les ponts Si-O-Si ne se défassent."] });
     if (estF(d)) duo.push({ titre: "Al–O", sous: `liaison ${O.nature("Al–O")} (électrons en partie partagés)`,
-      schema: { type: "partage", a: "Al", b: "O", aria: "Aluminium et oxygène : électrons en partie cédés" },
-      li: [`Ionique ${O.fraction(O.ionicite("Al", "O"))} (Pauling), comme Si–O ; mais l'aluminium n'a que trois charges pour quatre oxygènes : chaque liaison Al–O vaut ${String(Math.round(vals(d).al * 100) / 100).replace(".", ",")} contre ${String(Math.round(vals(d).si * 100) / 100).replace(".", ",")} pour Si–O (valences de liaison).`,
+      schema: { type: "partage", a: "Al", b: "O", aria: "Électrons partiellement transférés de l'aluminium vers l'oxygène" },
+      li: [`Caractère ionique ${O.fraction(O.ionicite("Al", "O"))} (Pauling), à l'image de Si-O ; l'aluminium, toutefois, dispose de trois charges pour quatre oxygènes : chaque liaison Al-O atteint ${String(Math.round(vals(d).al * 100) / 100).replace(".", ",")}, contre ${String(Math.round(vals(d).si * 100) / 100).replace(".", ",")} pour Si-O (valences de liaison).`,
         an(d) ? "Sous les H⁺, c'est elle qui lâche, et c'est elle qui règle la vitesse : l'anorthite se défait sans casser de liaison Si–O."
-          : "Sous les H⁺, c'est elle qui lâche la première : l'aluminium s'échange contre des protons et laisse des silicium à moitié détachés."] });
+          : "Sous l'action des H⁺, c'est cette liaison qui cède en premier : l'aluminium s'échange contre des protons et laisse des silicium à demi détachés."] });
     const EA = [["eaAcide", "dans l'acide"], ["eaNeutre", estF(d) ? "vers la neutralité" : "dans l'eau pure"], ["eaBasique", "en eau basique"]].filter(([c]) => E[c] != null);
     let barres = null;
     if (EA.length) {
@@ -289,12 +289,12 @@
         onglets: [{ k: "ea", nom: "Mesurée" }],
         rangs: EA.map(([c, nom]) => { const [a, b] = iv(E[c]), plage = a !== b;
           return { nom: majuscule(nom), el: "Si", hachure: plage, val: { ea: plage ? [a, b] : [0, b] }, txt: { ea: plage ? `${fr1(a)} à ${fr1(b)} kJ/mol` : `${fr1(b)} kJ/mol` } }; }),
-        explic: { ea: `L'énergie qu'il faut fournir pour que la réaction se fasse : plus elle est grande, plus la chaleur accélère la dissolution. De 25 à 35 °C, la vitesse est multipliée par ${facs.join(", ")}.` } };
+        explic: { ea: `Cette énergie à fournir pour déclencher la réaction, à un niveau élevé, fait que la chaleur accélère fortement la dissolution. Entre 25 et 35 °C, la vitesse est multipliée par ${facs.join(", ")}.` } };
     }
     let temps = null;
     if (rep && rep.eau && d.onglets.eau && d.onglets.eau.t) {
       const f = O.rond2(d.onglets.eau.t / rep.eau.t);
-      temps = { titre: T.tempsTitre || `Pourquoi ${d.la} résiste`, explic: `${T.tempsExplic || ""} ${majuscule(rep.la)} sert de repère. Barres : écart entre les valeurs publiées.`.trim(),
+      temps = { titre: T.tempsTitre || `Pourquoi ${d.la} résiste`, explic: `Le repère est ${T.tempsExplic || ""} ${majuscule(rep.la)} ; les barres traduisent l'écart entre valeurs publiées.`.trim(),
         rangees: [{ titre: "Une unité de la surface quitte le cristal, dans l'eau à 25 °C", fois: f >= 1 ? `environ ${nb(f, O)} fois plus lent pour ${d.la}` : `environ ${nb(O.rond2(1 / f), O)} fois plus rapide pour ${d.la}`,
           pts: [{ el: rep.cation, min: rep.eau.tmin, max: rep.eau.tmax, v: rep.eau.t, et: `${rep.nom} · ${rep.eau.court}`, ou: "haut" },
             { el: "Si", min: d.onglets.eau.tmin, max: d.onglets.eau.tmax, v: d.onglets.eau.t, et: `${d.nom} · ${d.onglets.eau.court}`, ou: "bas" }] }] };
@@ -307,7 +307,7 @@
       : estAm(d) ? [["eau", d.onglets.acide ? "Dans l'eau du sol" : "Dans l'eau"], ["acide", "Dans l'acide"], ["basique", "Eau basique"]].filter(([k]) => d.onglets[k]).map(([k, nom]) => ({ k, nom }))
       : [{ k: "eau", nom: "Dans l'eau" }, { k: "basique", nom: "Eau basique" }],
     decor, etapes, energie,
-    legende: (d) => Object.assign(estF(d) || estAm(d) ? { "e:O": estAm(d) ? "oxygène du réseau" : "oxygène du cristal", "i:Cl−": "Cl⁻, ne réagit pas", "e:Na": "ion sodium Na⁺", "e:K": "ion potassium K⁺" } : { "e:O": "oxygène du cristal", "i:O−": "ion hydroxyde OH⁻" }, { "t:avant": "atome juste devant le plan du dessin (en contour)", "t:arriere": "couche juste derrière le plan du dessin (plus petite, pâle)" }),
-    aria: (d) => estAm(d) ? `Coupe du bord d'un morceau ${d.textes.de || "de " + d.nom}, étape par étape` : `Coupe du bord d'un cristal de ${d.nom}, étape par étape`,
+    legende: (d) => Object.assign(estF(d) || estAm(d) ? { "e:O": estAm(d) ? "oxygène du réseau" : "oxygène du cristal", "i:Cl−": "Cl⁻, ne réagit pas", "e:Na": "ion sodium Na⁺", "e:K": "ion potassium K⁺" } : { "e:O": "oxygène du cristal", "i:O−": "ion hydroxyde OH⁻" }, { "t:avant": "atome placé en avant du plan de la figure, figuré en contour", "t:arriere": "couche située derrière le plan de la figure, plus petite et plus claire" }),
+    aria: (d) => estAm(d) ? `Coupe du bord d'un morceau ${d.textes.de || "de " + d.nom}, étape par étape` : `Vue en coupe du bord d'un cristal de ${d.nom}, étape après étape`,
   });
 })();

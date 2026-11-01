@@ -87,7 +87,7 @@
       mA: mx("M", derriere(M0)), mV: mx("M", "MV"), xA: mx("X", derriere(X0p)), xV: mx("X", "XV") };
     e.push({ A: A0, B: B0b, L: {}, g: [4, 2], h: { v: hv === null ? null : 0 },
       titre: "Le bord d'une marche du cristal",
-      texte: `Chaque ${N.nom} (${N.M}⁺) tient six chlorures (${N.X}⁻), et chaque chlorure six ${N.nom}s : quatre dans le plan du dessin, un devant (en contour), un derrière (plus petit et pâle). Au bord, celui qu'on suit (cerclé) en a déjà perdu deux : l'eau occupe leur place, oxygène tourné vers lui.` });
+      texte: `Chaque ${N.nom} (${N.M}⁺) est cerné de six chlorures (${N.X}⁻), et chaque chlorure de six ${N.nom}s : quatre dans le plan de la figure, un en avant (en contour), un en arrière (plus petit et plus pâle). Sur la bordure, celui qu'on suit (cerclé) a déjà perdu deux voisins, remplacés par l'eau, son oxygène tourné vers lui.` });
     const m1 = { x: M0[0] + 8, y: M0[1] - 10 };
     const T = d.textes || {};
     if (T.sulfure) {   // 11/10/2026 : galène (PbS, structure du sel gemme) dans l'eau acide : le soufre part en H₂S
@@ -99,7 +99,7 @@
       const ha = { x: X0p[0] - 10, y: X0p[1] - 15 }, hb = { x: X0p[0] + 10, y: X0p[1] - 15 };
       e.push(suite(e[0], {
         titre: `Des H⁺ s'accrochent ${an === "oxygène" ? "à l'oxygène" : "au " + an}, l'eau ${O.art(N.M, "au")}`,
-        texte: `Deux H⁺ de l'eau acide se fixent sur ${an === "oxygène" ? "un oxygène" : "un " + an} du bord, et l'eau se glisse contre ${N.le} : ses liaisons ${N.p} lâchent une à une. C'est l'étape lente${o.lettres ? ` : ${o.lettres} environ par ${d.formule} de la surface` : ""}.`,
+        texte: `Deux H⁺ de l'eau acide se posent sur ${an === "oxygène" ? "un oxygène" : "un " + an} du bord, et l'eau s'introduit contre ${N.le} : ses liaisons ${N.p} se défont une à une. Étape lente${o.lettres ? ` : ${o.lettres} environ par ${d.formule} de la surface` : ""}.`,
         A: { M: m1, halo: Object.assign({}, m1, { o: 0 }), Wu: { x: m1.x, y: m1.y - LW, a: -90 }, Wr: versA(m1, -25), Wa: versA(m1, 40),
           Ha: Object.assign({ t: "h" }, ha), Hb: Object.assign({ t: "h" }, hb) },
         B: z({ mB: 0, mA: 0, wa: we("M", "Wa"), ha: { a: "X", b: "Ha", k: "oh" }, hb: { a: "X", b: "Hb", k: "oh" } }), g: tt ? [1, 3] : [2, 4], h: Object.assign({ cours: true }, H),
@@ -107,7 +107,7 @@
       const m2 = { x: 470, y: 92 };
       e.push(suite(e[1], {
         titre: `${Le} s'en va, habillé d'eau`,
-        texte: `Le dernier ${an} a lâché. ${Le} part entouré de molécules d'eau : ${d.hydrate}.`,
+        texte: `Le dernier ${an} vient de se détacher. ${Le} s'éloigne, entouré de molécules d'eau : ${d.hydrate}.`,
         A: Object.assign({ M: m2 }, autour(m2.x, m2.y, [["Wu", "h"], ["Wr", "d"], ["Wa", "b"], ["Wb", "g"]])),
         B: z({ mX: 0, mV: 0, wb: we("M", "Wb") }), g: tt ? [0, 4] : [0, 6], h: H,
         L: { lM: { x: m2.x + 62, y: m2.y + 5, t: d.hydrate } },
@@ -115,7 +115,7 @@
       const x2 = { x: 238, y: 92 };
       e.push(suite(e[2], {
         titre: `${an === "oxygène" ? "L'oxygène" : "Le " + an} part en ${Mol}`,
-        texte: T.soufre || "Privé de ses voisins, le soufre du bord part avec ses deux hydrogènes : H₂S, un gaz dissous.",
+        texte: T.soufre || "Dépourvu de ses voisins, le soufre de la bordure part avec ses deux hydrogènes : H₂S, gaz dissous.",
         A: { X: x2, Ha: { x: x2.x - 10, y: x2.y - 15 }, Hb: { x: x2.x + 10, y: x2.y - 15 } },
         B: z({ x4: 0, x15: 0, xA: 0, xV: 0 }),
         L: { lX: { x: x2.x, y: x2.y + 40, t: Mol, m: 1 } },
@@ -131,14 +131,14 @@
     }
     e.push(suite(e[0], {
       titre: "L'eau prend la place des chlorures",
-      texte: `Une molécule d'eau se glisse : un chlorure lâche, l'oxygène de l'eau le remplace, puis un autre. C'est l'étape lente${o.lettres ? `, à l'échelle de l'atome seulement : ${o.lettres} environ par ${N.nom} de la surface` : ""}.`,
+      texte: `Une molécule d'eau s'introduit : un chlorure se libère, l'oxygène de l'eau prend sa place, et ainsi de suite pour un autre. Étape lente${o.lettres ? `, seulement à l'échelle de l'atome : ${o.lettres} en moyenne par ${N.nom} de la surface` : ""}.`,
       A: { M: m1, halo: Object.assign({}, m1, { o: 0 }), Wu: { x: m1.x, y: m1.y - LW, a: -90 }, Wr: versA(m1, -25), Wa: versA(m1, 40) },
       B: { mB: 0, mA: 0, wa: we("M", "Wa") }, g: [2, 4], h: Object.assign({ cours: true }, H),
     }));
     const m2 = { x: 470, y: 92 };
     e.push(suite(e[1], {
       titre: `${majuscule(N.le)} s'en va, habillé d'eau`,
-      texte: `Le dernier chlorure a lâché. ${majuscule(N.le)} part entouré de molécules d'eau : ${d.hydrate}.`,
+      texte: `Le dernier chlorure vient de se détacher. ${majuscule(N.le)} s'éloigne, entouré de molécules d'eau : ${d.hydrate}.`,
       A: Object.assign({ M: m2 }, autour(m2.x, m2.y, [["Wu", "h"], ["Wr", "d"], ["Wa", "b"], ["Wb", "g"]])),
       B: { mX: 0, mV: 0, wb: we("M", "Wb") }, g: [0, 6], h: H,
       L: { lM: { x: m2.x + 62, y: m2.y + 5, t: d.hydrate } },
@@ -146,7 +146,7 @@
     const x2 = { x: 238, y: 92 };
     e.push(suite(e[2], {
       titre: "Le chlorure part à son tour",
-      texte: "Privé de ses voisins, le chlorure du bord est pris par l'eau. Autour de lui, les molécules d'eau tournent un hydrogène vers lui : c'est leur côté chargé positivement.",
+      texte: "Dépourvu de ses voisins, le chlorure du bord se retrouve capté par l'eau. Autour de lui, les molécules d'eau orientent un hydrogène vers lui : c'est leur face chargée positivement.",
       A: Object.assign({ X: x2 }, autour(x2.x, x2.y, [["Wc", "g"], ["Wd", "h"], ["We", "d"]], LA, true)),
       B: { x4: 0, x15: 0, xA: 0, xV: 0 },
       L: { lX: { x: x2.x, y: x2.y + 52, t: `${N.X}⁻ hydraté`, m: 1 } },
@@ -167,15 +167,15 @@
     if (T.sulfure) return { duo: [{
       titre: N.p, sous: `liaison ${O.nature(N.p)} (${T.duoSous || "électrons surtout partagés"})`,
       schema: { type: "don", a: N.M, la: `${N.M}${T.chargeM || "²⁺"}`, ra: 15, fa: 12, b: N.X, lb: `${N.X}²⁻`, aria: `${majuscule(N.le)} cède ses électrons au soufre` },
-      li: [T.duoIon || `Ionique ${O.fraction(O.ionicite(N.M, N.X))} seulement (Pauling) : ${N.nom} et ${T.anionNom || "soufre"} gardent une bonne part de leurs électrons en commun.`,
-        `Chaque ion en tient ${O.lettres(n)} de signe contraire${n === 4 ? ", en tétraèdre" : ""} : chaque liaison ${N.p} vaut ${T.duoPart || ({ 4: "la moitié d'une", 6: "un tiers d'une" })[n] || `2/${n} de`} liaison simple.`,
-        `Dans l'eau acide, les H⁺ prennent ${T.anionNom === "oxygène" ? "l'oxygène" : "le soufre"}, l'eau prend ${N.le}.`] }], barres: null, temps: null };
+      li: [T.duoIon || `Caractère ionique ${O.fraction(O.ionicite(N.M, N.X))} seul selon Pauling : ${N.nom} et ${T.anionNom || "soufre"} conservent une part notable de leurs électrons en commun.`,
+        `Chaque ion est entouré de ${O.lettres(n)} ions de signe contraire${n === 4 ? ", en tétraèdre" : ""} : chaque liaison ${N.p} vaut ${T.duoPart || ({ 4: "la moitié d'une", 6: "un tiers d'une" })[n] || `2/${n} de`} de liaison simple.`,
+        `En eau acide, les H⁺ occupent ${T.anionNom === "oxygène" ? "l'oxygène" : "le soufre"} et l'eau occupe ${N.le}.`] }], barres: null, temps: null };
     const duo = [{
       titre: N.p, sous: `liaison ${O.nature(N.p)} (électron cédé)`,
       schema: { type: "don", a: N.M, la: `${N.M}⁺`, ra: 15, fa: 12, b: N.X, lb: `${N.X}⁻`, aria: `${majuscule(N.le)} cède son électron au chlore` },
-      li: [`${majuscule(N.le)} a cédé son électron au chlore : ${N.M}⁺ et ${N.X}⁻ s'attirent comme + et −. Ionique ${O.fraction(O.ionicite(N.M, N.X))} (Pauling).`,
-        `Chaque ion en tient ${O.lettres(n)} de signe contraire : sa charge se partage entre eux, et chaque liaison ${N.p} ne vaut ${({ 4: "qu'un quart", 6: "qu'un sixième", 8: "qu'un huitième" })[n] || `que 1/${n}`} de liaison simple.`,
-        `Dans l'eau, l'oxygène d'une molécule d'eau prend la place d'un chlorure autour ${O.art(N.M, "du")}, et un hydrogène celle ${O.art(N.M, "du")} autour du chlorure.`],
+      li: [`${majuscule(N.le)} a cédé son électron au chlore : ${N.M}⁺ et ${N.X}⁻ s'attirent comme des charges de signes contraires. Liaison ionique ${O.fraction(O.ionicite(N.M, N.X))} (Pauling).`,
+        `Chaque ion est entouré de ${O.lettres(n)} ions de signe contraire : sa charge se répartit entre eux, et chaque liaison ${N.p} ne vaut que ${({ 4: "qu'un quart", 6: "qu'un sixième", 8: "qu'un huitième" })[n] || `que 1/${n}`} de liaison simple.`,
+        `Dans l'eau, l'oxygène d'une molécule d'eau se substitue à un chlorure autour de ${O.art(N.M, "du")}, et un hydrogène occupe la place ${O.art(N.M, "du")} autour du chlorure.`],
     }];
     let barres = null;
     if (E.eaNeutre != null) {
@@ -184,7 +184,7 @@
         titre: "Énergie d'activation de la dissolution", unite: "kJ/mol", max: 100, graduations: [0, 25, 50, 75, 100],
         onglets: [{ k: "ea", nom: "Mesurée" }],
         rangs: [{ nom: "Dans l'eau pure", el: N.M, val: { ea: [0, E.eaNeutre] }, txt: { ea: `${String(E.eaNeutre).replace(".", ",")} kJ/mol` } }],
-        explic: { ea: `L'énergie qu'il faut fournir pour que la réaction se fasse : plus elle est grande, plus la chaleur accélère la dissolution. Ici elle est très faible : de 25 à 35 °C, la vitesse n'est multipliée que par ${fac}.` },
+        explic: { ea: `L'énergie d'activation, c'est-à-dire l'énergie à fournir pour que la réaction se produise, est ici très faible : plus elle est grande, plus la chaleur accélère la dissolution. De 25 à 35 °C, la vitesse n'est multipliée que par ${fac}.` },
       };
     }
     let temps = null;
@@ -192,7 +192,7 @@
       const f = O.rond2(rep.eau.t / d.onglets.eau.t);
       temps = {
         titre: `Pourquoi ${d.la} fond si vite`,
-        explic: `${T.tempsExplic || ""} ${majuscule(rep.la)} sert de repère. Barres : écart entre les valeurs publiées.`.trim(),
+        explic: `Le repère est ${T.tempsExplic || ""} ${majuscule(rep.la)} ; les barres traduisent l'écart entre valeurs publiées.`.trim(),
         rangees: [{ titre: "Un ion de la surface quitte le cristal, dans l'eau pure à 25 °C", fois: `environ ${nb(f, O)} fois plus rapide pour ${d.la}`,
           pts: [{ el: rep.cation, min: rep.eau.tmin, max: rep.eau.tmax, v: rep.eau.t, et: `${rep.nom} · ${rep.eau.court}`, ou: "haut" },
             { el: N.M, min: d.onglets.eau.tmin, max: d.onglets.eau.tmax, v: d.onglets.eau.t, et: `${d.nom} · ${d.onglets.eau.court || d.onglets.eau.txt}`, ou: "bas" }] }],
@@ -206,8 +206,8 @@
     decor, etapes, energie,
     jauge: (d) => ({ titre: `voisins du ${Liaisons.outils.nomEl(d.cation)} suivi`, n: d.textes && d.textes.tetra ? 4 : 6, classes: [d.textes && d.textes.sulfure ? `e:${d.textes.anion || "S"}` : "e:Cl", "lp-j-ow"] }),
     legende: (d) => d.textes && d.textes.sulfure ? ({ [`e:${d.cation}`]: d.textes.cationLeg || `${Liaisons.outils.nomEl(d.cation)} (${d.cation}²⁺)`, ...(d.textes.cation2 ? { [`e:${d.textes.cation2}`]: d.textes.cation2Leg || Liaisons.outils.nomEl(d.textes.cation2) } : {}), [`e:${d.textes.anion || "S"}`]: d.textes.anionLeg || "soufre (S²⁻)", "i:H+": "H⁺ de l'acide",
-      "t:avant": "ion juste devant le plan du dessin (en contour)", "t:arriere": "ion juste derrière le plan du dessin (plus petit, pâle)" }) : ({ [`e:${d.cation}`]: `${Liaisons.outils.nomEl(d.cation)} (${d.cation}⁺)`, "e:Cl": "chlorure (Cl⁻)",
-      "t:avant": "ion juste devant le plan du dessin (en contour)", "t:arriere": "ion juste derrière le plan du dessin (plus petit, pâle)" }),
-    aria: (d) => `Coupe du bord d'un cristal de ${d.nom}, étape par étape`,
+      "t:avant": "ion placé en avant du plan de la figure, dessiné en contour", "t:arriere": "ion placé derrière le plan de la figure, plus réduit et plus clair" }) : ({ [`e:${d.cation}`]: `${Liaisons.outils.nomEl(d.cation)} (${d.cation}⁺)`, "e:Cl": "chlorure (Cl⁻)",
+      "t:avant": "ion placé en avant du plan de la figure, dessiné en contour", "t:arriere": "ion placé derrière le plan de la figure, plus réduit et plus clair" }),
+    aria: (d) => `Vue en coupe du bord d'un cristal de ${d.nom}, étape après étape`,
   });
 })();

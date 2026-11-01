@@ -1,4 +1,4 @@
-// ============ Atlas géologique — logique ============
+// ============ Atlas Sol — logique ============
 "use strict";
 
 const $ = (sel, root) => (root || document).querySelector(sel);
@@ -20,7 +20,19 @@ function cssVar(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 const catColor = (cat) => `var(--cat-${cat})`;
-const geomean = (r) => Math.sqrt(r.alteration.vmin * r.alteration.vmax);
+// D.8 (22/10/2026) : vitesses NETTES. alteration.valeurs = [{ v (mm/an), cas, src, ref?, calcul? }], une valeur par
+// situation ; sinon l'ancienne fourchette vmin/vmax (roches pas encore reprises). Voir CLAUDE.md §32.
+const vValeurs = (r) => (r.alteration && Array.isArray(r.alteration.valeurs) && r.alteration.valeurs.length ? r.alteration.valeurs : null);
+const vChiffree = (r) => !!(r.alteration && (vValeurs(r) || (r.alteration.vmin != null && r.alteration.vmax != null)));
+const vRefValeur = (r) => { const vs = vValeurs(r); return vs ? (vs.find((x) => x.ref) || vs[0]) : null; };
+// valeur qui représente la roche sur les graphiques communs : la valeur de référence, sinon la moyenne géométrique de la fourchette
+const geomean = (r) => { const x = vRefValeur(r); return x ? x.v : Math.sqrt(r.alteration.vmin * r.alteration.vmax); };
+// texte court de la vitesse d'une roche (info-bulles), en mm par 100 ans
+const s100 = (v) => fmtRate(v * 100);
+function vitesseCourte(r) {
+  const x = vRefValeur(r);
+  return x ? `${s100(x.v)} mm en 100 ans : ${x.cas}` : `${s100(r.alteration.vmin)} à ${s100(r.alteration.vmax)} mm en 100 ans`;
+}
 // roches dont la « vitesse » est surtout de l'érosion physique / dissolution au contact de l'eau
 const EROSION_IDS = new Set(["marne", "argile", "sable", "loess", "sel", "gypse", "tourbe", "sylvinite", "anhydrite", "vase_tangue"]);
 
@@ -43,7 +55,7 @@ function bindTips(container) {
 }
 
 // ---------------- état & routage ----------------
-const state = { query: "", oxEl: "fer", phehEl: "fe", phehPt: { ph: 6.5, eh: 0.4 }, phehLogA: -6 };
+const state = { query: "", oxEl: "fer", phehEl: "fe", phehPt: { ph: 6.5, eh: 0.4 }, phehLogA: -6, phehTotal: false };
 let map = null, geolLayer = null;
 
 function go(id) { location.hash = id ? "roche/" + id : ""; }
@@ -67,6 +79,8 @@ function pedoSousPartie() {
   if (h === "#minsol" || h.startsWith("#minsol/")) return "minsol";
   if (h.startsWith("#argile/") || h.startsWith("#espece/") || h.startsWith("#argrp/") || h.startsWith("#argfam/") || h === "#argiles") return "argiles";
   if (h === "#oxydes" || h.startsWith("#oxyde/")) return "oxydes";
+  if (h === "#soltemps" || h.startsWith("#soltemps/")) return "soltemps";
+  if (h === "#sols" || h.startsWith("#sol/")) return "soltypes";
   return null;
 }
 
@@ -108,6 +122,11 @@ function route() {
   // 12/10/2026 : la vue « Minéraux du sol par rôle » passe en Pédologie, à sa propre adresse
   else if (location.hash === "#minsol") renderMineraux();
   else if (location.hash === "#pedologie") renderPedologie();
+  // 25/10/2026 (I.2) : « Le sol au fil du temps », chronoséquences par matériau parental (sols-temps.js)
+  else if ((location.hash === "#soltemps" || location.hash.startsWith("#soltemps/")) && window.SolsTemps) SolsTemps.page(decodeURIComponent(location.hash.slice(10)));
+  // 25/10/2026 : les types de sols du Référentiel pédologique (sols-fiches.js, prototype)
+  else if (location.hash === "#sols" && window.SolsFiches) SolsFiches.index();
+  else if (location.hash.startsWith("#sol/") && window.SolsFiches) SolsFiches.page(decodeURIComponent(location.hash.slice(5)));
   // 12/10/2026 : les roches rangées par surface en France (roches-surface.js) ; #rocsurf/<tranche> défile jusqu'à la tranche
   else if (location.hash === "#rocsurf" || location.hash.startsWith("#rocsurf/")) {
     RochesSurface.choisir("surface");
@@ -382,10 +401,10 @@ function renderSidebar() {
             if (g.sousGroupes) g.sousGroupes.map((sf) => minVisibles(sf.mineraux)).filter((ids) => ids.length)
               .forEach((ids, sfi) => ids.forEach((mid, mi) => ajoute(mid, sfi && !mi)));
             else minVisibles(groupeIds(g)).forEach((mid) => ajoute(mid, false));
-            const court = (g.code || g.nom.split(" —")[0].split(" (")[0]).slice(0, 6);
+            const court = (g.code || g.nom.split(/ [—:]/)[0].split(" (")[0]).slice(0, 6);
             branchesHTML += `<div class="arbre-br">
               ${groupes.length > 1 ? `<button class="arbre-band br ${brOn ? "on" : ""}" data-mingrp="${c.n}-${gi}" data-court="${court}" title="${g.nom}">
-                <span>${g.code || g.nom.split(" —")[0].split(" (")[0]}</span></button>` : ""}
+                <span>${g.code || g.nom.split(/ [—:]/)[0].split(" (")[0]}</span></button>` : ""}
               <div class="arbre-roches">${especesHTML}</div>
             </div>`;
           });
@@ -597,24 +616,16 @@ function renderAmorphes() {
     cela : un refroidissement brutal (lave de basalte trempée dans l'eau), ou un liquide si visqueux que ses atomes
     bougent à peine (lave de rhyolite, riche en silice et pauvre en eau). Le verre se reconnaît à son éclat vitreux et à
     sa cassure en coquille (conchoïdale). Trois façons d'en produire :</p>
-    ${bloc("var(--cat-magmatique)", "Une lave figée", "verre volcanique · fiches dans Roches", `
-      <div class="min-chips">${roc("obsidienne", part("obsidienne", "verre") + " de verre, massif")}
+    ${bloc("var(--cat-magmatique)", "Une lave figée", "verre volcanique · fiches dans Roches", `<div class="min-chips">${roc("obsidienne", part("obsidienne", "verre") + " de verre, massif")}
         ${roc("tuf_volcanique", "cendres, " + part("tuf_volcanique", "verre"))}
         ${roc("pouzzolane", "scories, " + part("pouzzolane", "verre"))}
         ${roc("ignimbrite", "ponces soudées, " + part("ignimbrite", "verre"))}
         ${roc("basalte", "bordures trempées, hyaloclastites")}</div>
-      <p class="sub amo-sans">Sans fiche à part : la <b>ponce</b>, verre de lave riche en silice gonflé de bulles, si léger
-      qu'il flotte ; le <b>sidéromélane</b>, verre de basalte transparent, trempé dans l'eau (bordure des laves en coussins,
-      hyaloclastites) ; la <b>tachylite</b>, verre de basalte opaque, chargé de microcristaux d'oxydes de fer.</p>`)}
-    ${bloc("var(--cat-metamorphique)", "Une roche fondue par un séisme", "fiche dans Roches", `
-      <div class="min-chips">${roc("pseudotachylite", part("pseudotachylite", "verre") + " de verre")}</div>
-      <p class="sub amo-sans">Pendant un séisme, le frottement sur la faille fond la roche en veines de quelques
-      millimètres, qui se figent aussitôt.</p>`)}
-    ${bloc("#7a5c8a", "Une roche fondue par un impact", "fiche dans Roches", `
-      <div class="min-chips">${roc("impactite", part("impactite", "verre") + " de verre")}</div>
-      <p class="sub amo-sans">L'onde de choc d'une météorite fond la roche en un instant (Rochechouart). Sans fiche à part :
-      la <b>lechatelierite</b>, verre de silice presque pure, née dans les impacts et dans les fulgurites (sable fondu par
-      la foudre).</p>`)}
+      <p class="sub amo-sans">Faute de fiche dédiée, on citera la <b>ponce</b>, verre de lave riche en silice, gonflé de bulles au point de flotter ; le <b>sidéromélane</b>, verre basaltique translucide né d'une trempe dans l'eau (bordures des laves en coussins, hyaloclastites) ; et la <b>tachylite</b>, verre basaltique opaque, chargé de microcristaux d'oxydes de fer.</p>`)}
+    ${bloc("var(--cat-metamorphique)", "Une roche fondue sous l'effet d'un séisme", "fiche dans Roches", `      <div class="min-chips">${roc("pseudotachylite", part("pseudotachylite", "verre") + " de verre")}</div>
+      <p class="sub amo-sans">Lors d'un séisme, le frottement le long de la faille fait fondre la roche en veines de quelques millimètres, qui se figent aussitôt.</p>`)}
+    ${bloc("#7a5c8a", "Une roche fondue lors d'un impact", "fiche dans Roches", `<div class="min-chips">${roc("impactite", part("impactite", "verre") + " de verre")}</div>
+      <p class="sub amo-sans">L'onde de choc d'une météorite fond la roche instantanément (Rochechouart). Faute de fiche dédiée, on citera la <b>lechatelierite</b>, verre de silice presque pure, formé lors des impacts et dans les fulgurites, tubes de sable fondu par la foudre.</p>`)}
     <div class="note">Dans les compositions des roches, ce verre compte comme un constituant : ${min("verre", nbRoches("verre") + " roches en contiennent")}
     Sans réseau à défendre, il s'altère plus vite que les minéraux de même composition : il s'hydrate (palagonite, perlite),
     puis donne les gels du § 2 (allophane, imogolite), et enfin des argiles (halloysite, smectites).</div>
@@ -657,25 +668,16 @@ function renderAmorphes() {
     <p class="sub">Les restes de plantes et d'animaux ne forment pas une substance mais un mélange de grosses molécules
     de carbone, d'hydrogène et d'oxygène, sans formule unique. Selon ce qu'elle est devenue, la matière organique est
     rangée à quatre endroits de l'atlas.</p>
-    ${bloc("#b0761a", "Des minéraloïdes organiques", "fiches dans cette partie", `
-      <div class="min-chips">${min("ambre", "résine fossile")}${min("copal", "résine subfossile")}${min("jais", "bois fossile")}
+    ${bloc("#b0761a", "Des minéraloïdes organiques", "fiches dans cette partie", `      <div class="min-chips">${min("ambre", "résine fossile")}${min("copal", "résine subfossile")}${min("jais", "bois fossile")}
         ${min("asphalte", "pétrole dégradé")}${min("ozokerite", "cire minérale")}</div>
-      <p class="sub amo-sans">Assez homogènes pour être taillés, polis ou exploités comme une pierre, mais sans réseau ni
-      formule : l'IMA ne les compte pas parmi les espèces.</p>`)}
-    ${bloc("var(--cat-sedimentaire)", "Quand elle fait la roche", "fiches dans Roches", `
-      <div class="min-chips">${roc("tourbe")}${roc("lignite")}${roc("houille")}${roc("anthracite")}
+      <p class="sub amo-sans">Leur homogénéité permet de les tailler et de les polir comme une pierre, bien qu'ils ne possèdent ni réseau cristallin ni formule fixe : l'IMA ne les compte donc pas parmi les espèces.</p>`)}
+    ${bloc("var(--cat-sedimentaire)", "Quand elle fait la roche", "fiches dans Roches", `      <div class="min-chips">${roc("tourbe")}${roc("lignite")}${roc("houille")}${roc("anthracite")}
         ${roc("schiste_bitumineux", "roche mère du pétrole")}</div>
-      <p class="sub amo-sans">Enfouie, elle perd son eau et ses gaz et s'enrichit en carbone : tourbe, lignite, houille, puis
-      anthracite. Au bout du chemin, sous l'effet du métamorphisme, le carbone cristallise : c'est le ${min("graphite")},
-      un vrai minéral.</p>`)}
-    ${bloc("var(--prod-argile)", "Dans les sols", "", `
-      <div class="min-chips">${min("matorg", nbRoches("matorg") + " roches en contiennent")}</div>
-      <p class="sub amo-sans">L'humus : associée aux argiles, elle forme le complexe argilo-humique, qui retient l'eau et
-      les éléments nutritifs.</p>`)}
-    ${bloc("#5a4330", "Quand elle cristallise", "classe X des minéraux", `
-      <div class="min-chips"><button class="min-chip" data-mincls="10">Minéraux → classe X, organiques</button></div>
-      <p class="sub amo-sans">Quelques molécules sont assez pures pour cristalliser : oxalates (whewellite), hydrocarbures
-      (évenkite), sels du guano. Ce sont des minéraux.</p>`)}
+      <p class="sub amo-sans">Sous l'effet de l'enfouissement, elle expulse eau et gaz, tandis que sa teneur en carbone augmente : de la tourbe au lignite, puis à la houille et à l'anthracite. Poussé plus loin par le métamorphisme, le carbone se réorganise en cristaux : il devient ${min("graphite")}, un minéral à part entière.</p>`)}
+    ${bloc("var(--prod-argile)", "Dans les sols", "", `      <div class="min-chips">${min("matorg", nbRoches("matorg") + " roches en contiennent")}</div>
+      <p class="sub amo-sans">Lié aux argiles, l'humus constitue le complexe argilo-humique, lequel retient l'eau et les nutriments.</p>`)}
+    ${bloc("#5a4330", "Quand elle cristallise", "classe X des minéraux", `      <div class="min-chips"><button class="min-chip" data-mincls="10">Minéraux → classe X, organiques</button></div>
+      <p class="sub amo-sans">Quelques composés organiques cristallisent avec assez de pureté pour être regardés comme des minéraux : oxalates (whewellite), hydrocarbures (évenkite) et sels du guano.</p>`)}
   </div>
 
   <div class="card">
@@ -703,7 +705,7 @@ function renderAmorphes() {
     l'allophane, Cradwick et al. (1972, <i>Nature Physical Science</i> 240) pour l'imogolite, Eggleton et Tilley (1998,
     <i>Clays and Clay Minerals</i> 46) pour l'hisingérite. Ambre, copal, jais, bitume, ozokérite : sources détaillées
     dans chaque fiche.</p>`;
-  document.title = "Amorphes et minéraloïdes — Atlas géologique";
+  document.title = "Amorphes et minéraloïdes : Atlas Sol";
 }
 
 // ---------------- ACCUEIL (hub des 3 parties) ----------------
@@ -716,7 +718,7 @@ function renderHub() {
   <div class="card hero hub-hero">
     <div class="hub-bandeau" aria-hidden="true"><i style="background:var(--cat-sedimentaire)"></i><i style="background:var(--cat-magmatique)"></i><i style="background:var(--prod-argile)"></i></div>
     <p class="hub-surtitre">Accueil</p>
-    <h1>Atlas géologique</h1>
+    <h1>Atlas Sol</h1>
     <p class="sub" style="font-size:15px;max-width:75ch">Les roches de France, les minéraux qui les composent et les sols qui en
     naissent. Les parties se lisent dans l'ordre où la matière se transforme : une roche est un assemblage de minéraux ; en
     s'altérant, ces minéraux donnent des argiles et des oxydes, la matière d'un sol.</p>
@@ -749,7 +751,7 @@ function renderHub() {
     </button>
   </div>
 `;
-  document.title = "Atlas géologique";
+  document.title = "Atlas Sol";
 }
 
 // ---------------- partie PÉDOLOGIE (12/10/2026) ----------------
@@ -760,12 +762,15 @@ const PEDO_PARTIES = [
   { id: "minsol", page: "minsol", nom: "Minéraux du sol", sw: "var(--cat-magmatique)" },
   { id: "argiles", page: "argiles", nom: "Argiles", sw: "var(--prod-argile)" },
   { id: "oxydes", page: "oxydes", nom: "Oxydes et hydroxydes", sw: "var(--prod-oxydes)" },
+  { id: "soltypes", page: "sols", nom: "Les types de sols", sw: "var(--prod-sable)" },
+  { id: "soltemps", page: "soltemps", nom: "Le sol au fil du temps", sw: "var(--prod-limon)" },
 ];
 function pedoMenuHTML(sub) {
   return `<div class="side-group"><h3>Pédologie</h3>
     <button class="rock-item pedo-part ${sub === "accueil" ? "on" : ""}" data-page="pedologie"><b>Vue d'ensemble</b></button>`
     + PEDO_PARTIES.map((p) => `<button class="rock-item pedo-part ${sub === p.id ? "on" : ""}" data-page="${p.page}">
-      <span class="sw" style="background:${p.sw}"></span><b>${p.nom}</b></button>`).join("") + `</div>`;
+      <span class="sw" style="background:${p.sw}"></span><b>${p.nom}</b></button>`
+      + (p.id === "soltemps" && sub === "soltemps" && window.SolsTemps ? SolsTemps.menu(location.hash.slice(10) || SolsTemps.FRISES[0].id) : "")).join("") + `</div>`;
 }
 function renderPedologie() {
   const nOx = OXYDES.reduce((s, f) => s + f.especes.length, 0);
@@ -799,17 +804,24 @@ function renderPedologie() {
       <div class="hub-ic" style="background:var(--prod-oxydes)" aria-hidden="true"></div>
       <h2>Oxydes et hydroxydes</h2>
       <p>Fer, manganèse, aluminium, titane… : comment ils naissent dans le sol, d'un oxyde à l'autre, et leurs
-      diagrammes pH–Eh.</p>
+      diagrammes pH-Eh.</p>
       <span class="hub-go">${nOx} espèces →</span>
     </button>
+    <button class="hub-card" onclick="location.hash='soltemps'">
+      <div class="hub-ic" style="background:var(--prod-limon)" aria-hidden="true"></div>
+      <h2>Le sol au fil du temps</h2>
+      <p>D'une roche à son sol : les étapes que traverse un sol sur dix matériaux parentaux de France, et les durées
+      mesurées de chacune.</p>
+      <span class="hub-go">${window.SolsTemps ? SolsTemps.FRISES.length : 10} frises →</span>
+    </button>
   </div>`;
-  document.title = "Pédologie — Atlas géologique";
+  document.title = "Pédologie : Atlas Sol";
 }
 
 // ---------------- partie ROCHES (vue d'ensemble) ----------------
 function renderRoches() {
   // les météorites (B.5) n'ont pas de vitesse d'altération chiffrée : elles ne figurent pas sur ce graphique
-  const sorted = ROCHES.filter((r) => r.alteration && r.alteration.vmin != null && r.alteration.vmax != null)
+  const sorted = ROCHES.filter(vChiffree)
     .sort((a, b) => geomean(b) - geomean(a));
   const rowH = 26, top = 46, left = 218, right = 985, H = top + sorted.length * rowH + 16;
 
@@ -819,18 +831,29 @@ function renderRoches() {
     svg += `<line x1="${x}" y1="${top - 8}" x2="${x}" y2="${H - 12}" class="hairline"/>
             <text x="${x}" y="${top - 16}" text-anchor="middle" class="tick-lab">${fmt(d, 2)}</text>`;
   }
-  svg += `<text x="${right}" y="14" text-anchor="end" class="axis-lab">mm par an — échelle logarithmique</text>`;
+  svg += `<text x="${right}" y="14" text-anchor="end" class="axis-lab">mm par an : échelle logarithmique</text>`;
   sorted.forEach((r, i) => {
     const y = top + i * rowH + rowH / 2;
-    const xa = xLog(r.alteration.vmin, left, right), xb = xLog(r.alteration.vmax, left, right);
     const c = catColor(r.categorie);
     const star = EROSION_IDS.has(r.id) ? " *" : "";
-    svg += `<text x="${left - 12}" y="${y + 4}" text-anchor="end" class="row-lab" data-go="${r.id}">${r.nom}${star}</text>
-      <line x1="${xa}" y1="${y}" x2="${xb}" y2="${y}" stroke="${c}" stroke-width="2.5" stroke-linecap="round"/>
+    const vs = vValeurs(r);
+    svg += `<text x="${left - 12}" y="${y + 4}" text-anchor="end" class="row-lab" data-go="${r.id}">${r.nom}${star}</text>`;
+    let tipV;
+    if (vs) {
+      // D.8 : un point par valeur nette, la référence plus grosse, reliés par un pointillé
+      const xs = vs.map((x) => xLog(x.v, left, right));
+      if (vs.length > 1) svg += `<line x1="${Math.min(...xs)}" y1="${y}" x2="${Math.max(...xs)}" y2="${y}" stroke="${c}" stroke-width="1.5" stroke-dasharray="2 4"/>`;
+      vs.forEach((x, i) => { svg += `<circle cx="${xs[i]}" cy="${y}" r="${x.ref ? 6 : 4}" fill="${c}" stroke="var(--surface)" stroke-width="2"/>`; });
+      tipV = vs.map((x) => `${fmtRate(x.v)} mm/an : ${x.cas}${x.ref ? " (référence)" : ""}`).join("<br>");
+    } else {
+      const xa = xLog(r.alteration.vmin, left, right), xb = xLog(r.alteration.vmax, left, right);
+      svg += `<line x1="${xa}" y1="${y}" x2="${xb}" y2="${y}" stroke="${c}" stroke-width="2.5" stroke-linecap="round"/>
       <circle cx="${xa}" cy="${y}" r="4.5" fill="${c}" stroke="var(--surface)" stroke-width="2"/>
-      <circle cx="${xb}" cy="${y}" r="4.5" fill="${c}" stroke="var(--surface)" stroke-width="2"/>
-      <rect x="0" y="${y - rowH / 2}" width="1000" height="${rowH}" class="hover-row" data-go="${r.id}"
-        data-tip="<b>${r.nom}</b>${fmtRate(r.alteration.vmin)} à ${fmtRate(r.alteration.vmax)} mm/an — ${FACILITE_LABELS[r.alteration.facilite].toLowerCase()}<br><i>Cliquer pour ouvrir la fiche</i>"/>`;
+      <circle cx="${xb}" cy="${y}" r="4.5" fill="${c}" stroke="var(--surface)" stroke-width="2"/>`;
+      tipV = `${fmtRate(r.alteration.vmin)} à ${fmtRate(r.alteration.vmax)} mm/an`;
+    }
+    svg += `<rect x="0" y="${y - rowH / 2}" width="1000" height="${rowH}" class="hover-row" data-go="${r.id}"
+        data-tip="<b>${r.nom}</b>${tipV} : ${FACILITE_LABELS[r.alteration.facilite].toLowerCase()}<br><i>Cliquer pour ouvrir la fiche</i>"/>`;
   });
   svg += "</svg>";
 
@@ -839,14 +862,14 @@ function renderRoches() {
 
   const tableRows = sorted.map((r) => `<tr>
       <td><a href="#roche/${r.id}">${r.nom}</a></td><td>${CATEGORIES[r.categorie].nom}</td>
-      <td class="num">${fmtRate(r.alteration.vmin)}</td><td class="num">${fmtRate(r.alteration.vmax)}</td>
+      <td class="num">${fmtRate(geomean(r))}</td><td>${vValeurs(r) ? vValeurs(r).map((x) => `${fmtRate(x.v)} (${x.cas})`).join(" · ") : `${fmtRate(r.alteration.vmin)} à ${fmtRate(r.alteration.vmax)} (fourchette)`}</td>
       <td>${FACILITE_LABELS[r.alteration.facilite]}</td></tr>`).join("");
 
   $("#main").innerHTML = `
   <div class="card hero">
     ${icone("ammonite", 96, "hero-icone")}
     <h1>Les roches de France</h1>
-    <p class="sub" style="font-size:15px;max-width:78ch">Une <b>roche</b> est un <b>assemblage de minéraux</b> — comme un mur
+    <p class="sub" style="font-size:15px;max-width:78ch">Une <b>roche</b> est un <b>assemblage de minéraux</b> : comme un mur
     fait de plusieurs briques. On les range par <b>origine</b> : sédimentaires (déposées grain par grain), magmatiques
     (cristallisées depuis un magma), métamorphiques (transformées par la chaleur et la pression), et météoritiques (tombées
     de l'espace). Choisis-en une pour voir où elle affleure, son âge, et ce qu'elle devient en s'altérant.</p>
@@ -855,35 +878,35 @@ function renderRoches() {
 
   <div class="card">
     <h2>Vitesse d'altération comparée</h2>
-    <p class="sub">Recul du front d'altération ou de dissolution, en mm par an (ordres de grandeur, climat tempéré : 8–15 °C, 600–1 100 mm/an).
-    Chaque barre va de la vitesse minimale à la vitesse maximale typique. Cliquer sur une ligne ouvre la fiche. Les météorites,
+    <p class="sub">Recul du front d'altération ou de dissolution, en mm par an (ordres de grandeur, climat tempéré : 8 à 15 °C, 600 à 1 100 mm/an).
+    Les points reliés en pointillé sont des vitesses nettes, chacune dans une situation précise (le gros point : la situation de référence) ; les barres pleines, des fourchettes pas encore reprises. Cliquer sur une ligne ouvre la fiche. Les météorites,
     sans vitesse chiffrée, n'y figurent pas.</p>
     <div class="legend">${legend}</div>
     <div class="chart-wrap" id="ov-chart">${svg}</div>
     <p class="sub">* Pour les roches meubles ou solubles (marnes, argiles, lœss, sables, gypse, sel et sels potassiques, anhydrite, vases, tourbe), la vitesse indiquée
-    correspond surtout à l'<b>érosion physique</b> ou à la dissolution au contact direct de l'eau — pas à une lente altération chimique.</p>
+    correspond surtout à l'<b>érosion physique</b> ou à la dissolution au contact direct de l'eau : pas à une lente altération chimique.</p>
     <button class="tbl-toggle" id="tbl-btn">Voir les données en tableau</button>
     <div id="tbl-box" hidden><table class="data"><thead><tr><th>Roche</th><th>Famille</th>
-      <th class="num">v. min (mm/an)</th><th class="num">v. max (mm/an)</th><th>Altérabilité</th></tr></thead>
+      <th class="num">Référence (mm/an)</th><th>Valeurs (mm/an)</th><th>Altérabilité</th></tr></thead>
       <tbody>${tableRows}</tbody></table></div>
   </div>
 
   <div class="card">
     <h2>Lire les codes de la carte géologique</h2>
     <p class="sub">Sur les cartes BRGM, chaque formation porte un code : une lettre pour le système (l'âge ou la nature),
-    un chiffre pour l'étage, parfois un suffixe pour le faciès local — ex. <span class="code-chip">Fz</span> alluvions récentes,
+    un chiffre pour l'étage, parfois un suffixe pour le faciès local : ex. <span class="code-chip">Fz</span> alluvions récentes,
     <span class="code-chip">g1AR</span> Argiles vertes de Romainville. Chaque fiche roche liste ses codes typiques.</p>
     <div class="chart-wrap"><table class="data notation"><thead><tr><th>Code</th><th>Signification</th></tr></thead>
       <tbody>${NOTATION_GENERALE.map((n) => `<tr><td>${n.code}</td><td>${n.sens}</td></tr>`).join("")}</tbody></table></div>
     <p class="sub">Les notations exactes varient d'une feuille 1/50 000 à l'autre (elles ont été levées sur plus d'un siècle) :
-    la légende de chaque carte fait foi — consultable sur <a href="https://infoterre.brgm.fr" target="_blank" rel="noopener">InfoTerre</a>.</p>
+    la légende de chaque carte fait foi : consultable sur <a href="https://infoterre.brgm.fr" target="_blank" rel="noopener">InfoTerre</a>.</p>
   </div>
 
   <div class="card">
     <h2>Pour aller plus loin : les grandes familles de roches</h2>
     <p>Toute roche raconte son histoire par son origine. Les <b>roches sédimentaires</b> (calcaire, craie, grès, argile…)
     naissent du dépôt et du compactage de débris ou de précipités chimiques au fond des mers, des lacs et des vallées :
-    elles couvrent les trois quarts de la surface de la France et gardent la mémoire des climats passés — un calcaire, c'est
+    elles couvrent les trois quarts de la surface de la France et gardent la mémoire des climats passés : un calcaire, c'est
     un ancien fond marin, souvent tropical.</p>
     <p>Les <b>roches magmatiques</b> viennent d'un magma refroidi : lentement en profondeur, il donne de gros cristaux
     visibles (le granite et ses grains de quartz, feldspath et mica) ; brutalement en surface, il fige en roches sombres à
@@ -891,7 +914,7 @@ function renderRoches() {
     l'essentiel des minéraux argileux.</p>
     <p>Les <b>roches métamorphiques</b> sont d'anciennes roches recuites par la chaleur et écrasées par la pression, sans
     jamais fondre : l'argile durcit en schiste puis en ardoise, le calcaire devient marbre, le granite devient gneiss. Leurs
-    minéraux se réorganisent et s'alignent en lits — cette « foliation » explique pourquoi l'ardoise se débite en plaques
+    minéraux se réorganisent et s'alignent en lits : cette « foliation » explique pourquoi l'ardoise se débite en plaques
     régulières. Clique sur n'importe quelle roche pour ouvrir sa fiche : carte d'affleurement, âge, vitesse d'altération, et
     le bilan de ce qu'elle produit en se défaisant.</p>
     <p>Les <b>roches météoritiques</b> forment une quatrième famille, à part : elles ne sont pas nées sur Terre mais sur des
@@ -909,7 +932,7 @@ function renderRoches() {
     const t = e.target.closest("[data-go]");
     if (t) go(t.dataset.go);
   });
-  document.title = "Roches — Atlas géologique";
+  document.title = "Roches · Atlas Sol";
 }
 
 // ---------------- arbre des roches (lexique BRGM) ----------------
@@ -962,35 +985,33 @@ function renderRocheFamille(fam) {
       <div class="min-chips">${br.groupes.flatMap((g) => g.roches).map(rocChipHTML).join("")}</div>
     </div>`).join("");
 
-  $("#main").innerHTML = `
-  <div class="card rock-head">
+  $("#main").innerHTML = `  <div class="card rock-head">
     <div class="rock-head-texte">
     <h1><span class="sw-big" style="background:${catColor(fam.id)}"></span>${fam.nom}</h1>
-    <p class="sub crumb">Roches <span>→</span> <b>${fam.nom}</b> · <a href="#roches">vue d'ensemble</a></p>
+    <p class="sub crumb">Roches <span>→</span> <b>${fam.nom}</b> · <a href="#roches">retour au panorama</a></p>
     <p class="desc">${fam.desc}</p>
     <div class="tiles">
-      <div class="tile"><div class="lab">Branches</div><div class="val">${fam.branches.length}</div></div>
-      <div class="tile"><div class="lab">Roches décrites</div><div class="val">${n}</div></div>
+      <div class="tile"><div class="lab">Rameaux</div><div class="val">${fam.branches.length}</div></div>
+      <div class="tile"><div class="lab">Roches détaillées</div><div class="val">${n}</div></div>
     </div>
   </div>
 
   <div class="card">
-    <h2>Les branches</h2>
-    <p class="sub">Les codes (${fam.branches[0].code}…) sont propres à l'atlas ; le badge indique le nœud correspondant du Lexique
-    Lithologie du BRGM.</p>
+    <h2>Les rameaux</h2>
+    <p class="sub">Les codes (${fam.branches[0].code}…) sont propres à l'atlas ; l'insigne renvoie au nœud correspondant du Lexique Lithologie du BRGM.</p>
     ${branches}
   </div>
 
   <div class="card">
-    <h2>Pour aller plus loin</h2>
+    <h2>Pour approfondir</h2>
     ${fam.plus}
   </div>
 
   <div class="card">
-    <h2>Les autres familles</h2>
+    <h2>Les autres grandes familles</h2>
     <div class="min-chips">${autres}</div>
   </div>`;
-  document.title = fam.nom + " — Atlas géologique";
+  document.title = fam.nom + " · Atlas Sol";
 }
 
 function renderRocheBranche({ fam, branche: br }) {
@@ -1025,7 +1046,7 @@ function renderRocheBranche({ fam, branche: br }) {
     <p class="sub">${fam.desc}</p>
     ${voisines ? `<p class="sub" style="margin-bottom:4px"><b>Les autres branches</b> :</p><div class="min-chips">${voisines}</div>` : ""}
   </div>`;
-  document.title = br.nom + " — Atlas géologique";
+  document.title = br.nom + " · Atlas Sol";
 }
 
 // ---------------- frise des temps géologiques (C.5) ----------------
@@ -1208,29 +1229,62 @@ function ajusterFrise() {
 }
 
 // ---------------- réglette de vitesse ----------------
+// D.8 : avec alteration.valeurs, un point net par situation (numéroté, la référence plus grosse), étiquettes rangées
+// sur des lignes sans chevauchement ; sans valeurs, l'ancienne bande vmin–vmax. Points gris = valeur de référence
+// (ou moyenne géométrique de la fourchette) des autres roches.
 function rateStripSVG(rock) {
-  const W = 1000, H = 108, x0 = 14, x1 = 986, cy = 66;
+  const W = 1000, x0 = 14, x1 = 986;
+  const vs = vValeurs(rock);
+  // lignes d'étiquettes au-dessus des points (valeurs nettes) : glouton de gauche à droite, 1 ligne = 15 unités
+  const etq = [];
+  if (vs) {
+    const tri = vs.map((x, i) => ({ x: xLog(x.v, x0, x1), i, t: `${i + 1} · ${s100(x.v)} mm` })).sort((p, q) => p.x - q.x);
+    const fins = [];
+    for (const e of tri) {
+      const l = e.t.length * 6.6;
+      let k = 0;
+      while (fins[k] != null && fins[k] > e.x - l / 2 - 8) k++;
+      fins[k] = e.x + l / 2;
+      etq.push(Object.assign(e, { k, l }));
+    }
+  }
+  const nl = vs ? Math.max(1, ...etq.map((e) => e.k + 1)) : 0;
+  const cy = vs ? 50 + nl * 15 : 66, H = cy + 42;
   let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vitesse d'altération sur une échelle logarithmique">`;
   // seules les roches à vitesse chiffrée ont un point (les autres donnaient cx = NaN, 12/10/2026)
-  const autres = ROCHES.filter((r) => r.id !== rock.id && r.alteration && r.alteration.vmin != null && r.alteration.vmax != null);
-  // 12/10/2026 (sa demande) : lu en mm PAR 100 ANS ; les données restent en mm/an (alteration.vmin/vmax), seul l'affichage × 100
-  const s100 = (v) => fmtRate(v * 100);
-  svg += `<text x="${x0}" y="14" class="axis-lab">mm perdus en 100 ans — échelle logarithmique (points gris : les ${autres.length} autres roches chiffrées)</text>`;
+  const autres = ROCHES.filter((r) => r.id !== rock.id && vChiffree(r));
+  // 12/10/2026 (sa demande) : lu en mm PAR 100 ANS ; les données restent en mm/an, seul l'affichage × 100
+  svg += `<text x="${x0}" y="14" class="axis-lab">Épaisseur perdue, en mm, sur 100 ans ; échelle logarithmique (points gris : les ${autres.length} autres roches chiffrées)</text>`;
   for (const d of DECADES) {
     const xd = xLog(d, x0, x1);
     svg += `<line x1="${xd}" y1="24" x2="${xd}" y2="${H - 24}" class="hairline"/>
-      <text x="${xd}" y="${H - 8}" text-anchor="middle" class="tick-lab">${fmt(d * 100, 2)}</text>`;
+      <text x="${xd}" y="${H - 8}" text-anchor="${d === DECADES[0] ? "start" : d === DECADES[DECADES.length - 1] ? "end" : "middle"}" class="tick-lab">${fmt(d * 100, 2)}</text>`;
   }
   for (const r of autres) {
     svg += `<circle cx="${xLog(geomean(r), x0, x1)}" cy="${cy}" r="4" fill="var(--baseline)"
-      data-tip="<b>${r.nom}</b>${s100(r.alteration.vmin)} à ${s100(r.alteration.vmax)} mm en 100 ans"/>`;
+      data-tip="<b>${r.nom}</b>${vitesseCourte(r)}"/>`;
   }
-  const xa = xLog(rock.alteration.vmin, x0, x1), xb = xLog(rock.alteration.vmax, x0, x1);
-  svg += `<rect x="${xa}" y="${cy - 7}" width="${Math.max(xb - xa, 6)}" height="14" rx="7"
-      fill="${catColor(rock.categorie)}" stroke="var(--surface)" stroke-width="2"
+  const coul = catColor(rock.categorie);
+  if (vs) {
+    const xs = vs.map((x) => xLog(x.v, x0, x1));
+    if (vs.length > 1) svg += `<line x1="${Math.min(...xs)}" y1="${cy}" x2="${Math.max(...xs)}" y2="${cy}" stroke="${coul}" stroke-width="1.5" stroke-dasharray="2 4" opacity=".7"/>`;
+    for (const e of etq) {
+      const yl = cy - 16 - e.k * 15;
+      if (e.k) svg += `<line x1="${e.x}" y1="${yl + 4}" x2="${e.x}" y2="${cy - 9}" stroke="var(--muted)" stroke-width="1"/>`;
+      svg += `<text x="${e.x}" y="${yl}" text-anchor="middle" class="band-lab${vs[e.i].ref ? " vit-ref-lab" : ""}">${e.t}</text>`;
+    }
+    vs.forEach((x, i) => {
+      svg += `<circle cx="${xs[i]}" cy="${cy}" r="${x.ref ? 8 : 6}" fill="${coul}" stroke="var(--surface)" stroke-width="2"${x.ref ? "" : ` fill-opacity=".75"`}
+        data-tip="<b>${rock.nom} · ${i + 1}</b>${s100(x.v)} mm en 100 ans${x.ref ? " (valeur de référence)" : ""}<br>${x.cas}<br><i>${x.calcul ? "calcul de l'atlas, d'après " : ""}${x.src}</i>"/>`;
+    });
+  } else {
+    const xa = xLog(rock.alteration.vmin, x0, x1), xb = xLog(rock.alteration.vmax, x0, x1);
+    svg += `<rect x="${xa}" y="${cy - 7}" width="${Math.max(xb - xa, 6)}" height="14" rx="7"
+      fill="${coul}" stroke="var(--surface)" stroke-width="2"
       data-tip="<b>${rock.nom}</b>${s100(rock.alteration.vmin)} à ${s100(rock.alteration.vmax)} mm en 100 ans"/>
     <text x="${xa - 10}" y="${cy + 4}" text-anchor="end" class="band-lab">${s100(rock.alteration.vmin)}</text>
     <text x="${xb + 10}" y="${cy + 4}" text-anchor="start" class="band-lab">${s100(rock.alteration.vmax)}</text>`;
+  }
   // repères posés sur la bande (grès : ce que donne chaque type de ciment, gres-ciment.js)
   for (const rp of rock.alteration.reperes || []) {
     const xr = xLog(rp.v, x0, x1);
@@ -1241,39 +1295,63 @@ function rateStripSVG(rock) {
   return svg;
 }
 
+// D.8 : méthodes de calcul communes, citées sous la liste des valeurs (champ `calcul` d'une valeur = clé de cette table).
+// Les lots suivants AJOUTENT leurs méthodes ici (une phrase : hypothèses + sources), jamais dans les fiches.
+const METHODES_VITESSE = {
+  carbonate: "Calcite à saturation : sous 1 % de CO₂ dans l'air du sol, à 10 °C, l'eau infiltrée (pluie moins l'évapotranspiration réelle de Turc 1961, normales SAFRAN 1991 à 2020 de la ville citée) contient 83,5 mg de calcium par litre, soit 208 mg de calcaire dissous (calcul de l'atlas, constantes de Plummer et Busenberg 1982). Le recul se calcule en divisant la masse dissoute par le produit de la masse volumique et de la part de carbonate. Seuls les effets de la dissolution sont comptés : gel, éboulements et ruissellement restent à l'écart. En Provence, les mesures au chlore 36 (30 à 60 mm par millénaire, Thomas et al. 2018) excèdent nettement ce calcul : la dissolution seule ne suffit pas (Thomas et al. 2017).",
+  sulfate: "L'eau infiltrée, après déduction de l'évapotranspiration réelle (Turc 1961, normales SAFRAN 1991 à 2020), se sature en gypse à raison de 2,4 g par litre, soit 1,9 g de sulfate de calcium (calcul de l'atlas). Le recul est égal à la masse dissoute divisée par le produit de la masse volumique et de la part de sulfate. Ce cas concerne une roche sous couverture, où l'eau demeure assez longtemps à son contact pour atteindre la saturation.",
+  gypse: "D'après Cucchi, Forti et Finocchiaro (1998), établi sur 26 sites italiens recevant de 250 à 1 300 mm de pluie, le gypse disparaît à raison de 0,91 mm pour 1 000 mm de précipitations ; le calcul applique cette loi à la pluie de la ville citée (normales SAFRAN 1991 à 2020).",
+  decarbonatation: "Pour une formation meuble, le front de décarbonatation (D.8.2) est le niveau où le calcaire disparaît. L'eau infiltrée, après déduction de l'évapotranspiration de Turc 1961 et calculée sur les normales SAFRAN 1991 à 2020 de la ville citée, ressort saturée en calcite, avec 208 mg de calcaire dissous par litre comme dans la méthode des roches carbonatées. Rapportée au calcaire contenu dans la formation (masse volumique apparente × part de calcaire de la fiche), cette masse donne la profondeur dont le front s'enfonce chaque année. Seul le calcaire se dissout, le reste du matériau demeurant en place. L'érosion et l'eau de ruissellement, qui ne s'infiltre pas, ne sont pas comptées.",
+  ruisseaux: "Bilan établi sur de petits bassins français qui ne drainent qu'une seule roche, couverts de forêt et éloignés des villes comme de la mer (Meybeck 1987, tableau 2, à partir de Meybeck 1986 : médianes de 6 à 19 ruisseaux par type de roche, déduction faite de l'apport de la pluie). En multipliant les cations et la silice dissous par l'écoulement médian de ces bassins (8,5 L/s/km², soit 268 mm par an), on obtient la masse de roche perdue en solution chaque année ; la division par la masse volumique la convertit en épaisseur. Le flysch, dont l'eau est presque entièrement bicarbonatée, voit son calcium et son magnésium comptés en carbonates. Seule la dissolution entre en compte, pas l'érosion des particules.",
+  gresCiment: "Calcul de la page « Ce qui tient un grès : son ciment » : l'eau qui traverse la pierre (400 mm par an pour une façade en France) dissout le ciment, dans la limite de sa solubilité et sans aller plus vite que sa vitesse de réaction (Palandri et Kharaka 2004, ramenée à 10 °C). Le recul est la masse de ciment dissoute divisée par le produit de la masse volumique du ciment et de sa part dans la roche, puisque chaque grain libéré tombe. Le gel et les sels sont laissés de côté.",
+  flux: "Un flux de 1 t/km² par an équivaut à 1 g par m² et par an. Rapporté à la masse volumique de la roche, un flux publié en tonnes par km² donne l'épaisseur de roche saine perdue chaque année (calcul de l'atlas). Le flux « en solution » ne retient que la matière dissoute, alors que le flux de dénudation, établi au béryllium 10 (D.8.4), inclut aussi l'érosion des particules.",
+  silice: "Roche poreuse riche en opale (D.8.3) : l'eau infiltrée, après déduction de l'évapotranspiration de Turc 1961 (normales SAFRAN 1991 à 2020 de la ville citée), traverse la pierre et en ressort saturée en silice amorphe, soit 87 mg de silice par litre à 10 °C (solubilité de Fournier et Rowe 1977, celle-là même du diagramme de formation de l'opale). Le recul vaut la masse dissoute divisée par le produit de la masse volumique et de la part d'opale. Seule la dissolution compte : le gel et le ruissellement sont exclus. Le calcul ne vaut pas pour une roche dense comme le silex ou le quartzite, que l'eau ne fait qu'effleurer.",
+  sel: "Relation mesurée à Cardona (Catalogne) : ≈ 10 mm de sel perdu pour 100 mm de pluie (Pérez-Villar et al. 2026), appliquée à la pluie de la ville citée ; pour un sel potassique, multipliée par 1,05 (sylvite : 340 g/L pour une masse volumique de 1,99, contre 360 g/L et 2,17 pour la halite)."
+};
+
+// D.8 : liste numérotée des valeurs nettes sous la réglette (mêmes numéros que les points)
+function vitessesListeHTML(rock) {
+  const vs = vValeurs(rock);
+  if (!vs) return "";
+  const meth = [...new Set(vs.map((x) => x.calcul).filter((c) => c && METHODES_VITESSE[c]))];
+  return `<ol class="vit-liste">${vs.map((x) => `<li${x.ref ? ` class="vit-ref"` : ""}><b>${s100(x.v)} mm en 100 ans</b> : ${x.cas}
+    <span class="vit-src">${x.calcul ? "calcul de l'atlas, d'après " : ""}${x.src}</span>${x.ref ? ` <span class="vit-badge">référence</span>` : ""}</li>`).join("")}</ol>
+  ${meth.length ? `<details class="vit-methode"><summary>Comment sont faits les calculs</summary>${meth.map((c) => `<p>${METHODES_VITESSE[c]}</p>`).join("")}</details>` : ""}`;
+}
+
 // ---------------- bloc « Formation » en tête de fiche roche (C.1) ----------------
 // Gabarit commun aux trois familles : étapes du processus (schémas C.2), conditions de formation (C.4),
 // structure 3D du minéral principal (C.3). Le processus est celui de la BRANCHE de l'arbre BRGM ;
 // `schema` / `conditions` pourront être fournis par fiche (champ `formation` de la roche) et remplaceront l'attente.
 const FORMATION_GABARITS = {
-  "M.1": { etapes: ["Fusion partielle en profondeur", "Montée du magma", "Cristallisation lente, à plusieurs kilomètres de profondeur", "Mise à l'affleurement par l'érosion"],
-    conditions: "Diagramme pression–température : champs de cristallisation des minéraux et chemin de refroidissement du magma." },
+  "M.1": { etapes: ["Fusion partielle en profondeur", "Montée du magma", "Refroidissement lent du magma, à plusieurs kilomètres sous la surface", "Mise à l'affleurement par l'érosion"],
+    conditions: "Diagramme pression et température : domaines de cristallisation des minéraux et trajet du magma pendant son refroidissement." },
   "M.2": { etapes: ["Fusion partielle en profondeur", "Montée du magma", "Éruption", "Refroidissement rapide en surface"],
-    conditions: "Diagramme pression–température : cristallisation dans la chambre magmatique, puis trempe en surface." },
-  "M.3": { etapes: ["Fusion partielle en profondeur", "Montée du magma", "Mise en place en filon ou en petit massif", "Refroidissement en deux temps : gros cristaux, puis pâte fine"],
-    conditions: "Diagramme pression–température : cristallisation des premiers minéraux en profondeur, puis refroidissement près de la surface." },
-  "M.4": { etapes: ["Fusion partielle du manteau, magma riche en carbonates", "Montée du magma", "Cristallisation des carbonates", "Mise à l'affleurement par l'érosion"],
-    conditions: "Diagramme pression–température : domaine de stabilité du magma carbonaté." },
-  "S.1": { etapes: ["Altération et érosion d'une roche source", "Transport des grains", "Dépôt en couches", "Diagenèse : compaction et cimentation"],
-    conditions: "Enfouissement : profondeur et température atteintes pendant la diagenèse." },
-  "S.2": { etapes: ["Production du carbonate, par des organismes ou par précipitation", "Accumulation sur le fond", "Enfouissement", "Diagenèse : compaction, cimentation, recristallisation"],
-    conditions: "Saturation de l'eau en carbonate de calcium : température, CO₂ dissous, profondeur." },
-  "S.3": { etapes: ["Ions dissous dans l'eau", "Précipitation, par saturation ou par des organismes", "Accumulation", "Enfouissement et diagenèse"],
-    conditions: "Seuils de saturation : concentration de l'eau face à la solubilité des minéraux qui précipitent." },
-  "S.4": { etapes: ["Accumulation de débris végétaux ou de plancton", "Enfouissement à l'abri de l'oxygène", "Maturation avec la profondeur : de la tourbe à l'anthracite"],
-    conditions: "Enfouissement : température et durée de maturation de la matière organique." },
-  "S.5": { etapes: ["Roche mère", "Altération chimique sur place", "Départ des éléments solubles", "Accumulation sur place de ce qui reste ou précipite"],
-    conditions: "Climat et drainage : température, pluie ÷ ETP et durée de l'altération." },
-  "S.6": { etapes: ["Altération et érosion", "Transport par l'eau, le vent, la glace ou la gravité", "Dépôt récent, non consolidé"],
-    conditions: "Agent de transport et énergie du dépôt." },
+    conditions: "Diagramme pression-température : le magma cristallise dans la chambre magmatique, puis subit une trempe en surface." },
+  "M.3": { etapes: ["Fusion partielle en profondeur", "Montée du magma", "Mise en place sous forme de filon ou de petit massif", "Refroidissement en deux étapes : d'abord de gros cristaux, puis une pâte fine"],
+    conditions: "Diagramme pression et température : des premiers minéraux prennent forme en profondeur, suivis d'un refroidissement vers la surface." },
+  "M.4": { etapes: ["Fusion partielle du manteau qui engendre un magma enrichi en carbonates", "Montée du magma", "Cristallisation des carbonates", "Mise à l'affleurement par l'érosion"],
+    conditions: "Diagramme pression et température : zone où un magma carbonaté peut rester liquide." },
+  "S.1": { etapes: ["Altération puis érosion d'une roche d'origine", "Transport des grains", "Dépôt en couches", "Diagenèse : compaction et cimentation"],
+    conditions: "Enfouissement : profondeur atteinte et chaleur reçue au cours de la diagenèse." },
+  "S.2": { etapes: ["Formation du carbonate, par l'activité d'organismes ou par précipitation directe", "Accumulation sur le fond", "Enfouissement", "Diagenèse : compaction, cimentation, recristallisation"],
+    conditions: "Degré de saturation de l'eau en carbonate de calcium selon la température, le CO₂ dissous et la profondeur." },
+  "S.3": { etapes: ["Ions dissous dans l'eau", "Dépôt par saturation de l'eau ou par l'action d'organismes", "Accumulation", "Enfouissement et diagenèse"],
+    conditions: "Seuils de saturation : on compare la concentration de l'eau à la solubilité des minéraux susceptibles de précipiter." },
+  "S.4": { etapes: ["Amas de débris végétaux ou de plancton", "Enfouissement à l'abri de l'oxygène", "De la tourbe à l'anthracite, la matière organique mûrit à mesure que la profondeur augmente."],
+    conditions: "Enfouissement : température et durée qui font mûrir la matière organique." },
+  "S.5": { etapes: ["Roche mère", "Altération chimique sur place", "Départ des éléments solubles", "Dépôt sur place des restes ou des précipités"],
+    conditions: "Facteurs : température, quotient pluie sur ETP, durée de l'altération et drainage." },
+  "S.6": { etapes: ["Altération et érosion", "Déplacement par l'eau, le vent, la glace ou la pesanteur", "Dépôt récent, non consolidé"],
+    conditions: "Agent du transport et énergie qui préside au dépôt." },
   "R.1": { etapes: ["Roche d'origine (protolithe)", "Enfouissement lors d'une collision", "Recristallisation à haute pression et température", "Remontée à la surface"],
-    conditions: "Diagramme pression–température : faciès métamorphiques et chemin suivi par la roche." },
+    conditions: "Diagramme pression et température : faciès métamorphiques, avec la trajectoire parcourue par la roche." },
   "R.2": { etapes: ["Roche d'origine (protolithe)", "Intrusion d'un magma voisin", "Recristallisation par la chaleur", "Refroidissement"],
-    conditions: "Diagramme pression–température : faciès de contact, température décroissante en s'éloignant de l'intrusion." },
-  "R.3": { etapes: ["Roche d'origine (protolithe)", "Déformation dans une zone de faille", "Broyage ou recristallisation des grains", "Remontée à la surface"],
-    conditions: "Diagramme pression–température : régime cassant près de la surface, ductile en profondeur." },
+    conditions: "Diagramme pression et température : faciès de contact, la température diminuant à mesure qu'on s'éloigne de l'intrusion." },
+  "R.3": { etapes: ["Roche d'origine (protolithe)", "Déformation le long d'une zone de faille", "Broyage ou recristallisation des grains", "Remontée à la surface"],
+    conditions: "Diagramme pression et température : comportement fragile près de la surface, plastique en profondeur." },
   "R.4": { etapes: ["Roche d'origine (protolithe)", "Circulation de fluides chauds", "Échanges chimiques avec la roche", "Nouveaux minéraux"],
-    conditions: "Diagramme pression–température et composition des fluides." },
+    conditions: "Diagramme pression et température, complété par la composition des fluides." },
 };
 
 // minéral principal (le plus abondant) ; s'il n'a pas de structure 3D, le plus abondant qui en a une,
@@ -1318,7 +1396,7 @@ function formationHTML(rock) {
     const viewer = affiche ? `<div data-s3d="${affiche.id}" data-s3d-source="bas" data-s3d-replier data-s3d-tourne></div>`
       : attente(MINERAUX[principal.id] && /amorphe|verre|organique/i.test(MINERAUX[principal.id].famille || "")
         ? "Phase non cristalline : pas de réseau d'atomes ordonné à représenter."
-        : "Structure atomique non encore disponible pour ce minéral.");
+        : "La structure atomique de ce minéral n'a pas encore été établie.");
     structure = `<div class="min-chips" id="form-struct-chips">${chips}</div>
       <div id="form-struct-viewer">${viewer}</div>`;
   }
@@ -1396,7 +1474,15 @@ async function legendePhoto(thumbUrl) {
 // photo de la roche en haut à droite (vignette de l'article Wikipédia, auteur et licence dessous)
 async function photoRoche(rock) {
   const slot = $("#roche-photo");
-  if (!slot || !rock.wikipedia) return;
+  if (!slot) return;
+  // photo choisie dans la fiche (`photo` = vignette Commons) quand l'article Wikipédia n'en a pas (B.8, 27/10/2026)
+  if (rock.photo) {
+    slot.innerHTML = `<img src="${rock.photo}" alt="${rock.nom}"><div class="cap"></div>`;
+    const cap = await legendePhoto(rock.photo);
+    if (slot.isConnected && slot.querySelector(".cap")) slot.querySelector(".cap").innerHTML = cap;
+    return;
+  }
+  if (!rock.wikipedia) return;
   try {
     const title = decodeURIComponent(rock.wikipedia.split("/wiki/")[1]);
     const r = await fetch("https://fr.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(title));
@@ -1457,7 +1543,7 @@ function mineralesProprietesHTML(rock) {
 
 function renderRock(rock) {
   const a = rock.alteration || null;
-  const hasRate = !!(a && a.vmin != null && a.vmax != null);
+  const hasRate = vChiffree(rock);
   const grise = "<span style=\"opacity:.55;font-style:italic\">non renseignée pour cette roche</span>";
 
   $("#main").innerHTML = `<div class="page-roche">
@@ -1470,6 +1556,7 @@ function renderRock(rock) {
     ${rocheCrumbHTML(rock)}
     <p class="desc">${rock.description}</p>
     <p class="sub"><b>Minéralogie :</b> ${rock.mineralogie}</p>
+    ${window.SolsTemps ? SolsTemps.lienRoche(rock) : ""}
     </div>
     <div class="arg-photo roche-photo" id="roche-photo"><span class="sw-ph" style="background:${rock.swatch}"></span></div>
   </div>
@@ -1481,7 +1568,7 @@ function renderRock(rock) {
   <div class="roche-ou-quand" id="roche-ou-quand">
   <div class="card map-card" id="map-card">
     ${window.CartesChutes && rock.categorie === "meteoritique" ? CartesChutes.entete(rock) : `<h2>${rock.regions && rock.regions.length && rock.regions.every((r) => r.etranger) ? "Où la trouver ?" : "Où la trouver en France ?"}</h2>
-    ${rock.regions && rock.regions.length && rock.regions.every((r) => r.etranger) ? `<p class="sub"><b>Roche absente de France</b> (ou sans affleurement notable) : la pastille marque le site de référence à l'étranger, celui que suit l'animation de formation.</p>` : ""}`}
+    ${rock.regions && rock.regions.length && rock.regions.every((r) => r.etranger) ? `<p class="sub"><b>Roche absente de France</b> (ou sans affleurement notable) : le point indique le site de référence situé à l'étranger, celui que retrace l'animation de formation.</p>` : ""}`}
     <div class="map-boite"><div id="map"></div><button type="button" class="map-fs-btn map-fs-sur" id="map-fs-btn">⤢ Agrandir</button></div>
   </div>
 
@@ -1491,12 +1578,13 @@ function renderRock(rock) {
   </div>
   </div>
 
-  <details class="card replie-travaux"><summary><h2>À quelle vitesse s'altère-t-elle ? ${EN_TRAVAUX}</h2></summary>
+  <details class="card replie-travaux" open><summary><h2>À quelle vitesse s'altère-t-elle ?</h2></summary>
     ${a && (a.mecanisme || a.climat) ? (`${a.mecanisme ? `<p><b>Mécanisme :</b> ${a.mecanisme}</p>` : ""}
-    ${hasRate && a.climat ? `<p><b>Effet du climat / mesures :</b> ${a.climat}</p>` : ""}`) : ""}
+    ${a.climat && (hasRate || rock.categorie === "meteoritique") ? `<p><b>${hasRate ? "Effet du climat / mesures" : "Durée de survie sur Terre"} :</b> ${a.climat}</p>` : ""}`) : ""}
     ${hasRate ? `<div class="chart-wrap" id="rate-chart">${rateStripSVG(rock)}</div>
-    ${a.ecart ? `<p class="sub"><b>Pourquoi un tel écart ?</b> ${a.ecart}</p>` : ""}` : `<p class="sub">Vitesse d'altération chiffrée ${grise}. Le mécanisme qualitatif est décrit ci-dessus.</p>`}
-    ${rock.id === "gres" && window.GresCiment ? `<div class="gc-renvoi"><p><b>Nouvelle page, à valider :</b> ce qui tient un grès, son ciment — les cinq ciments côte à côte, la vitesse d'altération calculée pour chacun, et quand le climat prend le relais.</p><a class="chip" href="#roche/gres/ciment">Ouvrir →</a></div>` : ""}
+    ${vitessesListeHTML(rock)}
+    ${a.ecart ? `<p class="sub"><b>Pourquoi un tel écart ?</b> ${a.ecart}</p>` : ""}` : rock.categorie === "meteoritique" ? `<p class="sub">Aucune vitesse n'est exprimée en millimètres. Une météorite ne se retire pas par sa surface comme un affleurement : elle s'oxyde dans toute sa masse, à partir de ses grains métalliques et de ses fissures. On donne donc plutôt la durée moyenne de sa survie sur Terre (ci-dessus).</p>` : `<p class="sub">Pas de vitesse d'altération chiffrée : aucune mesure publiée et aucun calcul fiable n'ont été trouvés pour cette roche. Son mécanisme est exposé plus haut.</p>`}
+    ${rock.id === "gres" && window.GresCiment ? `<div class="gc-renvoi"><p><b>Nouvelle page, à valider :</b> ce qui fait tenir un grès, à savoir son ciment. Les cinq types de ciment sont comparés, la vitesse d'altération est calculée pour chacun, et l'on précise à partir de quand le climat l'emporte.</p><a class="chip" href="#roche/gres/ciment">Ouvrir →</a></div>` : ""}
   </details>
 
   ${window.Pourquoi ? Pourquoi.carte(rock) : ""}
@@ -1508,10 +1596,10 @@ function renderRock(rock) {
   ${window.Pourquoi ? Pourquoi.sources(rock) : ""}
   ${(() => { const m = formationMineral3D(rock).affiche; return m ? `<p class="page-source" data-s3d-ref="${m.id}"></p>` : ""; })()}
   ${rock.ages && rock.ages.length ? friseSourceHTML() : ""}
-  ${rock.pedologieAuto ? `<p class="page-source"><b>Côté sols</b> — Baize D. et Girard M.-C., dir. (2009), <i>Référentiel pédologique 2008</i>, AFES, Quæ (références du Référentiel, attribuées par grand type de matériau).</p>` : ""}
-  <p class="page-source"><b>Photo de la roche</b> — <a href="${rock.wikipedia}" target="_blank" rel="noopener">Wikipédia</a> / Wikimedia Commons (licences libres, auteurs sur la page de l'image).</p>
+  ${a && a.sources && a.sources.length ? `<p class="page-source"><b>Vitesses d'altération</b> : ${a.sources.join(" ; ")}.</p>` : ""}
+  <p class="page-source"><b>Photo de la roche</b> : <a href="${rock.wikipedia}" target="_blank" rel="noopener">Wikipédia</a> / Wikimedia Commons (licences libres, auteurs sur la page de l'image).</p>
   ${rocheBrgmHTML(rock).replace('class="sub"', 'class="page-source"')}
-  <p class="page-source"><b>Données et fonds</b> — Ordres de grandeur compilés de la littérature scientifique (dénudation karstique, isotopes cosmogéniques, bilans de bassins versants, profils d'altération), à utiliser pour comparer, pas comme constantes. Fond géologique : © BRGM (carte géologique de la France au 1/1 000 000, service WMS geoservices.brgm.fr). Carte : © OpenStreetMap. Extraits : Wikipédia (CC BY-SA). Échelle des temps : Commission internationale de stratigraphie (2023).</p>
+  <p class="page-source"><b>Données et fonds</b> : Ordres de grandeur compilés de la littérature scientifique (dénudation karstique, isotopes cosmogéniques, bilans de bassins versants, profils d'altération), à utiliser pour comparer, pas comme constantes. Fond géologique : © BRGM (carte géologique de la France au 1/1 000 000, service WMS geoservices.brgm.fr). Carte : © OpenStreetMap. Extraits : Wikipédia (CC BY-SA). Échelle des temps : Commission internationale de stratigraphie (2023).</p>
   </details></div>`;
 
   ["rate-chart", "mp-chart"].forEach((id) => { const el = $("#" + id); if (el) bindTips(el); });
@@ -1559,7 +1647,7 @@ function renderRock(rock) {
   if (rock.regions && rock.regions.length) renderMap(rock);
   else { const mp = $("#map"); if (mp) mp.innerHTML = `<p class="sub" style="padding:14px;opacity:.55;font-style:italic">Localisation cartographique non renseignée pour cette roche.</p>`; }
   photoRoche(rock);
-  document.title = rock.nom + " — Atlas géologique";
+  document.title = rock.nom + " · Atlas Sol";
 }
 
 // ---------------- carte ----------------
@@ -1585,18 +1673,18 @@ const LITHO50_KW = {
   gypse: ["gypse"], sel: ["halite", "sel gemme", "evaporite"], houille: ["houille", "charbon"],
   tourbe: ["tourbe"], lignite: ["lignite"], anthracite: ["anthracite"],
   schiste_bitumineux: ["bitumineux"], meuliere: ["meuliere"], silex: ["silex", "chert"],
-  radiolarite: ["radiolarite"], diatomite: ["diatomite"], gaize: ["gaize"],
+  radiolarite: ["radiolarite", "lydienne"], diatomite: ["diatomite"], gaize: ["gaize"],
   phosphorite: ["phosphorite", "phosphate"], anhydrite: ["anhydrite"],
-  sylvinite: ["sylvinite", "sylvite", "potass"], laterite: ["laterite", "cuirasse"],
+  sylvinite: ["sylvinite", "sylvite"], laterite: ["laterite", "cuirasse"],
   bauxite: ["bauxite"], cargneule: ["cargneule", "cornieule"], falun: ["falun"],
   vase_tangue: ["tangue", "maerl", "vase"], calcrete: ["calcrete", "croute calcaire"],
   roche_ferrifere: ["minette", "ferrifere", "ferrugineux"],
   // — Magmatiques —
-  granite: ["granite", "leucogranite", "monzogranite", "syenogranite", "granitoide"],
+  granite: ["granite", "leucogranite", "monzogranite", "leucomonzogranite", "syenogranite", "granitoide"],
   granodiorite: ["granodiorite"], tonalite: ["tonalite"],
   trondhjemite: ["trondhjemite", "plagiogranite"], diorite: ["diorite"], monzonite: ["monzonite"],
   monzodiorite: ["monzodiorite"], syenite: ["syenite"], pyroxenite: ["pyroxenite"],
-  hornblendite: ["hornblendite"], syenite_nephelinique: ["nepheline"],
+  hornblendite: ["hornblendite"], syenite_nephelinique: ["syenite nephelinique", "syenite a nepheline", "foyaite"],
   foidolite: ["foidolite", "ijolite", "urtite", "melteigite"], charnockite: ["charnockite"],
   gabbro: ["gabbro", "norite"], basalte: ["basalte"], trachyandesite: ["trachyandesite"],
   trachyte: ["trachyte"], rhyolite: ["rhyolite"], andesite: ["andesite"], dacite: ["dacite"],
@@ -1611,7 +1699,7 @@ const LITHO50_KW = {
   trachybasalte: ["trachybasalte"], breche_volcanique: ["breche volcanique", "agglomerat"],
   microdiorite: ["microdiorite"], essexite: ["essexite"], carbonatite: ["carbonatite", "sovite"],
   // — Métamorphiques —
-  gneiss: ["gneiss", "paragneiss", "orthogneiss"], micaschiste: ["micaschiste"], ardoise: ["ardoise", "schiste ardoisier"],
+  gneiss: ["gneiss", "paragneiss", "orthogneiss"], micaschiste: ["micaschiste"], ardoise: ["ardoise", "schiste ardoisier", "schistes ardoisiers"],
   quartzite: ["quartzite"], marbre: ["marbre", "cipolin"], serpentinite: ["serpentin"],
   amphibolite: ["amphibolite"], eclogite: ["eclogite"], migmatite: ["migmatite", "anatexite", "metatexite", "diatexite"],
   leptynite: ["leptynite"], granulite_meta: ["granulite"],
@@ -1628,7 +1716,7 @@ const LITHO50_ACCESS = /(parfois|localement|eventuellement|rare|trace|accessoire
 function renderMap(rock) {
   const div = $("#map");
   if (typeof L === "undefined") {
-    div.innerHTML = `<div class="map-fallback">Carte indisponible : la bibliothèque Leaflet n'a pas pu être chargée (connexion internet requise).<br>
+    div.innerHTML = `<div class="map-fallback">Carte indisponible : Leaflet n'a pas pu se charger, une connexion à internet est nécessaire.<br>
       Régions typiques : ${rock.regions.map((r) => r.nom).join(" · ")}</div>`;
     return;
   }
@@ -1645,7 +1733,7 @@ function renderMap(rock) {
   }).addTo(map);
   geolLayer = L.tileLayer.wms("https://geoservices.brgm.fr/geologie", {
     layers: "GEOLOGIE", format: "image/png", version: "1.3.0",
-    opacity: 0.55, attribution: "© BRGM — cartes géologiques de la France (1/1 000 000 → 1/50 000 selon le zoom)",
+    opacity: 0.55, attribution: "Cartes géologiques de la France du BRGM, de 1/1 000 000 à 1/50 000, selon le niveau de zoom (© BRGM)",
   }).addTo(map);
   const color = cssVar("--cat-" + rock.categorie) || "#2a78d6";
   const markers = rock.regions.map((r) =>
@@ -1767,7 +1855,7 @@ function afficherPanneau() {
 function chargerVignetteMineral(id, prefix) {
   const m = MINERAUX[id];
   // « Quartz », « Calcite »… sont des pages d'homonymie sur Wikipédia FR : repli sur « … (minéral) »
-  const court = m.nom.split(" (")[0].split(" —")[0].trim();
+  const court = m.nom.split(" (")[0].split(/ [—:]/)[0].trim();
   return loadWikiThumbs([{ id, nom: m.nom, wiki: m.wiki, wikiAlts: [court + " (minéral)"] }], prefix, m.oxydeDe ? "oxydes" : "mineraux")
     .then(() => {
       // sans photo : la première lame mince où il est le sujet (A.5, 13/10/2026)
@@ -1799,7 +1887,7 @@ function renderMineralPage(id) {
   if (window.Nombres) Nombres.rendre($("#main"));
   if (window.Liaisons) Liaisons.brancher($("#main"));
   if (window.OxTransfo) OxTransfo.monter($("#main"));
-  document.title = MINERAUX[id].nom + " — Atlas géologique";
+  document.title = MINERAUX[id].nom + " · Atlas Sol";
 }
 
 // 02/10/2026 (sa demande) : carte « Comment se forme-t-il ? » RETIRÉE de la page (formationMineralCardHTML reste écrite) ;
@@ -1809,7 +1897,7 @@ function plusLoinMineralHTML(id) {
   const m = MINERAUX[id];
   if (!m.contexte) return "";
   return `<div class="card min-plusloin"><h2>Pour aller plus loin</h2>
-    <h4>Où la trouver</h4><p>${m.contexte}</p></div>`;
+    <h4>Lieux d'observation</h4><p>${m.contexte}</p></div>`;
 }
 
 // structure cristalline 3D (structures3d.js), si la fiche en a une
@@ -1841,18 +1929,18 @@ function structureCristalHTML(id, page) {
     : `<section class="min-structure ${classe}" data-ms>${titre}${corps}</section>`;
   if (!s3d && !cx) return page ? enveloppe(attenteMin(/amorphe|verre|organique|minéraloïde/i.test(m.famille || "")
     ? "Phase non cristalline : pas de réseau d'atomes ordonné à représenter."
-    : "Structure atomique et forme du cristal non encore disponibles pour ce minéral.")) : "";
+    : "La structure atomique et la forme du cristal ne sont pas encore établies pour ce minéral.")) : "";
   const pourquoi = f.forme ? `<h4>Pourquoi cette forme ?</h4><p class="${page ? "" : "pan-texte "}min-pourquoi">${f.forme}</p>` : "";
   const vueCristal = cx ? `<div class="ms-cristal"${s3d ? " hidden" : ""}>
       ${s3d ? `<div class="s3d-outils"><div class="s3d-seg"><button type="button" data-ms-rep="1" aria-pressed="false">1 maille</button><button type="button" data-ms-rep="2" aria-pressed="false">2 × 2 × 2</button><button type="button" aria-pressed="true">Forme du cristal</button></div></div>` : ""}
-      ${page ? `<p class="sub">Cristal idéal, calculé à partir de la maille, de la classe de symétrie et des formes {hkl} décrites
-        dans la littérature. Les lettres sont celles des faces, reprises dans la légende. Faire glisser pour tourner le cristal
-        (double-clic : vue de départ).</p>` : ""}
+      ${page ? `<p class="sub">Cristal idéal, construit à partir de la maille, de la classe de symétrie et des formes {hkl} publiées
+        dans la littérature. Les lettres désignent les faces et renvoient à la légende. Glisser pour faire pivoter le cristal
+        (double clic : retour à la vue initiale).</p>` : ""}
       ${Cristal.panneau(id)}${pourquoi}
     </div>` : "";
   // sans forme décrite, le bouton reste visible mais grisé (règle de l'atlas : ce qui manque se voit)
   // sans forme dessinée, le texte écrit sous la vue va dans le volet « Maille et description » de la visionneuse (02/10/2026)
-  const apres = cx ? "" : `<template class="s3d-apres"><p class="ms-manque">${f.sansForme || "Forme du cristal pas encore décrite pour ce minéral."}</p>${f.forme ? `<h4>Ce que montre la structure</h4><p class="min-pourquoi">${f.forme}</p>` : ""}</template>`;
+  const apres = cx ? "" : `<template class="s3d-apres"><p class="ms-manque">${f.sansForme || "Aucune description de la forme du cristal n'est encore disponible pour ce minéral."}</p>${f.forme ? `<h4>Ce que montre la structure</h4><p class="min-pourquoi">${f.forme}</p>` : ""}</template>`;
   const vueAtomes = s3d ? `<div class="ms-atomes"><div data-s3d="${id}" data-s3d-source="bas" data-s3d-cristal="${cx ? "1" : "0"}">${apres}</div></div>` : "";
   return enveloppe(vueAtomes + vueCristal);
 }
@@ -1882,7 +1970,7 @@ function brancherStructureMineral(racine) {
 function formationMineralCardHTML(id) {
   const m = MINERAUX[id], f = minFiche(id);
   if (!f || !f.scenarios || !f.scenarios.length) return `<div class="card"><h2>Comment se forme-t-il ?</h2>
-    ${attenteMin("Modes de formation non encore décrits pour ce minéral.")}</div>`;
+    ${attenteMin("Les modes de formation de ce minéral ne sont pas encore décrits.")}</div>`;
   const onglets = f.scenarios.length > 1 ? `<div class="min-chips mf-onglets">${f.scenarios.map((sc, i) =>
     `<button type="button" class="min-chip${i === 0 ? " on" : ""}" data-mf-onglet="${i}">${sc.nom}</button>`).join("")}</div>` : "";
   const vues = f.scenarios.map((sc, i) => `<div class="mf-vue" data-mf-vue="${i}"${i === 0 ? "" : " hidden"}>
@@ -1902,7 +1990,7 @@ function formationMineralCardHTML(id) {
 function rochesCardHTML(id) {
   const liste = rochesDuMineral(id);
   if (!liste.length) return "";
-  return `<div class="card"><h2>Roches de l'atlas qui en contiennent (${fmt(liste.length)})</h2>
+  return `<div class="card"><h2>Roches de l'atlas où on le trouve (${fmt(liste.length)})</h2>
     <div class="min-chips">${liste.map(rocheChipHTML).join("")}</div></div>`;
 }
 
@@ -1961,7 +2049,7 @@ function ficheMineralHTML(id, page) {
     + ligneNb("densite")
     + ligne("Clivage", m.clivage ? `${m.clivage}${m.clivage.includes("{") ? `<br><small style="color:var(--muted)">{001}, {110}… : notation cristallographique (indices de Miller) désignant les familles de plans selon lesquels le minéral se fend.</small>` : ""}` : "");
   const alteration = (m.stabilite ? `<tr><td>Résistance à l'altération<br><small style="color:var(--muted)">(série de Goldich)</small></td>
-        <td>${visuel("stabilite") ? "" : `<div class="meter">${meter}</div>`}<small style="color:var(--muted)">${m.stabilite}/10 — ${m.stabilite <= 2 ? "s'altère en premier" : m.stabilite <= 5 ? "s'altère assez vite" : m.stabilite <= 8 ? "résistant" : "quasi inaltérable"}</small></td></tr>${ligneNb("stabilite")}` : "")
+        <td>${visuel("stabilite") ? "" : `<div class="meter">${meter}</div>`}<small style="color:var(--muted)">${m.stabilite}/10 : ${m.stabilite <= 2 ? "s'altère en premier" : m.stabilite <= 5 ? "s'altère assez vite" : m.stabilite <= 8 ? "résistant" : "quasi inaltérable"}</small></td></tr>${ligneNb("stabilite")}` : "")
     + ligne("En s'altérant, donne", m.devient);
   const rochesHTML = roches.length ? `<h4>Roches de l'atlas qui en contiennent (${roches.length})</h4>
       <div class="min-chips">${roches.slice(0, 12).map(rocheChip).join("")}</div>
@@ -1970,7 +2058,7 @@ function ficheMineralHTML(id, page) {
   // (bouton « Sa place dans la classification » retiré le 01/10/2026 : le fil d'Ariane y mène déjà)
   const liens = m.argile || m.oxydeDe ? `<div class="pan-liens">
       ${m.argile ? `<button class="min-chip" data-goargile="${m.argile}">Fiche de l'argile →</button>` : ""}
-      ${m.oxydeDe ? `<button class="min-chip" data-gopage="oxyde/${m.oxydeDe}">Partie Oxydes (diagramme pH–Eh) →</button>` : ""}
+      ${m.oxydeDe ? `<button class="min-chip" data-gopage="oxyde/${m.oxydeDe}">Partie Oxydes (diagramme pH-Eh) →</button>` : ""}
     </div>` : "";
   const sources = sourcesFicheHTML(id, loc);
 
@@ -2006,7 +2094,7 @@ function ficheMineralHTML(id, page) {
       // plans, notation {hkl}) dans la bulle du « ? » à côté du titre (exception voulue à la règle « rien au survol »)
       const rangee = window.Clivage ? Clivage.html(id) : "";
       const expl = [window.Clivage ? Clivage.aide(id) : "",
-        m.clivage.includes("{") ? "{001}, {110}… : notation cristallographique (indices de Miller) désignant les familles de plans selon lesquels le minéral se fend." : ""].filter(Boolean);
+        m.clivage.includes("{") ? "{001}, {110}… : notation cristallographique (indices de Miller) qui désigne les familles de plans selon lesquelles le minéral se clive." : ""].filter(Boolean);
       const q = expl.length ? ` <span class="cl-aide" tabindex="0" aria-label="Explications">?<span class="cl-bulle" role="tooltip">${expl.map((t) => `<span>${t}</span>`).join("")}</span></span>` : "";
       return `<div class="mesure-ligne mesure-clivage"><span>Clivage${q}</span><div><p>${m.clivage}</p></div>${rangee ? `<div class="cl-ligne">${rangee}</div>` : ""}</div>`;
     })() : ""}`;
@@ -2025,15 +2113,15 @@ function ficheMineralHTML(id, page) {
 // sources en bas de fiche (minéral ou espèce d'argile) : structure cristalline (COD), formes, formation, classification
 function sourcesFicheHTML(id, loc, page) {
   const items = [];
-  if (Structure3D.existe(id)) items.push(`<li data-s3d-ref="${id}">Structure cristalline : chargement de la référence…</li>`);
+  if (Structure3D.existe(id)) items.push(`<li data-s3d-ref="${id}">Structure cristalline : la référence est en cours de chargement…</li>`);
   if (window.Cristal && Cristal.existe(id)) {
     items.push(`<li>${Cristal.SOURCES.formes}</li>`);
-    items.push(`<li>${Cristal.SOURCES.projection} Maille : le même affinement que la structure atomique.</li>`);
+    items.push(`<li>${Cristal.SOURCES.projection} Maille : mesurée lors du même affinement qui a donné la structure atomique.</li>`);
   }
   // (sources des diagrammes de formation retirées avec la carte « Comment se forme-t-il ? », 02/10/2026)
   if (window.AlterationSchema && AlterationSchema.existe(id)) items.push(`<li>${AlterationSchema.SOURCE}</li>`);
   for (const s of (MINERAUX[id] && MINERAUX[id].sources) || []) items.push(`<li>${s}</li>`);
-  if (loc) items.push(`<li>Classification : tables de Nickel-Strunz, 10ᵉ édition (codes des classes et des groupes).</li>`);
+  if (loc) items.push(`<li>Classification : selon Nickel et Strunz, 10ᵉ édition ; les codes désignent classes et groupes.</li>`);
   return items.length ? `<section class="min-sources${page ? " card" : ""}"><h4>Sources</h4><ul>${items.join("")}</ul></section>` : "";
 }
 
@@ -2052,7 +2140,7 @@ function renderEspecePage(eid) {
   Structure3D.brancher($("#main"));
   if (window.Nombres) Nombres.rendre($("#main"));
   if (window.CecSchema) CecSchema.monter($("#main"));
-  document.title = ESPECES[eid].nom + " — Atlas géologique";
+  document.title = ESPECES[eid].nom + " · Atlas Sol";
 }
 
 // page = true : fiche en pleine page (titre, fil d'Ariane cliquable)
@@ -2066,7 +2154,7 @@ function ficheEspeceHTML(eid, page) {
   const fiche = (e.fiche && ARGILES.find((a) => a.id === e.fiche)) || ARGILES.find((a) => a.espece === eid)
     || (groupe && groupe.fiche && ARGILES.find((a) => a.id === groupe.fiche)) || null;
   const sw = fiche ? fiche.swatch : "var(--baseline)";
-  const famNom = fam ? fam.famille.split(" — ")[0] : "";
+  const famNom = fam ? fam.famille.split(/ [—:] /)[0] : "";
   const autres = groupe ? groupe.especes.filter((x) => x !== eid && ESPECES[x]) : [];
   const titre = `<span class="sw-big" style="background:${sw}"></span>${e.nom}`;
   const ficheNom = fiche ? fiche.nom.split(" (")[0] : "";
@@ -2088,19 +2176,19 @@ function ficheEspeceHTML(eid, page) {
       ${groupe && groupe.charge ? `<tr><td>Charge foliaire</td><td>${groupe.charge}</td></tr>` : ""}
     </table>
     ${typeof ValeursEspeces !== "undefined" ? ValeursEspeces.html(eid) : ""}
-    ${fiche && fiche.cecMin != null ? `<h4>Propriétés de la fiche « ${ficheNom} »</h4>
-      <p class="pan-note">Valeurs données pour l'ensemble de la fiche, pas mesurées sur cette espèce seule.</p>
+    ${fiche && fiche.cecMin != null ? `<h4>Caractéristiques de la fiche « ${ficheNom} »</h4>
+      <p class="pan-note">Valeurs attribuées à l'ensemble de la fiche, et non mesurées sur cette seule espèce.</p>
       <table class="data">
-        <tr><td>CEC (capacité d'échange)</td><td>${fmt(fiche.cecMin)}–${fmt(fiche.cecMax)} cmol⁺/kg</td></tr>
-        ${fiche.surfMin != null ? `<tr><td>Surface spécifique</td><td>${fmt(fiche.surfMin)}–${fmt(fiche.surfMax)} m²/g</td></tr>` : ""}
-        ${fiche.eauMin != null ? `<tr><td>Rétention d'eau</td><td>${fmt(fiche.eauMin)}–${fmt(fiche.eauMax)} g/100 g</td></tr>` : ""}
+        <tr><td>CEC (capacité d'échange cationique)</td><td>${fmt(fiche.cecMin)} à ${fmt(fiche.cecMax)} cmol⁺/kg</td></tr>
+        ${fiche.surfMin != null ? `<tr><td>Surface spécifique</td><td>${fmt(fiche.surfMin)} à ${fmt(fiche.surfMax)} m²/g</td></tr>` : ""}
+        ${fiche.eauMin != null ? `<tr><td>Rétention d'eau</td><td>${fmt(fiche.eauMin)} à ${fmt(fiche.eauMax)} g/100 g</td></tr>` : ""}
         ${fiche.gonflement ? `<tr><td>Gonflement</td><td>${fiche.gonflement}</td></tr>` : ""}
       </table>` : ""}
     ${structure3DHTML(eid)}
     ${autres.length ? `<h4>Autres espèces du groupe</h4><div class="min-chips">${autres.map((x) => especeChip(x, sw)).join("")}</div>` : ""}
     <div class="pan-liens">
       ${fiche ? `<button class="min-chip" data-goargile="${fiche.id}">Fiche ${ficheNom} (structure, sols, usages) →</button>` : ""}
-      ${lienGroupe ? `<button class="min-chip" data-arggrp="${lienGroupe}">Son groupe dans la vue d'ensemble →</button>` : ""}
+      ${lienGroupe ? `<button class="min-chip" data-arggrp="${lienGroupe}">Voir son groupe dans la vue d'ensemble →</button>` : ""}
     </div>
     ${typeof ValeursEspeces !== "undefined" ? ValeursEspeces.sources(eid, sourcesFicheHTML(eid, null)) : sourcesFicheHTML(eid, null)}`;
 }
@@ -2118,9 +2206,9 @@ function ficheArgileHTML(id) {
     ${a.description ? `<p class="pan-texte">${a.description}</p>` : ""}
     <table class="data">
       ${a.type ? `<tr><td>Type</td><td>${a.type}</td></tr>` : ""}
-      ${a.cecMin != null ? `<tr><td>CEC (capacité d'échange)</td><td>${fmt(a.cecMin)}–${fmt(a.cecMax)} cmol⁺/kg</td></tr>` : ""}
-      ${a.surfMin != null ? `<tr><td>Surface spécifique</td><td>${fmt(a.surfMin)}–${fmt(a.surfMax)} m²/g</td></tr>` : ""}
-      ${a.eauMin != null ? `<tr><td>Rétention d'eau</td><td>${fmt(a.eauMin)}–${fmt(a.eauMax)} g/100 g</td></tr>` : ""}
+      ${a.cecMin != null ? `<tr><td>CEC (capacité d'échange)</td><td>${fmt(a.cecMin)} à ${fmt(a.cecMax)} cmol⁺/kg</td></tr>` : ""}
+      ${a.surfMin != null ? `<tr><td>Surface spécifique</td><td>${fmt(a.surfMin)} à ${fmt(a.surfMax)} m²/g</td></tr>` : ""}
+      ${a.eauMin != null ? `<tr><td>Rétention d'eau</td><td>${fmt(a.eauMin)} à ${fmt(a.eauMax)} g/100 g</td></tr>` : ""}
       ${a.gonflement ? `<tr><td>Gonflement</td><td>${a.gonflement}</td></tr>` : ""}
       ${a.espacement ? `<tr><td>Espacement basal</td><td>${a.espacement}</td></tr>` : ""}
       ${a.chargeFoliaire ? `<tr><td>Charge foliaire</td><td>${a.chargeFoliaire}</td></tr>` : ""}
@@ -2155,7 +2243,8 @@ function renderClassif(ancre) {
   if ($("#main [data-argv]")) return;
   $("#main").innerHTML = ArgilesVue.html();
   if (window.ArgilesComparer) ArgilesComparer.monter($("#main"));
-  document.title = "Argiles — Atlas géologique";
+  if (window.ArgilesDevenir) ArgilesDevenir.monter($("#main"));
+  document.title = "Argiles · Atlas Sol";
 }
 // lien vers la vue d'ensemble : si l'adresse ne change pas, défiler quand même
 function allerArgiles(cible) {
@@ -2247,7 +2336,7 @@ function renderMineraux(ancre) {
   if (typeof ancre === "string") window.__ancreArg = ancre;
   $("#main").innerHTML = MinerauxVue.html(minVue());
   MinerauxVue.brancher($("#main"));
-  document.title = (minVue() === "role" ? "Minéraux du sol" : "Minéraux") + " — Atlas géologique";
+  document.title = (minVue() === "role" ? "Minéraux du sol" : "Minéraux") + " · Atlas Sol";
 }
 
 // ---------------- page oxydes & hydroxydes ----------------
@@ -2289,22 +2378,16 @@ function renderOxydes() {
       <div class="min-chips">${f.especes.map((m) => `<span class="min-chip" style="pointer-events:none"><span class="sw" style="background:${m.swatch}"></span>${m.nom.split(" (")[0]} <small>${m.formule}</small></span>`).join("")}</div>
     </div>`).join("");
 
-  $("#main").innerHTML = `
-  <div class="card hero">
+  $("#main").innerHTML = `  <div class="card hero">
     <h1>Oxydes, hydroxydes &amp; oxy-hydroxydes métalliques</h1>
-    <p>Les <b>produits finaux de l'altération</b> : quand les silicates ont rendu leurs cations, il reste les métaux —
-    fer, manganèse, aluminium, titane… — verrouillés sous forme d'oxydes. Ce sont les <b>pigments des paysages</b>
-    (ocres, rouges, noirs) et des archives du climat. <b>Ouvre l'onglet d'un élément</b> pour le détail de ses espèces
-    et son <b>diagramme de Pourbaix</b> (sous quelle forme le métal est stable selon le pH et l'oxydo-réduction).</p>
+    <p>Les <b>produits finaux de l'altération</b> : une fois que les silicates ont libéré leurs cations, subsistent les métaux (fer, manganèse, aluminium, titane…), fixés sous forme d'oxydes. Ils colorent les paysages (ocres, rouges, noirs) et conservent les archives du climat. Chaque <b>onglet d'élément</b> présente ses espèces ainsi que son <b>diagramme de Pourbaix</b>, qui indique sous quelle forme le métal est stable selon le pH et le potentiel d'oxydo-réduction.</p>
   </div>
-  ${cards}
-  ${reperesClimatHTML()}
-  ${reperesClimatSourceHTML()}`;
+  ${cards}`;
 
   document.querySelectorAll("[data-oxyde]").forEach((b) => b.addEventListener("click", (e) => {
     e.stopPropagation(); location.hash = "oxyde/" + b.dataset.oxyde;
   }));
-  document.title = "Oxydes & hydroxydes — Atlas géologique";
+  document.title = "Oxydes & hydroxydes · Atlas Sol";
 }
 
 // charge une vignette par item : d'abord une image LOCALE (images/<dossier>/<id>.jpg, déposée par
@@ -2322,7 +2405,7 @@ async function loadWikiThumbs(items, prefix, dossier) {
       });
       if (ok) { slot.innerHTML = `<img src="images/${dossier}/${m.imgId || m.id}.jpg" alt="${m.nom}" loading="lazy"><div class="cap">photo locale</div>`; continue; }
     }
-    const titres = [m.wiki || m.nom.split(" (")[0].split(" —")[0].trim(), ...(m.wikiAlts || [])];
+    const titres = [m.wiki || m.nom.split(" (")[0].split(/ [—:]/)[0].trim(), ...(m.wikiAlts || [])];
     for (const title of titres) {
       try {
         const r = await fetch("https://fr.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(title));
@@ -2360,7 +2443,7 @@ function feFormationCard() {
     ${arr(168, 205, 228, 205, "+ O₂", 198, 195)}
     ${box(228, 172, 184, 66, "#8a4a2a", "Ferrihydrite", "le 1ᵉʳ précipité (gel)")}
     <rect x="500" y="66" width="9" height="292" rx="4.5" fill="url(#fetemp)"/>
-    <text x="504" y="58" text-anchor="middle" font-size="11" font-weight="700" fill="#3f78c0">❄ 8–15 °C, humide</text>
+    <text x="504" y="58" text-anchor="middle" font-size="11" font-weight="700" fill="#3f78c0">❄ 8 à 15 °C, humide</text>
     <text x="504" y="374" text-anchor="middle" font-size="11" font-weight="700" fill="#c23a2a">🔥 &gt; 15 °C, étés secs</text>
     ${arr(412, 192, 522, 104, "lent", 452, 132)}
     ${box(522, 72, 182, 64, "#b07830", "Goethite", "α-FeOOH · ocre-jaune")}
@@ -2376,11 +2459,11 @@ function feFormationCard() {
   return `<div class="card">
     <h2>🌡️ Comment se forment les oxydes de fer ?</h2>
     <p class="sub">Tout part du fer réduit <b>Fe²⁺ dissous</b>. Dès qu'il rencontre l'oxygène, il précipite en quelques heures
-    en <b>ferrihydrite</b>, un gel instable — le « premier jet ». La suite dépend du <b>climat</b>.</p>
+    en <b>ferrihydrite</b>, un gel instable : le « premier jet ». La suite dépend du <b>climat</b>.</p>
     <div class="chart-wrap">${svg}</div>
     <p class="sub" style="margin-top:10px">Deux voies principales, commandées par la <b>température et l'humidité</b> :</p>
     <ul class="sub" style="margin:4px 0 8px;padding-left:20px">
-      <li><b>Tempéré et humide (8–15 °C, pluie > 65 % de l'ETP), lentement</b> → <b>goethite</b> (α-FeOOH), la rouille ocre-jaune stable : la teinte de la plupart des sols français.</li>
+      <li><b>Tempéré et humide (8 à 15 °C, pluie > 65 % de l'ETP), lentement</b> → <b>goethite</b> (α-FeOOH), la rouille ocre-jaune stable : la teinte de la plupart des sols français.</li>
       <li><b>Chaud à étés secs (> 15 °C, sol sec ≥ 45 jours d'affilée), par déshydratation</b> → <b>hématite</b> (α-Fe₂O₃), le rouge des terres méditerranéennes et tropicales.</li>
     </ul>
     <p class="sub">Le <b>rapport hématite/goethite</b> d'un sol est donc un <b>paléo-thermomètre</b>. Et deux voies latérales :
@@ -2413,7 +2496,7 @@ function feChaleurCard() {
 
     <h3 style="margin:16px 0 6px">Faut-il compter en degrés-jours ?</h3>
     <p class="sub">Non. Les degrés-jours sont linéaires, alors qu'une réaction chimique suit la loi d'Arrhenius, exponentielle. Avec
-    les énergies d'activation mesurées par Shaw et al. (2005) — 69 kJ/mol pour l'hématite, 39 kJ/mol pour la goethite —, passer
+    les énergies d'activation mesurées par Shaw et al. (2005) : 69 kJ/mol pour l'hématite, 39 kJ/mol pour la goethite —, passer
     de 15 à 25 °C multiplie la vitesse de l'hématite par 2,6 et celle de la goethite par 1,7 : la chaleur avantage l'hématite.</p>
     <div style="${grille}">
       <div class="chart-wrap" id="fe-arrh-wrap"></div>
@@ -2451,17 +2534,17 @@ function feChaleurCard() {
       <table class="data" style="width:100%">
         <tr><td style="color:${HM};font-weight:650">Favorise l'hématite</td><td style="color:${GT};font-weight:650">Favorise la goethite</td></tr>
         <tr><td>chaleur</td><td>fraîcheur</td></tr>
-        <tr><td>pH proche de 7–8</td><td>pH acide, ou très basique</td></tr>
+        <tr><td>pH proche de 7 à 8</td><td>pH acide, ou très basique</td></tr>
         <tr><td>peu d'excès d'eau</td><td>excès d'eau</td></tr>
         <tr><td>peu de matière organique</td><td>matière organique abondante</td></tr>
       </table>
     </div>
     <ul class="sub" style="margin:10px 0 0;padding-left:20px;line-height:1.6">
-      <li><b>Laboratoire :</b> de la ferrihydrite gardée 10 à 12 ans entre 4 et 25 °C s'est transformée à 20–100 % selon le pH ;
+      <li><b>Laboratoire :</b> de la ferrihydrite gardée 10 à 12 ans entre 4 et 25 °C s'est transformée entre 20 et 100 % selon le pH ;
       entre 50 et 100 °C, il suffit de jours à mois (Schwertmann et al. 2004 ; Das et al. 2011).</li>
       <li><b>Sols :</b> la goethite domine quand il fait plus frais, plus humide, plus organique et plus acide (Kämpf et Schwertmann
       1983) ; la rubéfaction progresse avec l'âge des terrasses (Torrent et al. 1980).</li>
-      <li><b>Feu :</b> la goethite devient hématite vers 250–350 °C, et un sol rougit après environ 45 min au-delà de 600 °C (Cornell
+      <li><b>Feu :</b> la goethite devient hématite vers 250 à 350 °C, et un sol rougit après environ 45 min au-delà de 600 °C (Cornell
       et Schwertmann 2003 ; Ketterings et Bigham 2000). À la température d'un sol, l'hématite naît de la ferrihydrite, pas de la goethite.</li>
     </ul>
     <details style="margin-top:10px">
@@ -2483,14 +2566,14 @@ function feRatioSVG(HM, GT) {
   const barre = (x, lo, hi, lab) => `
     <rect x="${x - 30}" y="${py(hi)}" width="60" height="${py(lo) - py(hi)}" fill="${HM}" opacity="0.75" rx="3"/>
     <rect x="${x - 30}" y="${py(1)}" width="60" height="${py(hi) - py(1)}" fill="${GT}" opacity="0.18" rx="3"/>
-    <text x="${x}" y="${py(hi) - 6}" text-anchor="middle" class="tick-lab">${feNb(lo)}–${feNb(hi)}</text>
+    <text x="${x}" y="${py(hi) - 6}" text-anchor="middle" class="tick-lab">${feNb(lo)} à ${feNb(hi)}</text>
     <text x="${x}" y="${Y1 + 18}" text-anchor="middle" class="tick-lab">${lab}</text>`;
   let s = "";
   for (let v = 0; v <= 1.0001; v += 0.25)
     s += `<line x1="${X0}" y1="${py(v)}" x2="${X1}" y2="${py(v)}" stroke="var(--grid)" stroke-width="1"/>
       <text x="${X0 - 8}" y="${py(v) + 4}" text-anchor="end" class="tick-lab">${feNb(v, 2)}</text>`;
   s += barre(135, 0.1, 0.2, "4 °C") + barre(255, 0.7, 0.8, "25 °C");
-  s += `<text x="${(X0 + X1) / 2}" y="${Y1 + 38}" text-anchor="middle" class="axis-lab">ferrihydrite vieillie à pH 7–8</text>
+  s += `<text x="${(X0 + X1) / 2}" y="${Y1 + 38}" text-anchor="middle" class="axis-lab">ferrihydrite vieillie à pH 7 à 8</text>
     <text x="14" y="${(Y0 + Y1) / 2}" transform="rotate(-90 14 ${(Y0 + Y1) / 2})" text-anchor="middle" class="axis-lab">part d'hématite Hm/(Hm+Gt)</text>`;
   return `<svg viewBox="0 0 350 256" xmlns="http://www.w3.org/2000/svg" style="max-width:420px">${s}</svg>`;
 }
@@ -2551,7 +2634,7 @@ function initFeChaleur() {
     $("#fe-a-sais").textContent = `hématite ${pct(eqH, 365 * feVitesse(FE_CINETIQUE.eaHm, m))} · goethite ${pct(eqG, 365 * feVitesse(FE_CINETIQUE.eaGt, m))} · degrés-jours ${pct(dj, 365 * Math.max(m, 0))}`;
     const balance = eqH / eqG;   // les deux vitesses valent 1 à 25 °C : ce rapport compare au sol de 25 °C
     $("#fe-regime").textContent = `Régime du sol (Soil Taxonomy) : ${m < 8 ? "frigide" : m < 15 ? "mésique" : m < 22 ? "thermique" : "hyperthermique"}. `
-      + `Rapport hématite/goethite : ×${feNb(balance, 2)} par rapport à un sol à 25 °C.`;
+      + `Rapport hématite sur goethite : multiplié par ${feNb(balance, 2)} par rapport à un sol à 25 °C.`;
   };
   t.addEventListener("input", majT);
   moy.addEventListener("input", majAnnee);
@@ -2563,7 +2646,7 @@ function initFeChaleur() {
 function renderOxydeElement(id) {
   const fam = OXYDES.find((f) => f.id === id) || OXYDES[0];
   const sys0 = POURBAIX[fam.id];
-  let sys = sys0 && PourbaixCalc.systeme(fam.id, state.phehLogA);
+  let sys = sys0 && PourbaixCalc.systeme(fam.id, state.phehLogA, state.phehTotal);
   const especes = fam.especes.map((m) => `
     <div class="groupe-bloc">
       <div class="ox-fiche">
@@ -2588,7 +2671,7 @@ function renderOxydeElement(id) {
   const article = sys && /^[aeiouyéèêh]/.test(sys.nom.toLowerCase()) ? "l'" : "le ";
   const diagramme = sys ? `
   <div class="card">
-    <h2>Diagramme de Pourbaix (pH–Eh)</h2>
+    <h2>Diagramme de Pourbaix (pH-Eh)</h2>
     <p class="sub">Sous quelle forme ${article}${sys.nom.toLowerCase()} est-il stable ? <b>Clique ou fais glisser</b> le point,
     ou choisis un milieu naturel. Le curseur règle la quantité de ${sys.nom.toLowerCase()} dissous : plus il y en a, plus tôt un solide précipite.</p>
     <div class="chips" style="margin-bottom:12px">${PHEH_MILIEUX.map((m, i) => `<button class="chip" data-phmil="${i}">${m.nom}</button>`).join("")}</div>
@@ -2601,6 +2684,12 @@ function renderOxydeElement(id) {
       <output for="pheh-conc" id="pheh-conc-val"><b id="pheh-conc-mol"></b><span id="pheh-conc-masse"></span></output>
       <button class="chip" id="pheh-conc-defaut">10⁻⁶ (repère)</button>
     </div>
+    <div class="pheh-conv">
+      <span class="pheh-conv-lab">Seuil appliqué</span>
+      <button class="chip${state.phehTotal ? "" : " on"}" data-phconv="0" aria-pressed="${!state.phehTotal}">à chaque espèce (Pourbaix)</button>
+      <button class="chip${state.phehTotal ? " on" : ""}" data-phconv="1" aria-pressed="${state.phehTotal}">au total dissous (Takeno)</button>
+    </div>
+    ${conventionPourbaix()}
     <div class="chart-wrap" id="pheh-wrap">${pourbaixSVG(sys)}</div>
     <div class="tiles" style="margin-top:6px">
       <div class="tile"><div class="lab">Conditions choisies</div><div class="val" id="pheh-xy">—</div></div>
@@ -2609,13 +2698,12 @@ function renderOxydeElement(id) {
       <div class="tile"><div class="lab">Minéral(aux)</div><div class="val" id="pheh-min" style="font-size:14px">—</div></div>
     </div>
     <div class="note">${sys.note} <b>Repère :</b> 25 °C, espèces dissoutes à la concentration du curseur (10⁻⁶ mol/L par défaut,
-    le seuil de Pourbaix ; les valeurs citées dans les textes sont données pour 10⁻⁶) ; tiretés noirs : limites de stabilité
+    le seuil de Pourbaix ; les valeurs citées dans les textes sont données pour 10⁻⁶, seuil appliqué à chaque espèce) ; tiretés noirs : limites de stabilité
     de l'eau.${sys.source ? ` <b>Calcul :</b> ${sys.source}` : ""}</div>
     ${guideLecturePourbaix()}
-  </div>` : `
-  <div class="card">
-    <h2>Diagramme de Pourbaix (pH–Eh)</h2>
-    <p class="sub">Diagramme en préparation pour cet élément — à venir, à partir de sources fiables.</p>
+  </div>` : `  <div class="card">
+    <h2>Diagramme de Pourbaix (pH-Eh)</h2>
+    <p class="sub">Le diagramme de cet élément est en préparation et sera publié dès que des sources fiables auront été réunies.</p>
   </div>`;
 
   const chaleur = fam.id === "fer";
@@ -2627,16 +2715,14 @@ function renderOxydeElement(id) {
       · ${fam.especes.length} espèces</p>
     <p class="desc">${fam.intro}</p>
   </div>
-  ${chaleur && window.FerChemins ? `<div class="card chf-renvoi-carte"><p><b>Nouvelle partie, à valider :</b> comment naissent les oxydes de fer des sols — la carte des chemins, chaque étape à l'échelle des atomes, et ce qui oriente vers la goethite, l'hématite ou la lépidocrocite.</p><button class="chip" data-page="oxyde/fer/chemins">Ouvrir →</button></div>` : ""}
+  ${chaleur && window.FerChemins ? `<div class="card chf-renvoi-carte"><p><b>Nouvelle partie, à valider :</b> la formation des oxydes de fer dans les sols, avec la carte des chemins, chaque étape représentée à l'échelle des atomes, et les facteurs qui orientent vers la goethite, l'hématite ou la lépidocrocite.</p><button class="chip" data-page="oxyde/fer/chemins">Ouvrir →</button></div>` : ""}
   ${window.OxTransfo && OxTransfo.T[fam.id] ? OxTransfo.carte(fam.id) : (chaleur ? feFormationCard() : "")}
   ${chaleur ? feChaleurCard() : ""}
   <div class="card">
     <h2>Les espèces</h2>
     ${especes}
   </div>
-  ${diagramme}
-  ${reperesClimatHTML()}
-  ${reperesClimatSourceHTML()}`;
+  ${diagramme}`;
 
   loadOxImages(fam.especes);
   document.querySelectorAll("[data-page]").forEach((b) => b.addEventListener("click", () => location.hash = b.dataset.page));
@@ -2681,7 +2767,7 @@ function renderOxydeElement(id) {
     function redessiner() {
       enAttente = false;
       state.phehLogA = Math.round(+conc.value * 10) / 10;
-      sys = PourbaixCalc.systeme(fam.id, state.phehLogA);
+      sys = PourbaixCalc.systeme(fam.id, state.phehLogA, state.phehTotal);
       wrap.innerHTML = pourbaixSVG(sys);
       majLecture();
     }
@@ -2692,6 +2778,14 @@ function renderOxydeElement(id) {
     $("#pheh-conc-defaut").addEventListener("click", () => {
       conc.value = PourbaixCalc.DEFAUT; majConcentration(); redessiner();
     });
+    document.querySelectorAll("[data-phconv]").forEach((b) => b.addEventListener("click", () => {
+      state.phehTotal = b.dataset.phconv === "1";
+      document.querySelectorAll("[data-phconv]").forEach((x) => {
+        const on = (x.dataset.phconv === "1") === state.phehTotal;
+        x.classList.toggle("on", on); x.setAttribute("aria-pressed", on);
+      });
+      redessiner();
+    }));
     majConcentration();
     function majCurseur() {
       const g = $("#pheh-cursor"), { ph, eh } = state.phehPt;
@@ -2710,7 +2804,7 @@ function renderOxydeElement(id) {
         const t = $("#pheh-type");
         t.style.visibility = "visible";
         t.style.background = dom.type === "dissous" ? "var(--prod-dissous)" : "var(--prod-limon)";
-        t.textContent = dom.type === "dissous" ? "dissous — mobile" : "solide — immobile";
+        t.textContent = dom.type === "dissous" ? "dissous : mobile" : "solide : immobile";
         $("#pheh-desc").textContent = dom.desc;
         const mins = dom.mineraux || (dom.mineral ? [dom.mineral] : []);
         $("#pheh-min").innerHTML = mins.length
@@ -2718,11 +2812,11 @@ function renderOxydeElement(id) {
           : "—";
       } else { $("#pheh-type").style.visibility = "hidden"; $("#pheh-forme").textContent = "—"; $("#pheh-desc").textContent = ""; $("#pheh-min").textContent = "—"; }
       if (eh > 1.229 - 0.0592 * ph || eh < -0.0592 * ph)
-        $("#pheh-desc").textContent += " ⚠️ Hors du domaine de l'eau : irréalisable dans la nature.";
+        $("#pheh-desc").textContent += " ⚠️ Hors du domaine de stabilité de l'eau : ces conditions ne se rencontrent pas dans la nature.";
     }
     majCurseur(); majLecture();
   }
-  document.title = fam.element + " — Oxydes — Atlas géologique";
+  document.title = fam.element + " · Oxydes · Atlas Sol";
 }
 
 // ---------------- visualiseur pH–Eh (Pourbaix) ----------------
@@ -2737,6 +2831,25 @@ function dansPolygone(pt, poly) {
     if ((yi > pt[1]) !== (yj > pt[1]) && pt[0] < ((xj - xi) * (pt[1] - yi)) / (yj - yi) + xi) inside = !inside;
   }
   return inside;
+}
+
+// pastille repliée sous le choix du seuil : les deux conventions de concentration (H.8)
+function conventionPourbaix() {
+  return `<details class="pheh-guide pheh-conv-info">
+    <summary>Deux conventions pour le seuil : par espèce ou total</summary>
+    <div class="sub">
+      <p>Le domaine d'un solide s'étend là où ce minéral est la phase la plus stable et où la solution qui lui est associée demeure en dessous du seuil C fixé par le curseur. Deux conventions existent pour ce seuil.</p>
+      <ul>
+        <li><b>Convention par espèce</b> (Pourbaix, 1966) : chaque espèce dissoute du métal est confrontée isolément à C. La frontière entre solide et solution est la droite le long de laquelle l'espèce dominante atteint C ; toutes les frontières sont donc des droites dans le plan pH-Eh.</li>
+        <li><b>Convention totale</b> (Takeno, 2005 ; spéciation réalisée avec PHREEQC et The Geochemist's Workbench) : on additionne l'ensemble des espèces dissoutes, chacune pondérée par son nombre d'atomes de métal, et le solide n'est stable que si Σ nᵢ cᵢ ≤ C (nᵢ : nombre d'atomes de métal de l'espèce i ; cᵢ : sa concentration). Au voisinage d'un basculement d'espèce dominante, plusieurs espèces entrent dans la somme : la frontière se courbe et le domaine solide se réduit.</li>
+      </ul>
+      <p>Le retrait atteint au plus log₁₀ N unités de log C, où N désigne le nombre d'espèces dissoutes en proportions voisines ; il excède rarement quelques dixièmes d'unité de pH. Il devient très visible quand une espèce neutre a une solubilité voisine de C : au contact de la zincite (ZnO), Zn(OH)₂(aq) vaut 7,6 × 10⁻⁷ mol/L quel que soit le pH ; pour C = 10⁻⁶ mol/L, la zincite occupe de pH 8,6 à 11,6 selon la convention par espèce, et de pH 9,1 à 11,0 selon la convention totale.</p>
+      <p>Les frontières entre deux solides, et entre deux espèces dissoutes (à quantité de métal égale), restent identiques dans les deux conventions. Les valeurs chiffrées des textes de domaines relèvent de la convention par espèce.</p>
+      <p class="pheh-conv-src">Pourbaix M. 1966, <i>Atlas of Electrochemical Equilibria in Aqueous Solutions</i>, Pergamon ;
+      Takeno N. 2005, <i>Atlas of Eh-pH diagrams. Intercomparison of thermodynamic databases</i>, Geological Survey of Japan,
+      Open File Report 419.</p>
+    </div>
+  </details>`;
 }
 
 function guideLecturePourbaix() {
@@ -2759,9 +2872,14 @@ function guideLecturePourbaix() {
 
 function pourbaixSVG(sys) {
   let out = "";
-  // domaines (tous les polygones d'abord, pour qu'aucun ne recouvre une étiquette)
-  for (const d of sys.domaines) {
+  // domaines (tous les polygones d'abord, pour qu'aucun ne recouvre une étiquette) ; en concentration totale
+  // (`superpose`), les solides sont posés par-dessus les espèces dissoutes, sur un fond opaque
+  const ordre = sys.superpose
+    ? [...sys.domaines.filter((d) => d.type !== "solide"), ...sys.domaines.filter((d) => d.type === "solide")]
+    : sys.domaines;
+  for (const d of ordre) {
     const pts = d.points.map(([p, e]) => `${phX(p)},${ehY(e)}`).join(" ");
+    if (sys.superpose && d.type === "solide") out += `<polygon points="${pts}" fill="var(--surface)" stroke="none"/>`;
     out += `<polygon points="${pts}" fill="${d.couleur}" stroke="var(--surface)" stroke-width="1.5" data-dom="${d.id}" style="cursor:crosshair"/>`;
   }
   // étiquettes : barycentre des sommets par défaut ; `etiquette: [pH, Eh]` la place, `false` la masque
@@ -2805,7 +2923,7 @@ function pourbaixSVG(sys) {
   };
   const eau = sys.eau || {};
   out += wline(1.229, "au-dessus : l'eau s'oxyde en O₂", -8, eau.o2 || 13.8);
-  out += wline(0, "en dessous : l'eau se réduit en H₂", 16, eau.h2 || 13.8);
+  out += wline(0, "en dessous, l'eau est réduite en H₂", 16, eau.h2 || 13.8);
   // axes
   for (let p = 0; p <= 14; p += 2)
     out += `<line x1="${phX(p)}" y1="${PHEH.Y1}" x2="${phX(p)}" y2="${PHEH.Y1 + 6}" class="baseline"/>
@@ -2814,7 +2932,7 @@ function pourbaixSVG(sys) {
     out += `<line x1="${PHEH.X0 - 6}" y1="${ehY(e)}" x2="${PHEH.X0}" y2="${ehY(e)}" class="baseline"/>
       <text x="${PHEH.X0 - 12}" y="${ehY(e) + 4}" text-anchor="end" class="tick-lab">${e.toFixed(1)}</text>`;
   out += `<text x="${(PHEH.X0 + PHEH.X1) / 2}" y="${PHEH.Y1 + 44}" text-anchor="middle" class="axis-lab">pH (acide ← → basique)</text>
-    <text x="18" y="${(PHEH.Y0 + PHEH.Y1) / 2}" class="axis-lab" transform="rotate(-90 18 ${(PHEH.Y0 + PHEH.Y1) / 2})" text-anchor="middle">Eh (volts) — réducteur ↓ / oxydant ↑</text>`;
+    <text x="18" y="${(PHEH.Y0 + PHEH.Y1) / 2}" class="axis-lab" transform="rotate(-90 18 ${(PHEH.Y0 + PHEH.Y1) / 2})" text-anchor="middle">Eh (volts) : réducteur ↓ / oxydant ↑</text>`;
   // curseur
   const { ph, eh } = state.phehPt;
   out += `<g id="pheh-cursor" pointer-events="none">
@@ -2832,10 +2950,10 @@ function renderPourbaix() {
 
   $("#main").innerHTML = `
   <div class="card hero">
-    <h1>⚗️ Sous quelle forme ? — le visualiseur pH–Eh</h1>
+    <h1>⚗️ Sous quelle forme ? Le visualiseur pH-Eh</h1>
     <p>Deux nombres décrivent la chimie d'une eau ou d'un sol : son <b>pH</b> (acide ou basique) et son <b>Eh</b>
     (le potentiel d'oxydo-réduction : riche en oxygène = oxydant en haut, privé d'oxygène = réducteur en bas).
-    Ces <b>diagrammes de Pourbaix</b> montrent, pour chaque couple pH–Eh, la forme stable d'un métal :
+    Ces <b>diagrammes de Pourbaix</b> montrent, pour chaque couple pH-Eh, la forme stable d'un métal :
     <b>dissous</b> (il voyage avec l'eau) ou <b>solide</b> (il reste sur place). <b>Clique ou fais glisser</b> le point
     sur le diagramme, ou choisis un milieu naturel type.</p>
   </div>
@@ -2851,20 +2969,20 @@ function renderPourbaix() {
       <div class="tile"><div class="lab">Fiche minérale</div><div class="val" id="pheh-min" style="font-size:14px">—</div></div>
     </div>
     <div class="note">${sys.note} <b>Repères :</b> diagramme simplifié (25 °C, concentrations ≈ 10⁻⁶ mol/L), à lire comme une
-    carte qualitative — les frontières exactes dépendent des concentrations et des autres ions présents.</div>
+    carte qualitative : les frontières exactes dépendent des concentrations et des autres ions présents.</div>
   </div>
 
   <div class="card">
     <h2>Lire le diagramme comme un pédologue</h2>
     <p class="sub">Quelques trajets classiques :</p>
-    <p>• <b>Un sol qui s'engorge</b> (l'hiver, une nappe monte) : le point descend verticalement — le fer solide repasse
+    <p>• <b>Un sol qui s'engorge</b> (l'hiver, une nappe monte) : le point descend verticalement, le fer solide repasse
     en Fe²⁺ dissous, migre, puis reprécipite en ocre là où l'oxygène revient : c'est la naissance des taches des
     <b>pseudogleys</b> et des horizons rouillés.</p>
-    <p>• <b>Un drainage minier acide</b> : pyrite oxydée → le point file en haut à gauche (pH 2–3, Eh fort) — seul domaine
+    <p>• <b>Un drainage minier acide</b> : pyrite oxydée → le point file en haut à gauche (pH 2 à 3, Eh fort), seul domaine
     où le fer ferrique reste dissous, d'où ces rivières orange qui précipitent leur fer dès que le pH remonte.</p>
-    <p>• <b>Le manganèse retardataire</b> : son domaine dissous est bien plus vaste que celui du fer — dans un profil,
+    <p>• <b>Le manganèse retardataire</b> : son domaine dissous est bien plus vaste que celui du fer, dans un profil,
     les taches noires de Mn se déposent toujours plus loin (ou plus tard) que les taches ocre de fer.</p>
-    <p>• <b>L'aluminium</b> ne « voit » pas l'Eh : seul le pH le mobilise, aux deux extrêmes — c'est le poison des sols
+    <p>• <b>L'aluminium</b> ne « voit » pas l'Eh : seul le pH le mobilise, aux deux extrêmes, c'est le poison des sols
     trop acidifiés.</p>
   </div>`;
 
@@ -2907,7 +3025,7 @@ function renderPourbaix() {
     $("#pheh-xy").innerHTML = `pH ${ph.toFixed(1)} · Eh ${eh >= 0 ? "+" : ""}${eh.toFixed(2)} V`;
     const dom = sys.domaines.find((d) => dansPolygone([ph, eh], d.points));
     if (dom) {
-      $("#pheh-forme").innerHTML = `${dom.nom.replace(/ dissous$/, "")} <span class="badge" style="background:${dom.type === "dissous" ? "var(--prod-dissous)" : "var(--prod-limon)"}">${dom.type === "dissous" ? "dissous — mobile" : "solide — immobile"}</span>`;
+      $("#pheh-forme").innerHTML = `${dom.nom.replace(/ dissous$/, "")} <span class="badge" style="background:${dom.type === "dissous" ? "var(--prod-dissous)" : "var(--prod-limon)"}">${dom.type === "dissous" ? "dissous : mobile" : "solide : immobile"}</span>`;
       $("#pheh-desc").textContent = dom.desc;
       $("#pheh-min").innerHTML = dom.mineral
         ? `<button class="min-chip" data-min="${dom.mineral}"><span class="sw" style="background:${MINERAUX[dom.mineral].swatch}"></span>${MINERAUX[dom.mineral].nom.split(" (")[0]} →</button>`
@@ -2917,11 +3035,11 @@ function renderPourbaix() {
     }
     // hors du domaine de l'eau ?
     const hautEau = 1.229 - 0.0592 * ph, basEau = -0.0592 * ph;
-    if (eh > hautEau) $("#pheh-desc").textContent += " ⚠️ Au-dessus de la limite de stabilité de l'eau : conditions irréalisables dans une eau naturelle.";
-    if (eh < basEau) $("#pheh-desc").textContent += " ⚠️ En dessous de la limite de stabilité de l'eau : conditions irréalisables dans une eau naturelle.";
+    if (eh > hautEau) $("#pheh-desc").textContent += " ⚠️ Au-delà de la limite haute de stabilité de l'eau, ces conditions ne se rencontrent pas dans une eau naturelle.";
+    if (eh < basEau) $("#pheh-desc").textContent += " ⚠️ En deçà de la limite basse de stabilité de l'eau, ces conditions ne se rencontrent pas dans une eau naturelle.";
   }
   majLecture();
-  document.title = "Visualiseur pH–Eh — Atlas géologique";
+  document.title = "Visualiseur pH-Eh · Atlas Sol";
 }
 
 // ---------------- schéma de structure des argiles ----------------
@@ -2953,15 +3071,15 @@ function structureSVG(a) {
       else if (secondTop === null && unitCount >= 1) secondTop = y;
       for (let x = X0; x + 42 <= X1; x += 50)
         out += `<polygon points="${x},${y + h - 2} ${x + 42},${y + h - 2} ${x + 21},${y + 2}" fill="${T}"/>`;
-      out += label("T — tétraèdres Si", y + h - 6);
+      out += label("T : tétraèdres Si", y + h - 6);
     } else if (el === "O") {
       for (let x = X0; x + 42 <= X1; x += 50)
         out += `<polygon points="${x + 21},${y + 1} ${x + 42},${y + h / 2} ${x + 21},${y + h - 1} ${x},${y + h / 2}" fill="${O}"/>`;
-      out += label("O — octaèdres Al/Mg/Fe", y + h / 2 + 4);
+      out += label("O : octaèdres Al/Mg/Fe", y + h / 2 + 4);
       unitCount++;
     } else if (el === "B") {
       out += `<rect x="${X0}" y="${y + 2}" width="${X1 - X0}" height="${h - 4}" rx="5" fill="${B}"/>
-        <text x="${(X0 + X1) / 2}" y="${y + h / 2 + 4}" text-anchor="middle" font-size="12" fill="#fff">feuillet brucitique Mg(OH)₂ — soude les feuillets</text>`;
+        <text x="${(X0 + X1) / 2}" y="${y + h / 2 + 4}" text-anchor="middle" font-size="12" fill="#fff">feuillet brucitique Mg(OH)₂ : soude les feuillets</text>`;
       out += label("interfoliaire", y + h / 2 + 4);
     } else if (el === "gapH") {
       out += `<text x="${(X0 + X1) / 2}" y="${y + h / 2 + 4}" text-anchor="middle" font-size="11.5" fill="var(--muted)">· · · liaisons hydrogène · · ·</text>`;
@@ -3065,14 +3183,14 @@ function propStrip(argile, key, minKey, maxKey, axisMax, unite, titre) {
   for (const o of ARGILES) {
     if (o.id === argile.id) continue;
     svg += `<circle cx="${x((o[minKey] + o[maxKey]) / 2)}" cy="${cy}" r="4" fill="var(--baseline)"
-      data-tip="<b>${o.nom}</b>${fmt(o[minKey])}–${fmt(o[maxKey])} ${unite}"/>`;
+      data-tip="<b>${o.nom}</b>${fmt(o[minKey])} à ${fmt(o[maxKey])} ${unite}"/>`;
   }
   const xa = x(argile[minKey]), xb = x(argile[maxKey]);
   svg += `<rect x="${xa}" y="${cy - 7}" width="${Math.max(xb - xa, 6)}" height="14" rx="7"
       fill="var(--prod-argile)" stroke="var(--surface)" stroke-width="2"
-      data-tip="<b>${argile.nom}</b>${fmt(argile[minKey])}–${fmt(argile[maxKey])} ${unite}"/>`;
+      data-tip="<b>${argile.nom}</b>${fmt(argile[minKey])} à ${fmt(argile[maxKey])} ${unite}"/>`;
   svg += "</svg>";
-  return `<div class="prop-strip"><div class="lab"><b>${titre}</b> — ${unite} (points gris : les autres argiles)</div>
+  return `<div class="prop-strip"><div class="lab"><b>${titre}</b> : ${unite} (points gris : les autres argiles)</div>
     <div class="chart-wrap">${svg}</div></div>`;
 }
 
@@ -3097,9 +3215,9 @@ function renderArgile(a) {
       <div class="min-chips">${a.especes.map((eid) => especeChip(eid, a.swatch)).join("")}</div>` : ""}
     <p class="sub"><b>Formule :</b> <span style="font-family:ui-monospace,Menlo,monospace">${a.formule}</span></p>
     <div class="meta-row">
-      <div class="meta"><div class="lab">CEC (capacité d'échange)</div><div class="val">${fmt(a.cecMin)}–${fmt(a.cecMax)} cmol⁺/kg</div></div>
-      <div class="meta"><div class="lab">Surface spécifique</div><div class="val">${fmt(a.surfMin)}–${fmt(a.surfMax)} m²/g</div></div>
-      <div class="meta"><div class="lab">Rétention d'eau</div><div class="val">${fmt(a.eauMin)}–${fmt(a.eauMax)} g/100 g</div></div>
+      <div class="meta"><div class="lab">CEC (capacité d'échange)</div><div class="val">${fmt(a.cecMin)} à ${fmt(a.cecMax)} cmol⁺/kg</div></div>
+      <div class="meta"><div class="lab">Surface spécifique</div><div class="val">${fmt(a.surfMin)} à ${fmt(a.surfMax)} m²/g</div></div>
+      <div class="meta"><div class="lab">Rétention d'eau</div><div class="val">${fmt(a.eauMin)} à ${fmt(a.eauMax)} g/100 g</div></div>
       <div class="meta"><div class="lab">Gonflement</div><div class="val" style="font-size:13.5px">${a.gonflement}</div></div>
       <div class="meta"><div class="lab">Espacement basal</div><div class="val" style="font-size:13.5px">${a.espacement}</div></div>
       <div class="meta"><div class="lab">Charge foliaire</div><div class="val">${a.chargeFoliaire}</div></div>
@@ -3127,7 +3245,7 @@ function renderArgile(a) {
   <div class="card">
     <h2>Ses propriétés, comparées aux autres argiles</h2>
     <p class="sub">La <b>CEC</b> (capacité d'échange cationique, en centimoles de charges + par kg) mesure l'aptitude à retenir
-    et échanger les nutriments (Ca²⁺, K⁺, Mg²⁺, NH₄⁺…) — c'est le « garde-manger » chimique du sol. La <b>surface spécifique</b>
+    et échanger les nutriments (Ca²⁺, K⁺, Mg²⁺, NH₄⁺…) : c'est le « garde-manger » chimique du sol. La <b>surface spécifique</b>
     (surface développée par gramme, feuillets internes compris) commande la rétention d'eau.</p>
     <div id="prop-charts">
       ${propStrip(a, "cec", "cecMin", "cecMax", 170, "cmol⁺/kg", "Capacité d'échange cationique (CEC)")}
@@ -3173,13 +3291,13 @@ function renderArgile(a) {
     wiki: decodeURIComponent((a.wikipedia || "").split("/wiki/").pop() || a.nom),
     wikiAlts: (a.especes || []).map((eid) => (ESPECES[eid] || {}).nom || "").filter(Boolean).map((n) => n.split(" (")[0]),
   }], "argpimg-", "argiles");
-  document.title = a.nom + " — Atlas géologique";
+  document.title = a.nom + " · Atlas Sol";
 }
 
 // ---------------- démarrage ----------------
 ROCHES.forEach((r) => { if (ROCHE_EXTRAS[r.id]) Object.assign(r, ROCHE_EXTRAS[r.id]); });
 // bilan « 1 kg altéré » calculé à partir de la composition (alteration-bilan.js, D.6)
-if (window.BilanAlteration) { BilanAlteration.appliquer(ROCHES); BilanAlteration.appliquerSols(ROCHES); }
+if (window.BilanAlteration) BilanAlteration.appliquer(ROCHES);
 
 // clics délégués : fiches liées (panneau latéral), fiches argiles, fiches roches
 document.addEventListener("click", (e) => {

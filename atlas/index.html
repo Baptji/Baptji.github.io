@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Atlas géologique — roches, âges et altération</title>
+  <title>Atlas Sol : roches, âges et altération</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪨</text></svg>">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="style.css">
@@ -13,16 +13,18 @@
   <link rel="stylesheet" href="mineraux-vue.css">
   <link rel="stylesheet" href="roches-surface.css">
   <link rel="stylesheet" href="argiles-charge.css">
+  <link rel="stylesheet" href="argiles-devenir.css">
   <link rel="stylesheet" href="liaisons.css">
   <link rel="stylesheet" href="oxydes-transformations.css">
   <link rel="stylesheet" href="oxydes-fer-chemins.css">
   <link rel="stylesheet" href="gres-ciment.css">
   <link rel="stylesheet" href="perso.css">
   <link rel="stylesheet" href="lames-minces.css">
+  <link rel="stylesheet" href="sols-temps.css">
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">🪨 Atlas géologique<small>géologie · minéralogie · pédologie</small></div>
+    <div class="brand">Atlas Sol<small>géologie · minéralogie · pédologie</small></div>
     <input id="search" type="search" placeholder="Chercher (granite, quartz, montmorillonite…)">
     <nav class="chips" id="mainnav">
       <button class="chip" data-section="accueil">Accueil</button>
@@ -46,8 +48,8 @@
   </div>
 
   <footer>
-    <p class="licence"><b>Licence <a href="https://creativecommons.org/licenses/by-nc/4.0/deed.fr" target="_blank" rel="noopener license">CC BY-NC 4.0</a></b> —
-    Réutilisation libre pour l'enseignement, les exposés et les conférences, en citant l'Atlas géologique (B. Decobert).
+    <p class="licence"><b>Licence <a href="https://creativecommons.org/licenses/by-nc/4.0/deed.fr" target="_blank" rel="noopener license">CC BY-NC 4.0</a></b> :
+    Réutilisation libre pour l'enseignement, les exposés et les conférences, en citant l'Atlas Sol (B. Decobert).
     Toute utilisation commerciale (vente, publicité, publication payante) demande une autorisation.
     Les photos gardent la licence indiquée sous chacune d'elles.</p>
   </footer>
@@ -135,6 +137,7 @@
   <script src="argiles-vue.js"></script>
   <script src="mineraux-vue.js"></script>
   <script src="argiles-charge.js"></script>
+  <script src="argiles-devenir.js"></script>
   <script src="liaisons.js"></script>
   <script src="perso.js"></script>
   <script src="lames.js"></script>
@@ -154,6 +157,8 @@
   <script src="gres-ciment.js"></script>
   <script src="liaisons-natifs.js"></script>
   <script src="liaisons-amorphes.js"></script>
+  <script src="sols-temps.js"></script>
+  <script src="sols-fiches.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

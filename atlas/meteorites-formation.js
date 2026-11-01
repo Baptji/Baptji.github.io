@@ -116,7 +116,7 @@
         s += ell(XS + 210, YS, 440, 34, `url(#${k})`);
         // ligne des glaces
         s += ell(XS, YS, NEIGE, NEIGE * 0.13, "none", { stroke: "#a9c9ee", "stroke-width": 0.9, "stroke-dasharray": "4 3", opacity: 0.8 });
-        s += blanc(XS + NEIGE, YS + NEIGE * 0.13 + 12, "ligne des glaces (≈ 3 fois la distance Terre–Soleil)", { petit: true, a: "middle" });
+        s += blanc(XS + NEIGE, YS + NEIGE * 0.13 + 12, "la zone glacée, située à ≈ 3 fois la distance qui sépare la Terre du Soleil", { petit: true, a: "middle" });
         // zone où naît la météorite
         s += ell(XS, YS, aZ, aZ * 0.13, "none", { stroke: "#ff6b5a", "stroke-width": 2, opacity: r1(0.4 + 0.5 * fen(t, 0.1, 0.4)) });
         // au-dessus de l'anneau, sauf loin du Soleil, où la loupe occupe le haut de la scène
@@ -136,7 +136,7 @@
         }
         s += soleil(XS, YS, 15, ta);
         s += blanc(XS, YS + 30, "jeune Soleil", { a: "middle", petit: true });
-        if (p.cai) s += blanc(XS + 8, 196, "points blancs : les premiers solides, inclusions", { petit: true, op: fen(t, 0.05, 0.25) }) + blanc(XS + 8, 205, "riches en calcium et en aluminium (4 567,3 Ma)", { petit: true, op: fen(t, 0.05, 0.25) });
+        if (p.cai) s += blanc(XS + 8, 196, "points blancs : les premiers solides, inclusions", { petit: true, op: fen(t, 0.05, 0.25) }) + blanc(XS + 8, 205, "inclusions réfractaires, riches en calcium et en aluminium (4 567,3 Ma)", { petit: true, op: fen(t, 0.05, 0.25) });
         // loupe : des grains de poussière qui s'agglomèrent
         const L = loupe(408, 58, 38, { vers: [XS + aZ, YS], fond: "#151a2b" });
         let d = "";
@@ -146,7 +146,7 @@
           d += circ(408 + Math.cos(a) * dd, 58 + Math.sin(a) * dd, 1.5 + Rl() * 1.6, p.zone === "externe" && i % 3 === 0 ? "#dbe9fb" : i % 4 === 0 ? "#cfd2d4" : "#c39d70");
         }
         s += L.fond + L.dans(d) + L.bord + blanc(408, 106, p.loupe || "les grains se collent", { a: "middle", petit: true });
-        s += blanc(8, 15, p.titre || "Un disque de gaz et de poussières tourne autour du jeune Soleil");
+        s += blanc(8, 15, p.titre || "Autour du jeune Soleil, un disque de gaz et de poussière est animé d'un mouvement de rotation");
         (p.lignes || []).forEach((l, i) => { s += blanc(8, 27 + i * 10, l, { petit: true }); });
         s += compteur(388, 228, p.age || ilYa(4567));
         return s;
@@ -187,10 +187,10 @@
           }
         }
         s += thermometre(426, 40, 150, T(t), 0, 2000, [0, 500, 1000, 1500, 2000], { clair: true });
-        s += blanc(8, 15, t < 0.2 ? "Des amas de poussière flottent dans le disque" : t < 0.4 ? "Un éclair de chaleur : en quelques minutes, ils fondent" : "En quelques heures, les gouttes refroidissent et cristallisent");
+        s += blanc(8, 15, t < 0.2 ? "Des amas de poussière flottent dans le disque" : t < 0.4 ? "Un éclair de chaleur : en quelques minutes, ils fondent" : "Les gouttes se figent et cristallisent en l'espace de quelques heures");
         s += blanc(8, 27, "taille réelle d'une goutte : 0,2 à 2 mm", { petit: true });
         if (t > 0.5) s += bulle(8, 186, ["Selon la vitesse du refroidissement : cristaux", "d'olivine dans du verre, barres parallèles", "ou fibres rayonnantes"], { op: fen(t, 0.5, 0.65) });
-        s += compteur(300, 228, p.age || "1 à 3 millions d'années après les premiers solides");
+        s += compteur(300, 228, p.age || "Environ 1 à 3 millions d'années, après les premiers solides");
         return s;
       },
     };
@@ -220,9 +220,9 @@
         // échelle
         s += line(CX - RMAX, CY - RMAX - 9, CX + RMAX, CY - RMAX - 9, "#eef2f7", 1.2, { opacity: r1(fen(t, 0.7, 0.9)) })
           + blanc(CX, CY - RMAX - 13, p.taille || "≈ 100 km", { a: "middle", petit: true, op: fen(t, 0.7, 0.9) });
-        s += blanc(8, 15, p.titre || "Chondres, grains de métal et poussière se collent : un astéroïde grandit");
+        s += blanc(8, 15, p.titre || "Les chondres, les grains de métal et la poussière s'agglomèrent : un astéroïde se forme peu à peu");
         (p.lignes || []).forEach((l, i) => { s += blanc(8, 27 + i * 10, l, { petit: true }); });
-        s += compteur(390, 228, p.age || "≈ 2 millions d'années après les premiers solides");
+        s += compteur(390, 228, p.age || "Au bout de ≈ 2 millions d'années, après les premiers solides");
         return s;
       },
     };
@@ -231,7 +231,7 @@
   // ─────────────────────────────── 4 · l'astéroïde chauffe : métamorphisme, eau liquide ou début de fusion ───────────────────────────────
   // p.mode : "metamorphisme" (couches par type pétrologique), "eau" (la glace fond, l'eau circule), "fusionPartielle"
   // p.tmax (°C au point suivi), p.position (0 = centre, 1 = surface), p.nom (étiquette du point suivi)
-  const TYPES = [{ r: 1, c: "#7d7564", n: "type 3 · moins de 600 °C" }, { r: 0.8, c: "#9d7c57", n: "type 4 · 600–700 °C" }, { r: 0.6, c: "#b97b48", n: "type 5 · 700–750 °C" }, { r: 0.42, c: "#d27a3c", n: "type 6 · 750–950 °C" }];
+  const TYPES = [{ r: 1, c: "#7d7564", n: "type 3 · moins de 600 °C" }, { r: 0.8, c: "#9d7c57", n: "type 4 · 600 à 700 °C" }, { r: 0.6, c: "#b97b48", n: "type 5 · 700 à 750 °C" }, { r: 0.42, c: "#d27a3c", n: "type 6 · 750 à 950 °C" }];
   SCENES.chauffageAsteroide = function (p) {
     const mode = p.mode || "metamorphisme", CX = 170, CY = 128, RR = 88, R = alea("ch" + (p.graine || ""));
     const al = Array.from({ length: 60 }, () => ({ a: R() * 6.283, d: Math.sqrt(R()) * 0.95, ph: R() * 6.283 }));
@@ -277,9 +277,9 @@
         const xp = CX - pos * RR * 0.8, yp = CY + pos * RR * 0.6;
         s += circ(xp, yp, 4, "#e53b2c", { stroke: "#fff", "stroke-width": 1.4 }) + line(xp - 3, yp + 3, CX - RR * 0.55, CY + RR + 4, "#ffffff", 0.7) + blanc(CX - RR * 0.55, CY + RR + 13, p.nom || "notre pierre", { petit: true, a: "middle" });
         s += thermometre(426, 50, 140, Tde(t), mode === "eau" ? -100 : 0, mode === "eau" ? 200 : 1200, mode === "eau" ? [-100, 0, 100, 200] : [0, 400, 800, 1200], { clair: true });
-        s += blanc(8, 15, p.titre || "L'aluminium 26, radioactif, chauffe l'astéroïde de l'intérieur");
+        s += blanc(8, 15, p.titre || "De l'intérieur, l'aluminium 26, élément radioactif, réchauffe l'astéroïde");
         (p.lignes || []).forEach((l, i) => { s += blanc(8, 27 + i * 10, l, { petit: true }); });
-        s += compteur(345, 228, p.age || "de 2 à 60 millions d'années après les premiers solides");
+        s += compteur(345, 228, p.age || "entre 2 et 60 millions d'années, à partir des premiers solides");
         return s;
       },
     };
@@ -312,9 +312,9 @@
         if (p.croute !== false) s += lab(CX + RR * 0.98, CY - RR * 0.18, 280, 72, p.labCroute || "croûte de basalte", fen(t, 0.75, 0.9));
         if (p.suivi) { const pos = { noyau: [CX - rn * 0.4, CY + rn * 0.2], manteau: [CX - RR * 0.62, CY - RR * 0.25], croute: [CX - RR * 0.95, CY - RR * 0.2] }[p.suivi]; s += circ(pos[0], pos[1], 4, "#e53b2c", { stroke: "#fff", "stroke-width": 1.4, opacity: r1(fen(t, 0.7, 0.85)) }); }
         s += thermometre(426, 50, 140, lerp(-20, p.tmax || 1500, fen(t, 0, 0.45)), 0, 1600, [0, 500, 1000, 1500], { clair: true });
-        s += blanc(8, 15, p.titre || "Chauffé au-delà de 1 200 °C, l'astéroïde fond : le métal, plus dense, descend au centre");
+        s += blanc(8, 15, p.titre || "Porté au-delà de 1 200 °C, l'astéroïde se liquéfie : le métal, plus dense, gagne le centre");
         (p.lignes || []).forEach((l, i) => { s += blanc(8, 27 + i * 10, l, { petit: true }); });
-        s += compteur(150, 228, p.age || "1 à 3 millions d'années après les premiers solides");
+        s += compteur(150, 228, p.age || "Environ 1 à 3 millions d'années, après les premiers solides");
         return s;
       },
     };
@@ -351,9 +351,9 @@
         s += L.fond + L.dans(d) + L.bord;
         s += `<text x="318" y="${118 + 88}" text-anchor="middle" class="fa-leg" style="fill:#eef2f7">${p.breche ? "fragments de croûte et métal (gris)" : prog <= 0 ? "taénite : un seul cristal de fer-nickel" : "kamacite (gris) en lamelles dans la taénite"}</text>`;
         s += thermometre(426, 50, 140, T(t), 0, 1600, [0, 500, 1000, 1500], { clair: true });
-        s += blanc(8, 15, p.titre || "Le noyau refroidit de quelques dizaines de degrés par million d'années");
-        (p.lignes || ["Entre 700 et 450 °C, le nickel migre dans le métal solide :", "il faut des millions d'années, aucune forge ne peut le reproduire."]).forEach((l, i) => { s += blanc(8, 27 + i * 10, l, { petit: true }); });
-        s += compteur(120, 228, p.age || "de quelques millions à des dizaines de millions d'années");
+        s += blanc(8, 15, p.titre || "Chaque million d'années, le noyau voit sa température baisser de quelques dizaines de degrés.");
+        (p.lignes || ["Dans l'intervalle de 700 à 450 °C, le nickel se déplace au sein du métal solide :", "ce processus demande des millions d'années, et aucune forge ne saurait l'imiter."]).forEach((l, i) => { s += blanc(8, 27 + i * 10, l, { petit: true }); });
+        s += compteur(120, 228, p.age || "une durée allant de quelques millions à plusieurs dizaines de millions d'années");
         return s;
       },
     };
@@ -426,7 +426,7 @@
         s += (cible === "mars" ? txt : blanc)(8, 15, p.titre || "Une collision brise l'astéroïde");
         if (p.lignes2) p.lignes2.forEach((l, i) => { s += blanc(8, 27 + i * 10, l, { petit: true }); });
         s += compteur(390, 228, p.age || "");
-        if (!sol && t > choc + 0.2 && cible !== "melange" && cible !== "injection") s += blanc(8, 200, "en rouge : le fragment qui finira sur Terre", { petit: true, op: fen(t, choc + 0.2, choc + 0.35) });
+        if (!sol && t > choc + 0.2 && cible !== "melange" && cible !== "injection") s += blanc(8, 200, "en rouge : le fragment destiné à atterrir sur Terre", { petit: true, op: fen(t, choc + 0.2, choc + 0.35) });
         return s;
       },
     };
@@ -461,9 +461,9 @@
         s += blanc(SX + RT * 0.72, SY - RT * 0.72 - 4, "Terre", { petit: true, a: "middle" }) + blanc(SX - RM * 0.8, SY - RM * 0.75, "Mars", { petit: true, a: "middle" });
         s += blanc(SX + RJ * 0.55, SY + RJ * 0.45 - 70, "Jupiter", { petit: true });
         if (depart === "ceinture" || depart === "vesta") s += blanc(SX + RG * 0.72 + 4, SY + RG * 0.69 + 4, "lacune de Kirkwood (résonance 3:1)", { petit: true });
-        s += blanc(8, 15, p.titre || "Le fragment dérive, puis son orbite s'allonge jusqu'à croiser celle de la Terre");
-        s += bulle(286, 34, p.lignes || ["Chauffé par le Soleil, le fragment est poussé", "très lentement (effet Yarkovsky) jusqu'à une", "zone où Jupiter le tire à chaque tour :", "son orbite s'étire vers l'intérieur."], { op: fen(t, 0.1, 0.25) });
-        s += compteur(370, 228, p.age || "quelques millions à quelques dizaines de millions d'années");
+        s += blanc(8, 15, p.titre || "Le fragment dérive ; son orbite s'étire ensuite jusqu'à couper celle de la Terre");
+        s += bulle(286, 34, p.lignes || ["Réchauffé par le rayonnement solaire, le fragment subit une poussée", "très lentement (effet Yarkovsky) jusqu'à une", "région où Jupiter l'attire à chaque révolution :", "son orbite s'étire vers l'intérieur."], { op: fen(t, 0.1, 0.25) });
+        s += compteur(370, 228, p.age || "entre quelques millions et quelques dizaines de millions d'années");
         return s;
       },
     };
@@ -510,7 +510,7 @@
         s += txt(8, 14, p.titre || "La chute");
         (p.lignes || []).forEach((l, i) => { s += txt(8, 26 + i * 10, l, { petit: true }); });
         if (t > 0.5) s += bulle(300, 150 - 40, ["Freinée vers 20 km d'altitude, elle s'éteint", "et finit sa chute en quelques minutes :", "seule sa surface a fondu (croûte noire", "de moins d'un millimètre)."], { op: fen(t, 0.5, 0.62) });
-        if (glace && t > 0.82) s += bulle(28, 150, ["Enfouie dans la glace, entraînée par le glacier,", "elle ressort là où le vent use la glace bleue."], { op: fen(t, 0.82, 0.92) });
+        if (glace && t > 0.82) s += bulle(28, 150, ["Prise dans la glace, charriée par le glacier,", "elle réapparaît là où le vent érode la glace bleue."], { op: fen(t, 0.82, 0.92) });
         s += compteur(390, 228, p.date || "");
         return s;
       },
@@ -539,7 +539,7 @@
         }
         s += circ(200, fond - 3, 3.6, "#e53b2c", { stroke: "#fff", "stroke-width": 1.2, opacity: r1(fen(t, 0.6, 0.8)) });
         s += thermometre(426, 80, 120, T, 900, 1500, [900, 1100, 1300, 1500]);
-        s += txt(8, 14, p.titre || "Sous un volcan de Mars, l'olivine tombe au fond de la chambre magmatique");
+        s += txt(8, 14, p.titre || "Sous un volcan martien, l'olivine se dépose au fond de la chambre magmatique");
         s += bulle(8, 84, ["Plus denses que le liquide, les olivines", "s'accumulent en un tapis : un cumulat", "(une dunite). Le liquide resté entre elles", "donne pyroxènes et feldspath."], { op: fen(t, 0.35, 0.5) });
         s += compteur(140, 228, p.age || ilYa(1340));
         return s;
@@ -562,7 +562,7 @@
           s += c.flotte ? rect(c.x, y, 9, 3, "#f6f3ec", { stroke: "#9a9488", "stroke-width": 0.4 }) : poly(Array.from({ length: 6 }, (_, i) => [c.x + Math.cos(i * 1.047) * 3, y + Math.sin(i * 1.047) * 2.4]), "#5a6a38");
         }
         s += rect(0, 70, W, ep, "#e9e5da", { opacity: 0.9 });
-        s += txt(8, 14, p.titre || "Un océan de magma recouvre la jeune Lune", { clair: true });
+        s += txt(8, 14, p.titre || "La jeune Lune est recouverte par un océan de magma", { clair: true });
         s += bulle(250, 100, ["Le plagioclase, plus léger que le magma,", "flotte et forme une croûte blanche", "d'anorthosite ; olivine et pyroxène", "coulent au fond."], { op: fen(t, 0.3, 0.45) });
         s += compteur(390, 228, p.age || "≈ 4,46 à 4,36 milliards d'années");
         return s;
@@ -580,8 +580,8 @@
         // régolithe (gris) creusé de cratères, qui s'épaissit peu à peu sur la croûte d'anorthosite (blanc)
         let s = poly([...pts, [W, H], [0, H]], "#8c887f") + rect(0, 134 + 14 * fen(t, 0, 1), W, H, "#e3dfd4");
         for (const c of imp) if (t > c.t0 && t < c.t0 + 0.06) s += circ(c.x, prof(c.x), 10, "#fff2b0", { opacity: 0.85 });
-        s += txt(8, 14, p.titre || "Pendant des milliards d'années, les impacts broient et soudent le sol lunaire", { clair: true });
-        s += bulle(8, 170, ["Régolithe (gris) sur la croûte d'anorthosite (blanc) :", "chaque impact pulvérise, fond un peu de verre", "et tasse des fragments en brèche."], { op: fen(t, 0.2, 0.35) });
+        s += txt(8, 14, p.titre || "Durant des milliards d'années, les impacts brisent puis resoudent le sol lunaire", { clair: true });
+        s += bulle(8, 170, ["Couche de régolithe (gris) posée sur la croûte d'anorthosite (blanc) :", "chaque choc pulvérise la roche et fait fondre un peu de verre", "et tasse des fragments en brèche."], { op: fen(t, 0.2, 0.35) });
         s += compteur(390, 228, p.age || "de 4 à 1 milliard d'années");
         return s;
       },
@@ -601,7 +601,7 @@
     const rectZ = (x0, x1, y0, y1, cls) => { const [a, b] = G.P(x0, y1), [cx, d] = G.P(x1, y0); G.domaines.push(`<rect x="${r1(a)}" y="${r1(b)}" width="${r1(cx - a)}" height="${r1(d - b)}" class="${cls}"/>`); return [a, b, cx, d]; };
     const labs = [];
     const zoneLab = (t, box, pref = 0.5) => labs.push({ t, box, pref });
-    if (zones.includes("fusion")) zoneLab("les silicates fondent (au-delà de ≈ 1 100–1 200 °C)", rectZ(0.05, 6000, 1150, 2000, "fc2-fondu"), 0.7);
+    if (zones.includes("fusion")) zoneLab("les silicates entrent en fusion (au-delà de ≈ 1 100 à 1 200 °C)", rectZ(0.05, 6000, 1150, 2000, "fc2-fondu"), 0.7);
     if (zones.includes("chondres")) zoneLab("chondres", rectZ(1, 3.5, 1450, 1950, "fc2-s3"), 0.5);
     // recuit des chondrites (types pétrologiques) : bandes sur toute la largeur, étiquettes à droite (le chemin y passe peu)
     if (zones.includes("types")) [[400, 600, "fc2-s0", "type 3"], [600, 700, "fc2-s1", "type 4"], [700, 750, "fc2-s2", "type 5"], [750, 950, "fc2-s3", "type 6"]]
@@ -638,16 +638,16 @@
     connelly2012: "Âges des inclusions réfractaires (4 567,3 Ma) et des chondres (4 567,3 à 4 564,7 Ma) : Connelly J. N. et al. (2012), <i>Science</i> 338, 651.",
     huss2006: "Types pétrologiques et températures du métamorphisme des chondrites (type 3 < 600 °C ; type 4 ≈ 600–700 ; type 5 ≈ 700–750 ; type 6 ≈ 750–950 °C ; altération par l'eau des types 1 et 2 vers 20–150 °C) : Van Schmus W. R. et Wood J. A. (1967), <i>Geochimica et Cosmochimica Acta</i> 31, 747 ; Huss G. R. et al. (2006), dans <i>Meteorites and the Early Solar System II</i>, University of Arizona Press, p. 567.",
     gopel1994: "Âges de refroidissement des chondrites H (Sainte-Marguerite H4 vers 4 563 Ma, Kernouvé H6 vers 4 522 Ma, modèle « en pelure d'oignon ») : Göpel C., Manhès G. et Allègre C. J. (1994), <i>Earth and Planetary Science Letters</i> 121, 153 ; Trieloff M. et al. (2003), <i>Nature</i> 422, 502.",
-    laigle: "Chute de L'Aigle (Orne) le 26 avril 1803 : plusieurs milliers de pierres, 37 kg conservés, chondrite L6 ; enquête de Jean-Baptiste Biot pour l'Académie des sciences. Catalogue de la Meteoritical Society ; Wikipédia, « Météorite de L'Aigle ».",
+    laigle: "Le 26 avril 1803, la chute de L'Aigle (Orne) livre plusieurs milliers de pierres, dont 37 kg ont été conservés (chondrite L6) ; Jean-Baptiste Biot mène l'enquête pour l'Académie des sciences. Références : catalogue de la Meteoritical Society ; Wikipédia, « Météorite de L'Aigle ».",
     l466: "Éclatement de l'astéroïde parent des chondrites L il y a ≈ 466 millions d'années (météorites fossiles de l'Ordovicien de Suède, âges de choc des chondrites L) : Schmitz B. et al. (2001), <i>Earth and Planetary Science Letters</i> 194, 1 ; Heck P. R. et al. (2004), <i>Nature</i> 430, 323.",
     yarkovsky: "Transport des fragments vers la Terre (effet Yarkovsky, résonance 3:1 avec Jupiter, lacunes de Kirkwood) : Wikipédia, « Météorite HED » et « Effet Yarkovsky » ; âges d'exposition aux rayons cosmiques : Eugster O. et al. (2006), dans <i>Meteorites and the Early Solar System II</i>, p. 829.",
     orgueil: "Chute d'Orgueil (Tarn-et-Garonne) le 14 mai 1864 : une vingtaine de pierres, 14 kg, chondrite CI1 ; altération par l'eau sur l'astéroïde : Wikipédia, « Météorite d'Orgueil », « Chondrite carbonée » ; Fujiya W. et al. (2012), <i>Nature Communications</i> 3, 627 (âge des carbonates).",
     piani2020: "Hydrogène des chondrites à enstatite : Piani L. et al. (2020), <i>Science</i> 369, 1110.",
-    acapulco: "Acapulcoïtes et lodranites, astéroïde formé 1,5 à 2 millions d'années après les premiers solides, refroidi sous ≈ 1 000 °C entre 4 563,1 et 4 562,6 Ma : Wikipédia (anglais), « Lodranite », « Acapulcoite ».",
-    vesta: "Vesta et les météorites HED : fusion et croûte basaltique dans les premiers millions d'années, cratère Rheasilvia vers 1 milliard d'années, âges d'exposition de 6 à 73 millions d'années : Wikipédia, « (4) Vesta », « Météorite HED ».",
-    chassigny: "Chassigny (Haute-Marne), chute du 3 octobre 1815, cumulat d'olivine cristallisé vers 1 340 Ma, éjecté de Mars vers 11 Ma (comme les nakhlites) : Wikipédia, « Météorite de Chassigny », « Météorite martienne ».",
-    lune: "Météorites lunaires : ALH 81005, trouvée le 18 janvier 1982 (programme ANSMET), éjections depuis moins de 20 millions d'années ; croûte d'anorthosite de l'océan de magma : Wikipédia, « Météorite lunaire ».",
-    kruijer2014: "Accrétion des corps parents des fers dans le premier million d'années, noyaux séparés 1 à 1,5 million d'années après les premiers solides : Kruijer T. S. et al. (2014), <i>Science</i> 344, 1150 ; figures de Widmanstätten (700–450 °C, 100 à 10 000 °C par million d'années) : Wikipédia, « Figures de Widmanstätten » ; âges d'exposition des fers IIIAB groupés vers 650 millions d'années : Voshage H. (1967), <i>Zeitschrift für Naturforschung</i> 22a, 477.",
+    acapulco: "Acapulcoïtes et lodranites : l'astéroïde parent se forme 1,5 à 2 millions d'années après les premiers solides et se refroidit sous ≈ 1 000 °C entre 4 563,1 et 4 562,6 Ma. Sources : Wikipédia (en anglais), « Lodranite », « Acapulcoite ».",
+    vesta: "Vesta et les météorites HED : la fusion, puis la formation d'une croûte basaltique, interviennent dès les premiers millions d'années ; le cratère Rheasilvia se creuse vers 1 milliard d'années, et les âges d'exposition s'étalent de 6 à 73 millions d'années. Sources : Wikipédia, « (4) Vesta », « Météorite HED ».",
+    chassigny: "Chassigny (Haute-Marne) est tombée le 3 octobre 1815. Ce cumulat d'olivine, formé vers 1 340 Ma, a été éjecté de Mars vers 11 Ma, à l'instar des nakhlites. Références : Wikipédia, « Météorite de Chassigny », « Météorite martienne ».",
+    lune: "Météorites lunaires : ALH 81005, découverte le 18 janvier 1982 dans le cadre du programme ANSMET, éjectée depuis moins de 20 millions d'années, issue de la croûte d'anorthosite de l'océan de magma. Source : Wikipédia, « Météorite lunaire ».",
+    kruijer2014: "Les corps parents des fers se sont constitués au cours du premier million d'années ; leurs noyaux se sont séparés 1 à 1,5 million d'années après les premiers solides (Kruijer T. S. et al., 2014, <i>Science</i> 344, 1150). Les figures de Widmanstätten prennent forme entre 700 et 450 °C, à des vitesses de refroidissement de 100 à 10 000 °C par million d'années (Wikipédia, « Figures de Widmanstätten »). Quant aux âges d'exposition des fers IIIAB groupés, ils avoisinent 650 millions d'années (Voshage H., 1967, <i>Zeitschrift für Naturforschung</i> 22a, 477).",
     pallasite: "Pallasites : olivine du manteau et métal d'un noyau mêlés par une collision (Tarduno J. A. et al. 2012, <i>Science</i> 338, 939), refroidies de 2,5 à 18 °C par million d'années (Yang J. et al. 2010, <i>Geochimica et Cosmochimica Acta</i> 74, 4471).",
     meso: "Mésosidérites : mélange par collision vers 4 525 Ma (Haba M. K. et al. 2019, <i>Nature Geoscience</i> 12, 510), refroidissement de moins d'un degré par million d'années ; chute de Barea (Espagne) en 1842 : Wikipédia (anglais), « Mesosiderite ».",
   });
@@ -655,47 +655,47 @@
 
   // ─────────────────────────────── minéraux des météorites : forme et modes de formation (MIN_F, cartes de la fiche minéral) ───────────────────────────────
   if (typeof MIN_F !== "undefined") {
-    const SD = "Pas de diagramme : la formation dépend de l'histoire de l'astéroïde (chaleur, absence d'oxygène), pas d'un seul couple de conditions mesurables ici.";
+    const SD = "Aucun diagramme n'est tracé : la formation dépend de l'histoire de l'astéroïde (chaleur, absence d'oxygène) et non d'un couple de conditions mesurables.";
     const sc = (nom, texte) => ({ nom, texte, cond: false, sansDiagramme: SD });
     Object.assign(MIN_F, {
-      taenite: { sansForme: "Pas de cristal à faces : la taénite forme de minces bandes entre les lamelles de kamacite, et le fond des plessites.",
-        forme: "Fer et nickel empilés en cubique à faces centrées, comme l'or : chaque atome a 12 voisins. Lente à se démêler, la taénite riche en nickel ne rejette la kamacite qu'en dessous de 700 °C, sur des millions d'années.",
-        intro: "Elle naît dans le métal des astéroïdes qui ont fondu, et dans les grains de métal des chondrites.",
-        scenarios: [sc("Dans le noyau d'un astéroïde qui refroidit", "Au-dessus de 700 °C environ, tout le métal est de la taénite. En refroidissant de quelques dizaines de degrés par million d'années, elle rejette des lamelles de kamacite pauvre en nickel ; elle-même s'enrichit en nickel et reste en minces bandes brillantes : ce sont les figures de Widmanstätten."),
-          sc("Tétrataénite, sous 320 °C", "Si le refroidissement continue très lentement sous 320 °C, fer et nickel se rangent en plans alternés : la tétrataénite, connue seulement dans les météorites (Saint-Séverin, Charente).")] },
-      cohenite: { sansForme: "Cristaux de quelques millimètres pris dans le métal, à faces mal décrites : pas de dessin.",
-        forme: "Chaque atome de carbone est logé au centre d'un prisme de six fers ; les prismes partagent leurs arêtes. C'est la structure de la cémentite des aciers.",
-        intro: "Elle se forme quand du fer-nickel riche en carbone refroidit sans oxygène.",
-        scenarios: [sc("Dans les météorites de fer riches en carbone", "Dans les fers du groupe IAB et dans les uréilites, le carbone dissous dans le métal se sépare en refroidissant, sous forme de graphite ou de cohénite, souvent autour de nodules de troïlite."),
-          sc("Dans le fer natif terrestre", "À Disko (Groenland), le fer réduit par le charbon contient de la cohénite, comme une fonte naturelle.")] },
-      schreibersite: { sansForme: "En plaques et en fines aiguilles (rhabdites) dans le métal : pas de cristal à faces à dessiner.",
-        forme: "Composé métallique : chaque phosphore est entouré de neuf atomes de fer et de nickel, qui se touchent aussi entre eux. D'où son éclat et sa dureté (6,5 à 7).",
-        intro: "Elle rassemble le phosphore quand le métal d'un astéroïde refroidit.",
-        scenarios: [sc("Dans le métal qui refroidit", "Le phosphore, soluble dans le fer-nickel chaud, s'en sépare en refroidissant : en plaques de plusieurs centimètres autour des nodules de troïlite, puis en aiguilles microscopiques (rhabdites) au cœur de la kamacite.")] },
-      moissanite: { sansForme: "En grains microscopiques dans les météorites ; les plaquettes hexagonales des collections et des bijoux sont synthétiques.",
-        forme: "Silicium et carbone forment des tétraèdres, comme le carbone du diamant : d'où une dureté de 9,5. Les couches s'empilent de dizaines de façons (polytypes).",
-        intro: "Une partie se forme hors du Système solaire, dans les étoiles ; une autre dans des milieux extrêmement réduits.",
-        scenarios: [sc("Autour d'étoiles géantes, avant le Soleil", "Les grains de moissanite des chondrites carbonées se sont condensés dans l'atmosphère d'étoiles géantes rouges riches en carbone, puis ont voyagé dans le nuage d'où est né le Soleil : ce sont des « grains présolaires », plus vieux que le Système solaire."),
-          sc("Dans des roches très réduites", "Quelques grains sont signalés dans des kimberlites et des roches du manteau, où ils témoignent de conditions sans oxygène.")] },
-      troilite: { sansForme: "En nodules arrondis et en lames dans le métal (lamelles de Reichenbach) : pas de cristal à faces à dessiner.",
-        forme: "Structure de la nickéline : chaque fer au centre d'un octaèdre de six soufres, les octaèdres empilés en colonnes. Il n'y manque aucun fer, contrairement à la pyrrhotite.",
-        intro: "Le sulfure de fer des milieux sans oxygène : presque toutes les météorites, la Lune.",
-        scenarios: [sc("Dans le métal fondu d'un astéroïde", "Le fer et le soufre fondent ensemble dès 988 °C ; en refroidissant, le liquide de sulfure se sépare du métal et cristallise en nodules de troïlite."),
-          sc("Dans les chondrites", "Dans le disque autour du jeune Soleil, le soufre du gaz s'est fixé sur les grains de fer vers 400 °C : la troïlite des chondrites en vient.")] },
-      oldhamite: { sansForme: "En petits grains arrondis : pas de cristal à faces décrit.",
-        forme: "Structure du sel gemme : chaque calcium entouré de six soufres et inversement, d'où le clivage cubique.",
-        intro: "Il ne naît que là où il n'y a ni oxygène ni eau.",
-        scenarios: [sc("Près du Soleil, dans un gaz sans oxygène", "Dans les chondrites à enstatite et les aubrites, le calcium n'a pas trouvé d'oxygène et s'est lié au soufre : ces météorites se sont formées dans un milieu extraordinairement réduit."),
-          sc("Dans les terrils de charbon qui brûlent", "Sur Terre, il apparaît dans des roches cuites par la combustion de charbon, privées d'oxygène.")] },
-      daubreelite: { sansForme: "En lames dans la troïlite et en petits grains : pas de cristal à faces décrit.",
-        forme: "Structure du spinelle, avec du soufre à la place de l'oxygène : chrome dans des octaèdres, fer dans des tétraèdres.",
-        intro: "Elle se forme quand le chrome, faute d'oxygène, se lie au soufre.",
-        scenarios: [sc("Dans la troïlite des météorites de fer", "En refroidissant, la troïlite rejette le chrome qu'elle avait dissous sous forme de fines lames de daubréelite.")] },
-      merrillite: { sansForme: "En grains sans forme propre entre les autres minéraux : pas de dessin.",
-        forme: "Tétraèdres de phosphate isolés, reliés par du calcium, du magnésium et du sodium ; la même charpente que la whitlockite, sans hydrogène.",
-        intro: "Le phosphate des milieux secs : astéroïdes, Lune, Mars.",
-        scenarios: [sc("Dans les chondrites recuites", "Pendant le recuit des chondrites (types 4 à 6), le phosphore du métal s'oxyde et se combine au calcium des silicates : de petits grains de merrillite apparaissent."),
-          sc("Dans les basaltes de la Lune et de Mars", "En fin de cristallisation, la merrillite concentre les terres rares, l'uranium et le thorium du magma.")] },
+      taenite: { sansForme: "Sans faces cristallines propres, la taénite forme de minces bandes entre les lamelles de kamacite et constitue le fond des plessites.",
+        forme: "Le fer et le nickel s'empilent en cubique à faces centrées, comme l'or : chaque atome compte 12 voisins. La taénite, riche en nickel, se démêle lentement : elle ne rejette la kamacite qu'en dessous de 700 °C, et cela sur des millions d'années.",
+        intro: "Elle se forme dans le métal des astéroïdes fondus comme dans les grains métalliques des chondrites.",
+        scenarios: [sc("Au sein du noyau d'un astéroïde en cours de refroidissement", "Au-delà de 700 °C environ, la totalité du métal est constituée de taénite. Lorsque le refroidissement atteint quelques dizaines de degrés par million d'années, celle-ci expulse des lamelles de kamacite pauvre en nickel, tandis qu'elle-même s'enrichit en nickel et subsiste sous forme de minces bandes brillantes : ce sont les figures de Widmanstätten."),
+          sc("Tétrataénite, sous 320 °C", "Lorsque le refroidissement se poursuit très lentement sous 320 °C, les atomes de fer et de nickel s'alignent en plans alternés. Cette tétrataénite n'est connue que dans les météorites (Saint-Séverin, Charente).")] },
+      cohenite: { sansForme: "Cristaux de quelques millimètres pris dans le métal, aux faces mal décrites : aucun dessin n'est proposé.",
+        forme: "Chaque atome de carbone se loge au centre d'un prisme de six fers, les prismes se partageant leurs arêtes. Il s'agit de la structure de la cémentite des aciers.",
+        intro: "Elle se forme lorsque du fer-nickel riche en carbone refroidit en l'absence d'oxygène.",
+        scenarios: [sc("Rencontrée dans les météorites de fer à forte teneur en carbone", "Au refroidissement, le carbone dissous dans le métal précipite, sous forme de graphite ou de cohénite, dans les fers du groupe IAB et les uréilites, souvent au contact de nodules de troïlite."),
+          sc("Dans le fer natif terrestre", "À Disko (Groenland), le fer réduit par le charbon renferme de la cohénite, à la manière d'une fonte naturelle.")] },
+      schreibersite: { sansForme: "Elle forme des plaques et de fines aiguilles (rhabdites) dans le métal, sans cristal à faces à dessiner.",
+        forme: "Il s'agit d'un composé métallique : chaque phosphore est enveloppé de neuf atomes de fer et de nickel, lesquels se touchent également. Cette structure explique son éclat et sa dureté (6,5 à 7).",
+        intro: "Elle concentre le phosphore lorsque le métal d'un astéroïde se refroidit.",
+        scenarios: [sc("Dans le métal qui refroidit", "Soluble dans le fer-nickel chaud, le phosphore s'en détache au refroidissement : il forme des plaques de plusieurs centimètres autour des nodules de troïlite, puis des aiguilles microscopiques (rhabdites) au cœur de la kamacite.")] },
+      moissanite: { sansForme: "Présente sous forme de grains microscopiques dans les météorites : les plaquettes hexagonales vendues en collection ou en bijouterie sont de synthèse.",
+        forme: "Le silicium et le carbone s'organisent en tétraèdres, à l'image du carbone du diamant, d'où une dureté de 9,5. Les couches peuvent s'empiler de dizaines de manières, ce qui définit les polytypes.",
+        intro: "Certains grains naissent hors du Système solaire, au sein d'étoiles, tandis que d'autres se forment dans des milieux extrêmement réducteurs.",
+        scenarios: [sc("Autour d'étoiles géantes, antérieurement au Soleil", "Les grains de moissanite contenus dans les chondrites carbonées se sont condensés dans l'atmosphère d'étoiles géantes rouges riches en carbone, avant de migrer dans le nuage à l'origine du Soleil. Il s'agit de « grains présolaires », plus anciens que le Système solaire lui-même."),
+          sc("Dans des roches très réduites", "Quelques grains ont été signalés dans des kimberlites et des roches du manteau, où ils attestent d'un milieu dépourvu d'oxygène.")] },
+      troilite: { sansForme: "Se présente en nodules arrondis et en lames dans le métal (lamelles de Reichenbach), sans cristal à faces qui se prête au dessin.",
+        forme: "La nickéline adopte une structure où chaque fer occupe le centre d'un octaèdre de six soufres, les octaèdres s'empilant en colonnes. Contrairement à la pyrrhotite, aucun fer ne fait défaut.",
+        intro: "Il s'agit du sulfure de fer caractéristique des milieux sans oxygène, présent dans presque toutes les météorites et sur la Lune.",
+        scenarios: [sc("Dans le métal fondu d'un astéroïde", "Le fer et le soufre entrent en fusion conjointe dès 988 °C ; au refroidissement, le liquide sulfuré se détache du métal et cristallise en nodules de troïlite."),
+          sc("Dans les chondrites", "Au sein du disque entourant le jeune Soleil, le soufre gazeux se fixa sur les grains de fer vers 400 °C : c'est de ce processus que provient la troïlite des chondrites.")] },
+      oldhamite: { sansForme: "Elle se présente en petits grains arrondis, sans cristal à faces décrit.",
+        forme: "Elle adopte la structure du sel gemme : chaque calcium est entouré de six soufres, et réciproquement, ce qui explique le clivage cubique.",
+        intro: "Elle ne se forme que là où l'oxygène et l'eau sont absents.",
+        scenarios: [sc("Au voisinage du Soleil, dans un gaz dépourvu d'oxygène", "Dans les chondrites à enstatite et les aubrites, le calcium, faute d'oxygène disponible, s'est combiné au soufre : ces météorites se sont donc formées dans un milieu extrêmement réducteur."),
+          sc("Dans les terrils de charbon qui brûlent", "À la surface de la Terre, elle se rencontre dans des roches cuites par la combustion du charbon, à l'abri de l'oxygène.")] },
+      daubreelite: { sansForme: "Elle forme des lames dans la troïlite et de petits grains, sans cristal à faces décrit.",
+        forme: "Elle reprend la structure du spinelle, le soufre remplaçant l'oxygène : le chrome occupe les octaèdres, le fer les tétraèdres.",
+        intro: "Elle naît lorsque le chrome, en l'absence d'oxygène, se combine au soufre.",
+        scenarios: [sc("Présente dans la troïlite des météorites de fer", "Au refroidissement, la troïlite expulse le chrome qu'elle contenait en solution, sous forme de fines lames de daubréelite.")] },
+      merrillite: { sansForme: "Elle se présente en grains sans forme propre, logés entre les autres minéraux, et ne fait donc l'objet d'aucun dessin.",
+        forme: "Des tétraèdres de phosphate isolés sont reliés entre eux par du calcium, du magnésium et du sodium : la charpente est celle de la whitlockite, mais dépourvue d'hydrogène.",
+        intro: "Phosphate caractéristique des milieux secs, comme les astéroïdes, la Lune ou Mars.",
+        scenarios: [sc("Dans les chondrites recuites", "Au cours du recuit des chondrites (types 4 à 6), le phosphore du métal s'oxyde puis se lie au calcium des silicates : de petits grains de merrillite prennent alors naissance."),
+          sc("Présente dans les basaltes lunaires et martiens", "En fin de cristallisation, la merrillite se charge en terres rares, en uranium et en thorium issus du magma.")] },
     });
   }
 
@@ -708,64 +708,64 @@
   }
 
   poser("chondrite_ordinaire", {
-    exemple: "Exemple suivi : la pierre de L'Aigle (Orne), tombée le 26 avril 1803, une chondrite L6.",
+    exemple: "Exemple suivi : la pierre de L'Aigle (Orne), chute du 26 avril 1803, classée chondrite L6.",
     anim: [
-      E("Disque", "Il y a 4 567 millions d'années, un disque de gaz et de poussières tourne autour du jeune Soleil ; les premiers solides y condensent", "Il y a 4 567 millions d'années", null, "disqueSolaire", { zone: "ceinture", cai: true }),
-      E("Chondres", "Des amas de poussière fondent en quelques minutes sous un éclair de chaleur (1 500 à 1 900 °C), puis se figent en quelques heures : les chondres", "1 à 3 millions d'années après les premiers solides", "quelques heures pour chaque goutte", "chondresFlash", {}),
-      E("Astéroïde", "Chondres, grains de métal et poussière se collent : un astéroïde d'une centaine de kilomètres se forme", "≈ 2 millions d'années après", null, "accretionAsteroide", {}),
-      E("Recuit", "L'aluminium 26 chauffe l'astéroïde : au cœur, vers 750–950 °C, la roche recristallise sans fondre (type 6) ; elle refroidit ensuite pendant des dizaines de millions d'années", "De 2 à ≈ 60 millions d'années après", "des dizaines de millions d'années", "chauffageAsteroide", { mode: "metamorphisme", position: 0.15, nom: "L'Aigle, au cœur (type 6)" }),
-      E("Collision", "Il y a ≈ 466 millions d'années, une collision fait éclater l'astéroïde des chondrites L ; ses débris se dispersent", "Il y a ≈ 466 millions d'années", null, "collision", { cible: "asteroide", age: ilYa(466) }),
-      E("Voyage", "Un fragment dérive jusqu'à une zone où Jupiter allonge son orbite : il finit par croiser celle de la Terre", "Pendant des millions d'années", "en général 10 à 50 millions d'années dans l'espace", "voyageEspace", { depart: "ceinture", age: "10 à 50 millions d'années (rayons cosmiques)" }),
-      E("Chute", "Le 26 avril 1803, vers 13 h, une boule de feu traverse la Normandie : des milliers de pierres tombent autour de L'Aigle", "Le 26 avril 1803", null, "chute", { paysage: "village", pierres: 14, date: "26 avril 1803", titre: "Le 26 avril 1803, à L'Aigle (Orne)", lignes: ["Une boule de feu, des détonations, puis une pluie", "de plusieurs milliers de pierres : 37 kg conservés."] }),
-      loupe6("Au microscope, chondres, grains de métal et de sulfure dans une matrice recristallisée", ["Chondres d'olivine et de pyroxène", "aux bords estompés par le recuit,", "grains de fer-nickel et de troïlite.", "Le rapport de Biot sur cette chute", "a convaincu l'Académie que des", "pierres tombent du ciel."]),
+      E("Disque", "Il y a 4 567 millions d'années, un disque de gaz et de poussière entoure le jeune Soleil ; c'est là que se condensent les premiers solides", "Il y a 4 567 millions d'années", null, "disqueSolaire", { zone: "ceinture", cai: true }),
+      E("Chondres", "Sous l'effet d'un échauffement de courte durée (1 500 à 1 900 °C), des amas de poussière fondent en quelques minutes ; figés en quelques heures, ils donnent les chondres.", "Environ 1 à 3 millions d'années, après les premiers solides", "quelques heures pour chaque goutte", "chondresFlash", {}),
+      E("Astéroïde", "Chondres, grains métalliques et poussière s'agglomèrent : il en résulte un astéroïde d'une centaine de kilomètres", "≈ 2 millions d'années après", null, "accretionAsteroide", {}),
+      E("Recuit", "Sous l'effet de l'aluminium 26, le cœur atteint 750 à 950 °C sans fondre et recristallise (type 6) ; le refroidissement dure ensuite des dizaines de millions d'années.", "De 2 à ≈ 60 millions d'années après", "des dizaines de millions d'années", "chauffageAsteroide", { mode: "metamorphisme", position: 0.15, nom: "L'Aigle, au cœur (type 6)" }),
+      E("Collision", "Voici ≈ 466 millions d'années, une collision disloque l'astéroïde des chondrites L, dont les débris se répandent", "Il y a ≈ 466 millions d'années", null, "collision", { cible: "asteroide", age: ilYa(466) }),
+      E("Voyage", "Un fragment migre vers une zone où Jupiter étire son orbite, jusqu'à croiser celle de la Terre", "Pendant des millions d'années", "séjournant généralement 10 à 50 millions d'années dans l'espace", "voyageEspace", { depart: "ceinture", age: "10 à 50 millions d'années (rayons cosmiques)" }),
+      E("Chute", "Le 26 avril 1803, vers 13 h, une boule de feu traverse la Normandie : plusieurs milliers de pierres s'abattent sur les environs de L'Aigle", "Le 26 avril 1803", null, "chute", { paysage: "village", pierres: 14, date: "26 avril 1803", titre: "Le 26 avril 1803, à L'Aigle (Orne)", lignes: ["Une boule de feu, des détonations, puis une averse de pierres", "de plusieurs milliers de pierres : 37 kg conservés."] }),
+      loupe6("À l'observation microscopique, on distingue des chondres, des grains de métal et de sulfure au sein d'une matrice recristallisée.", ["Chondres d'olivine et de pyroxène", "aux bords estompés par le recuit,", "grains de fer-nickel et de troïlite.", "Le rapport de Biot sur cette chute", "a convaincu l'Académie que des", "pierres tombent du ciel."]),
     ],
     cond: { type: "meteorite", zones: ["fusion", "chondres", "types"], src: ["gopel1994", "l466", "yarkovsky", "laigle"], chemin: [
       { age: 0.1, T: 1350, lab: "premiers solides" },
-      { age: 0.9, T: -80, n: 1, t: "Les poussières du disque, froides, tournent autour du Soleil." },
+      { age: 0.9, T: -80, n: 1, t: "Froides, les poussières du disque gravitent autour du Soleil." },
       { age: 1.9, T: -60 }, { age: 2, T: 1750 },
-      { age: 2.1, T: 30, n: 2, t: "Un éclair de chaleur les fond (1 500 à 1 900 °C) ; figées en quelques heures, elles deviennent des chondres." },
+      { age: 2.1, T: 30, n: 2, t: "Une montée soudaine en température (1 500 à 1 900 °C) les liquéfie ; figées en quelques heures, elles deviennent des chondres." },
       { age: 2.5, T: -30, n: 3, t: "Chondres, métal et poussière s'agglomèrent en astéroïde." },
       { age: 8, T: 850 },
-      { age: 50, T: 400, n: 4, t: "Au cœur de l'astéroïde, recuite vers 750–950 °C (type 6), la roche refroidit lentement pendant des dizaines de millions d'années." },
+      { age: 50, T: 400, n: 4, t: "En son cœur, la roche est recuite vers 750 à 950 °C (type 6), puis elle se refroidit lentement pendant des dizaines de millions d'années." },
       { age: 3000, T: -60 },
-      { age: 4101, T: 350, n: 5, t: "Il y a ≈ 466 millions d'années : la collision qui fait éclater l'astéroïde la chauffe brièvement." },
-      { age: 4540, T: -70, n: 6, t: "Fragment dans l'espace, vers −70 °C, pendant des millions d'années." },
+      { age: 4101, T: 350, n: 5, t: "Vers ≈ 466 millions d'années, la collision qui disloque l'astéroïde la réchauffe brièvement." },
+      { age: 4540, T: -70, n: 6, t: "Une fois dans l'espace, il demeure vers −70 °C pendant des millions d'années." },
       { age: 4567, T: 15, n: 7, t: "Le 26 avril 1803, chute à L'Aigle." },
-      { n: 8, t: "Au microscope : chondres estompés, métal et troïlite." }] },
+      { n: 8, t: "Vus au microscope, les chondres sont estompés, avec du métal et de la troïlite." }] },
   });
 
   poser("chondrite_carbonee", {
-    exemple: "Exemple suivi : la pierre d'Orgueil (Tarn-et-Garonne), tombée le 14 mai 1864, une chondrite carbonée CI.",
+    exemple: "Exemple suivi : la pierre d'Orgueil (Tarn-et-Garonne), chute du 14 mai 1864, classée chondrite carbonée CI.",
     anim: [
-      E("Disque froid", "Au-delà de la ligne des glaces, loin du Soleil, la poussière se mêle de glace et de molécules organiques", "Il y a 4 567 millions d'années", null, "disqueSolaire", { zone: "externe", ici: "ici : poussière, glace et matière organique", loupe: "poussière et glace se collent" }),
-      E("Astéroïde", "Poussière, glace et matière organique s'agglomèrent en un petit astéroïde", "≈ 3 millions d'années après les premiers solides", null, "accretionAsteroide", { glace: true, couleur: "#4a4540", titre: "Poussière, glace et matière organique s'agglomèrent en un petit astéroïde", age: "≈ 3 millions d'années après les premiers solides" }),
-      E("Eau liquide", "Chauffée par l'aluminium 26, la glace fond : l'eau (≈ 50 à 150 °C) change olivine et pyroxène en argiles, magnétite et carbonates", "≈ 3 à 6 millions d'années après", "quelques millions d'années", "chauffageAsteroide", { mode: "eau", tmax: 120, position: 0.4, nom: "Orgueil", age: "≈ 3 à 6 millions d'années après les premiers solides", titre: "La glace fond : de l'eau liquide circule dans l'astéroïde" }),
-      E("Collision et voyage", "Une collision libère un fragment, qui dérive pendant des millions d'années jusqu'à croiser l'orbite de la Terre", "Bien plus tard", null, "collision", { cible: "asteroide", couleur: "#3d3934", age: "il y a quelques millions d'années" }),
-      E("Chute", "Le 14 mai 1864, peu après 20 h, une vingtaine de pierres noires tombent près d'Orgueil", "Le 14 mai 1864", null, "chute", { paysage: "champ", pierres: 8, date: "14 mai 1864", titre: "Le 14 mai 1864, à Orgueil (Tarn-et-Garonne)", lignes: ["Une vingtaine de pierres noires et friables,", "14 kg en tout : la plus grosse chondrite CI connue."] }),
-      loupe6("Au microscope : une matrice d'argiles, des amas de magnétite et des carbonates, plus aucun chondre", ["Tout a été transformé par l'eau :", "argiles en feuillets, framboïdes de", "magnétite, plaquettes de sulfure,", "carbonates. Sa chimie reste celle", "du Soleil, moins les gaz."]),
+      E("Disque froid", "Au-delà de la ligne des glaces, très loin du Soleil, poussières, glace et molécules organiques se rassemblent.", "Il y a 4 567 millions d'années", null, "disqueSolaire", { zone: "externe", ici: "ici : poussière, glace et matière organique", loupe: "poussière et glace se collent" }),
+      E("Astéroïde", "Ces éléments, poussière, glace et matière organique, se réunissent pour former un petit astéroïde.", "Au bout de ≈ 3 millions d'années, après les premiers solides", null, "accretionAsteroide", { glace: true, couleur: "#4a4540", titre: "Ces éléments, poussière, glace et matière organique, se réunissent pour former un petit astéroïde.", age: "Au bout de ≈ 3 millions d'années, après les premiers solides" }),
+      E("Eau liquide", "Réchauffée par l'aluminium 26, la glace se liquéfie : l'eau (≈ 50 à 150 °C) transforme l'olivine et le pyroxène en argiles, en magnétite et en carbonates", "≈ 3 à 6 millions d'années après", "quelques millions d'années", "chauffageAsteroide", { mode: "eau", tmax: 120, position: 0.4, nom: "Orgueil", age: "Vers ≈ 3 à 6 millions d'années, à partir des premiers solides", titre: "La glace fond : de l'eau liquide circule dans l'astéroïde" }),
+      E("Collision et voyage", "Une collision détache un fragment, qui erre pendant des millions d'années avant de croiser l'orbite terrestre", "Bien plus tard", null, "collision", { cible: "asteroide", couleur: "#3d3934", age: "il y a quelques millions d'années" }),
+      E("Chute", "Le 14 mai 1864, vers 20 h, une vingtaine de pierres noires chutent aux abords d'Orgueil.", "Le 14 mai 1864", null, "chute", { paysage: "champ", pierres: 8, date: "14 mai 1864", titre: "Le 14 mai 1864, à Orgueil (Tarn-et-Garonne)", lignes: ["Une vingtaine de pierres noires et friables,", "Pesant 14 kg au total, il s'agit de la plus grosse chondrite CI connue."] }),
+      loupe6("Observée au microscope, elle montre une matrice argileuse, des amas de magnétite et des carbonates, sans aucun chondre", ["Tout a été transformé par l'eau :", "argiles en feuillets, framboïdes de", "magnétite, plaquettes de sulfure,", "carbonates. Sa chimie reste celle", "du Soleil, moins les gaz."]),
     ],
     cond: { type: "meteorite", zones: ["eau"], src: ["orgueil", "huss2006"], chemin: [
       { age: 0.1, T: 1350, lab: "premiers solides" },
-      { age: 1, T: -140, n: 1, t: "Loin du Soleil, poussière, glace et matière organique, vers −140 °C." },
+      { age: 1, T: -140, n: 1, t: "Loin du Soleil, la poussière, la glace et la matière organique se trouvent vers −140 °C." },
       { age: 3, T: -100, n: 2, t: "Elles s'agglomèrent en un petit astéroïde." },
       { age: 4, T: 0 },
-      { age: 6, T: 110, n: 3, t: "La glace fond : l'eau liquide (≈ 50 à 150 °C) transforme les minéraux en argiles, magnétite et carbonates." },
+      { age: 6, T: 110, n: 3, t: "L'eau liquide (≈ 50 à 150 °C) issue de la fonte de la glace convertit les minéraux en argiles, en magnétite et en carbonates." },
       { age: 100, T: -60 },
-      { age: 4550, T: -70, n: 4, t: "Une collision libère un fragment, qui voyage dans l'espace." },
+      { age: 4550, T: -70, n: 4, t: "Une collision éjecte un fragment qui poursuit son voyage dans l'espace." },
       { age: 4567, T: 15, n: 5, t: "Le 14 mai 1864, chute à Orgueil." },
-      { n: 6, t: "Au microscope : argiles, magnétite, carbonates ; plus de chondres." }] },
+      { n: 6, t: "En lame mince : argiles, magnétite et carbonates, sans aucun chondre." }] },
   });
 
   poser("chondrite_enstatite", {
-    exemple: "Exemple suivi : la pierre de Saint-Sauveur (Haute-Garonne), tombée en 1914, une chondrite à enstatite EH5.",
+    exemple: "Exemple suivi : la pierre de Saint-Sauveur (Haute-Garonne), chute de 1914, classée chondrite à enstatite EH5.",
     anim: [
-      E("Près du Soleil", "Tout près du Soleil, les poussières se forment dans un gaz presque sans oxygène : le fer reste en métal et en sulfure", "Il y a 4 567 millions d'années", null, "disqueSolaire", { zone: "interne", ici: "ici : sans oxygène, près du Soleil" }),
-      E("Chondres", "Les chondres se forment ; faits d'enstatite presque pure, ils figent en fibres rayonnantes", "1 à 3 millions d'années après", "quelques heures pour chaque goutte", "chondresFlash", { types: ["rp", "rp", "pop", "rp", "rp"] }),
-      E("Astéroïde", "Chondres, beaucoup de métal et de sulfures s'agglomèrent", "≈ 2 millions d'années après", null, "accretionAsteroide", { couleur: "#8a877e" }),
-      E("Recuit", "L'astéroïde chauffe vers 700–750 °C (type 5) puis refroidit lentement", "De 2 à quelques dizaines de millions d'années après", "des dizaines de millions d'années", "chauffageAsteroide", { mode: "metamorphisme", position: 0.4, nom: "Saint-Sauveur (type 5)" }),
-      E("Collision et voyage", "Une collision détache un fragment, qui finit par croiser l'orbite de la Terre", "Bien plus tard", null, "collision", { cible: "asteroide", couleur: "#8a877e", age: "il y a quelques millions d'années" }),
-      E("Chute", "En 1914, une pierre de 14 kg tombe à Saint-Sauveur, près de Toulouse", "1914", null, "chute", { paysage: "champ", pierres: 1, date: "1914", titre: "En 1914, à Saint-Sauveur (Haute-Garonne)", lignes: ["Une pierre de 14 kg, très riche en métal :", "une chondrite à enstatite EH5."] }),
-      loupe6("Au microscope : chondres d'enstatite, beaucoup de métal et des sulfures rares", ["Chondres fibreux d'enstatite sans", "fer, fer-nickel chargé de silicium,", "troïlite, sulfures de calcium et de", "chrome : des minéraux qui ne naissent", "qu'en l'absence d'oxygène."]),
+      E("Près du Soleil", "Au plus près du Soleil, les poussières naissent dans un gaz presque dépourvu d'oxygène : le fer demeure à l'état de métal et de sulfure", "Il y a 4 567 millions d'années", null, "disqueSolaire", { zone: "interne", ici: "ici : sans oxygène, près du Soleil" }),
+      E("Chondres", "Les chondres naissent : constitués d'enstatite presque pure, ils se figent en fibres rayonnantes", "1 à 3 millions d'années après", "quelques heures pour chaque goutte", "chondresFlash", { types: ["rp", "rp", "pop", "rp", "rp"] }),
+      E("Astéroïde", "Les chondres se rassemblent avec une forte proportion de métal et de sulfures.", "≈ 2 millions d'années après", null, "accretionAsteroide", { couleur: "#8a877e" }),
+      E("Recuit", "L'astéroïde chauffe vers 700 à 750 °C (type 5) puis refroidit lentement", "Entre 2 et quelques dizaines de millions d'années plus tard", "des dizaines de millions d'années", "chauffageAsteroide", { mode: "metamorphisme", position: 0.4, nom: "Saint-Sauveur (type 5)" }),
+      E("Collision et voyage", "Une collision libère un fragment, dont l'orbite finit par couper celle de la Terre", "Bien plus tard", null, "collision", { cible: "asteroide", couleur: "#8a877e", age: "il y a quelques millions d'années" }),
+      E("Chute", "En 1914, une pierre de 14 kg chute près de Saint-Sauveur, à proximité de Toulouse", "1914", null, "chute", { paysage: "champ", pierres: 1, date: "1914", titre: "En 1914, à Saint-Sauveur (Haute-Garonne)", lignes: ["Riche en métal, une pierre de 14 kg :", "une chondrite à enstatite EH5."] }),
+      loupe6("Vue au microscope, elle présente des chondres d'enstatite, une forte proportion de métal et des sulfures rares", ["Chondres fibreux d'enstatite sans", "fer, fer-nickel chargé de silicium,", "troïlite, sulfures de calcium et de", "chrome : des minéraux qui ne naissent", "qu'en l'absence d'oxygène."]),
     ],
     cond: { type: "meteorite", zones: ["fusion", "chondres", "types"], src: ["piani2020", "yarkovsky"], chemin: [
       { age: 0.1, T: 1350, lab: "premiers solides" },
@@ -774,7 +774,7 @@
       { age: 2.1, T: 40, n: 2, t: "Chondres d'enstatite fondus puis figés." },
       { age: 2.5, T: 0, n: 3, t: "Accrétion de l'astéroïde." },
       { age: 8, T: 730 },
-      { age: 40, T: 400, n: 4, t: "Recuit vers 700–750 °C (type 5), puis refroidissement lent." },
+      { age: 40, T: 400, n: 4, t: "Recuit vers 700 à 750 °C (type 5), puis refroidissement lent." },
       { age: 3000, T: -50 },
       { age: 4550, T: -60, n: 5, t: "Collision, voyage dans l'espace." },
       { age: 4567, T: 15, n: 6, t: "En 1914, chute à Saint-Sauveur." },
@@ -782,20 +782,20 @@
   });
 
   poser("achondrite_primitive", {
-    exemple: "Exemple suivi : la pierre d'Acapulco (Mexique), tombée le 11 août 1976 ; aucune achondrite primitive n'est connue en France.",
+    exemple: "Exemple suivi : la pierre d'Acapulco (Mexique), survenue le 11 août 1976 ; on ne connaît aucune achondrite primitive en France.",
     anim: [
-      E("Astéroïde", "Un astéroïde de matière chondritique s'agglomère tôt, 1,5 à 2 millions d'années après les premiers solides", "≈ 1,5 à 2 millions d'années après", null, "accretionAsteroide", { age: "≈ 1,5 à 2 millions d'années après les premiers solides" }),
-      E("Début de fusion", "Formé tôt, riche en aluminium 26, il chauffe au-delà de 1 000 °C : le fer et son sulfure fondent et s'écoulent, un peu de silicate fond, les chondres disparaissent", "≈ 2 à 4 millions d'années après", "quelques millions d'années", "chauffageAsteroide", { mode: "fusionPartielle", tmax: 1150, position: 0.3, nom: "Acapulco", titre: "Chauffé au-delà de 1 000 °C, l'astéroïde commence à fondre", age: "≈ 2 à 4 millions d'années après les premiers solides" }),
-      E("Refroidissement", "La chaleur baisse avant que la fusion n'aille au bout : sous 1 000 °C vers 4 563 Ma, les grains recristallisent en mosaïque", "Vers 4 563 millions d'années", null, "chauffageAsteroide", { mode: "metamorphisme", tmax: 950, position: 0.3, nom: "Acapulco", titre: "La chaleur baisse : les grains recristallisent en mosaïque", age: ilYa(4563) }),
-      E("Collision et voyage", "Une collision détache un fragment, qui dérive jusqu'à l'orbite de la Terre", "Bien plus tard", null, "collision", { cible: "asteroide", age: "il y a quelques millions d'années" }),
-      E("Chute", "Le 11 août 1976, une pierre de 1,9 kg tombe près d'Acapulco ; ramassée un quart d'heure plus tard, elle était froide au toucher", "Le 11 août 1976", null, "chute", { paysage: "desert", pierres: 1, date: "11 août 1976", titre: "Le 11 août 1976, près d'Acapulco (Mexique)", lignes: ["Une pierre de 1,9 kg dans un trou de 30 cm,", "froide au toucher quinze minutes après."] }),
-      loupe6("Au microscope : grains égaux recristallisés, métal et troïlite", ["Grains d'olivine, de pyroxènes et de", "plagioclase de même taille, joints", "à 120° : une roche recuite, pas", "cristallisée d'un magma. Il reste", "du métal et du sulfure."]),
+      E("Astéroïde", "De bonne heure, un astéroïde de matière chondritique se forme, 1,5 à 2 millions d'années après les premiers solides", "≈ 1,5 à 2 millions d'années après", null, "accretionAsteroide", { age: "Au bout de ≈ 1,5 à 2 millions d'années, depuis les premiers solides" }),
+      E("Début de fusion", "Précoce et riche en aluminium 26, il atteint plus de 1 000 °C : le fer et son sulfure fondent puis s'écoulent, une faible part des silicates entre en fusion, et les chondres s'effacent", "≈ 2 à 4 millions d'années après", "quelques millions d'années", "chauffageAsteroide", { mode: "fusionPartielle", tmax: 1150, position: 0.3, nom: "Acapulco", titre: "Chauffé au-delà de 1 000 °C, l'astéroïde commence à fondre", age: "Vers ≈ 2 à 4 millions d'années, à partir des premiers solides" }),
+      E("Refroidissement", "La chaleur décroît avant que la fusion ne s'achève : passé sous 1 000 °C, vers 4 563 Ma, les grains se recristallisent en mosaïque", "Vers 4 563 millions d'années", null, "chauffageAsteroide", { mode: "metamorphisme", tmax: 950, position: 0.3, nom: "Acapulco", titre: "La chaleur baisse : les grains recristallisent en mosaïque", age: ilYa(4563) }),
+      E("Collision et voyage", "Une collision détache un fragment, qui gagne l'orbite terrestre", "Bien plus tard", null, "collision", { cible: "asteroide", age: "il y a quelques millions d'années" }),
+      E("Chute", "Près d'Acapulco, une pierre de 1,9 kg s'écrase le 11 août 1976 ; quinze minutes plus tard, lorsqu'on la ramasse, elle est déjà froide au toucher.", "Le 11 août 1976", null, "chute", { paysage: "desert", pierres: 1, date: "11 août 1976", titre: "Le 11 août 1976, près d'Acapulco (Mexique)", lignes: ["Logée dans un trou de 30 cm, une pierre de 1,9 kg,", "froide au toucher quinze minutes après."] }),
+      loupe6("Observés au microscope, des grains de taille homogène, recristallisés, côtoient du métal et de la troïlite", ["Grains d'olivine, de pyroxènes et de", "plagioclase de même taille, joints", "à 120° : une roche recuite, pas", "cristallisée d'un magma. Il reste", "du métal et du sulfure."]),
     ],
     cond: { type: "meteorite", zones: ["fusion", "fefs"], src: ["acapulco", "yarkovsky"], chemin: [
       { age: 0.1, T: 1350, lab: "premiers solides" },
-      { age: 1.8, T: 0, n: 1, t: "Accrétion de l'astéroïde, 1,5 à 2 millions d'années après les premiers solides." },
-      { age: 3, T: 1150, n: 2, t: "Au-delà de 980 °C, le fer et son sulfure fondent ; vers 1 100–1 200 °C, un peu de silicate fond." },
-      { age: 4.5, T: 950, n: 3, t: "Vers 4 563 Ma, sous ≈ 1 000 °C : les grains recristallisent." },
+      { age: 1.8, T: 0, n: 1, t: "L'astéroïde s'accrète environ 1,5 à 2 millions d'années après les premiers solides." },
+      { age: 3, T: 1150, n: 2, t: "Au-dessus de 980 °C, le fer et son sulfure entrent en fusion ; vers 1 100 à 1 200 °C, une faible part des silicates fond." },
+      { age: 4.5, T: 950, n: 3, t: "Les grains recristallisent vers 4 563 Ma, lorsque la température descend sous ≈ 1 000 °C." },
       { age: 200, T: -40 },
       { age: 4550, T: -60, n: 4, t: "Collision et voyage dans l'espace." },
       { age: 4567, T: 25, n: 5, t: "Le 11 août 1976, chute près d'Acapulco." },
@@ -803,105 +803,105 @@
   });
 
   poser("achondrite_asteroidale", {
-    exemple: "Exemple suivi : la pierre de Juvinas (Ardèche), tombée le 15 juin 1821, une eucrite venue de l'astéroïde Vesta.",
+    exemple: "Exemple suivi : la pierre de Juvinas (Ardèche), chutée le 15 juin 1821, relève de l'eucrite issue de l'astéroïde Vesta.",
     anim: [
-      E("Vesta naît", "Vesta, futur astéroïde de 525 km, s'agglomère dans le premier million d'années", "≈ 1 million d'années après les premiers solides", null, "accretionAsteroide", { rmax: 72, taille: "≈ 525 km (Vesta)", titre: "Vesta, futur astéroïde de 525 km, s'agglomère", age: "≈ 1 million d'années après les premiers solides" }),
-      E("Fusion", "Riche en aluminium 26, Vesta fond : le métal descend en noyau, un océan de magma l'entoure", "1 à 3 millions d'années après", "quelques millions d'années", "differenciation", { croute: false, titre: "Vesta fond : le métal descend en noyau" }),
-      E("Croûte", "Le magma qui remonte se fige en surface en coulées de basalte : la croûte de Vesta, faite d'eucrites", "Jusqu'à ≈ 15 millions d'années après", "≈ 10 millions d'années", "differenciation", { suivi: "croute", tmax: 1200, titre: "Les laves remontent et se figent : une croûte de basalte", age: "jusqu'à ≈ 15 millions d'années après les premiers solides" }),
-      E("Rheasilvia", "Il y a ≈ 1 milliard d'années, un astéroïde de 60 km frappe Vesta : le cratère Rheasilvia, large de 500 km, lance des fragments de croûte", "Il y a ≈ 1 milliard d'années", null, "collision", { cible: "vesta", reste: true, titre: "Un impact géant creuse le cratère Rheasilvia sur Vesta", age: "il y a ≈ 1 milliard d'années" }),
-      E("Voyage", "Les fragments dérivent jusqu'à la résonance 3:1 avec Jupiter, qui allonge leur orbite jusqu'à celle de la Terre", "Pendant des millions d'années", "6 à 73 millions d'années pour les HED", "voyageEspace", { depart: "vesta", age: "6 à 73 millions d'années (rayons cosmiques)" }),
-      E("Chute", "Le 15 juin 1821, une pierre de 91 kg tombe près de Juvinas, en Ardèche", "Le 15 juin 1821", null, "chute", { paysage: "village", pierres: 2, date: "15 juin 1821", titre: "Le 15 juin 1821, à Juvinas (Ardèche)", lignes: ["Une pierre de 91 kg, enfoncée dans le sol :", "un basalte de l'astéroïde Vesta."] }),
-      loupe6("Au microscope : baguettes de plagioclase et pyroxène, comme un basalte terrestre", ["Baguettes de plagioclase calcique", "englobées dans la pigeonite : la", "texture d'une dolérite, mais presque", "sans eau ni sodium. La sonde Dawn", "a cartographié son astéroïde."]),
+      E("Vesta naît", "Dans le premier million d'années se constitue Vesta, astéroïde appelé à mesurer 525 km", "Quelque ≈ 1 million d'années après les premiers solides", null, "accretionAsteroide", { rmax: 72, taille: "≈ 525 km (Vesta)", titre: "Vesta, futur astéroïde de 525 km, s'agglomère", age: "Quelque ≈ 1 million d'années après les premiers solides" }),
+      E("Fusion", "Vesta, chargé en aluminium 26, entre en fusion : le métal gagne le cœur tandis qu'un océan de magma l'enveloppe", "1 à 3 millions d'années après", "quelques millions d'années", "differenciation", { croute: false, titre: "Vesta fond : le métal descend en noyau" }),
+      E("Croûte", "Remontant à la surface, le magma se fige en coulées de basalte : c'est la croûte de Vesta, constituée d'eucrites", "Jusqu'à ≈ 15 millions d'années après", "≈ 10 millions d'années", "differenciation", { suivi: "croute", tmax: 1200, titre: "Les laves remontent et se figent : une croûte de basalte", age: "parvenant à ≈ 15 millions d'années après les premiers solides" }),
+      E("Rheasilvia", "Voici ≈ 1 milliard d'années, un choc provoqué par un astéroïde de 60 km sur Vesta crée le cratère Rheasilvia (500 km de large), qui arrache des fragments de croûte.", "Il y a ≈ 1 milliard d'années", null, "collision", { cible: "vesta", reste: true, titre: "Un impact géant creuse le cratère Rheasilvia sur Vesta", age: "il y a ≈ 1 milliard d'années" }),
+      E("Voyage", "Les fragments migrent jusqu'à la résonance 3:1 avec Jupiter, dont l'action étire leur orbite jusqu'à atteindre celle de la Terre.", "Pendant des millions d'années", "6 à 73 millions d'années pour les HED", "voyageEspace", { depart: "vesta", age: "6 à 73 millions d'années (rayons cosmiques)" }),
+      E("Chute", "Une pierre de 91 kg tombe près de Juvinas (Ardèche), le 15 juin 1821.", "Le 15 juin 1821", null, "chute", { paysage: "village", pierres: 2, date: "15 juin 1821", titre: "Le 15 juin 1821, à Juvinas (Ardèche)", lignes: ["Enfoncée dans le sol, une pierre de 91 kg :", "un basalte de l'astéroïde Vesta."] }),
+      loupe6("Vue au microscope, elle montre des baguettes de plagioclase et de pyroxène, à la manière d'un basalte terrestre", ["Baguettes de plagioclase calcique", "englobées dans la pigeonite : la", "texture d'une dolérite, mais presque", "sans eau ni sodium. La sonde Dawn", "a cartographié son astéroïde."]),
     ],
     cond: { type: "meteorite", zones: ["fusion", "fefs"], src: ["vesta", "yarkovsky"], chemin: [
       { age: 0.1, T: 1350, lab: "premiers solides" },
       { age: 0.9, T: 0, n: 1, t: "Vesta s'agglomère." },
-      { age: 2.5, T: 1500, n: 2, t: "Vesta fond : noyau de métal, océan de magma." },
-      { age: 15, T: 250, n: 3, t: "Les laves se figent en croûte de basalte (eucrites), enfouies et recuites par les coulées suivantes." },
+      { age: 2.5, T: 1500, n: 2, t: "Sous l'effet de la chaleur, Vesta se différencie : un noyau métallique se forme, entouré d'un océan de magma." },
+      { age: 15, T: 250, n: 3, t: "Les laves se solidifient en une croûte basaltique (eucrites), qu'enfouissent et recuisent les coulées suivantes." },
       { age: 2000, T: -60 },
-      { age: 3567, T: 300, n: 4, t: "Il y a ≈ 1 milliard d'années : le choc de Rheasilvia lance des fragments de croûte." },
+      { age: 3567, T: 300, n: 4, t: "Voici ≈ 1 milliard d'années, le cratère Rheasilvia est creusé et projette des fragments de croûte." },
       { age: 4540, T: -70, n: 5, t: "Voyage dans l'espace, 6 à 73 millions d'années." },
       { age: 4567, T: 20, n: 6, t: "Le 15 juin 1821, chute à Juvinas." },
-      { n: 7, t: "Au microscope : plagioclase et pyroxène, texture de basalte." }] },
+      { n: 7, t: "Vue au microscope, la roche combine plagioclase et pyroxène, dans une texture de basalte." }] },
   });
 
   poser("achondrite_martienne", {
-    exemple: "Exemple suivi : la pierre de Chassigny (Haute-Marne), tombée le 3 octobre 1815, une roche de Mars.",
+    exemple: "Exemple suivi : la pierre de Chassigny (Haute-Marne), survenue le 3 octobre 1815, roche martienne.",
     anim: [
-      E("Chambre magmatique", "Sous un volcan de Mars, les cristaux d'olivine tombent au fond d'une chambre magmatique et s'accumulent", "Il y a ≈ 1 340 millions d'années", "des milliers à des millions d'années", "marsChambre", {}),
-      E("Impact sur Mars", "Il y a ≈ 11 millions d'années, un astéroïde frappe Mars : des fragments de la croûte sont lancés à plus de 5 km/s", "Il y a ≈ 11 millions d'années", null, "collision", { cible: "mars", titre: "Il y a ≈ 11 millions d'années, un astéroïde frappe Mars", age: ilYa(11) }),
-      E("Voyage", "Le fragment tourne autour du Soleil, puis croise l'orbite de la Terre", "Pendant ≈ 11 millions d'années", "≈ 11 millions d'années", "voyageEspace", { depart: "mars", age: "≈ 11 millions d'années (rayons cosmiques)", lignes: ["Éjecté de Mars, le fragment tourne autour", "du Soleil sur une orbite qui finit par", "croiser celle de la Terre."] }),
-      E("Chute", "Le 3 octobre 1815 au matin, une pierre de 4 kg tombe à Chassigny, en Haute-Marne", "Le 3 octobre 1815", null, "chute", { paysage: "village", pierres: 1, date: "3 octobre 1815", titre: "Le 3 octobre 1815, à Chassigny (Haute-Marne)", lignes: ["Une pierre de 4 kg : on ne saura qu'au XXᵉ siècle", "qu'elle vient de Mars."] }),
-      loupe6("Au microscope : un cumulat d'olivine, la dunite de Mars", ["Cristaux d'olivine jointifs, tombés", "au fond de la chambre magmatique ;", "entre eux, pyroxènes, feldspath et", "chromite. Ses gaz rares ne sont pas", "ceux de l'atmosphère actuelle de Mars."]),
+      E("Chambre magmatique", "Sous un volcan martien, les cristaux d'olivine sédimentent au fond d'une chambre magmatique et s'y accumulent", "Il y a ≈ 1 340 millions d'années", "des milliers à des millions d'années", "marsChambre", {}),
+      E("Impact sur Mars", "Voici ≈ 11 millions d'années, un astéroïde heurte Mars ; des morceaux de la croûte sont éjectés à plus de 5 km/s.", "Il y a ≈ 11 millions d'années", null, "collision", { cible: "mars", titre: "Il y a ≈ 11 millions d'années, un astéroïde frappe Mars", age: ilYa(11) }),
+      E("Voyage", "Le fragment gravite autour du Soleil, puis croise l'orbite terrestre", "Pendant ≈ 11 millions d'années", "≈ 11 millions d'années", "voyageEspace", { depart: "mars", age: "≈ 11 millions d'années (rayons cosmiques)", lignes: ["Éjecté de Mars, le fragment tourne autour", "du Soleil, sur une orbite qui finit par croiser celle de la Terre", "croiser celle de la Terre."] }),
+      E("Chute", "Le matin du 3 octobre 1815, une pierre de 4 kg s'abat sur Chassigny, en Haute-Marne", "Le 3 octobre 1815", null, "chute", { paysage: "village", pierres: 1, date: "3 octobre 1815", titre: "Le 3 octobre 1815, à Chassigny (Haute-Marne)", lignes: ["Pierre de 4 kg dont l'origine martienne ne sera établie qu'au XXᵉ siècle", "qu'elle vient de Mars."] }),
+      loupe6("Vu au microscope, il s'agit d'un cumulat d'olivine, la dunite martienne", ["Cristaux d'olivine jointifs, tombés", "au fond de la chambre magmatique ;", "entre eux, pyroxènes, feldspath et", "chromite. Ses gaz rares ne sont pas", "ceux de l'atmosphère actuelle de Mars."]),
     ],
     cond: { type: "meteorite", zones: ["fusion"], src: ["chassigny"], chemin: [
       { age: 3, T: 1500, lab: "Mars se forme et fond" },
       { age: 3227, T: 1300 },
-      { age: 3260, T: 700, n: 1, t: "Il y a ≈ 1 340 millions d'années, les olivines s'accumulent au fond d'une chambre magmatique martienne." },
+      { age: 3260, T: 700, n: 1, t: "Voici ≈ 1 340 millions d'années, des olivines se déposent au fond d'une chambre magmatique martienne." },
       { age: 4200, T: -20 },
-      { age: 4556, T: 300, n: 2, t: "Il y a ≈ 11 millions d'années, l'impact qui l'arrache à Mars la chauffe brièvement." },
+      { age: 4556, T: 300, n: 2, t: "Voici ≈ 11 millions d'années, l'impact qui l'arrache à Mars l'échauffe brièvement." },
       { age: 4563, T: -70, n: 3, t: "Voyage dans l'espace, ≈ 11 millions d'années." },
       { age: 4567, T: 15, n: 4, t: "Le 3 octobre 1815, chute à Chassigny." },
       { n: 5, t: "Au microscope : cumulat d'olivine." }] },
   });
 
   poser("achondrite_lunaire", {
-    exemple: "Exemple suivi : ALH 81005, trouvée le 18 janvier 1982 dans les Allan Hills (Antarctique), la première météorite reconnue comme lunaire.",
+    exemple: "Exemple suivi : ALH 81005, récoltée aux Allan Hills (Antarctique) le 18 janvier 1982, fut la première météorite identifiée comme lunaire.",
     anim: [
-      E("Océan de magma", "La jeune Lune est couverte d'un océan de magma ; le plagioclase flotte et forme une croûte d'anorthosite", "Il y a ≈ 4,46 à 4,36 milliards d'années", "des dizaines de millions d'années", "luneOcean", {}),
-      E("Régolithe", "Pendant des milliards d'années, les impacts broient le sol et soudent les fragments en brèches", "De 4 à 1 milliard d'années", "des milliards d'années", "luneRegolithe", {}),
-      E("Éjection", "Un impact sur les hauts plateaux lance des éclats dans l'espace : 2,4 km/s suffisent", "Il y a moins de 20 millions d'années", null, "collision", { cible: "lune", titre: "Un impact lance des éclats de la Lune dans l'espace", age: "il y a moins de 20 millions d'années" }),
-      E("Chute en Antarctique", "Le fragment tombe sur l'Antarctique ; enfoui dans la glace, il est porté par le glacier jusqu'aux Allan Hills, où le vent use la glace bleue", "Il y a quelques milliers à dizaines de milliers d'années", null, "chute", { paysage: "glace", pierres: 1, date: "trouvée le 18 janvier 1982", titre: "Chute sur l'Antarctique, trouvée aux Allan Hills", lignes: ["Un éclat de 31 g ramassé en 1982 par le programme", "ANSMET : la première roche lunaire venue seule."] }),
-      loupe6("Au microscope : une brèche de fragments d'anorthosite et de verre", ["Fragments blancs d'anorthosite, éclats", "de pyroxène et billes de verre", "d'impact, soudés dans le sol lunaire", "pulvérisé : la même roche que celles", "rapportées par Apollo 16."]),
+      E("Océan de magma", "L'océan de magma recouvre la jeune Lune ; le plagioclase, moins dense, surnage et forme une croûte d'anorthosite", "Il y a ≈ 4,46 à 4,36 milliards d'années", "des dizaines de millions d'années", "luneOcean", {}),
+      E("Régolithe", "Durant des milliards d'années, les chocs pulvérisent le sol et agglomèrent les fragments en brèches", "De 4 à 1 milliard d'années", "des milliards d'années", "luneRegolithe", {}),
+      E("Éjection", "Un choc survenu sur les hauts plateaux projette des éclats dans l'espace : une vitesse de 2,4 km/s suffit", "Il y a moins de 20 millions d'années", null, "collision", { cible: "lune", titre: "Un impact lance des éclats de la Lune dans l'espace", age: "il y a moins de 20 millions d'années" }),
+      E("Chute en Antarctique", "Retombé sur l'Antarctique, le fragment est enfoui dans la glace, puis transporté par le glacier jusqu'aux Allan Hills, où le vent érode la glace bleue.", "Voici quelques milliers à dizaines de milliers d'années", null, "chute", { paysage: "glace", pierres: 1, date: "trouvée le 18 janvier 1982", titre: "Chute sur l'Antarctique, trouvée aux Allan Hills", lignes: ["Recueilli en 1982 par le programme, un éclat de 31 g", "ANSMET : la première roche lunaire venue seule."] }),
+      loupe6("Vue au microscope, la roche présente une brèche faite de fragments d'anorthosite et de verre.", ["Fragments blancs d'anorthosite, éclats", "de pyroxène et billes de verre", "d'impact, soudés dans le sol lunaire", "pulvérisé : la même roche que celles", "rapportées par Apollo 16."]),
     ],
     cond: { type: "meteorite", zones: ["fusion"], src: ["lune"], chemin: [
       { age: 70, T: 1500, lab: "la Lune se forme" },
-      { age: 180, T: 500, n: 1, t: "L'océan de magma cristallise : croûte d'anorthosite (≈ 4,46 à 4,36 milliards d'années)." },
-      { age: 2500, T: 60, n: 2, t: "Les impacts broient et soudent le régolithe en brèches (surface entre −170 et +120 °C)." },
-      { age: 4555, T: 250, n: 3, t: "Il y a moins de 20 millions d'années, un impact l'éjecte." },
-      { age: 4567, T: -30, n: 4, t: "Tombée sur l'Antarctique, conservée dans la glace, trouvée en 1982." },
-      { n: 5, t: "Au microscope : brèche d'anorthosite et de verre." }] },
+      { age: 180, T: 500, n: 1, t: "La cristallisation de l'océan de magma produit une croûte d'anorthosite (≈ 4,46 à 4,36 milliards d'années)." },
+      { age: 2500, T: 60, n: 2, t: "Les chocs pulvérisent le régolithe puis l'agglomèrent en brèches (surface comprise entre −170 et +120 °C)." },
+      { age: 4555, T: 250, n: 3, t: "Voici moins de 20 millions d'années, un choc l'expulse." },
+      { age: 4567, T: -30, n: 4, t: "Retombée sur l'Antarctique, préservée par la glace, recueillie en 1982." },
+      { n: 5, t: "Vue au microscope, elle combine anorthosite et verre dans une brèche." }] },
   });
 
   poser("meteorite_fer", {
-    exemple: "Exemple suivi : la météorite de Saint-Aubin (Aube), un fer du groupe IIIAB trouvé en 1968 en plusieurs masses (472 kg).",
+    exemple: "Exemple suivi : la météorite de Saint-Aubin (Aube), fer du groupe IIIAB, a été retrouvée en 1968 sous forme de plusieurs masses (472 kg).",
     anim: [
-      E("Astéroïde", "Un astéroïde s'agglomère très tôt, dans le premier million d'années", "Moins d'un million d'années après les premiers solides", null, "accretionAsteroide", { age: "moins d'un million d'années après les premiers solides", titre: "Poussières et grains de métal se collent : un astéroïde se forme très tôt" }),
-      E("Noyau", "Très riche en aluminium 26, il fond : le fer-nickel, plus dense, descend former un noyau", "1 à 1,5 million d'années après", "quelques centaines de milliers d'années", "differenciation", { suivi: "noyau", croute: true }),
-      E("Widmanstätten", "Le noyau cristallise puis refroidit de quelques dizaines de degrés par million d'années : entre 700 et 450 °C, la kamacite pousse en lamelles", "Pendant des millions d'années", "des millions à des dizaines de millions d'années", "noyauRefroidit", {}),
-      E("Collision", "Une collision brise l'astéroïde : manteau et croûte s'envolent, le noyau se fragmente", "Il y a ≈ 650 millions d'années (fers IIIAB)", null, "collision", { cible: "noyau", titre: "Une collision brise l'astéroïde jusqu'à son noyau", age: ilYa(650) }),
-      E("Voyage", "Le fragment de métal dérive pendant des centaines de millions d'années avant de croiser la Terre", "Pendant des centaines de millions d'années", "≈ 650 millions d'années", "voyageEspace", { depart: "ceinture", age: "≈ 650 millions d'années (rayons cosmiques)" }),
-      E("Trouvée", "Tombée à une date inconnue, elle est retrouvée en 1968 à Saint-Aubin, dans l'Aube : plusieurs masses, 472 kg", "Trouvée en 1968", null, "chute", { paysage: "champ", pierres: 3, date: "trouvée en 1968", titre: "Saint-Aubin (Aube), trouvée en 1968", lignes: ["Tombée à une date inconnue : plusieurs masses", "de fer, 472 kg en tout."] }),
-      loupe6("Tranche polie attaquée à l'acide : les figures de Widmanstätten", ["Lamelles de kamacite selon les faces", "d'un octaèdre, bordées de taénite,", "plessite entre elles, nodule de", "troïlite. Il a fallu des millions", "d'années pour les faire pousser."]),
+      E("Astéroïde", "Très tôt, dans le premier million d'années, un astéroïde se forme par accrétion", "En moins d'un million d'années, à compter des premiers solides", null, "accretionAsteroide", { age: "Dans un délai inférieur au million d'années suivant les premiers solides", titre: "Poussières et grains de métal se collent : un astéroïde se forme très tôt" }),
+      E("Noyau", "Très chargé en aluminium 26, il entre en fusion : le fer-nickel, plus dense, gagne le centre pour former un noyau", "1 à 1,5 million d'années après", "quelques centaines de milliers d'années", "differenciation", { suivi: "noyau", croute: true }),
+      E("Widmanstätten", "Dans le noyau, la cristallisation se poursuit tandis que le refroidissement avance de quelques dizaines de degrés par million d'années ; entre 700 et 450 °C, des lamelles de kamacite se développent.", "Pendant des millions d'années", "allant de millions à dizaines de millions d'années", "noyauRefroidit", {}),
+      E("Collision", "Une collision disloque l'astéroïde : le manteau et la croûte se dispersent, le noyau se fragmente", "Il y a ≈ 650 millions d'années (fers IIIAB)", null, "collision", { cible: "noyau", titre: "Une collision brise l'astéroïde jusqu'à son noyau", age: ilYa(650) }),
+      E("Voyage", "Le fragment métallique erre pendant des centaines de millions d'années avant de croiser l'orbite terrestre", "Pendant des centaines de millions d'années", "≈ 650 millions d'années", "voyageEspace", { depart: "ceinture", age: "≈ 650 millions d'années (rayons cosmiques)" }),
+      E("Trouvée", "Chute de date inconnue : les morceaux, au nombre de plusieurs, pèsent 472 kg et sont découverts en 1968 à Saint-Aubin, dans l'Aube.", "Trouvée en 1968", null, "chute", { paysage: "champ", pierres: 3, date: "trouvée en 1968", titre: "Saint-Aubin (Aube), trouvée en 1968", lignes: ["Chute de date inconnue : plusieurs masses", "de fer, 472 kg en tout."] }),
+      loupe6("Après attaque à l'acide, une tranche polie fait apparaître les figures de Widmanstätten.", ["Lamelles de kamacite selon les faces", "d'un octaèdre, bordées de taénite,", "plessite entre elles, nodule de", "troïlite. Il a fallu des millions", "d'années pour les faire pousser."]),
     ],
     cond: { type: "meteorite", zones: ["fusion", "widman", "fefs"], src: ["kruijer2014"], chemin: [
       { age: 0.1, T: 1350, lab: "premiers solides" },
-      { age: 0.3, T: 0, n: 1, t: "L'astéroïde s'agglomère dans le premier million d'années." },
-      { age: 1.3, T: 1550, n: 2, t: "Il fond : le fer-nickel descend en noyau." },
+      { age: 0.3, T: 0, n: 1, t: "Dans le premier million d'années, l'astéroïde s'accrète." },
+      { age: 1.3, T: 1550, n: 2, t: "Le corps entre en fusion : le fer-nickel gagne le centre." },
       { age: 6, T: 1400, lab: "le noyau cristallise" },
       { age: 15, T: 700 },
-      { age: 40, T: 450, n: 3, bande: "lamelles de kamacite", t: "Entre 700 et 450 °C, les figures de Widmanstätten poussent." },
+      { age: 40, T: 450, n: 3, bande: "lamelles de kamacite", t: "Dans l'intervalle de 700 à 450 °C, les figures de Widmanstätten se forment." },
       { age: 3000, T: -60 },
-      { age: 3917, T: 300, n: 4, t: "Il y a ≈ 650 millions d'années, une collision brise le noyau." },
-      { age: 4500, T: -70, n: 5, t: "Voyage dans l'espace, des centaines de millions d'années." },
-      { age: 4567, T: 12, n: 6, t: "Tombée à une date inconnue, trouvée en 1968 à Saint-Aubin." },
+      { age: 3917, T: 300, n: 4, t: "Voici ≈ 650 millions d'années, une collision fracture le noyau." },
+      { age: 4500, T: -70, n: 5, t: "Pendant des centaines de millions d'années, elle voyage dans l'espace." },
+      { age: 4567, T: 12, n: 6, t: "Chute de date inconnue, retrouvée en 1968 à Saint-Aubin." },
       { n: 7, t: "Tranche attaquée : figures de Widmanstätten." }] },
   });
 
   poser("pallasite", {
-    exemple: "Exemple suivi : une pallasite du groupe principal ; la plus proche de la France, Marburg (Hesse, Allemagne), trouvée en 1906.",
+    exemple: "Exemple suivi : une pallasite du groupe principal, celle de Marburg (Hesse, Allemagne), la plus proche de la France, découverte en 1906.",
     anim: [
-      E("Astéroïde fondu", "Un astéroïde fond et se sépare en un noyau de métal et un manteau d'olivine", "1 à 3 millions d'années après les premiers solides", null, "differenciation", { suivi: "manteau", croute: true }),
-      E("Collision", "Le noyau fondu d'un autre corps est projeté dans ce manteau : le métal entoure les cristaux d'olivine", "Quelques millions d'années après", null, "collision", { cible: "injection", titre: "Une collision injecte le métal d'un noyau dans un manteau d'olivine", age: "quelques millions d'années après les premiers solides" }),
-      E("Refroidissement", "Le mélange, enfoui, refroidit très lentement : 2,5 à 18 °C par million d'années", "Pendant des dizaines de millions d'années", "des dizaines de millions d'années", "noyauRefroidit", { titre: "Le mélange enfoui refroidit de 2,5 à 18 °C par million d'années", lignes: ["Dans les plages de métal assez larges, la kamacite", "pousse en lamelles, comme dans les fers."] }),
-      E("Collision et voyage", "Une dernière collision libère un fragment, qui dérive jusqu'à l'orbite de la Terre", "Bien plus tard", null, "collision", { cible: "noyau", age: "il y a des dizaines à centaines de millions d'années" }),
-      E("Trouvée", "Tombée à une date inconnue, une pallasite de 3 kg est trouvée en 1906 à Marburg, en Allemagne", "Trouvée en 1906", null, "chute", { paysage: "champ", pierres: 1, date: "trouvée en 1906", titre: "Marburg (Hesse), trouvée en 1906", lignes: ["Une pallasite de 3 kg ; aucune n'est connue", "en France."] }),
-      loupe6("Tranche polie : cristaux d'olivine dans du fer-nickel", ["Cristaux d'olivine jaune-vert de 0,5", "à 2 cm, enchâssés dans le métal ;", "troïlite et chromite. En tranche fine,", "l'olivine laisse passer la lumière", "comme un vitrail."]),
+      E("Astéroïde fondu", "Un astéroïde entre en fusion et se différencie en un noyau métallique et un manteau d'olivine", "Environ 1 à 3 millions d'années, après les premiers solides", null, "differenciation", { suivi: "manteau", croute: true }),
+      E("Collision", "Un noyau fondu venu d'un autre corps s'injecte dans ce manteau : le métal enveloppe alors les cristaux d'olivine.", "Quelques millions d'années après", null, "collision", { cible: "injection", titre: "Une collision injecte le métal d'un noyau dans un manteau d'olivine", age: "quelques millions d'années à compter des premiers solides" }),
+      E("Refroidissement", "Enfoui, le mélange se refroidit très lentement, à raison de 2,5 à 18 °C par million d'années", "Pendant des dizaines de millions d'années", "des dizaines de millions d'années", "noyauRefroidit", { titre: "Le mélange enfoui refroidit de 2,5 à 18 °C par million d'années", lignes: ["Au sein des plages métalliques suffisamment larges, la kamacite", "pousse en lamelles, comme dans les fers."] }),
+      E("Collision et voyage", "Une ultime collision détache un fragment, qui rejoint l'orbite terrestre", "Bien plus tard", null, "collision", { cible: "noyau", age: "voici des dizaines à des centaines de millions d'années" }),
+      E("Trouvée", "Chute de date inconnue : une pallasite de 3 kg est découverte en 1906 à Marburg, en Allemagne", "Trouvée en 1906", null, "chute", { paysage: "champ", pierres: 1, date: "trouvée en 1906", titre: "Marburg (Hesse), trouvée en 1906", lignes: ["Pour une pallasite de 3 kg, aucune n'est connue", "en France."] }),
+      loupe6("Sur une tranche polie apparaissent des cristaux d'olivine dans le fer-nickel", ["Cristaux d'olivine jaune-vert de 0,5", "à 2 cm, enchâssés dans le métal ;", "troïlite et chromite. En tranche fine,", "l'olivine laisse passer la lumière", "comme un vitrail."]),
     ],
     cond: { type: "meteorite", zones: ["fusion", "widman"], src: ["pallasite"], chemin: [
       { age: 0.1, T: 1350, lab: "premiers solides" },
       { age: 2, T: 1500, n: 1, t: "L'astéroïde fond : noyau de métal, manteau d'olivine." },
-      { age: 8, T: 1300, n: 2, t: "Une collision mêle le métal fondu d'un noyau à l'olivine du manteau." },
+      { age: 8, T: 1300, n: 2, t: "Par collision, le métal liquide d'un noyau se trouve injecté dans l'olivine du manteau." },
       { age: 30, T: 700 },
       { age: 150, T: 400, n: 3, bande: "lamelles de kamacite", t: "Refroidissement de 2,5 à 18 °C par million d'années." },
       { age: 3000, T: -60 },
@@ -911,22 +911,22 @@
   });
 
   poser("mesosiderite", {
-    exemple: "Exemple suivi : la mésosidérite de Barea (Espagne), tombée en 1842 ; aucune n'est connue en France.",
+    exemple: "Exemple suivi : la mésosidérite de Barea (Espagne), survenue en 1842 ; on n'en connaît aucune en France.",
     anim: [
-      E("Deux astéroïdes", "Deux astéroïdes ont fondu : chacun a un noyau de métal, un manteau et une croûte de basalte", "Dans les premiers millions d'années", null, "differenciation", { suivi: "croute", titre: "Deux astéroïdes fondent : chacun forme un noyau, un manteau et une croûte" }),
-      E("Collision", "Vers 4 525 millions d'années, ils se heurtent : le métal fondu de l'un éclabousse la croûte de l'autre et s'y mélange", "Il y a ≈ 4 525 millions d'années", null, "collision", { cible: "melange", titre: "Le métal fondu d'un astéroïde se mêle à la croûte d'un autre", age: ilYa(4525) }),
-      E("Refroidissement", "Le mélange, enfoui sous les débris, refroidit plus lentement que toute autre météorite : moins d'un degré par million d'années", "Pendant des centaines de millions d'années", "des centaines de millions d'années", "noyauRefroidit", { breche: true, titre: "Enfoui, le mélange refroidit de moins d'un degré par million d'années", lignes: ["Le refroidissement le plus lent mesuré", "dans une météorite."] }),
-      E("Collision et voyage", "Une collision plus récente détache un fragment, qui dérive jusqu'à l'orbite de la Terre", "Bien plus tard", null, "collision", { cible: "noyau", age: "il y a des dizaines de millions d'années" }),
-      E("Chute", "En 1842, une pierre de 3,2 kg tombe à Barea, en Espagne", "1842", null, "chute", { paysage: "champ", pierres: 1, date: "1842", titre: "En 1842, à Barea (Espagne)", lignes: ["Une mésosidérite de 3,2 kg, la plus proche de", "la France ; seules 7 chutes sont connues."] }),
-      loupe6("Tranche polie : une brèche de fragments de croûte et de métal", ["Fragments de basalte, de gabbro et", "d'orthopyroxène, nodules de fer-", "nickel, dans un mélange fin des", "deux : la trace d'une collision", "entre astéroïdes fondus."]),
+      E("Deux astéroïdes", "Deux astéroïdes ont fondu : chacun possède un noyau métallique, un manteau et une croûte basaltique", "Dans les premiers millions d'années", null, "differenciation", { suivi: "croute", titre: "Deux astéroïdes fondent : chacun forme un noyau, un manteau et une croûte" }),
+      E("Collision", "Vers 4 525 millions d'années, leur collision projette le métal fondu de l'un sur la croûte de l'autre, où il se mêle", "Il y a ≈ 4 525 millions d'années", null, "collision", { cible: "melange", titre: "Le métal fondu d'un astéroïde se mêle à la croûte d'un autre", age: ilYa(4525) }),
+      E("Refroidissement", "Enfoui sous les débris, ce mélange se refroidit plus lentement que n'importe quelle autre météorite : moins d'un degré par million d'années", "Pendant des centaines de millions d'années", "des centaines de millions d'années", "noyauRefroidit", { breche: true, titre: "Enfoui, le mélange refroidit de moins d'un degré par million d'années", lignes: ["Le refroidissement le plus lent mesuré", "dans une météorite."] }),
+      E("Collision et voyage", "Une collision plus récente libère un fragment, qui gagne l'orbite terrestre", "Bien plus tard", null, "collision", { cible: "noyau", age: "il y a des dizaines de millions d'années" }),
+      E("Chute", "Une pierre de 3,2 kg s'abat sur Barea (Espagne) en 1842.", "1842", null, "chute", { paysage: "champ", pierres: 1, date: "1842", titre: "En 1842, à Barea (Espagne)", lignes: ["Cette pierre de 3,2 kg, de type mésosidérite, reste la plus proche de", "la France ; 7 chutes seulement sont recensées."] }),
+      loupe6("Une tranche polie dévoile une brèche où se mêlent fragments de croûte et métal.", ["Fragments de basalte, de gabbro et", "d'orthopyroxène, nodules de fer-", "nickel, dans un mélange fin des", "deux : la trace d'une collision", "entre astéroïdes fondus."]),
     ],
     cond: { type: "meteorite", zones: ["fusion", "widman"], src: ["meso"], chemin: [
       { age: 0.1, T: 1350, lab: "premiers solides" },
       { age: 3, T: 1400, n: 1, t: "Deux astéroïdes ont fondu : noyau, manteau, croûte." },
-      { age: 42, T: 1250, n: 2, t: "Vers 4 525 Ma, le métal fondu de l'un se mêle à la croûte de l'autre." },
-      { age: 900, T: 300, n: 3, t: "Enfoui, le mélange refroidit de moins d'un degré par million d'années." },
+      { age: 42, T: 1250, n: 2, t: "Vers 4 525 Ma, du métal fondu issu de l'un se disperse dans la croûte de l'autre." },
+      { age: 900, T: 300, n: 3, t: "Enfoui, ce mélange perd moins d'un degré par million d'années." },
       { age: 4500, T: -70, n: 4, t: "Collision récente, voyage dans l'espace." },
       { age: 4567, T: 15, n: 5, t: "En 1842, chute à Barea (Espagne)." },
-      { n: 6, t: "Tranche polie : brèche de croûte et de métal." }] },
+      { n: 6, t: "Sur une tranche polie se lit une brèche de croûte et de métal." }] },
   });
 })();

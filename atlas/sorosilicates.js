@@ -19,9 +19,9 @@ Object.assign(MINERAUX, {
     nom: "Clinozoïsite", formule: "Ca₂Al₃(SiO₄)(Si₂O₇)O(OH)", famille: "Sorosilicate (groupe de l'épidote)",
     systeme: "monoclinique", durete: 6.5, densite: 3.3, stabilite: 6, swatch: "#b8c4a8",
     clivage: "parfait", eclat: "vitreux", couleurs: "gris-vert pâle, incolore, jaunâtre",
-    contexte: "Schistes verts, marbres, fentes alpines — partout où l'épidote apparaît, mais sans fer.",
+    contexte: "Schistes verts, marbres, fentes alpines : partout où apparaît l'épidote, mais en l'absence de fer.",
     devient: "→ argiles + calcite ; libère du calcium.",
-    note: "Le pôle sans fer de l'épidote : là où l'épidote est vert pistache à cause du fer ferrique, la clinozoïsite reste pâle. Les deux forment une série continue — plus il y a de fer, plus le vert est franc.",
+    note: "Pôle dépourvu de fer de l'épidote : la clinozoïsite, privée de fer ferrique, reste pâle là où l'épidote affiche un vert pistache. Une série continue relie les deux termes, et la teinte s'intensifie avec la teneur en fer.",
   },
   zoisite: {
     nom: "Zoïsite", formule: "Ca₂Al₃(SiO₄)(Si₂O₇)O(OH)", famille: "Sorosilicate (groupe de l'épidote)",
@@ -29,23 +29,23 @@ Object.assign(MINERAUX, {
     clivage: "parfait", eclat: "vitreux à nacré", couleurs: "gris, vert, bleu violacé (tanzanite), rose (thulite)",
     contexte: "Roches métamorphiques calciques, éclogites, gneiss.",
     devient: "→ argiles + calcite.",
-    note: "Même formule que la clinozoïsite, mais un empilement orthorhombique : ce sont des polymorphes. Sa variété bleu-violet, la tanzanite, découverte en 1967 au pied du Kilimandjaro, ne se trouve que là — sur une bande de quelques kilomètres carrés. Chauffée, elle passe du brun terne au bleu profond. Sa variété rose au manganèse est la thulite.",
+    note: "Polymorphe de la clinozoïsite, de même formule mais à empilement orthorhombique. C'est sa variété bleu violet, la tanzanite, qui a été découverte en 1967 au pied du Kilimandjaro, sur une bande de quelques kilomètres carrés seulement. Chauffée, elle passe du brun terne au bleu profond. La variété rose au manganèse porte le nom de thulite.",
   },
   piemontite: {
     nom: "Piémontite", formule: "Ca₂(Mn³⁺,Al,Fe³⁺)₃(SiO₄)(Si₂O₇)O(OH)", famille: "Sorosilicate (groupe de l'épidote)",
     systeme: "monoclinique", durete: 6.5, densite: 3.5, stabilite: 6, swatch: "#a04a5c",
-    clivage: "parfait", eclat: "vitreux", couleurs: "rouge-violet à rouge sombre — très pléochroïque",
-    contexte: "Schistes manganésifères métamorphisés, quartzites roses (Piémont, Italie).",
+    clivage: "parfait", eclat: "vitreux", couleurs: "rouge-violet à rouge sombre : très pléochroïque",
+    contexte: "Schistes manganésifères soumis au métamorphisme, quartzites roses (Piémont, Italie).",
     devient: "→ oxydes de manganèse + argiles.",
-    note: "L'épidote au manganèse, d'un rouge-violet spectaculaire. C'est elle qui rosit certains quartzites et schistes du Piémont italien, d'où son nom. Son pléochroïsme est si fort qu'au microscope elle change du jaune au rouge sang selon l'orientation.",
+    note: "Teinte rouge violet vif pour l'épidote riche en manganèse. Ce minéral donne aux quartzites et aux schistes du Piémont italien leur reflet rosé, d'où son nom. Au microscope, son pléochroïsme est si intense qu'elle passe du jaune au rouge sang selon l'orientation.",
   },
   allanite: {
     nom: "Allanite (orthite)", formule: "(Ca,Ce,La,Y)₂(Al,Fe)₃(SiO₄)(Si₂O₇)O(OH)", famille: "Sorosilicate (groupe de l'épidote)",
     systeme: "monoclinique", durete: 6, densite: 3.9, stabilite: 5, swatch: "#3a3028",
     clivage: "imparfait", eclat: "submétallique à poisseux", couleurs: "brun-noir, noir",
-    contexte: "Accessoire des granites, pegmatites et gneiss.",
-    devient: "Se métamictise (radioactivité) puis s'altère en argiles + terres rares.",
-    note: "L'épidote des terres rares : le calcium y est remplacé par du cérium, du lanthane, de l'yttrium — souvent accompagnés de thorium radioactif. Ce thorium détruit peu à peu son réseau de l'intérieur : les vieux cristaux sont « métamictes », devenus amorphes et vitreux. Souvent entourée d'un halo sombre dans les micas voisins, brûlés par sa radioactivité.",
+    contexte: "Minéral accessoire des granites, des pegmatites et des gneiss.",
+    devient: "Elle se métamictise sous l'effet de la radioactivité, puis s'altère en argiles et libère des terres rares.",
+    note: "Épidote des terres rares, où du cérium, du lanthane ou de l'yttrium remplacent le calcium, souvent accompagnés de thorium radioactif. Ce dernier détruit peu à peu le réseau de l'intérieur : les vieux cristaux deviennent « métamictes », amorphes et vitreux. Autour d'eux, les micas voisins portent souvent un halo sombre, marque de la radioactivité.",
   },
 
   // ---------- Groupe de la vésuvianite ----------
@@ -53,9 +53,9 @@ Object.assign(MINERAUX, {
     nom: "Vésuvianite (idocrase)", formule: "Ca₁₀(Mg,Fe)₂Al₄(SiO₄)₅(Si₂O₇)₂(OH)₄", famille: "Sorosilicate (groupe de la vésuvianite)",
     systeme: "quadratique", durete: 6.5, densite: 3.4, stabilite: 6, swatch: "#6a8a4a",
     clivage: "médiocre", eclat: "vitreux à résineux", couleurs: "vert olive, brun, jaune, bleu (cyprine)",
-    contexte: "Skarns : contact entre un magma et un calcaire. Découverte sur le Vésuve.",
-    devient: "→ argiles + calcite ; libère Ca et Mg.",
-    note: "Une structure hybride remarquable : elle mélange des tétraèdres isolés (SiO₄) ET des paires (Si₂O₇) dans le même cristal. Son autre nom, idocrase, vient du grec « forme mêlée », car ses cristaux semblent emprunter leurs faces à d'autres minéraux. Prismes verts trapus, typiques des skarns.",
+    contexte: "Elle a été découverte sur le Vésuve ; elle se développe dans les skarns, au contact entre un magma et un calcaire.",
+    devient: "Elle donne des argiles et de la calcite, et libère du calcium et du magnésium.",
+    note: "Son autre nom, idocrase, vient du grec « forme mêlée » : ses cristaux semblent emprunter leurs faces à d'autres minéraux. Ce minéral hybride associe tétraèdres isolés (SiO₄) et paires (Si₂O₇) au sein d'un seul cristal ; ses prismes verts et trapus caractérisent les skarns.",
   },
 
   // ---------- Groupe de la pumpellyite ----------
@@ -63,9 +63,9 @@ Object.assign(MINERAUX, {
     nom: "Pumpellyite", formule: "Ca₂MgAl₂(SiO₄)(Si₂O₇)(OH)₂·H₂O", famille: "Sorosilicate (groupe de la pumpellyite)",
     systeme: "monoclinique", durete: 5.5, densite: 3.2, stabilite: 4, swatch: "#4a7a6a",
     clivage: "bon", eclat: "vitreux", couleurs: "vert bleuté, vert olive",
-    contexte: "Basaltes et gabbros très faiblement métamorphisés ; amygdales des laves.",
+    contexte: "Dans les basaltes et les gabbros au métamorphisme très faible, ainsi que dans les amygdales des laves.",
     devient: "→ chlorite puis argiles.",
-    note: "Minéral-index d'un métamorphisme presque imperceptible : le faciès « préhnite-pumpellyite », juste au-dessus de la diagenèse et juste en dessous des schistes verts. Trouver de la pumpellyite dans un basalte, c'est savoir qu'il a été enfoui à 5-10 km — pas plus.",
+    note: "Le faciès « préhnite-pumpellyite », qui occupe l'intervalle entre la diagenèse et les schistes verts, se signale par ce minéral repère d'un métamorphisme presque imperceptible. Une pumpellyite présente dans un basalte signifie que celui-ci n'a pas été enfoui au-delà de 5 à 10 km.",
   },
 
   // ================= SOROSILICATES PURS (Si₂O₇ seuls) =================
@@ -75,9 +75,9 @@ Object.assign(MINERAUX, {
     nom: "Lawsonite", formule: "CaAl₂(Si₂O₇)(OH)₂·H₂O", famille: "Sorosilicate (groupe de la lawsonite)",
     systeme: "orthorhombique", durete: 8, densite: 3.1, stabilite: 5, swatch: "#a8c4d4",
     clivage: "parfait", eclat: "vitreux", couleurs: "incolore, bleu pâle, gris",
-    contexte: "Schistes bleus des zones de SUBDUCTION : haute pression, basse température.",
-    devient: "Se déshydrate en remontant → zoïsite + argiles.",
-    note: "Le marqueur des subductions. Elle ne se forme que sous très haute pression et basse température — exactement les conditions d'une plaque océanique qui plonge. Sa présence dans une roche (île de Groix, Nouvelle-Calédonie) prouve qu'elle a été enfouie à 30-70 km puis remontée. Elle transporte aussi de l'eau en profondeur, alimentant le volcanisme d'arc.",
+    contexte: "Dans les zones de subduction, on le trouve dans les schistes bleus, où la pression est élevée et la température basse.",
+    devient: "En remontant, elle se déshydrate et donne de la zoïsite et des argiles.",
+    note: "Marqueur des zones de subduction, la lawsonite n'apparaît que sous très haute pression et basse température, conditions propres à une plaque océanique qui plonge. Une roche qui la contient (île de Groix, Nouvelle-Calédonie) a donc été enfouie entre 30 et 70 km avant de remonter. Transportant de l'eau en profondeur, elle nourrit le volcanisme d'arc.",
   },
 
   // ---------- Groupe de la mélilite ----------
@@ -85,25 +85,25 @@ Object.assign(MINERAUX, {
     nom: "Åkermanite", formule: "Ca₂MgSi₂O₇", famille: "Sorosilicate (groupe de la mélilite)",
     systeme: "quadratique", durete: 5.5, densite: 2.94, stabilite: 3, swatch: "#c8c8b8",
     clivage: "net", eclat: "vitreux à résineux", couleurs: "incolore, gris, jaune-brun",
-    contexte: "Marbres de contact, laves alcalines, laitiers métallurgiques — et météorites.",
+    contexte: "On la trouve dans les marbres de contact, les laves alcalines, les laitiers métallurgiques et les météorites.",
     devient: "→ argiles + calcite (s'altère assez vite).",
-    note: "Pôle magnésien de la mélilite. Son intérêt dépasse la Terre : la mélilite est le principal constituant des « CAI », ces inclusions blanches des météorites carbonées qui sont les plus vieux solides du système solaire — 4,567 milliards d'années. Elles ont condensé avant même la formation des planètes.",
+    note: "Pôle magnésien de la mélilite, dont l'intérêt dépasse la Terre. Elle compose l'essentiel des « CAI », inclusions blanches des météorites carbonées, qui comptent parmi les plus anciens solides du Système solaire (4,567 milliards d'années). Elles se sont condensées avant même la formation des planètes.",
   },
   gehlenite: {
     nom: "Gehlénite", formule: "Ca₂Al(AlSi)O₇", famille: "Sorosilicate (groupe de la mélilite)",
     systeme: "quadratique", durete: 5.5, densite: 3.04, stabilite: 3, swatch: "#b8bca0",
     clivage: "net", eclat: "vitreux à résineux", couleurs: "gris-vert, jaune, brun",
-    contexte: "Skarns et marbres de contact à haute température ; clinker de ciment.",
+    contexte: "Présente dans les skarns et les marbres de contact portés à haute température, ainsi que dans le clinker de ciment.",
     devient: "→ argiles + calcite.",
-    note: "Pôle alumineux de la mélilite, en série continue avec l'åkermanite. Elle apparaît quand un calcaire argileux est cuit très fort au contact d'un magma — ou dans un four à ciment, car c'est exactement la même chimie.",
+    note: "Pôle alumineux de la mélilite, en série continue avec l'åkermanite. On l'obtient en cuisant fortement un calcaire argileux au contact d'un magma, ou dans un four à ciment dont la chimie est identique.",
   },
   hardystonite: {
     nom: "Hardystonite", formule: "Ca₂ZnSi₂O₇", famille: "Sorosilicate (groupe de la mélilite)",
     systeme: "quadratique", durete: 3.5, densite: 3.4, stabilite: 3, swatch: "#d8d0c8",
-    clivage: "net", eclat: "vitreux", couleurs: "blanc, gris — violet intense en UV",
-    contexte: "Franklin (New Jersey), dans les marbres à zinc.",
+    clivage: "net", eclat: "vitreux", couleurs: "blanc, gris : violet intense en UV",
+    contexte: "Franklin (New Jersey), au sein de marbres riches en zinc.",
     devient: "→ carbonates de zinc.",
-    note: "La mélilite au zinc, connue quasiment d'un seul gisement. Sous lampe UV, elle s'illumine d'un violet-bleu profond — Franklin est célèbre pour ces roches qui s'embrasent de couleurs sous ultraviolet.",
+    note: "La mélilite au zinc n'est connue que dans un seul gisement. Sous lampe UV, elle prend une teinte violet bleu profond : Franklin est célèbre pour ces roches qui se parent de couleurs sous ultraviolet.",
   },
 
   // ---------- Zinc & béryllium ----------
@@ -111,17 +111,17 @@ Object.assign(MINERAUX, {
     nom: "Hémimorphite", formule: "Zn₄Si₂O₇(OH)₂·H₂O", famille: "Sorosilicate (groupe de l'hémimorphite)",
     systeme: "orthorhombique", durete: 5, densite: 3.45, stabilite: 4, swatch: "#a8cdd4",
     clivage: "parfait", eclat: "vitreux à nacré", couleurs: "incolore, blanc, bleu ciel, vert",
-    contexte: "Zone d'oxydation des gisements de zinc (chapeaux de la blende).",
-    devient: "Stable en surface ; se dissout en milieu acide.",
-    note: "Son nom vient de sa curiosité cristalline : ses cristaux sont hémimorphes, c'est-à-dire que leurs deux extrémités n'ont pas la même forme. Résultat, elle est pyroélectrique — chauffée, elle se charge d'électricité, un pôle positif et l'autre négatif. Avec la smithsonite, elle formait les « calamines », minerai de zinc historique de la Vieille Montagne (Belgique).",
+    contexte: "Présente dans la zone d'oxydation des gisements de zinc, au niveau des chapeaux de blende.",
+    devient: "En surface, elle demeure stable, mais elle se dissout en milieu acide.",
+    note: "Hémimorphite : ses cristaux présentent deux extrémités différentes, et elle devient pyroélectrique, un pôle positif et l'autre négatif apparaissant lorsqu'on la chauffe. Avec la smithsonite, elle constituait les « calamines », minerai de zinc de la Vieille Montagne (Belgique) ; son nom découle de cette hémimorphie.",
   },
   bertrandite: {
     nom: "Bertrandite", formule: "Be₄Si₂O₇(OH)₂", famille: "Sorosilicate (groupe de la bertrandite)",
     systeme: "orthorhombique", durete: 6.5, densite: 2.6, stabilite: 5, swatch: "#e0dcd0",
     clivage: "parfait", eclat: "vitreux à nacré", couleurs: "incolore, blanc, jaune pâle",
-    contexte: "Pegmatites et tufs volcaniques altérés (Spor Mountain, Utah).",
+    contexte: "On la rencontre dans les pegmatites et les tufs volcaniques altérés (Spor Mountain, Utah).",
     devient: "→ argiles ; libère le béryllium.",
-    note: "Le principal minerai de béryllium du monde — devant le béryl lui-même. Le gisement de Spor Mountain (Utah) fournit l'essentiel de la production mondiale. Nommée d'après le minéralogiste français Émile Bertrand.",
+    note: "Devant le béryl lui-même, elle constitue le premier minerai de béryllium du monde. Le gisement de Spor Mountain (Utah) fournit l'essentiel de la production mondiale. Son nom rend hommage au minéralogiste français Émile Bertrand.",
   },
 
   // ---------- Fer & scandium ----------
@@ -129,9 +129,9 @@ Object.assign(MINERAUX, {
     nom: "Ilvaïte", formule: "CaFe²⁺₂Fe³⁺(Si₂O₇)O(OH)", famille: "Sorosilicate (groupe de l'ilvaïte)",
     systeme: "monoclinique", durete: 5.75, densite: 4.0, stabilite: 3, swatch: "#2e2c30",
     clivage: "net", eclat: "submétallique", couleurs: "noir de jais, gris-noir",
-    contexte: "Skarns à fer — gisement type : l'île d'Elbe (Ilva en latin, d'où son nom).",
-    devient: "→ oxydes de fer (goethite) + argiles ; s'altère assez vite.",
-    note: "Prismes noirs striés, à éclat presque métallique. C'est l'un des rares silicates à contenir à la fois du fer ferreux (Fe²⁺) et du fer ferrique (Fe³⁺) dans le même cristal. L'île d'Elbe, où Napoléon fut exilé, est aussi un haut lieu de la minéralogie.",
+    contexte: "Skarns ferrifères ; gisement type : l'île d'Elbe (Ilva en latin, origine de son nom).",
+    devient: "Elle donne des oxydes de fer (goethite) et des argiles, et s'altère assez rapidement.",
+    note: "Prismes noirs striés, à l'éclat presque métallique. Il s'agit d'un des rares silicates où fer ferreux (Fe²⁺) et fer ferrique (Fe³⁺) coexistent dans un même cristal. L'île d'Elbe, où Napoléon fut exilé, est aussi un haut lieu de la minéralogie.",
   },
   thortveitite: {
     nom: "Thortveitite", formule: "(Sc,Y)₂Si₂O₇", famille: "Sorosilicate (groupe de la thortveitite)",
@@ -139,7 +139,7 @@ Object.assign(MINERAUX, {
     clivage: "parfait", eclat: "vitreux", couleurs: "gris-vert, brun-vert",
     contexte: "Pegmatites granitiques rares (Iveland, Norvège ; Madagascar).",
     devient: "Résiduelle.",
-    note: "Le principal minerai de scandium, et l'un des minéraux les plus chers au monde au gramme. Le scandium, ajouté à l'aluminium, donne des alliages exceptionnellement légers et résistants — utilisés dans l'aéronautique et les cadres de vélo haut de gamme. Il est si rare qu'il se compte en dizaines de tonnes par an.",
+    note: "Premier minerai de scandium, il figure parmi les minéraux les plus chers au gramme. Le scandium, ajouté à l'aluminium, produit des alliages légers et résistants, employés dans l'aéronautique et pour les cadres de vélo haut de gamme. Sa production mondiale se chiffre en dizaines de tonnes par an.",
   },
 
   // ---------- Silicates de calcium (skarns & ciment) ----------
@@ -147,9 +147,9 @@ Object.assign(MINERAUX, {
     nom: "Cuspidine", formule: "Ca₄(Si₂O₇)F₂", famille: "Sorosilicate (silicate de calcium)",
     systeme: "monoclinique", durete: 5.5, densite: 2.98, stabilite: 2, swatch: "#e0c8c8",
     clivage: "net", eclat: "vitreux", couleurs: "rose pâle, incolore, blanc",
-    contexte: "Marbres de contact riches en fluor ; laitiers sidérurgiques.",
+    contexte: "Présente dans les marbres de contact riches en fluor et dans les laitiers sidérurgiques.",
     devient: "→ calcite + fluorine + argiles.",
-    note: "Aiguilles roses dans les marbres cuits par un magma. Son nom vient du latin cuspis, la pointe, pour ses cristaux effilés. On la retrouve dans les laitiers d'aciérie — un minéral naturel que l'industrie refabrique sans le vouloir.",
+    note: "On trouve ces aiguilles roses dans les marbres cuits par un magma, qui doivent leur nom au latin cuspis, la pointe. Elles se retrouvent aussi, de manière inattendue, dans les laitiers d'aciérie : minéral naturel reproduit sans le vouloir par l'industrie.",
   },
   tilleyite: {
     nom: "Tilleyite", formule: "Ca₅(Si₂O₇)(CO₃)₂", famille: "Sorosilicate (silicate de calcium)",
@@ -157,15 +157,15 @@ Object.assign(MINERAUX, {
     clivage: "parfait", eclat: "vitreux", couleurs: "blanc, incolore, gris",
     contexte: "Marbres de contact (Crestmore, Californie).",
     devient: "→ calcite (se décarbonate facilement).",
-    note: "Une curiosité chimique : elle contient à la fois des groupements silicatés ET carbonatés. Elle se forme dans la zone la plus chaude du contact entre un granite et un calcaire, là où le CO₂ n'a pas encore eu le temps de s'échapper.",
+    note: "Elle réunit groupements silicatés et carbonatés, ce qui en fait un cas singulier. Son lieu de formation : la zone la plus chaude du contact entre granite et calcaire, là où le CO₂ n'a pas encore pu s'échapper.",
   },
   rankinite: {
     nom: "Rankinite", formule: "Ca₃Si₂O₇", famille: "Sorosilicate (silicate de calcium)",
     systeme: "monoclinique", durete: 5.5, densite: 2.96, stabilite: 2, swatch: "#dcd8cc",
     clivage: "aucun", eclat: "vitreux", couleurs: "incolore, blanc, gris",
-    contexte: "Marbres de contact très chauds ; phase du clinker de ciment.",
+    contexte: "On la trouve dans les marbres de contact très chauds et comme phase du clinker de ciment.",
     devient: "S'hydrate facilement.",
-    note: "Rarissime dans la nature, mais familière des cimentiers : elle apparaît dans le clinker, ce mâchefer que produit le four à ciment à 1 450 °C. Le ciment Portland est, littéralement, une roche métamorphique artificielle.",
+    note: "Bien que très rare dans la nature, elle est familière des cimentiers, qui la retrouvent dans le clinker, ce mâchefer produit par le four à ciment à 1 450 °C. En somme, le ciment Portland est une roche métamorphique artificielle.",
   },
 
   // ---------- Borosilicate ----------
@@ -175,7 +175,7 @@ Object.assign(MINERAUX, {
     clivage: "bon", eclat: "vitreux, très brillant", couleurs: "brun-violet, brun clou de girofle, lilas",
     contexte: "Skarns, veines alpines, contacts granite-calcaire (Oisans, Pyrénées).",
     devient: "→ argiles + bore en solution.",
-    note: "Ses cristaux sont si aplatis et si tranchants qu'ils évoquent une lame de hache — du grec axine, la hache. Les fentes alpines de l'Oisans en livrent de superbes cristaux violets. Sa classification a longtemps hésité : Strunz la range en sorosilicate (9.BD), mais sa structure en anneaux borosilicatés l'a longtemps fait classer parmi les cyclosilicates.",
+    note: "Aplatis et tranchants, ses cristaux évoquent une lame de hache (du grec axine, la hache). Les fentes alpines de l'Oisans en livrent de superbes exemplaires violets. Sa classification a longtemps hésité : Strunz la range parmi les sorosilicates (9.BD), alors que sa structure en anneaux borosilicatés l'a longtemps fait ranger parmi les cyclosilicates.",
   },
 });
 
@@ -183,62 +183,62 @@ Object.assign(MINERAUX, {
 const SORO_SOUS_FAMILLES = [
   {
     nom: "Groupe de l'épidote",
-    formule: "Ca₂(Al,Fe)₃(SiO₄)(Si₂O₇)O(OH) — unités MIXTES",
-    note: "De loin le groupe le plus important de la classe — et une structure hybride : des tétraèdres isolés (SiO₄) coexistent avec des paires (Si₂O₇) dans le même cristal. Minéraux-index du faciès « schistes verts », ils verdissent les roches métamorphiques de bas degré. Selon le cation, la couleur change du tout au tout : fer → vert pistache, manganèse → rouge-violet, terres rares → noir.",
+    formule: "Ca₂(Al,Fe)₃(SiO₄)(Si₂O₇)O(OH) : unités MIXTES",
+    note: "De loin, c'est le groupe le plus important de la classe. Ses cristaux présentent une structure hybride : tétraèdres isolés (SiO₄) et paires (Si₂O₇) coexistent dans un même cristal. Minéraux repères du faciès « schistes verts », ils colorent en vert les roches métamorphiques de bas degré. La couleur varie selon le cation : fer, vert pistache ; manganèse, rouge violet ; terres rares, noir.",
     mineraux: ["epidote", "clinozoisite", "zoisite", "piemontite", "allanite"],
   },
   {
     nom: "Groupe de la vésuvianite",
     formule: "Ca₁₀(Mg,Fe)₂Al₄(SiO₄)₅(Si₂O₇)₂(OH)₄",
-    note: "Même hybridation SiO₄ + Si₂O₇, mais une charpente quadratique bien à elle. Minéral emblématique des skarns — là où un magma cuit un calcaire.",
+    note: "Même hybridation SiO₄ et Si₂O₇ que dans l'espèce précédente, mais avec une charpente quadratique propre. Ce minéral est caractéristique des skarns, formés là où un magma chauffe un calcaire.",
     mineraux: ["vesuvianite"],
   },
   {
     nom: "Groupe de la pumpellyite",
     formule: "Ca₂MgAl₂(SiO₄)(Si₂O₇)(OH)₂·H₂O",
-    note: "Le témoin d'un métamorphisme minuscule : le faciès « préhnite-pumpellyite », entre la simple diagenèse et les schistes verts. Trouver de la pumpellyite, c'est dater un enfouissement de 5 à 10 km.",
+    note: "Il signe un métamorphisme de très faible intensité, celui du faciès à préhnite-pumpellyite, intermédiaire entre la diagenèse et les schistes verts. Sa présence permet de dater un enfouissement de 5 à 10 km.",
     mineraux: ["pumpellyite"],
   },
   {
     nom: "Groupe de la lawsonite",
     formule: "CaAl₂(Si₂O₇)(OH)₂·H₂O",
-    note: "Le marqueur des zones de SUBDUCTION : haute pression, basse température. Elle ne se forme que dans une plaque qui plonge — et elle emporte de l'eau avec elle vers le manteau.",
+    note: "Il caractérise les zones de subduction, où règnent des pressions élevées pour une température basse. Il ne se forme que dans une plaque en cours de plongée et entraîne de l'eau vers le manteau.",
     mineraux: ["lawsonite"],
   },
   {
     nom: "Groupe de la mélilite",
-    formule: "Ca₂(Mg,Al,Zn)Si₂O₇ — Si₂O₇ purs",
-    note: "Série continue entre l'åkermanite (Mg) et la gehlénite (Al). Née des calcaires cuits à très haute température — et des fours à ciment. Mais surtout : la mélilite constitue les inclusions blanches des météorites carbonées, les plus vieux solides du système solaire (4,567 milliards d'années).",
+    formule: "Ca₂(Mg,Al,Zn)Si₂O₇ : Si₂O₇ purs",
+    note: "Série continue entre l'åkermanite (Mg) et la gehlénite (Al). Elle naît des calcaires portés à très haute température et des fours à ciment. Mais la mélilite constitue surtout les inclusions blanches des météorites carbonées, les plus anciens solides du système solaire (4,567 milliards d'années).",
     mineraux: ["akermanite", "gehlenite", "hardystonite"],
   },
   {
     nom: "Zinc & béryllium",
     formule: "Zn₄Si₂O₇(OH)₂·H₂O · Be₄Si₂O₇(OH)₂",
-    note: "Deux minerais majeurs bâtis sur le même motif Si₂O₇ : l'hémimorphite pour le zinc (les « calamines »), la bertrandite pour le béryllium (premier minerai mondial).",
+    note: "Ces deux minerais, fondés sur le même motif Si₂O₇, sont l'hémimorphite, source du zinc (dite « calamine »), et la bertrandite, premier minerai mondial du béryllium.",
     mineraux: ["hemimorphite", "bertrandite"],
   },
   {
     nom: "Groupe de l'ilvaïte",
     formule: "CaFe²⁺₂Fe³⁺(Si₂O₇)O(OH)",
-    note: "Un silicate presque métallique, noir de jais, qui héberge à la fois du fer ferreux et du fer ferrique. Gisement type : l'île d'Elbe.",
+    note: "Silicate d'aspect presque métallique, d'un noir profond, qui renferme à la fois du fer ferreux et du fer ferrique. Son gisement type se situe sur l'île d'Elbe.",
     mineraux: ["ilvaite"],
   },
   {
     nom: "Groupe de la thortveitite",
     formule: "(Sc,Y)₂Si₂O₇",
-    note: "Le motif Si₂O₇ le plus dépouillé — et le principal minerai de scandium, l'un des métaux les plus chers au monde.",
+    note: "Motif Si₂O₇ réduit à sa forme la plus simple. Il constitue le principal minerai de scandium, l'un des métaux les plus coûteux au monde.",
     mineraux: ["thortveitite"],
   },
   {
     nom: "Silicates de calcium (skarns & ciment)",
     formule: "Ca₄Si₂O₇F₂ · Ca₅Si₂O₇(CO₃)₂ · Ca₃Si₂O₇",
-    note: "Les minéraux des calcaires cuits au contact d'un magma. Ils réapparaissent, à l'identique, dans le clinker des cimenteries : le ciment Portland est une roche métamorphique fabriquée par l'homme.",
+    note: "Au contact d'un magma, des calcaires cuits donnent ces minéraux, que l'on retrouve à l'identique dans le clinker des cimenteries. Le ciment Portland constitue donc, en pratique, une roche métamorphique fabriquée par l'homme.",
     mineraux: ["cuspidine", "tilleyite", "rankinite"],
   },
   {
-    nom: "Borosilicate — groupe de l'axinite",
+    nom: "Borosilicate : groupe de l'axinite",
     formule: "Ca₂(Fe,Mg,Mn)Al₂(BO₃)(Si₄O₁₂)(OH)",
-    note: "Cristaux en lame de hache, brun-violet. Sa classification a longtemps hésité entre sorosilicate et cyclosilicate — Strunz la range ici (9.BD).",
+    note: "Brun-violet, ce minéral forme des cristaux en lame de hache. Strunz le range ici (9.BD), alors que sa place a longtemps été disputée entre sorosilicates et cyclosilicates.",
     mineraux: ["axinite"],
   },
 ];
@@ -250,5 +250,5 @@ const SORO_SOUS_FAMILLES = [
   soro.sousGroupes = SORO_SOUS_FAMILLES;
   soro.mineraux = SORO_SOUS_FAMILLES.flatMap((sf) => sf.mineraux);
   soro.motif = "paires Si₂O₇ (deux tétraèdres partageant un sommet)";
-  soro.note = "Deux tétraèdres SiO₄ se soudent par un sommet — un oxygène devient commun — et forment le radical [Si₂O₇]⁶⁻, en nœud papillon. Beaucoup de sorosilicates trichent toutefois : ils mélangent des paires Si₂O₇ ET des tétraèdres isolés SiO₄ dans la même structure. C'est le cas du groupe de l'épidote, de la vésuvianite et de la pumpellyite — soit l'essentiel de la classe. Ce sont des minéraux typiques du métamorphisme : ils datent les enfouissements et signent les subductions.";
+  soro.note = "Deux tétraèdres SiO₄ se lient par un sommet commun, ce qui forme le radical [Si₂O₇]⁶⁻ en nœud papillon. Beaucoup de sorosilicates associent toutefois des paires Si₂O₇ et des tétraèdres isolés SiO₄ au sein d'une même structure. C'est le cas du groupe de l'épidote, de la vésuvianite et de la pumpellyite, qui constituent l'essentiel de la classe. Ces minéraux sont typiques du métamorphisme : ils permettent de dater les enfouissements et signalent les subductions.";
 })();

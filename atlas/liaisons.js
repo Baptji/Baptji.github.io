@@ -285,7 +285,7 @@
       </div>
       <div class="lp-scene">
         <div class="lp-horloge" aria-live="off"><span class="lp-h-lab">Temps réel</span><b data-lp-hv>0 s</b><span class="lp-h-sous" data-lp-hs></span><span class="lp-h-cond" data-lp-hc></span></div>
-        <svg viewBox="0 0 640 340" role="img" aria-label="${gab.aria ? gab.aria(d) : "Coupe du bord du cristal, étape par étape"}"><g data-lp-fl></g><g data-lp-ml></g><g data-lp-fa></g><g data-lp-ma></g></svg>
+        <svg viewBox="0 0 640 340" role="img" aria-label="${gab.aria ? gab.aria(d) : "Le bord du cristal, vu en coupe à chaque étape"}"><g data-lp-fl></g><g data-lp-ml></g><g data-lp-fa></g><g data-lp-ma></g></svg>
       </div>
       <div class="lp-pas">
         <button type="button" class="lp-btn" data-lp-prec aria-label="Étape précédente">◀</button>

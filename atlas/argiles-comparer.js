@@ -32,52 +32,33 @@
   const A_OCTA = (texte) => ({ id: "octa", nom: "Octaèdres", texte });
   const A_TETRA_SUB = (texte, nom = "Al à la place de Si") => ({ id: "tsub", nom, texte });
   const A_INTER = (texte, nom = "Entre les feuillets") => ({ id: "inter", nom, texte });
-  const SCHEMA = "proportions de la formule, positions de la structure voisine";
+  const SCHEMA = "répartition selon la formule ; positions empruntées à la structure voisine";
 
   const GROUPES = {
     kaolinite_e: {
-      intro: `Les trois espèces ont exactement le même feuillet, Al₂Si₂O₅(OH)₄ : un feuillet de tétraèdres de silicium soudé à un
-        feuillet d'octaèdres d'aluminium où un site sur trois reste vide (la lacune). Ce qui change, c'est l'empilement : le décalage
-        d'un feuillet au suivant et la place de la lacune dans chaque feuillet (Bailey 1963).`,
+      intro: `Les trois espèces partagent un même feuillet, Al₂Si₂O₅(OH)₄ : une couche de tétraèdres de silicium accolée à une couche d'octaèdres d'aluminium dont un site sur trois demeure vide (la lacune). Seul l'empilement diffère : le décalage d'un feuillet à l'autre et la position de la lacune dans chaque feuillet (Bailey 1963).`,
       aspects: [A_TOUT,
-        { id: "lacunes", nom: "Sites vides (lacunes)", lacunes: true, texte: `Les billes montrent les sites octaédriques vides, le reste est
-          estompé. Dans un feuillet, la lacune peut occuper deux sites, images l'un de l'autre dans un miroir : site n° 1 en jaune,
-          site n° 2 en orange (numéros calculés sur la structure affichée). Kaolinite : la lacune est au même site dans tous les
-          feuillets, tout est jaune. Dickite : elle change de site à chaque feuillet (un feuillet « droit », un feuillet « gauche »).
-          Nacrite : elle alterne aussi, mais chaque feuillet est décalé sur le précédent le long de l'autre direction du plan (l'axe
-          de 8,9 Å au lieu de celui de 5,1 Å) ; ce décalage se voit à la maille penchée quand on regarde les feuillets par la
-          tranche.` }],
+        { id: "lacunes", nom: "Sites vides (lacunes)", lacunes: true, texte: `Estompé sauf les billes, qui signalent les sites octaédriques vides. Au sein d'un feuillet, la lacune peut se loger sur deux sites symétriques par rapport à un miroir : site n° 1 en jaune, site n° 2 en orange (numéros calculés sur la structure affichée). Kaolinite : même site dans tous les feuillets, donc tout en jaune. Dickite : site qui change à chaque feuillet (feuillet « droit » puis « gauche »). Nacrite : alternance également, mais décalage de chaque feuillet sur le précédent selon l'autre direction du plan (axe de 8,9 Å au lieu de 5,1 Å) ; visible à la maille inclinée quand on regarde les feuillets en tranche.` }],
       especes: {
-        kaolinite_e: { dit: `Un feuillet par maille (triclinique). Chaque feuillet est décalé d'environ un tiers de a (≈ 1,7 Å) sur le
-          précédent et sa lacune est au même site. La forme des sols et des altérations de surface.` },
+        kaolinite_e: { dit: `Un seul feuillet par maille (triclinique). Chaque feuillet se décale d'environ un tiers de a (≈ 1,7 Å) par rapport au précédent, tout en gardant sa lacune au même site. C'est la forme des sols et des altérations de surface.` },
         dickite: { dit: `Deux feuillets par maille (monoclinique). Même décalage que la kaolinite, mais la lacune change de site d'un
           feuillet à l'autre. Elle se forme plus chaud : grès enfouis à plusieurs kilomètres, où la kaolinite se transforme en
           dickite (Beaufort et al. 1998), et filons hydrothermaux.` },
-        nacrite: { dit: `Deux feuillets par maille (monoclinique), lacune alternée comme la dickite, mais décalage le long de l'axe de
-          8,9 Å. La plus rare des trois, surtout hydrothermale (Zheng et Bailey 1994).` },
+        nacrite: { dit: `Deux feuillets par maille (monoclinique) ; la lacune alterne comme dans la dickite, mais le décalage se fait le long de l'axe de 8,9 Å. C'est la moins fréquente des trois, surtout d'origine hydrothermale (Zheng et Bailey 1994).` },
       },
       sources: [`Bailey S. W. (1963). « Polymorphism of the kaolin minerals ». <i>American Mineralogist</i> 48, p. 1196–1209.`,
         `Beaufort D. et al. (1998). « Kaolinite-to-dickite reaction in sandstone reservoirs ». <i>Clay Minerals</i> 33, p. 297–316.`],
     },
     chrysotile: {
       vue: "objet",
-      intro: `Même feuillet 1:1 de magnésium, Mg₃Si₂O₅(OH)₄, pour les trois. Le feuillet d'octaèdres de magnésium est un peu plus
-        large que celui des tétraèdres de silicium (≈ 9,4 Å contre ≈ 9,1 Å pour la même rangée de sites) : chaque espèce règle ce
-        désaccord à sa manière. Vues « Structure » : un petit objet entier, atome par atome, comme sur les pages des espèces.`,
+      intro: `Feuillet 1:1 de magnésium, Mg₃Si₂O₅(OH)₄, commun aux trois espèces. Sa couche d'octaèdres magnésiens dépasse légèrement celle des tétraèdres de silicium (≈ 9,4 Å contre ≈ 9,1 Å, pour la même rangée de sites), et chaque espèce règle ce désaccord à sa manière. En vue « Structure », chacune apparaît comme un petit objet entier, atome par atome, à la façon des pages d'espèces.`,
       aspects: [A_TOUT,
-        { id: "octa", nom: "Couche de magnésium", texte: `En surbrillance, les octaèdres de magnésium. Lizardite : couche plane, le
-          désaccord est rattrapé par de petites rotations des tétraèdres et quelques substitutions. Chrysotile : le magnésium reste à
-          l'extérieur de la courbure et le feuillet s'enroule en tube. Antigorite : le feuillet ondule, et la couche de silicium
-          change de côté à chaque demi-onde.` },
-        { id: "tetra", nom: "Couche de silicium", texte: `En surbrillance, les tétraèdres de silicium : à l'intérieur de la spirale
-          du chrysotile, d'un côté puis de l'autre dans l'onde de l'antigorite, sur une seule face dans la lizardite.` }],
+        { id: "octa", nom: "Couche de magnésium", texte: `Les octaèdres magnésiens ressortent en couleur. Côté lizardite, le feuillet est plan et l'écart se compense par de légères rotations de tétraèdres, accompagnées de quelques substitutions. Côté chrysotile, la courbure rejette le magnésium vers l'extérieur, d'où le tube qui s'enroule. Côté antigorite, l'ondulation fait passer la couche de silicium d'un côté à l'autre à chaque demi-onde.` },
+        { id: "tetra", nom: "Couche de silicium", texte: `Mis en évidence : les tétraèdres de silicium. Dans la spirale du chrysotile ils sont à l'intérieur ; dans l'onde de l'antigorite ils passent alternativement d'un côté puis de l'autre ; dans la lizardite ils n'occupent qu'une seule face.` }],
       especes: {
-        chrysotile: { dit: `Feuillets enroulés en tubes d'environ 25 nm de diamètre, magnésium à l'extérieur : l'amiante blanc. Modèle
-          de l'atlas : le feuillet de la lizardite enroulé (aucune structure courbe n'est affinée).` },
-        antigorite: { dit: `Feuillet ondulé, une onde complète tous les 43,5 Å ; la couche de silicium passe d'un côté à l'autre à chaque
-          demi-onde (Capitani et Mellini 2004). La serpentine des températures les plus hautes.` },
-        lizardite: { dit: `Feuillets plans, empilés : la serpentine la plus courante, celle des serpentinites formées à basse
-          température.` },
+        chrysotile: { dit: `Ce sont des tubes d'environ 25 nm de diamètre, enroulés magnésium vers l'extérieur : il s'agit de l'amiante blanc. Le modèle de l'atlas reprend le feuillet de la lizardite, enroulé, aucune structure courbe n'ayant été affinée.` },
+        antigorite: { dit: `Feuillet ondulé : une onde entière couvre 43,5 Å. La couche de silicium bascule d'un côté à l'autre à chaque demi-onde (Capitani et Mellini 2004). Il s'agit de la serpentine des températures les plus élevées.` },
+        lizardite: { dit: `Empilement de feuillets plans. C'est la serpentine la plus répandue ; elle caractérise les serpentinites formées à basse température.` },
       },
       sources: [`Wicks F. J. et O'Hanley D. S. (1988). « Serpentine minerals: structures and petrology ». <i>Reviews in Mineralogy</i>
         19, p. 91–167.`, `Capitani G. et Mellini M. (2004). « The modulated crystal structure of antigorite: the m = 17 polysome ».
@@ -85,254 +66,194 @@
         resolution electron microscopy ». <i>Acta Crystallographica</i> A27, p. 659–664.`],
     },
     cronstedtite: {
-      intro: `Même charpente 1:1 que les serpentines, avec d'autres cations : fer, aluminium ou nickel prennent la place du magnésium
-        dans les octaèdres, et une partie du silicium est remplacée par de l'aluminium ou du fer ferrique dans les tétraèdres.`,
+      intro: `Même charpente 1:1 que les serpentines, mais avec d'autres cations : fer, aluminium ou nickel occupent la place du magnésium dans les octaèdres, tandis qu'une partie du silicium cède la sienne à l'aluminium ou au fer ferrique dans les tétraèdres.`,
       aspects: [A_TOUT,
-        A_OCTA(`En surbrillance, les cations des octaèdres : fer (brun), nickel (gris), magnésium (orange), aluminium (bleu pâle) ; un
-          site partagé prend la couleur mêlée de ses occupants.`),
-        A_TETRA_SUB(`En surbrillance, les tétraèdres où le silicium est en partie remplacé (par Fe³⁺ dans la cronstedtite, par Al
-          ailleurs). Rien ne s'allume dans la népouite et la greenalite : leurs tétraèdres ne contiennent que du silicium.`,
+        A_OCTA(`En surbrillance, les cations occupant les octaèdres : fer (brun), nickel (gris), magnésium (orange), aluminium (bleu pâle). Un site partagé se colore du mélange de ses occupants.`),
+        A_TETRA_SUB(`En surbrillance, les tétraèdres où le silicium cède une partie de sa place : au Fe³⁺ dans la cronstedtite, à l'Al ailleurs. Rien ne s'éclaire pour la népouite ni pour la greenalite, dont les tétraèdres ne contiennent que du silicium.`,
           "Ce qui remplace Si")],
       especes: {
-        cronstedtite: { dit: `Tout fer : Fe²⁺ et Fe³⁺ dans les octaèdres, Fe³⁺ à la place d'une partie du silicium (27 % des sites
-          tétraédriques dans l'échantillon affiné).` },
-        berthierine: { dit: `La serpentine des minerais de fer oolithiques (minette lorraine) : fer et aluminium dans les octaèdres,
-          aluminium à la place d'une partie du silicium.`,
+        cronstedtite: { dit: `Fer exclusivement : Fe²⁺ et Fe³⁺ occupent les octaèdres, et Fe³⁺ remplace une partie du silicium (27 % des sites tétraédriques de l'échantillon affiné).` },
+        berthierine: { dit: `Serpentine des minerais de fer oolithiques (minette lorraine) : fer et aluminium occupent les octaèdres, et l'aluminium remplace une partie du silicium.`,
           modele: SCHEMA, occuper: { octa: { Fe: 0.75, Al: 0.25 }, tetra: { Si: 0.7, Al: 0.3 } } },
-        amesite: { dit: `Magnésium et aluminium dans les octaèdres, aluminium dans la moitié des tétraèdres : la plus alumineuse des
-          serpentines.` },
-        greenalite: { dit: `Fer seul dans les octaèdres (surtout Fe²⁺), silicium seul dans les tétraèdres : l'équivalent ferreux de la
-          lizardite, dans les formations de fer rubanées.`,
+        amesite: { dit: `Magnésium et aluminium dans les octaèdres, aluminium dans la moitié des tétraèdres : c'est la serpentine la plus riche en aluminium.` },
+        greenalite: { dit: `Dans les octaèdres, fer seul (surtout Fe²⁺) ; dans les tétraèdres, silicium seul. C'est l'équivalent ferreux de la lizardite, que l'on retrouve dans les formations de fer rubanées.`,
           modele: SCHEMA, occuper: { octa: { Fe: 1 }, tetra: { Si: 1 } } },
-        nepouite: { dit: `Nickel dans les octaèdres, silicium seul dans les tétraèdres : la serpentine des latérites à nickel de
-          Nouvelle-Calédonie (Népoui).` },
-        odinite: { dit: `Fer ferrique, magnésium et aluminium mêlés dans les octaèdres, dont 2,5 sites sur 3 seulement sont occupés
-          (entre di- et trioctaédrique) ; un peu d'aluminium dans les tétraèdres. Argile verte des fonds marins tropicaux peu
-          profonds (Bailey 1988).`,
+        nepouite: { dit: `Octaèdres à nickel, tétraèdres à silicium seul : c'est la serpentine des latérites nickélifères de Nouvelle-Calédonie (Népoui).` },
+        odinite: { dit: `Les octaèdres renferment ensemble fer ferrique, magnésium et aluminium, et seulement 2,5 sites sur 3 sont occupés, à mi-chemin entre dioctaédrique et trioctaédrique ; un peu d'aluminium s'insère dans les tétraèdres. Argile verte des fonds marins tropicaux peu profonds (Bailey 1988).`,
           modele: SCHEMA, occuper: { octa: { Fe: 0.5, Mg: 0.25, Al: 0.25 }, tetra: { Si: 0.85, Al: 0.15 } } },
       },
       sources: [`Bailey S. W. (1988). « Odinite, a new dioctahedral-trioctahedral Fe³⁺-rich 1:1 clay mineral ». <i>Clay Minerals</i>
         23, p. 237–247.`],
     },
     pyrophyllite: {
-      intro: `Feuillet 2:1 sans aucune substitution, donc sans charge : rien entre les feuillets. Seul change le cation des octaèdres.`,
-      aspects: [A_TOUT, A_OCTA(`En surbrillance, les octaèdres : aluminium dans la pyrophyllite, fer ferrique dans la ferripyrophyllite.
-        Dans les deux, un site sur trois reste vide.`)],
+      intro: `Feuillet 2:1 dépourvu de toute substitution, donc sans charge, et sans rien entre les feuillets. Seul le cation des octaèdres diffère.`,
+      aspects: [A_TOUT, A_OCTA(`En surbrillance, les octaèdres : ils renferment l'aluminium dans la pyrophyllite, le fer ferrique dans la ferripyrophyllite. Dans les deux espèces, un site sur trois reste vacant.`)],
       especes: {
-        pyrophyllite: { dit: `Aluminium dans deux sites octaédriques sur trois. Minéral tendre des altérations hydrothermales et des
-          schistes alumineux.` },
-        ferripyrophyllite: { dit: `Fer ferrique à la place de l'aluminium, dans les mêmes sites. Très rare.`,
+        pyrophyllite: { dit: `Deux sites octaédriques sur trois sont occupés par l'aluminium. Ce minéral tendre est caractéristique des altérations hydrothermales et des schistes alumineux.` },
+        ferripyrophyllite: { dit: `Dans les mêmes sites que l'aluminium, c'est le fer ferrique qui s'installe. Espèce très rare.`,
           modele: SCHEMA, remplacer: { octa: { Al: "Fe" } } },
       },
     },
     montmorillonite: {
-      intro: `Smectites dioctaédriques dont la charge naît dans les octaèdres : un cation de valence 2 (Mg²⁺) remplace un cation de
-        valence 3. Entre les feuillets, des cations compensent cette charge (l'eau qui les entoure n'est pas dessinée ici).`,
+      intro: `Smectites dioctaédriques dont la charge prend naissance dans les octaèdres : un cation de valence 2 (Mg²⁺) prend la place d'un cation de valence 3. Des cations logés entre les feuillets compensent cette charge (l'eau qui les entoure n'est pas représentée ici).`,
       aspects: [A_TOUT,
-        A_OCTA(`En surbrillance, les octaèdres, là où naît la charge : aluminium et magnésium mêlés dans la montmorillonite, chrome dans
-          la volkonskoïte.`),
-        A_INTER(`En surbrillance, les cations entre les feuillets (Ca²⁺ ici), qui compensent la charge des feuillets.`)],
+        A_OCTA(`Les octaèdres, siège de la charge, sont en surbrillance : aluminium et magnésium mêlés dans la montmorillonite, chrome dans la volkonskoïte.`),
+        A_INTER(`Les cations logés entre les feuillets (Ca²⁺ ici) sont en surbrillance : ils compensent la charge des feuillets.`)],
       especes: {
-        montmorillonite: { dit: `Aluminium dans les octaèdres, magnésium à la place d'environ un aluminium sur six : c'est là que naît
-          la charge. La smectite des bentonites et des sols.`,
-          modele: "magnésium placé selon la formule (le modèle publié ne met que de l'aluminium)", occuper: { octa: { Al: 0.85, Mg: 0.15 } } },
-        volkonskoite: { dit: `Le chrome (Cr³⁺) remplace l'aluminium ; la charge vient du magnésium qui l'accompagne. Smectite verte et
-          rare.`,
+        montmorillonite: { dit: `Aluminium dans les octaèdres, avec du magnésium à la place d'environ un aluminium sur six : c'est là que la charge prend son origine. Cette smectite forme les bentonites et les sols.`,
+          modele: "magnésium disposé selon la formule, alors que le modèle publié ne renferme que de l'aluminium", occuper: { octa: { Al: 0.85, Mg: 0.15 } } },
+        volkonskoite: { dit: `Le chrome (Cr³⁺) prend la place de l'aluminium ; la charge provient du magnésium qui l'accompagne. Smectite verte, rare.`,
           modele: SCHEMA, occuper: { octa: { Cr: 0.75, Mg: 0.15, Fe: 0.1 } } },
       },
     },
     beidellite: {
-      intro: `Smectites dioctaédriques dont la charge naît dans les tétraèdres : de l'aluminium remplace un peu de silicium. La
-        charge est alors plus près de la surface du feuillet qu'avec la montmorillonite.`,
+      intro: `Smectites dioctaédriques dont la charge prend naissance dans les tétraèdres : de l'aluminium s'y substitue à une partie du silicium. La charge se situe alors plus près de la surface du feuillet qu'avec la montmorillonite.`,
       aspects: [A_TOUT,
-        A_TETRA_SUB(`En surbrillance, les tétraèdres où l'aluminium remplace une partie du silicium (environ un sur huit) : c'est là
-          que naît la charge.`, "Tétraèdres : la charge"),
-        A_OCTA(`En surbrillance, les octaèdres : aluminium dans la beidellite, fer ferrique dans la nontronite.`),
-        A_INTER(`En surbrillance, les cations entre les feuillets (l'eau qui les entoure n'est pas dessinée).`)],
+        A_TETRA_SUB(`Les tétraèdres où l'aluminium remplace une part du silicium (environ un sur huit) sont en surbrillance : c'est là que la charge prend naissance.`, "Tétraèdres : la charge"),
+        A_OCTA(`En surbrillance, les octaèdres : de l'aluminium pour la beidellite, du fer ferrique pour la nontronite.`),
+        A_INTER(`Les cations entre les feuillets sont en surbrillance (l'eau qui les entoure n'est pas représentée).`)],
       especes: {
-        beidellite: { dit: `Aluminium dans les octaèdres et aluminium à la place d'environ un silicium sur huit.`,
+        beidellite: { dit: `Dans les octaèdres, de l'aluminium ; et de l'aluminium remplaçant environ un silicium sur huit.`,
           modele: SCHEMA, occuper: { octa: { Al: 1 }, tetra: { Si: 0.875, Al: 0.125 } } },
-        nontronite: { dit: `Fer ferrique dans les octaèdres au lieu de l'aluminium : smectite jaune-vert de l'altération des basaltes et
-          des roches riches en fer.` },
+        nontronite: { dit: `Le fer ferrique occupe les octaèdres à la place de l'aluminium : c'est une smectite jaune-vert, formée lors de l'altération des basaltes et des roches ferrugineuses.` },
       },
     },
     illite_e: {
-      intro: `Charge forte du feuillet, compensée par des cations qui ne gardent pas d'eau et verrouillent l'espace entre les feuillets
-        vers 10 Å. D'une espèce à l'autre changent le cation entre les feuillets (K⁺, Na⁺ ou Ca²⁺), le cation des octaèdres (Al, Fe³⁺,
-        Mg) et la part d'aluminium dans les tétraèdres, qui fixe la charge.`,
+      intro: `Le feuillet porte une charge élevée, compensée par des cations déshydratés qui bloquent l'espace entre les feuillets vers 10 Å. D'une espèce à l'autre varient le cation logé entre les feuillets (K⁺, Na⁺ ou Ca²⁺), celui des octaèdres (Al, Fe³⁺, Mg) et la part d'aluminium dans les tétraèdres, qui fixe la charge.`,
       aspects: [A_TOUT,
-        A_INTER(`En surbrillance, les cations entre les feuillets : potassium (violet), sodium (jaune), calcium (bleu). Plus le cation
-          est petit, plus les feuillets se rapprochent : 10,0 Å pour la muscovite, 9,6 Å pour la paragonite, 9,5 Å pour la margarite.`),
-        A_OCTA(`En surbrillance, les octaèdres : aluminium dans la plupart, fer et magnésium dans la glauconite et la céladonite.`),
-        A_TETRA_SUB(`En surbrillance, les tétraèdres qui contiennent de l'aluminium ; la légende donne la part d'aluminium dans chaque
-          site (l'aluminium y est réparti au hasard, chaque site en contient en moyenne une fraction). Muscovite et paragonite : 25 à
-          27 %, un aluminium pour trois silicium. Margarite : la moitié des tétraèdres sont des tétraèdres d'aluminium. Illite : 17 %.
-          Céladonite : 8 %.`)],
+        A_INTER(`Surbrillance des cations logés entre les feuillets : potassium (violet), sodium (jaune) et calcium (bleu). Un cation plus petit rapproche davantage les feuillets : 10,0 Å (muscovite), 9,6 Å (paragonite), 9,5 Å (margarite).`),
+        A_OCTA(`Octaèdres en surbrillance, majoritairement occupés par l'aluminium ; le fer et le magnésium prennent le relais dans la glauconite et la céladonite.`),
+        A_TETRA_SUB(`Les tétraèdres renfermant de l'aluminium sont en surbrillance ; la légende indique la part d'aluminium de chaque site (il est réparti au hasard, si bien que chaque site en contient une fraction moyenne). Muscovite et paragonite : 25 à 27 %, soit un aluminium pour trois silicium. Margarite : la moitié des tétraèdres sont occupés par l'aluminium. Illite : 17 %. Céladonite : 8 %.`)],
       especes: {
-        illite_e: { dit: `K⁺ entre les feuillets, mais moins que dans un mica (0,65 par demi-maille ici, un site sur trois vide) ; un
-          peu de magnésium avec l'aluminium. Le « mica » des argiles et des sols.` },
-        brammallite: { dit: `L'illite sodique : Na⁺ entre les feuillets.`, modele: "montrée telle quelle" },
-        sericite: { dit: `De la muscovite en paillettes microscopiques : même structure.`, modele: "montrée telle quelle" },
-        glauconite_e: { dit: `K⁺ entre les feuillets, fer ferrique avec un peu d'aluminium et de magnésium dans les octaèdres, un peu
-          d'aluminium dans les tétraèdres : le grain vert des sables marins.`,
-          modele: "sites remplis selon la formule (le modèle publié note Al les octaèdres et Si les tétraèdres)",
+        illite_e: { dit: `Un mica où moins de K⁺ occupe l'espace inter-feuillets qu'une muscovite (0,65 par demi-maille, un site sur trois étant vide), avec un peu de magnésium à côté de l'aluminium. C'est le « mica » de nombreux argiles et sols.` },
+        brammallite: { dit: `Variante sodique de l'illite : Na⁺ entre les feuillets.`, modele: "montrée telle quelle" },
+        sericite: { dit: `Muscovite en paillettes microscopiques, de même structure.`, modele: "montrée telle quelle" },
+        glauconite_e: { dit: `Grain vert des sables marins : K⁺ entre les feuillets, octaèdres où le fer ferrique côtoie un peu d'aluminium et de magnésium, et faible part d'aluminium en tétraèdres.`,
+          modele: "sites occupés suivant la formule (le modèle publié désigne Al pour les octaèdres, Si pour les tétraèdres)",
           occuper: { octa: { Fe: 0.65, Al: 0.2, Mg: 0.15 }, tetra: { Si: 0.91, Al: 0.09 } } },
-        celadonite: { dit: `K⁺ entre les feuillets, fer et magnésium dans les octaèdres, presque pas d'aluminium dans les tétraèdres : la
-          charge naît dans les octaèdres.` },
-        muscovite_e: { dit: `K⁺ entre les feuillets, aluminium dans les octaèdres, un aluminium pour trois silicium dans les tétraèdres.
-          Le mica blanc des granites et des micaschistes.` },
-        paragonite: { dit: `Comme la muscovite, mais Na⁺ entre les feuillets : plus petit, il les rapproche (9,6 Å au lieu de 10,0 Å).` },
-        margarite: { dit: `Ca²⁺ entre les feuillets et deux aluminium pour deux silicium dans les tétraèdres : charge double, mica
-          « dur » et cassant.` },
+        celadonite: { dit: `La charge s'installe dans les octaèdres, riches en fer et en magnésium, les tétraèdres ne contenant presque pas d'aluminium. K⁺ occupe l'espace inter-feuillets.` },
+        muscovite_e: { dit: `Des granites aux micaschistes, on rencontre ce mica blanc : entre les feuillets, K⁺ ; dans les octaèdres, aluminium ; dans les tétraèdres, un aluminium pour trois silicium.` },
+        paragonite: { dit: `Na⁺ prend place entre les feuillets d'une muscovite à la place de K⁺ ; plus petit, il resserre l'espace à 9,6 Å contre 10,0 Å.` },
+        margarite: { dit: `Mica « dur » et cassant, né de Ca²⁺ entre les feuillets et de deux aluminium pour deux silicium dans les tétraèdres : la charge est double.` },
       },
     },
     talc_e: {
-      intro: `Feuillet 2:1 trioctaédrique sans charge : rien entre les feuillets, qui glissent les uns sur les autres. Seul change le
-        cation des octaèdres.`,
-      aspects: [A_TOUT, A_OCTA(`En surbrillance, les octaèdres : magnésium (orange), fer (brun) ou nickel (gris). Les trois sites sont
-        occupés dans les trois espèces.`)],
+      intro: `Pas de charge dans ce feuillet 2:1 trioctaédrique : rien ne sépare les feuillets, qui glissent aisément. Seul le cation des octaèdres diffère d'une espèce à l'autre.`,
+      aspects: [A_TOUT, A_OCTA(`Octaèdres en surbrillance, avec du magnésium (orange), du fer (brun) ou du nickel (gris) ; les trois sites restent pleins dans les trois espèces.`)],
       especes: {
-        talc_e: { dit: `Magnésium dans les trois sites octaédriques.` },
-        minnesotaite: { dit: `Fer ferreux à la place du magnésium : le talc des formations de fer rubanées. Dans la réalité, son feuillet
-          tétraédrique est découpé en bandes ; cette modulation n'est pas montrée.`,
+        talc_e: { dit: `Du magnésium occupe les trois sites octaédriques.` },
+        minnesotaite: { dit: `Le magnésium est ici remplacé par du fer ferreux : c'est le talc des formations de fer rubanées, dont le feuillet tétraédrique s'organise en bandes que le dessin ne montre pas.`,
           modele: SCHEMA, remplacer: { octa: { Mg: "Fe" } } },
-        willemseite: { dit: `Nickel à la place du magnésium (plus de nickel que de magnésium).`,
+        willemseite: { dit: `Nickel en remplacement du magnésium (le nickel y est plus abondant que le magnésium).`,
           modele: SCHEMA, occuper: { octa: { Ni: 0.7, Mg: 0.3 } } },
       },
     },
     stevensite: {
-      intro: `Smectites trioctaédriques dont la charge naît dans les octaèdres, mais pas de la même façon : un site vide dans la
-        stevensite, du lithium dans l'hectorite. Entre les feuillets, les cations qui compensent la charge (eau non dessinée).`,
+      intro: `Smectites trioctaédriques dont la charge naît dans les octaèdres, mais selon deux mécanismes : un site vide dans la stevensite, du lithium dans l'hectorite. Entre les feuillets, des cations compensent cette charge (l'eau n'est pas dessinée).`,
       aspects: [A_TOUT,
-        A_OCTA(`En surbrillance, les octaèdres. Stevensite : quelques sites vides (en jaune), chacun laisse deux charges négatives.
-          Hectorite : du lithium (vert) partage les sites du magnésium, chaque Li⁺ laisse une charge.`),
-        A_INTER(`En surbrillance, les cations entre les feuillets.`)],
+        A_OCTA(`Octaèdres en surbrillance. La stevensite présente quelques sites vides (en jaune), chacun ouvrant deux charges négatives. Dans l'hectorite, le lithium (vert) partage les sites du magnésium, chaque Li⁺ créant une charge.`),
+        A_INTER(`Les cations entre les feuillets sont en surbrillance.`)],
       especes: {
-        stevensite: { dit: `Magnésium seul, mais environ un site octaédrique sur vingt reste vide. Smectite des lacs salés et des milieux
-          très magnésiens. Une seule lacune est montrée.`,
+        stevensite: { dit: `Ne reste que le magnésium, avec environ un site octaédrique sur vingt libre. Cette smectite caractérise les lacs salés et les milieux très riches en magnésium ; une seule lacune est dessinée.`,
           modele: SCHEMA + " ; lithium retiré, une lacune ajoutée", occuper: { octa: { Mg: 1 } }, remplacer: { inter: { Cs: "Ca" } }, lacune: 1 },
-        hectorite: { dit: `Du lithium remplace une partie du magnésium (un site sur cinq environ dans l'échantillon affiné). Smectite
-          des argiles à lithium (Hector, Californie).`,
-          modele: "Cs⁺ de l'échantillon (échangé au laboratoire) remplacé par Na⁺", remplacer: { inter: { Cs: "Na" } } },
+        hectorite: { dit: `Une partie du magnésium cède sa place au lithium (environ un site sur cinq dans l'échantillon affiné). C'est une smectite des argiles à lithium (Hector, Californie).`,
+          modele: "Na⁺ à la place du Cs⁺ d'origine, échange réalisé au laboratoire", remplacer: { inter: { Cs: "Na" } } },
       },
     },
     saponite: {
-      intro: `Smectites trioctaédriques dont la charge naît dans les tétraèdres (Al à la place de Si). Aucune n'a de structure
-        affinée : les trois vues sont des modèles de l'atlas sur la structure de l'hectorite ; elles montrent quels cations occupent
-        quels sites, pas leurs positions exactes.`,
+      intro: `Ces smectites trioctaédriques puisent leur charge dans les tétraèdres (Al en lieu et place de Si). Faute de structure affinée, les trois vues sont des modèles de l'atlas fondés sur celle de l'hectorite : elles précisent quels cations occupent quels sites, sans leurs positions exactes.`,
       aspects: [A_TOUT,
-        A_TETRA_SUB(`En surbrillance, les tétraèdres où l'aluminium remplace une partie du silicium : c'est là que naît la charge.`,
+        A_TETRA_SUB(`Les tétraèdres où l'aluminium remplace une partie du silicium sont en surbrillance : c'est là que prend naissance la charge.`,
           "Tétraèdres : la charge"),
-        A_OCTA(`En surbrillance, les octaèdres : magnésium, zinc, ou lithium et aluminium mêlés.`),
-        A_INTER(`En surbrillance, les cations entre les feuillets (eau non dessinée).`)],
+        A_OCTA(`Les octaèdres sont en surbrillance : magnésium, zinc, ou lithium et aluminium mêlés.`),
+        A_INTER(`Les cations entre les feuillets sont en surbrillance (l'eau n'est pas représentée).`)],
       especes: {
-        saponite: { dit: `Magnésium, avec un peu de fer, dans les octaèdres. La smectite des basaltes, des gabbros et des serpentinites
-          altérés.`,
+        saponite: { dit: `Octaèdres à magnésium, accompagné de peu de fer : smectite des basaltes, des gabbros et des serpentinites altérés.`,
           modele: SCHEMA, occuper: { octa: { Mg: 0.9, Fe: 0.1 }, tetra: { Si: 0.9, Al: 0.1 } }, remplacer: { inter: { Cs: "Ca" } } },
-        sauconite: { dit: `Zinc à la place du magnésium : smectite des zones oxydées des gisements de zinc.`,
+        sauconite: { dit: `Le zinc remplace le magnésium dans cette smectite des zones oxydées des gisements de zinc.`,
           modele: SCHEMA, occuper: { octa: { Zn: 1 }, tetra: { Si: 0.85, Al: 0.15 } }, remplacer: { inter: { Cs: "Na" } } },
-        swinefordite: { dit: `Lithium, aluminium et magnésium mêlés dans les octaèdres, entre di- et trioctaédrique : pegmatites à
-          lithium altérées.`,
+        swinefordite: { dit: `Octaèdres mêlant lithium, aluminium et magnésium, dans une position intermédiaire entre dioctaédrique et trioctaédrique : smectite des pegmatites à lithium altérées.`,
           modele: SCHEMA, occuper: { octa: { Li: 0.35, Al: 0.35, Mg: 0.3 }, tetra: { Si: 0.9, Al: 0.1 } }, remplacer: { inter: { Cs: "Ca" } } },
       },
     },
     phlogopite: {
-      intro: `Micas trioctaédriques : un cation sans eau entre les feuillets, trois sites octaédriques occupés. Ce qui change : le
-        cation des octaèdres (magnésium, fer, lithium et aluminium) et, pour la clintonite, celui de l'espace entre les feuillets.`,
+      intro: `Dans ces micas trioctaédriques, les trois sites octaédriques sont pleins et le cation intercalaire est dépourvu d'eau. Ce qui change d'une espèce à l'autre : le cation des octaèdres (magnésium, fer, lithium ou aluminium), et, pour la clintonite, le cation intercalaire.`,
       aspects: [A_TOUT,
-        A_OCTA(`En surbrillance, les octaèdres : magnésium (orange), fer (brun), lithium (vert) et aluminium (bleu pâle) ; un site
-          partagé prend la couleur mêlée de ses occupants.`),
-        A_INTER(`En surbrillance, les cations entre les feuillets : potassium (violet) partout, calcium (bleu) dans la clintonite.`),
-        A_TETRA_SUB(`En surbrillance, les tétraèdres qui contiennent de l'aluminium ; la légende donne sa part dans chaque site : 25 à
-          30 % dans la phlogopite, la biotite et l'annite (un aluminium pour trois silicium), 13 à 23 % dans les micas au lithium,
-          59 % dans la clintonite.`)],
+        A_OCTA(`Octaèdres en surbrillance : magnésium (orange), fer (brun), lithium (vert), aluminium (bleu pâle). Un site partagé adopte la teinte mélangée des atomes qui l'occupent.`),
+        A_INTER(`Cations intercalaires en surbrillance : du potassium (violet) dans toutes les espèces, du calcium (bleu) dans la clintonite.`),
+        A_TETRA_SUB(`Surbrillance des tétraèdres qui contiennent de l'aluminium ; la légende précise la proportion par site : de 25 à 30 % pour la phlogopite, la biotite et l'annite (un aluminium pour trois silicium), de 13 à 23 % pour les micas au lithium, et 59 % pour la clintonite.`)],
       especes: {
-        phlogopite: { dit: `Magnésium dans les octaèdres : le mica brun clair des marbres et des péridotites.` },
-        biotite_e: { dit: `Fer et magnésium mêlés dans les octaèdres : le mica noir des granites et des gneiss.` },
-        annite: { dit: `Fer ferreux presque seul dans les octaèdres (81 % des sites dans l'échantillon) : le pôle ferreux de la série.` },
-        lepidolite: { dit: `Lithium et aluminium dans les octaèdres, fluor à la place d'une partie des OH : mica rose-lilas des
-          pegmatites.` },
-        zinnwaldite: { dit: `Lithium, fer et aluminium dans les octaèdres : mica des greisens à étain (Zinnwald, Erzgebirge).` },
-        clintonite: { dit: `Ca²⁺ entre les feuillets et beaucoup d'aluminium dans les tétraèdres (trois pour un silicium dans la formule
-          idéale, 59 % des sites dans l'échantillon affiné) : mica « dur » et cassant.` },
+        phlogopite: { dit: `Mica brun clair des marbres et des péridotites, où le magnésium occupe les octaèdres.` },
+        biotite_e: { dit: `Mica noir des granites et des gneiss : fer et magnésium se partagent les octaèdres.` },
+        annite: { dit: `Pôle ferreux de la série : le fer ferreux occupe presque seul les octaèdres (81 % des sites de l'échantillon).` },
+        lepidolite: { dit: `Mica rose-lilas des pegmatites : lithium et aluminium dans les octaèdres, fluor remplaçant une partie des OH.` },
+        zinnwaldite: { dit: `Mica des greisens à étain (Zinnwald, Erzgebirge), avec lithium, fer et aluminium dans les octaèdres.` },
+        clintonite: { dit: `Mica « dur » et cassant : Ca²⁺ entre les feuillets, et aluminium très abondant dans les tétraèdres (trois pour un silicium dans la formule idéale, 59 % des sites de l'échantillon affiné).` },
       },
     },
     cookeite: {
-      intro: `Chlorites : entre deux feuillets T-O-T, un feuillet d'hydroxyde occupe tout l'espace. Ici, le T-O-T est dioctaédrique ;
-        le feuillet d'hydroxyde est plein.`,
+      intro: `Dans les chlorites, un feuillet d'hydroxyde comble tout l'espace entre deux T-O-T. Ici le T-O-T est dioctaédrique, et le feuillet d'hydroxyde est plein.`,
       aspects: [A_TOUT,
-        A_INTER(`En surbrillance, le feuillet d'hydroxyde entre les T-O-T : lithium et aluminium dans la cookéite, magnésium et
-          aluminium dans la sudoïte.`, "Feuillet d'hydroxyde"),
-        A_OCTA(`En surbrillance, les octaèdres du T-O-T, surtout de l'aluminium.`)],
+        A_INTER(`Surbrillance du feuillet d'hydroxyde intercalé entre les T-O-T : lithium et aluminium chez la cookéite, magnésium et aluminium chez la sudoïte.`, "Feuillet d'hydroxyde"),
+        A_OCTA(`Les octaèdres du T-O-T sont en surbrillance, surtout avec de l'aluminium.`)],
       especes: {
-        cookeite: { dit: `Lithium et aluminium dans le feuillet d'hydroxyde : la chlorite des pegmatites à lithium.` },
-        sudoite: { dit: `Magnésium et aluminium dans le feuillet d'hydroxyde : chlorite du métamorphisme de très bas degré et des
-          altérations hydrothermales.` },
+        cookeite: { dit: `La chlorite des pegmatites à lithium porte lithium et aluminium dans son feuillet d'hydroxyde.` },
+        sudoite: { dit: `Chlorite du métamorphisme de très bas degré et des altérations hydrothermales : magnésium et aluminium dans le feuillet d'hydroxyde.` },
       },
     },
     clinochlore: {
-      intro: `Chlorites trioctaédriques : T-O-T et feuillet d'hydroxyde tous deux pleins. Ce qui change, c'est le cation qui domine
-        dans les deux feuillets d'octaèdres.`,
+      intro: `Chlorites trioctaédriques : le T-O-T et le feuillet d'hydroxyde sont pleins, l'un comme l'autre. Seul le cation dominant des deux feuillets d'octaèdres diffère.`,
       aspects: [A_TOUT,
-        { id: "octaTous", nom: "Octaèdres (les deux feuillets)", texte: `En surbrillance, les octaèdres du T-O-T et ceux du feuillet
-          d'hydroxyde : magnésium (orange), fer (brun), manganèse (violet), nickel (gris), zinc (gris-vert).` },
-        A_INTER(`En surbrillance, le feuillet d'hydroxyde seul.`, "Feuillet d'hydroxyde")],
+        { id: "octaTous", nom: "Octaèdres (les deux feuillets)", texte: `Octaèdres surlignés, dans le T-O-T et dans le feuillet d'hydroxyde : magnésium (orange), fer (brun), manganèse (violet), nickel (gris), zinc (gris-vert).` },
+        A_INTER(`Seul le feuillet d'hydroxyde est en surbrillance.`, "Feuillet d'hydroxyde")],
       especes: {
-        clinochlore: { dit: `Magnésium : la chlorite des schistes verts et des serpentinites.` },
-        chamosite: { dit: `Fer ferreux à parts égales avec le magnésium dans l'échantillon : chlorite des minerais de fer et des schistes.` },
-        pennantite: { dit: `Manganèse à la place du magnésium : chlorite des gisements de manganèse.`,
+        clinochlore: { dit: `Chlorite des schistes verts et des serpentinites, riche en magnésium.` },
+        chamosite: { dit: `Chlorite des minerais de fer et des schistes, où fer ferreux et magnésium se partagent à parts égales dans l'échantillon.` },
+        pennantite: { dit: `Chlorite des gisements de manganèse, où le manganèse prend la place du magnésium.`,
           modele: SCHEMA, remplacer: { octaTous: { Mg: "Mn", Fe: "Mn" } } },
-        nimite: { dit: `Nickel à la place du magnésium : chlorite des gisements de nickel.`,
+        nimite: { dit: `Chlorite des gisements de nickel, le nickel remplaçant le magnésium.`,
           modele: SCHEMA, remplacer: { octaTous: { Mg: "Ni", Fe: "Ni" } } },
-        baileychlore: { dit: `Zinc à la place du magnésium : très rare, dans des gisements de zinc.`,
+        baileychlore: { dit: `Chlorite très rare des gisements de zinc, où le zinc se substitue au magnésium.`,
           modele: SCHEMA, remplacer: { octaTous: { Mg: "Zn", Fe: "Zn" } } },
       },
     },
     rectorite: {
-      intro: `Deux sortes de feuillets alternent dans un même cristal. Aucune structure n'est affinée : chaque vue empile des feuillets
-        pris dans deux structures publiées (comme sur les pages des espèces), avec une couche d'eau dans les espaces qui gonflent.`,
+      intro: `Un même cristal alterne deux types de feuillets. Faute de structure affinée, chaque vue empile des feuillets empruntés à deux structures publiées (comme dans les pages d'espèces), avec une couche d'eau dans les espaces qui gonflent.`,
       aspects: [A_TOUT,
-        A_INTER(`En surbrillance, ce qu'il y a entre les feuillets : cations sans eau (mica), feuillet d'hydroxyde (chlorite), cations
-          et eau (smectite, vermiculite), liaisons hydrogène seulement (kaolinite). C'est ce contenu qui alterne.`)],
+        A_INTER(`Le contenu situé entre les feuillets est en surbrillance : cations sans eau (mica), feuillet d'hydroxyde (chlorite), cations et eau (smectite, vermiculite), simples liaisons hydrogène (kaolinite). C'est ce contenu qui alterne.`)],
       especes: {
-        rectorite: { dit: `Mica sodique et smectite en alternance régulière, un sur un.` },
-        corrensite: { dit: `Chlorite et smectite trioctaédrique en alternance régulière : évaporites et basaltes altérés.` },
-        hydrobiotite: { dit: `Biotite et vermiculite en alternance : une étape de l'altération de la biotite.` },
-        aliettite: { dit: `Talc et smectite trioctaédrique en alternance régulière.` },
-        tosudite: { dit: `Chlorite dioctaédrique et smectite en alternance régulière.` },
-        kaolinite_smectite: { dit: `Kaolinite et smectite mêlées au hasard : sols où la smectite se transforme en kaolinite.` },
+        rectorite: { dit: `Mica sodique et smectite se succédant régulièrement, un feuillet sur un.` },
+        corrensite: { dit: `Chlorite et smectite trioctaédrique qui se succèdent régulièrement : on les trouve dans les évaporites et les basaltes altérés.` },
+        hydrobiotite: { dit: `Biotite et vermiculite qui se succèdent : c'est une étape de l'altération de la biotite.` },
+        aliettite: { dit: `Talc et smectite trioctaédrique se succédant régulièrement.` },
+        tosudite: { dit: `Chlorite dioctaédrique et smectite se succédant régulièrement.` },
+        kaolinite_smectite: { dit: `Kaolinite et smectite mêlées au hasard : sols où la smectite évolue vers la kaolinite.` },
       },
     },
     sepiolite_e: {
       partage: false,   // palygorskite monoclinique : chaque vue regarde le long de SES canaux (axe c), même échelle
-      intro: `Feuillets 2:1 découpés en rubans, retournés d'un ruban à l'autre, qui laissent des canaux remplis d'eau (vus ici en bout,
-        à la même échelle). Ce qui change : la largeur des rubans, donc des canaux, et le cation des octaèdres.`,
+      intro: `Des feuillets 2:1 se découpent en rubans, retournés alternativement, qui laissent entre eux des canaux pleins d'eau (vus ici par le bout, à même échelle). Varient la largeur des rubans, donc celle des canaux, et le cation des octaèdres.`,
       aspects: [A_TOUT,
-        A_OCTA(`En surbrillance, les rubans d'octaèdres : larges de trois chaînes dans la sépiolite (magnésium), de deux dans la
-          palygorskite (magnésium et aluminium).`),
-        { id: "tetra", nom: "Tétraèdres", texte: `En surbrillance, les tétraèdres de silicium, qui changent de côté d'un ruban à
-          l'autre et bordent les canaux.` }],
+        A_OCTA(`En surbrillance, les rubans d'octaèdres : trois chaînes de large chez la sépiolite (magnésium), deux chez la palygorskite (magnésium et aluminium).`),
+        { id: "tetra", nom: "Tétraèdres", texte: `Les tétraèdres de silicium sont en surbrillance : ils s'inversent d'un ruban à l'autre et bordent les canaux.` }],
       especes: {
-        sepiolite_e: { dit: `Rubans de trois chaînes ; canaux d'environ 3,7 × 10,6 Å. Néoformée dans les lacs et lagunes riches en
-          magnésium.` },
-        palygorskite: { dit: `Rubans de deux chaînes ; canaux plus étroits, d'environ 3,7 × 6,4 Å.` },
+        sepiolite_e: { dit: `Trois chaînes par ruban, canaux d'environ 3,7 × 10,6 Å. Ce minéral naît dans les lacs et lagunes riches en magnésium.` },
+        palygorskite: { dit: `Deux chaînes par ruban : des canaux plus étroits, d'environ 3,7 × 6,4 Å.` },
       },
       sources: [`Galán E. (1996). « Properties and applications of palygorskite-sepiolite clays ». <i>Clay Minerals</i> 31,
         p. 443–453.`],
     },
     allophane_e: {
       vue: "objet",
-      intro: `Pas de feuillets empilés : un seul feuillet courbé, refermé en sphère ou roulé en tube. Modèles construits par l'atlas,
-        les mêmes que sur les pages des espèces.`,
+      intro: `Aucun empilement de feuillets : un feuillet unique, courbé, refermé en sphère ou roulé en tube. Ce sont des modèles construits par l'atlas, identiques à ceux des pages d'espèces.`,
       aspects: [A_TOUT,
-        A_OCTA(`En surbrillance, les octaèdres d'aluminium (de fer dans l'hisingérite), à l'extérieur de la courbure.`),
-        { id: "tetra", nom: "Tétraèdres", texte: `En surbrillance, les tétraèdres de silicium, à l'intérieur de la sphère et du tube.` }],
+        A_OCTA(`Octaèdres d'aluminium (de fer pour l'hisingérite), en surbrillance, côté extérieur de la courbure.`),
+        { id: "tetra", nom: "Tétraèdres", texte: `Tétraèdres de silicium surlignés, du côté intérieur de la sphère et du tube.` }],
       especes: {
-        allophane_e: { dit: `Sphère creuse d'environ 3,5 nm, aluminium dehors, silicium dedans, paroi percée : l'argile des andosols.` },
-        imogolite: { dit: `Le même feuillet roulé en tube d'environ 2 nm de diamètre, ouvert aux deux bouts (un tube, vu de côté).`,
+        allophane_e: { dit: `Sphère creuse d'environ 3,5 nm, avec de l'aluminium à l'extérieur, du silicium à l'intérieur et une paroi percée : c'est l'argile des andosols.` },
+        imogolite: { dit: `Ce feuillet enroulé forme un tube de près de 2 nm de diamètre, ouvert aux deux bouts (vu de côté).`,
           publie: true, rep: [1, 1, 3] },
-        hisingerite: { dit: `Feuillet 1:1 de fer ferrique (une kaolinite où Fe³⁺ remplace Al) courbé en sphères creuses (ici une calotte de deux
-          feuillets) ; le sens de la courbure n'est pas établi.` },
+        hisingerite: { dit: `Courbé en sphères creuses (ici une calotte de deux feuillets), ce feuillet 1:1 de fer ferrique, une kaolinite où Fe³⁺ occupe la place d'Al, présente un sens de courbure encore incertain.` },
       },
     },
   };
@@ -579,9 +500,9 @@
   function carteHTML(eid, P, cfg) {
     const e = ESPECES[eid], spec = (cfg.especes || {})[eid] || {};
     let modele;
-    if (!P) modele = "Pas de modèle 3D pour cette espèce.";
+    if (!P) modele = "Cette espèce ne dispose pas de modèle 3D.";
     else if (P.objet && P.base.source && P.base.source.modele) modele = "Modèle construit par l'atlas.";
-    else if (P.objet || EB.INTERSTRAT[eid]) modele = `Modèle de l'atlas à partir de la structure ${P.emprunt ? deLa(P.fichier) : "publiée"}, ${reference(P.base)}.`;
+    else if (P.objet || EB.INTERSTRAT[eid]) modele = `Modèle construit par l'atlas à partir de la structure ${P.emprunt ? deLa(P.fichier) : "publiée"}, ${reference(P.base)}.`;
     else if (spec.modele === "montrée telle quelle") modele = `Structure ${deLa(P.fichier)}, ${reference(P.base)}, montrée telle quelle.`;
     else if (P.emprunt || spec.modele) modele = `${P.emprunt ? `Modèle de l'atlas : structure ${deLa(P.fichier)}, ${reference(P.base)}` : `Structure : ${reference(P.base)}`}${spec.modele ? ` ; ${spec.modele}` : ""}.`;
     else modele = `Structure affinée : ${reference(P.base)}.`;

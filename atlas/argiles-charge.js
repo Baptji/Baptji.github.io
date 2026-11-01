@@ -15,27 +15,27 @@
   // src = d'où vient la fourchette (« structure » = déduite de la charge du feuillet, nulle ou compensée)
   const FICHES = {
     allophane: { perm: [0, 5], pcn: 6, pcnTxt: "vers pH 6 (5 à 7 selon le rapport Al/Si)", lieu: "surface", src: "parfitt",
-      dit: "Pas de feuillet, donc pas de substitution : presque toute la charge est variable." },
+      dit: "Aucun feuillet, donc aucune substitution : l'essentiel de la charge est variable." },
     talc: { perm: [0, 10], pcn: 6.5, lieu: "bords", src: "structure",
-      dit: "Feuillet neutre (aucune substitution) : la petite CEC vient des bords cassés." },
+      dit: "Feuillet neutre, sans substitution : sa faible CEC provient des bords rompus." },
     serpentines: { perm: [0, 20], pcn: 7, lieu: "bords", src: "structure",
-      dit: "Feuillet presque neutre : la charge vient surtout des bords et des surfaces." },
+      dit: "Feuillet quasiment neutre : sa charge provient surtout des bords et des surfaces." },
     kaolinite: { perm: [10, 50], pcn: 6.3, pcnTxt: "vers pH 6 à 6,5 pour les bords", lieu: "bords", src: "kaolinite",
-      dit: "Presque pas de substitution : la charge vient surtout des bords, et change avec le pH. La part permanente est débattue." },
+      dit: "Substitutions quasi absentes : la charge naît surtout des bords et varie avec le pH. La fraction permanente fait encore débat." },
     chlorite: { perm: [20, 60], pcn: 6.5, lieu: "bords", src: "structure",
-      dit: "La charge du feuillet est compensée par le feuillet d'hydroxyde intercalé, qui ne s'échange pas : seuls les bords et les faces externes échangent." },
+      dit: "Le feuillet d'hydroxyde intercalé compense la charge du feuillet, sans s'échanger : seuls les bords et les faces externes participent à l'échange." },
     sepiolite: { perm: [30, 70], pcn: 6.5, lieu: "bords", src: "structure",
-      dit: "Quelques substitutions (charge permanente) et beaucoup de groupes Si–OH au bord des rubans (charge variable)." },
+      dit: "Les substitutions sont peu nombreuses (charge permanente), tandis que les groupes Si-OH bordant les rubans fournissent une charge variable abondante." },
     illite: { perm: [60, 85], pcn: 6.5, lieu: "bords", src: "structure",
-      dit: "Charge permanente forte, mais en grande partie neutralisée par le K⁺ fixé : les bords comptent davantage que dans une smectite." },
+      dit: "Charge permanente élevée, mais largement neutralisée par le K⁺ fixé : les bords pèsent plus que dans une smectite." },
     glauconite: { perm: [60, 85], pcn: 6.5, lieu: "bords", src: "structure",
-      dit: "Comme l'illite : charge forte en partie neutralisée par le K⁺ fixé, bords en plus." },
+      dit: "Comme l'illite, elle porte une forte charge en partie compensée par le K⁺ fixé, auquel s'ajoutent les bords." },
     interstratifies: { perm: [60, 90], pcn: 6.5, lieu: "bords", src: "structure",
-      dit: "Selon la part de feuillets gonflants : plus il y a de smectite, plus la charge est permanente." },
+      dit: "Cela varie avec la part de feuillets gonflants : une proportion accrue de smectite rend la charge plus permanente." },
     smectites: { perm: [80, 95], pcn: 6.5, lieu: "bords", src: "sposito",
-      dit: "La charge vient des substitutions dans le feuillet : elle est surtout permanente ; les bords n'en font qu'une petite part." },
+      dit: "Elle naît des substitutions au sein du feuillet et reste donc surtout permanente ; les bords n'en représentent qu'une faible part." },
     vermiculite: { perm: [90, 100], pcn: 6.5, lieu: "bords", src: "structure",
-      dit: "Charge du feuillet très forte, entièrement échangeable : presque toute la charge est permanente." },
+      dit: "Le feuillet porte une charge très forte, entièrement échangeable : l'essentiel de la charge est permanent." },
   };
   const ORDRE = ["vermiculite", "smectites", "interstratifies", "illite", "glauconite", "sepiolite", "chlorite", "kaolinite", "serpentines", "talc", "allophane"];
   const SOURCES = {
@@ -67,8 +67,8 @@
       <text class="ch-p" x="20" y="38">dans le feuillet : ne dépend pas du pH</text>`;
     if (surface) {
       g += `<circle cx="150" cy="118" r="44" class="ch-sphere"/><circle cx="150" cy="118" r="30" class="ch-creux"/>
-        <text class="ch-p" x="150" y="186" text-anchor="middle">pas de feuillet empilé,</text>
-        <text class="ch-p" x="150" y="200" text-anchor="middle">pas de substitution : rien ici</text>`;
+        <text class="ch-p" x="150" y="186" text-anchor="middle">aucun feuillet empilé,</text>
+        <text class="ch-p" x="150" y="200" text-anchor="middle">aucune substitution : rien ici</text>`;
     } else {
       g += `<rect x="30" y="94" width="240" height="14" class="ch-T"/><rect x="30" y="108" width="240" height="20" class="ch-O"/>
         <rect x="30" y="128" width="240" height="14" class="ch-T"/>
@@ -83,8 +83,8 @@
           g += `<circle cx="${x}" cy="${y}" r="11" class="ch-eau"/><circle cx="${x}" cy="${y}" r="6" class="ch-cation"/>
             <text class="ch-mini" x="${x + 14}" y="${y + 4}">Ca²⁺</text>`;
         });
-        g += `<text class="ch-p" x="150" y="196" text-anchor="middle">Mg²⁺ à la place d'Al³⁺, ou Al³⁺ à la place de Si⁴⁺ :</text>
-          <text class="ch-p" x="150" y="210" text-anchor="middle">une charge − qui reste, des cations la compensent</text>`;
+        g += `<text class="ch-p" x="150" y="196" text-anchor="middle">Mg²⁺ pour Al³⁺, ou Al³⁺ pour Si⁴⁺ :</text>
+          <text class="ch-p" x="150" y="210" text-anchor="middle">une charge − subsiste, que des cations compensent</text>`;
       }
     }
     // ── droite : charge variable ──
@@ -103,7 +103,7 @@
     });
     const net = P.plus - P.moins;
     const etat = Math.abs(net) < 0.08 ? "les bords sont à peu près neutres" : net > 0 ? "les bords sont chargés + : ils retiennent des anions"
-      : "les bords sont chargés − : ils retiennent des cations";
+      : "sur les bords, la charge est négative : ce sont des cations qu'ils retiennent";
     d += `<text class="ch-p" x="340" y="204">pH ${fr(pH)} : ${surface ? etat.replace("les bords sont", "la surface est").replace("chargés", "chargée").replace("neutres", "neutre").replace("ils retiennent", "elle retient") : etat}</text>`;
     return `<svg class="ch-svg" viewBox="0 0 640 220" role="img" aria-label="Charge permanente et charge variable d'une argile au pH ${fr(pH)}">
       <line x1="320" y1="10" x2="320" y2="210" class="ch-sep"/>${g}${d}</svg>`;
@@ -111,17 +111,17 @@
 
   function comparaison(id) {
     return `<div class="ch-comp">
-      <p class="ch-comp-t">Part de la charge qui est permanente, fiche par fiche (ordre de grandeur)</p>
+      <p class="ch-comp-t">Part de la charge permanente, fiche par fiche (ordres de grandeur)</p>
       ${ORDRE.map((k) => {
         const f = FICHES[k], a = ARGILES.find((x) => x.id === k);
         if (!a) return "";
         return `<div class="ch-l${k === id ? " ch-ici" : ""}">
           <button type="button" class="ch-nom" data-goargile="${k}">${a.nom.split(" (")[0]}</button>
           <span class="ch-piste"><span class="ch-plage" style="left:${f.perm[0]}%;width:${Math.max(2, f.perm[1] - f.perm[0])}%"></span></span>
-          <span class="ch-val">${f.perm[0]}–${f.perm[1]} %</span>
+          <span class="ch-val">${f.perm[0]} à ${f.perm[1]} %</span>
         </div>`;
       }).join("")}
-      <p class="ch-echelle"><span>0 % : toute variable</span><span>100 % : toute permanente</span></p>
+      <p class="ch-echelle"><span>0 % : entièrement variable</span><span>100 % : entièrement permanente</span></p>
     </div>`;
   }
 
@@ -130,32 +130,23 @@
     if (!f) return "";
     const pH0 = 6.5;
     return `<div class="card ch-carte" data-ch="${a.id}">
-      <h2>D'où vient sa charge : permanente ou variable</h2>
-      <p class="sub ch-lead">Une argile retient des cations parce qu'elle porte des charges négatives. Elles ont deux origines :
-        les <b>substitutions dans le feuillet</b> (charge permanente, quel que soit le pH) et les <b>groupes OH des bords ou de la
-        surface</b>, qui gagnent ou perdent un H⁺ selon le pH (charge variable). <b>${a.nom.split(" (")[0]}</b> : ${f.dit.charAt(0).toLowerCase() + f.dit.slice(1)}</p>
+      <h2>Permanente ou variable : d'où vient la charge</h2>
+      <p class="sub ch-lead">Des charges négatives permettent à une argile de retenir des cations. Elles naissent de deux manières : des <b>substitutions au sein du feuillet</b> (charge permanente, indépendante du pH), ou des <b>groupes OH en bordure ou en surface</b>, qui captent ou libèrent un H⁺ selon le pH (charge variable). <b>${a.nom.split(" (")[0]}</b> : ${f.dit.charAt(0).toLowerCase() + f.dit.slice(1)}</p>
       <div class="ch-schema">${schema(f, pH0)}</div>
-      <label class="ch-curseur"><span>pH de l'eau du sol</span>
+      <label class="ch-curseur"><span>pH de la solution du sol</span>
         <input type="range" min="3" max="10" step="0.1" value="${pH0}" data-ch-ph>
         <output data-ch-sortie>${fr(pH0)}</output></label>
-      <p class="ch-pcn">Point de charge nulle des groupes variables : ${f.pcnTxt || "vers pH " + fr(f.pcn)} (en dessous, ils sont plutôt +, au-dessus plutôt −).
-        Le nombre de groupes chargés est schématique.</p>
+      <p class="ch-pcn">Point de charge nulle des groupes variables : ${f.pcnTxt || "vers pH " + fr(f.pcn)}. Sous ce pH ils tendent vers le positif, au-delà vers le négatif. Le nombre de groupes chargés est schématique.</p>
       ${comparaison(a.id)}
-      <details class="cmp-puce ch-plus"><summary>Pourquoi c'est important</summary>
-        <p>• <b>La CEC change avec le pH</b> pour une argile à charge variable. Au laboratoire, la CEC « à pH 7 » (méthode Metson)
-          surestime celle d'un sol acide ; on mesure aussi la CEC effective, au pH du sol (Baize 2000).</p>
-        <p>• <b>Chauler</b> un sol riche en kaolinite, en allophane ou en oxydes fait monter le pH, donc sa CEC ; sur une smectite,
-          l'effet est faible.</p>
-        <p>• <b>Les sites positifs retiennent des anions</b> : phosphate, sulfate. Les andosols, riches en allophane, fixent si
-          fortement le phosphore des engrais qu'une grande part n'est plus disponible pour les plantes (Parfitt 2009).</p>
-        <p>• Les oxydes de fer et d'aluminium (goethite, gibbsite) ont eux aussi une charge presque entièrement variable : c'est ce qui
-          rapproche l'allophane des oxydes, et la distingue des argiles en feuillets.</p>
+      <details class="cmp-puce ch-plus"><summary>Pourquoi cela compte</summary>
+        <p>• <b>La CEC évolue avec le pH</b> pour une argile à charge variable. Au laboratoire, la CEC « à pH 7 » (méthode Metson) dépasse celle d'un sol acide ; la CEC effective, mesurée au pH du sol, est aussi déterminée (Baize 2000).</p>
+        <p>• <b>Un chaulage</b> d'un sol riche en kaolinite, en allophane ou en oxydes élève le pH et donc la CEC ; sur une smectite, l'effet reste faible.</p>
+        <p>• <b>Les sites positifs captent des anions</b> : phosphate, sulfate. Les andosols, riches en allophane, immobilisent tant de phosphore des engrais qu'une large part n'est plus accessible aux plantes (Parfitt 2009).</p>
+        <p>• Les oxydes de fer et d'aluminium (goethite, gibbsite) portent eux aussi une charge presque entièrement variable : c'est ce qui rapproche l'allophane des oxydes et l'éloigne des argiles en feuillets.</p>
       </details>
-      <details class="cmp-puce ch-sources"><summary>Sources</summary>
+      <details class="cmp-puce ch-sources"><summary>Références</summary>
         <ul>${[f.src, "sposito", "baize", "parfitt"].filter((x, i, t) => x !== "structure" && t.indexOf(x) === i).map((k) => `<li>${SOURCES[k]}</li>`).join("")}
-          <li>Fourchettes marquées « structure » : déduites par l'atlas de la charge du feuillet (nulle, ou compensée par un feuillet
-          d'hydroxyde ou par du K⁺ fixé) ; ordres de grandeur, qui dépendent aussi de la taille des cristaux (plus ils sont petits,
-          plus il y a de bords).${f.src === "structure" ? " C'est le cas de cette fiche." : ""}</li></ul>
+          <li>Les fourchettes marquées « structure » sont déduites par l'atlas de la charge du feuillet (nulle, ou compensée par un feuillet d'hydroxyde ou par du K⁺ fixé) ; ce sont des ordres de grandeur, qui dépendent aussi de la taille des cristaux (plus ils sont petits, plus il y a de bords).${f.src === "structure" ? " C'est ce que montre cette fiche." : ""}</li></ul>
       </details>
     </div>`;
   }

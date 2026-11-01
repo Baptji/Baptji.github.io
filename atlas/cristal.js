@@ -364,7 +364,7 @@
       poses.push([x, y]);
       gl += `<text x="${x.toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="middle" class="cx-lab">${fac.formes[f.forme].sym}</text>`;
     });
-    return `<svg viewBox="0 0 ${W} ${H}" class="cx-svg" role="img" aria-label="Forme du cristal : ${cr.nom || id} — ${fac.nom}">
+    return `<svg viewBox="0 0 ${W} ${H}" class="cx-svg" role="img" aria-label="Forme du cristal : ${cr.nom || id}, ${fac.nom}">
       <g class="cx-axes">${ga}</g>${g}<g class="cx-clivages">${gc}</g>${gs}${gl}</svg>`;
   }
 
@@ -415,8 +415,8 @@
       </div>
       ${vues}
       <table class="data cx-fiche">
-        <tr><td>Système</td><td>${cr.systeme} — classe ${cr.classe.replace(/-(\d)/g, (s, d) => `<span class="cx-barre">${d}</span>`)}${cr.classeNom ? ` (${cr.classeNom})` : ""}</td></tr>
-        <tr><td>Maille</td><td>a = ${nb(m[0], 3)} Å, b = ${nb(m[1], 3)} Å, c = ${nb(m[2], 3)} Å${angles ? ", " + angles : ""}${cr.reseau && cr.reseau !== "P" ? ` — réseau ${cr.reseau}` : ""}</td></tr>
+        <tr><td>Système</td><td>${cr.systeme} : classe ${cr.classe.replace(/-(\d)/g, (s, d) => `<span class="cx-barre">${d}</span>`)}${cr.classeNom ? ` (${cr.classeNom})` : ""}</td></tr>
+        <tr><td>Maille</td><td>a = ${nb(m[0], 3)} Å, b = ${nb(m[1], 3)} Å, c = ${nb(m[2], 3)} Å${angles ? ", " + angles : ""}${cr.reseau && cr.reseau !== "P" ? ` : réseau ${cr.reseau}` : ""}</td></tr>
         ${cl ? `<tr><td>Clivages</td><td><ul class="cx-liste">${cl}</ul></td></tr>` : ""}
         ${cr.macleNote ? `<tr><td>Macles</td><td>${cr.macleNote}</td></tr>` : ""}
       </table>
@@ -520,7 +520,7 @@
       maille: [4.9160, 4.9160, 5.4054, 90, 90, 120],
       mailleSource: "cod9000775",
       stries: { forme: 0, normale: [0, 0, 1], pas: 0.075 },
-      macleNote: "Macle du Japon : plan de macle {11<span class=\"cx-barre\">2</span>2}, les deux prismes font un angle de 84°33′. Les macles du Dauphiné et du Brésil ne changent pas la forme extérieure — elles s'accolent sans créer d'angle rentrant.",
+      macleNote: "Macle du Japon, sur le plan {11<span class=\"cx-barre\">2</span>2} : deux prismes font entre eux 84°33′. Les macles du Dauphiné et du Brésil ne changent rien à la silhouette extérieure, puisqu'elles s'accolent sans angle rentrant.",
       facies: [
         { nom: "Prisme (cristal de roche)",
           formes: [
@@ -528,7 +528,7 @@
             { sym: "r", hkl: [1, 0, -1, 1], nom: "rhomboèdre positif (face majeure)", d: 1.36 },
             { sym: "z", hkl: [0, 1, -1, 1], nom: "rhomboèdre négatif (face mineure)", d: 1.44 },
           ],
-          note: "Le prisme porte des stries horizontales : elles marquent les arrêts de croissance, et c'est à elles qu'on reconnaît le quartz sur le terrain. Les deux rhomboèdres r et z alternent autour du sommet — r est presque toujours plus développé que z, ce qui donne des « faces » de tailles inégales.",
+          note: "Le prisme montre des stries horizontales marquant les arrêts de croissance ; c'est grâce à elles qu'on reconnaît le quartz sur le terrain. Les rhomboèdres r et z alternent autour du sommet ; r se développe presque toujours davantage que z, d'où des faces de tailles inégales.",
         },
         { nom: "Prisme à faces s et x",
           formes: [
@@ -538,7 +538,7 @@
             { sym: "s", hkl: [1, 1, -2, 1], nom: "bipyramide trigonale", d: 1.36 },
             { sym: "x", hkl: [5, 1, -6, 1], nom: "trapézoèdre trigonal", d: 1.15 },
           ],
-          note: "Les petites faces x n'apparaissent que d'un seul côté de chaque arête : c'est la signature de la classe 32, qui n'a ni centre ni miroir. Selon le côté où elles se placent, le cristal est dit droit ou gauche — la même dissymétrie fait tourner le plan de polarisation de la lumière et sert à tailler les lames de montre.",
+          note: "La classe 32, sans centre ni miroir, se signale par des petites faces x qui n'apparaissent que d'un seul côté de chaque arête. Selon ce côté, le cristal est dit droit ou gauche ; cette dissymétrie fait tourner le plan de polarisation de la lumière et sert à tailler les lames de montre.",
         },
         { nom: "Macle du Japon", azimut: 60, elevation: 8,
           macle: { plan: [1, 1, -2, 2], compo: [1, 1, -2, 2] },
@@ -547,7 +547,7 @@
             { sym: "r", hkl: [1, 0, -1, 1], nom: "rhomboèdre positif", d: 2.10 },
             { sym: "z", hkl: [0, 1, -1, 1], nom: "rhomboèdre négatif", d: 2.20 },
           ],
-          note: "Deux prismes soudés sur un plan {11<span class=\"cx-barre\">2</span>2}, en V aplati. C'est la seule macle du quartz qui se voie à l'œil nu.",
+          note: "C'est la seule macle du quartz visible à l'œil nu : deux prismes soudés sur un plan {11<span class=\"cx-barre\">2</span>2}, formant un V aplati.",
         },
       ],
       clivages: [], // aucun : cassure conchoïdale
@@ -559,25 +559,25 @@
       classeNom: "scalénoédrique hexagonale", reseau: "R",
       maille: [4.9880, 4.9880, 17.0610, 90, 90, 120],
       mailleSource: "cod9000965",
-      macleNote: "Macle la plus fréquente sur {01<span class=\"cx-barre\">1</span>2} ; la macle sur {0001} donne les « cœurs » aplatis.",
+      macleNote: "La macle la plus fréquente se fait sur {01<span class=\"cx-barre\">1</span>2} ; celle sur {0001} produit des « cœurs » aplatis.",
       facies: [
         { nom: "Rhomboèdre de clivage", azimut: 42, elevation: 17,
           formes: [{ sym: "r", hkl: [1, 0, -1, 4], nom: "rhomboèdre", d: 1.0 }],
-          note: "Forme fermée à six faces : c'est exactement le bloc qu'on obtient en cassant n'importe quel morceau de calcite, parce que les trois clivages suivent ces mêmes plans. Chaque face est un losange dont les angles valent 78°05′ et 101°55′, et deux faces voisines font entre elles 74°55′ : jamais 90°, d'où le bloc toujours penché. (Le calcul de l'atlas redonne 78°07′, 101°53′ et 74°58′.)",
+          note: "Un bloc à six faces : c'est précisément celui que donne la fracture de n'importe quel morceau de calcite, car les trois clivages suivent ces plans. Chaque face est un losange aux angles de 78°05′ et 101°55′, et deux faces voisines font 74°55′ entre elles, jamais 90°, ce qui rend le bloc toujours penché. Le calcul de l'atlas redonne 78°07′, 101°53′ et 74°58′.",
         },
         { nom: "Scalénoèdre (dent de chien)",
           formes: [
             { sym: "v", hkl: [2, 1, -3, 1], nom: "scalénoèdre", d: 1.0 },
             { sym: "r", hkl: [1, 0, -1, 4], nom: "rhomboèdre de clivage", d: 1.9 },
           ],
-          note: "Douze faces en triangles scalènes, terminées en pointe : c'est la calcite des géodes et des filons, la « dent de chien ». Les traces de clivage, qui gardent l'orientation du rhomboèdre, traversent les faces en biais — d'où l'intérêt de les afficher : elles montrent que la forme extérieure a changé, pas la structure.",
+          note: "La « dent de chien », calcite des géodes et des filons, présente douze faces en triangles scalènes terminées en pointe. Les traces de clivage, qui gardent l'orientation du rhomboèdre, traversent les faces en biais : les afficher montre que la forme extérieure a changé, pas la structure.",
         },
         { nom: "Prisme à tête de clou",
           formes: [
             { sym: "m", hkl: [1, 0, -1, 0], nom: "prisme hexagonal", d: 1.0 },
             { sym: "e", hkl: [0, 1, -1, 2], nom: "rhomboèdre obtus", d: 0.86 },
           ],
-          note: "Prisme court coiffé d'un rhomboèdre très obtus, presque plat : la calcite « tête de clou » des filons de plomb et des cavités des calcaires.",
+          note: "Calcite « tête de clou » des filons de plomb et des cavités calcaires : un prisme court, coiffé d'un rhomboèdre très obtus, presque plat.",
         },
       ],
       clivages: [{ hkl: [1, 0, -1, 4], qualite: "parfait", nom: "trois directions, rhomboèdre", pas: 0.24 }],
@@ -589,7 +589,7 @@
       classeNom: "prismatique", reseau: "C",
       maille: [8.5632, 12.9630, 7.2099, 90, 116.073, 90],
       mailleSource: "cod9000311",
-      macleNote: "Macle de Carlsbad (axe de macle [001], plan d'accolement {010}), la plus courante dans les granites ; macles de Baveno {021} et de Manebach {001} dans les cavités et les laves.",
+      macleNote: "Plus courante dans les granites, la macle de Carlsbad (axe [001], plan d'accolement {010}) se distingue des macles de Baveno {021} et de Manebach {001}, qui se logent plutôt dans les cavités et les laves.",
       facies: [
         { nom: "Prisme de granite",
           formes: [
@@ -598,7 +598,7 @@
             { sym: "m", hkl: [1, 1, 0], nom: "prisme", d: 2.05 },
             { sym: "x", hkl: [-2, 0, 1], nom: "face oblique", d: 1.80 },
           ],
-          note: "Cristal trapu, allongé selon a : c'est la forme des phénocristaux roses qui ponctuent les granites porphyroïdes. La face c {001} et la face b {010} se coupent exactement à angle droit — c'est ce 90° qui vaut à l'orthose son nom (grec orthós, « droit ») et que suivent ses deux clivages.",
+          note: "Les phénocristaux roses qui ponctuent les granites porphyroïdes prennent cette forme trapue, allongée selon a. Leur face c {001} et leur face b {010} se recoupent à angle droit exact : ce 90° vaut à l'orthose son nom (grec orthós, « droit ») et détermine ses deux clivages.",
         },
         { nom: "Macle de Carlsbad", azimut: 78, elevation: 12,
           macle: { axe: [0, 0, 1], compo: [0, 1, 0] },
@@ -608,7 +608,7 @@
             { sym: "m", hkl: [1, 1, 0], nom: "prisme", d: 2.05 },
             { sym: "x", hkl: [-2, 0, 1], nom: "face oblique", d: 1.80 },
           ],
-          note: "Deux individus tournés de 180° l'un par rapport à l'autre autour de l'axe c, soudés sur le plan {010} : l'angle rentrant qui en résulte se voit à l'œil nu sur les cristaux des granites. Au soleil, les deux moitiés d'un même cristal ne s'éteignent pas ensemble — c'est la façon la plus simple de reconnaître un feldspath potassique.",
+          note: "Soudés sur le plan {010}, deux individus tournés de 180° autour de l'axe c forment un angle rentrant visible à l'œil nu sur les cristaux de granite. Au soleil, leurs deux moitiés ne s'éteignent pas ensemble : c'est le moyen le plus simple de reconnaître un feldspath potassique.",
         },
       ],
       clivages: [
@@ -623,24 +623,24 @@
       classeNom: "prismatique", reseau: "I",
       maille: [5.6790, 15.2020, 6.5220, 90, 118.43, 90],
       mailleSource: "cod9017313",
-      macleNote: "Macle en fer de lance (ou queue d'aronde) sur {100} : deux individus accolés sur ce plan, avec un angle rentrant très net.",
+      macleNote: "Macle à la manière d'un fer de lance (ou queue d'aronde) sur {100} : deux individus se rejoignent sur ce plan en formant un angle rentrant bien marqué.",
       facies: [
         { nom: "Cristal tabulaire", azimut: 32, elevation: 16,
           formes: [
-            { sym: "b", hkl: [0, 1, 0], nom: "pinacoïde — la lame", d: 1.0 },
+            { sym: "b", hkl: [0, 1, 0], nom: "pinacoïde : la lame", d: 1.0 },
             { sym: "m", hkl: [1, 2, 0], nom: "prisme", d: 1.30 },
             { sym: "l", hkl: [-1, 1, 1], nom: "face terminale", d: 1.10 },
           ],
-          note: "Une lame plate, en losange allongé : la face b {010} est le plan de clivage parfait, celui qui se détache en feuillets souples et transparents (le « miroir d'âne » ou sélénite). Le gypse pousse en remplissant l'eau de la lagune ou en cristallisant dans une marne, d'où ces cristaux isolés bien formés.",
+          note: "Le gypse, en lame plate losangée, possède un plan de clivage parfait, la face b {010}, qui se détache en feuillets souples et transparents (« miroir d'âne », sélénite). Il pousse en remplissant l'eau d'une lagune ou en cristallisant dans une marne, ce qui explique ces cristaux isolés bien formés.",
         },
         { nom: "Macle en fer de lance", azimut: 16, elevation: 12,
           macle: { plan: [1, 0, 0], compo: [1, 0, 0] },
           formes: [
-            { sym: "b", hkl: [0, 1, 0], nom: "pinacoïde — la lame", d: 1.0 },
+            { sym: "b", hkl: [0, 1, 0], nom: "pinacoïde : la lame", d: 1.0 },
             { sym: "m", hkl: [1, 2, 0], nom: "prisme", d: 1.30 },
             { sym: "l", hkl: [-1, 1, 1], nom: "face terminale", d: 1.10 },
           ],
-          note: "Deux lames accolées sur {100}, symétriques l'une de l'autre : l'entaille en V au sommet est l'angle rentrant, impossible sur un cristal simple. C'est la forme des « fers de lance » du gypse de Montmartre, décrits dès le XVIII<sup>e</sup> siècle.",
+          note: "Deux lames accolées selon {100}, symétriques l'une de l'autre : l'entaille en V du sommet est un angle rentrant, impossible sur un cristal simple. Cette forme en « fer de lance » est celle du gypse de Montmartre, décrite dès le XVIII<sup>e</sup> siècle.",
         },
       ],
       clivages: [
@@ -652,8 +652,8 @@
 
   // Sources des formes cristallines et des habitus (affichées en bas de fiche)
   const SOURCES = {
-    formes: "Formes cristallines et habitus : C. Klein et B. Dutrow, <i>Manual of Mineral Science</i>, 23<sup>e</sup> éd., 2007 ; C. Palache, H. Berman et C. Frondel, <i>Dana's System of Mineralogy</i>, 7<sup>e</sup> éd. ; V. Goldschmidt, <i>Atlas der Krystallformen</i>, 1913-1923.",
-    projection: "Dessin calculé : le solide est l'intersection des demi-espaces définis par les faces, en projection clinographique (rotation de 18°26′, inclinaison de 9°28′). Les distances au centre sont réglées pour retrouver l'habitus décrit dans la littérature : ce sont des cristaux idéaux, pas des mesures d'échantillons.",
+    formes: "Les formes et l'habitus décrits s'appuient sur Klein et Dutrow (<i>Manual of Mineral Science</i>, 23<sup>e</sup> éd., 2007), sur Palache, Berman et Frondel (<i>Dana's System of Mineralogy</i>, 7<sup>e</sup> éd.) et sur l'atlas de Goldschmidt (<i>Atlas der Krystallformen</i>, 1913 à 1923).",
+    projection: "Le dessin est calculé : chaque forme borne le solide par un demi-espace, la projection étant clinographique (rotation de 18°26′, inclinaison de 9°28′). Les distances au centre sont ajustées pour reproduire l'habitus décrit dans la littérature. Il s'agit donc de cristaux idéalisés, et non de mesures sur des échantillons.",
   };
 
   // svg(id, i) : le dessin seul, vue de départ (vignettes de la vue d'ensemble des minéraux, 11/10/2026)

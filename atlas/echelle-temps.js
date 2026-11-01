@@ -272,7 +272,7 @@ const ECHELLE_TEMPS = {
   E.feuilles = []; E.noeuds = [];
   const lire = (s) => {
     const m = String(s).match(/^(~\s*)?([\d.]+)(?:\s*±\s*([\d.]+))?$/);
-    if (!m) throw new Error("Âge illisible dans echelle-temps.js : " + s);
+    if (!m) throw new Error("Âge non lisible dans echelle-temps.js :" + s);
     return { v: parseFloat(m[2]), env: !!m[1], pm: m[3] || null, txt: m[2] };
   };
   // colonne : éon 0, ère 1, système 2, sous-système 3 (Carbonifère), série 4, étage 5
@@ -298,6 +298,6 @@ const ECHELLE_TEMPS = {
   E.arbre.forEach(borner);
   // contrôle : âges strictement croissants
   E.feuilles.forEach((f, i) => {
-    if (f.base.v <= f.sommet) console.error("Échelle des temps : âges non croissants à", f.n);
+    if (f.base.v <= f.sommet) console.error("Échelle des temps : les âges ne croissent pas à", f.n);
   });
 })();

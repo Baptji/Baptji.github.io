@@ -10,7 +10,7 @@ function reperesClimatHTML() {
     <details>
       <summary><h2 style="display:inline">Repères climatiques</h2></summary>
       <p class="sub">Les mots « froid », « tempéré », « chaud », « sec » et « humide » suivent partout dans l'Atlas la même échelle.
-      Les villes donnent la moyenne 1991–2020.</p>
+      Les villes donnent la moyenne 1991 à 2020.</p>
       <div class="rc-grille">
         <table class="data">
           <tr><th>Température moyenne annuelle</th><th>Repères</th></tr>
@@ -38,9 +38,5 @@ function reperesClimatHTML() {
   </div>`;
 }
 function reperesClimatSourceHTML() {
-  return `<p class="page-source">Repères climatiques : régimes de température et d'humidité des sols, <i>Keys to Soil Taxonomy</i>
-    (USDA, Soil Survey Staff) ; indice d'aridité de l'UNEP, <i>World Atlas of Desertification</i> (1992) ; groupe A de la
-    classification de Köppen ; normales 1991–2020 calculées à partir de la réanalyse SAFRAN de Météo-France (API GeoSAS), ETP de
-    Penman-Monteith — avec une ETP de Thornthwaite, les pourcentages seraient plus élevés ; France entière : 13,0 °C et 935 mm
-    (Météo-France) ; carbonates pédogénétiques rares au-delà de 760 mm/an : Royer (1999), <i>Geology</i> 27.</p>`;
+  return `<p class="page-source">Origine des repères climatiques : régimes de température et d'humidité des sols selon <i>Keys to Soil Taxonomy</i> (USDA, Soil Survey Staff) ; indice d'aridité de l'UNEP, publié en 1992 dans le <i>World Atlas of Desertification</i> ; catégorie A de Köppen. Pour 1991 à 2020, les normales viennent de la réanalyse SAFRAN (Météo-France, API GeoSAS) combinée à l'ETP de Penman-Monteith, qui donne des pourcentages plus faibles que celle de Thornthwaite. Moyennes pour toute la France : 13,0 °C et 935 mm, selon Météo-France. Les carbonates pédogénétiques se font rares au-delà de 760 mm/an (Royer, 1999, <i>Geology</i> 27).</p>`;
 }

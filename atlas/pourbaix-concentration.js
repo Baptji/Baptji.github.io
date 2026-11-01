@@ -71,6 +71,111 @@ const PourbaixCalc = (() => {
     return out;
   }
 
+  // ---------------------------------------------------------------- convention « concentration totale » (H.8)
+  // Takeno (2005), PHREEQC : un solide k n'est tracé que si la SOMME du métal dissous à l'équilibre avec lui
+  // reste sous le seuil C. Avec Phi_s pris à l'activité C/n_s (convention de pourbaix.py), le métal porté par
+  // l'espèce s vaut C·10^(n_s·(Phi_k − Phi_s)) ; d'où le critère log10 Σ_s 10^(n_s·(Phi_k − Phi_s)) ≤ 0.
+  // Cette fonction est convexe : le domaine du solide reste convexe, son bord côté solution devient une courbe.
+  function logTotal(k, aq, x, y) {
+    const pk = k.a + k.b * x + k.g * y;
+    let m = -Infinity;
+    const t = aq.map((s) => { const v = s.e.n * (pk - (s.a + s.b * x + s.g * y)); if (v > m) m = v; return v; });
+    let somme = 0;
+    for (const v of t) somme += 10 ** (v - m);
+    return m + Math.log10(somme);
+  }
+
+  // demi-plans n·(pH, E) ≤ c d'un polygone convexe, quel que soit son sens de parcours
+  function demiPlans(poly) {
+    let A = 0;
+    for (let i = 0; i < poly.length; i++) A += poly[i][0] * poly[(i + 1) % poly.length][1] - poly[(i + 1) % poly.length][0] * poly[i][1];
+    const s = A > 0 ? 1 : -1;
+    return poly.map((p, i) => {
+      const q = poly[(i + 1) % poly.length], nx = s * (q[1] - p[1]), ny = -s * (q[0] - p[0]);
+      return [nx, ny, nx * p[0] + ny * p[1]];
+    });
+  }
+
+  // partie du domaine S (convexe, solide k le plus stable des solides) où le métal dissous total reste ≤ C :
+  // rayons tirés d'un point intérieur, bord du polygone ou courbe log Σ = 0 trouvée par dichotomie
+  function solideTotal(k, S, aq) {
+    const f = (x, y) => logTotal(k, aq, x, y), hp = demiPlans(S);
+    const dedans = (x, y) => hp.every(([nx, ny, c]) => nx * x + ny * y <= c + 1e-9);
+    const xs = S.map((p) => p[0]), ys = S.map((p) => p[1]);
+    const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+    // candidats ramenés de 1 % vers le centre du polygone : le point de départ des rayons doit être STRICTEMENT dedans
+    const gx = S.reduce((s, p) => s + p[0], 0) / S.length, gy = S.reduce((s, p) => s + p[1], 0) / S.length;
+    let c = null, fc = Infinity;
+    const essayer = (x, y) => {
+      x += 0.01 * (gx - x); y += 0.01 * (gy - y);
+      if (dedans(x, y)) { const v = f(x, y); if (v < fc) { fc = v; c = [x, y]; } }
+    };
+    S.forEach((p, i) => { const q = S[(i + 1) % S.length]; essayer((p[0] + q[0]) / 2, (p[1] + q[1]) / 2); });
+    for (let i = 0; i <= 40; i++) for (let j = 0; j <= 40; j++) essayer(x0 + (x1 - x0) * i / 40, y0 + (y1 - y0) * j / 40);
+    if (!c || fc > 0) return [];
+    // directions régulières à l'écran (pixels), plus une vers chaque sommet pour garder les coins nets
+    const ux = 14 / (X1 - X0), uy = 3 / (Y1 - Y0);
+    const angles = [];
+    for (let i = 0; i < 360; i++) angles.push(i * Math.PI / 180);
+    S.forEach(([x, y]) => angles.push((Math.atan2((y - c[1]) / uy, (x - c[0]) / ux) + 2 * Math.PI) % (2 * Math.PI)));
+    angles.sort((a, b) => a - b);
+    // point du bord le long du rayon d'angle th : sortie du polygone si le solide y tient encore, sinon courbe Σ = 0
+    const rayon = (th) => {
+      const dx = Math.cos(th) * ux, dy = Math.sin(th) * uy;
+      let t = Infinity;
+      for (const [nx, ny, cc] of hp) {
+        const den = nx * dx + ny * dy;
+        if (den > 1e-15) t = Math.min(t, (cc - nx * c[0] - ny * c[1]) / den);
+      }
+      if (!isFinite(t) || t <= 0) return null;
+      if (f(c[0] + t * dx, c[1] + t * dy) <= 0) return { p: [c[0] + t * dx, c[1] + t * dy], bord: true };
+      let a = 0, b = t;
+      for (let it = 0; it < 40; it++) { const m = (a + b) / 2; if (f(c[0] + m * dx, c[1] + m * dy) > 0) b = m; else a = m; }
+      return { p: [c[0] + a * dx, c[1] + a * dy], bord: false };
+    };
+    const ecart = (p, q) => Math.hypot((p[0] - q[0]) / ux, (p[1] - q[1]) / uy);
+    const pts = angles.map((th) => ({ th, r: rayon(th) })).filter((x) => x.r);
+    const out = [];
+    pts.forEach((A, i) => {
+      out.push(A.r.p);
+      const B = pts[(i + 1) % pts.length];
+      let thB = B.th;
+      if (thB <= A.th) thB += 2 * Math.PI;
+      if (A.r.bord !== B.r.bord) {
+        // passage bord droit ⇄ courbe : on cherche l'angle exact du coin
+        let a = A.th, b = thB, ra = A.r, rb = B.r;
+        for (let it = 0; it < 18; it++) {
+          const m = (a + b) / 2, rm = rayon(m);
+          if (!rm) break;
+          if (rm.bord === A.r.bord) { a = m; ra = rm; } else { b = m; rb = rm; }
+        }
+        out.push(ra.p, rb.p);
+      } else if (!A.r.bord && ecart(A.r.p, B.r.p) > 4) {
+        // courbe : points intermédiaires tous les ≈ 4 px
+        const n = Math.min(16, Math.ceil(ecart(A.r.p, B.r.p) / 4));
+        for (let k = 1; k < n; k++) { const r = rayon(A.th + (thB - A.th) * k / n); if (r) out.push(r.p); }
+      }
+    });
+    for (let i = out.length - 1; i > 0; i--) if (ecart(out[i], out[i - 1]) < 0.05) out.splice(i, 1);
+    // points alignés retirés (bords droits du polygone)
+    const simple = out.filter((p, i) => {
+      const a = out[(i + out.length - 1) % out.length], b = out[(i + 1) % out.length];
+      return Math.abs((p[0] - a[0]) / ux * (b[1] - a[1]) / uy - (p[1] - a[1]) / uy * (b[0] - a[0]) / ux) > 1e-3;
+    });
+    return simple.length >= 3 ? simple : [];
+  }
+
+  // Domaines en concentration totale : partition des espèces dissoutes seules (droites, inchangée), puis
+  // solides posés PAR-DESSUS (solides d'abord dans la liste : c'est le premier domaine trouvé au curseur).
+  function domainesTotal(liste) {
+    const aq = liste.filter((s) => s.e.aq), so = liste.filter((s) => !s.e.aq);
+    const solides = domaines(so, false)
+      .map(({ s, poly }) => ({ s, poly: solideTotal(s, poly, aq) }))
+      .filter((d) => d.poly.length && aire(d.poly) >= AIRE_MIN)
+      .map((d) => Object.assign(d, { aire: aire(d.poly) }));
+    return { solides, dissous: domaines(aq), aq };
+  }
+
   // ---------------------------------------------------------------- étiquettes (etiquettes.py)
   function signee(a, b, x, y) {
     const [x0, y0] = a, [x1, y1] = b;
@@ -170,8 +275,17 @@ const PourbaixCalc = (() => {
   }
   const arr = (v, n) => Math.round(v * 10 ** n) / 10 ** n;
 
-  function placer(poly, h, obstacles) {
-    const pp = poly.map(([p, e]) => [px(p), py(e)]), dist = preparer(pp);
+  // `trous` : polygones (pixels) posés par-dessus le domaine ; −distance au trou = borne basse de la distance réelle
+  function placer(poly, h, obstacles, trous = []) {
+    const pp = poly.map(([p, e]) => [px(p), py(e)]), d0 = preparer(pp), dt = trous.map(preparer);
+    const dist = !dt.length ? d0 : (x, y, plancher) => {
+      let m = d0(x, y, plancher);
+      for (const f of dt) {
+        if (m < plancher) return m;
+        m = Math.min(m, -f(x, y, -Infinity));
+      }
+      return m;
+    };
     const wn = Math.max(longueur(h.nom) * LARG_NOM, longueur(h.formule) * LARG_FORM), wc = longueur(h.court) * LARG_NOM;
     const a = angleBande(pp);
     const modes = [["complet", wn, -12, 19, 0], ["court", wc, -11, 4, 0]];
@@ -208,11 +322,7 @@ const PourbaixCalc = (() => {
     const sous = liste.filter((s) => s.e.aq || s.e.sym === spec.phase);
     const d = domaines(sous).find((x) => x.s.e.sym === spec.phase);
     if (!d) return null;
-    const poly = d.poly, n = poly.length;
-    const bord = (p) => Math.abs(p[0]) < 1e-9 || Math.abs(p[0] - 14) < 1e-9 || Math.abs(p[1] + 1) < 1e-9 || Math.abs(p[1] - 2) < 1e-9;
     const permis = doms.filter((x) => spec.dans.includes(x.s.e.id)).map((x) => x.poly);
-    const series = [];
-    let cur = [];
     // espèce qui l'emporte juste de l'autre côté d'une arête (pour écarter les limites qui ne sont pas des précipitations)
     const voisine = (a, b) => {
       const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
@@ -225,14 +335,51 @@ const PourbaixCalc = (() => {
       }
       return best;
     };
+    return tracer(spec, d.poly, (p) => permis.some((pl) => dans(p, pl)), voisine, () => 200);
+  }
+
+  // même ligne en concentration totale : bord de la zone où la phase précipite (somme du dissous ≥ C) ;
+  // permis = point dont le domaine affiché (solide d'abord) est dans `spec.dans`
+  function ligneTotal(spec, liste, T) {
+    const ph = liste.find((s) => s.e.sym === spec.phase);
+    if (!ph) return null;
+    const [ph0, ph1, e0, e1] = CADRE;
+    const poly = solideTotal(ph, [[ph0, e0], [ph1, e0], [ph1, e1], [ph0, e1]], T.aq);
+    if (!poly.length) return null;
+    const ids = new Set(spec.dans);
+    const domaineDe = (p) => {
+      const s = T.solides.find((x) => dans(p, x.poly)) || T.dissous.find((x) => dans(p, x.poly));
+      return s && s.s.e.id;
+    };
+    const voisine = (a, b) => {
+      const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+      for (const sg of [1, -1]) {
+        const x = mx + sg * 0.01 * (b[1] - a[1]) / L, y = my - sg * 0.01 * (b[0] - a[0]) / L;
+        if (dans([x, y], poly)) continue;
+        let m = null;
+        for (const t of T.aq) { const v = t.a + t.b * x + t.g * y; if (!m || v < m[0]) m = [v, t]; }
+        return m[1];
+      }
+      return null;
+    };
+    const pas = (a, b) => Math.max(2, Math.ceil(Math.hypot(px(b[0]) - px(a[0]), py(b[1]) - py(a[1])) / 2));
+    return tracer(spec, poly, (p) => ids.has(domaineDe(p)), voisine, pas);
+  }
+
+  function tracer(spec, poly, permis, voisine, pas) {
+    const n = poly.length;
+    const bord = (p) => Math.abs(p[0]) < 1e-9 || Math.abs(p[0] - 14) < 1e-9 || Math.abs(p[1] + 1) < 1e-9 || Math.abs(p[1] - 2) < 1e-9;
+    const series = [];
+    let cur = [];
     for (let i = 0; i < n; i++) {
       const a = poly[i], b = poly[(i + 1) % n];
       if (bord(a) && bord(b) && (Math.abs(a[0] - b[0]) < 1e-9 || Math.abs(a[1] - b[1]) < 1e-9)) continue;
       const v = spec.sauf && voisine(a, b);
       if (v && spec.sauf.includes(v.e.id)) { if (cur.length) { series.push(cur); cur = []; } continue; }
-      for (let k = 0; k <= 200; k++) {
-        const p = [a[0] + k / 200 * (b[0] - a[0]), a[1] + k / 200 * (b[1] - a[1])];
-        if (permis.some((pl) => dans(p, pl))) cur.push(p);
+      const N = pas(a, b);
+      for (let k = 0; k <= N; k++) {
+        const p = [a[0] + k / N * (b[0] - a[0]), a[1] + k / N * (b[1] - a[1])];
+        if (permis(p)) cur.push(p);
         else if (cur.length) { series.push(cur); cur = []; }
       }
     }
@@ -287,14 +434,24 @@ const PourbaixCalc = (() => {
 
   // ---------------------------------------------------------------- système habillé à l'activité 10^logA
   const cache = new Map();
-  function systeme(cle, logA) {
+  // total = convention « concentration totale » (Takeno 2005) au lieu de « chaque espèce » (Pourbaix 1966)
+  function systeme(cle, logA, total = false) {
     const base = POURBAIX[cle], donnees = POURBAIX_ESPECES[cle];
     logA = Math.round(logA * 10) / 10;
-    if (!base || !donnees || logA === DEFAUT) return base;
-    const k = cle + ":" + logA;
+    if (!base || !donnees || (logA === DEFAUT && !total)) return base;
+    const k = cle + ":" + logA + (total ? ":total" : "");
     if (cache.has(k)) return cache.get(k);
-    const liste = plans(cle, logA), doms = domaines(liste);
-    const lignes = (donnees.lignes || []).map((spec) => ligne(spec, liste, doms)).filter(Boolean);
+    const liste = plans(cle, logA);
+    let doms, lignes, trous = [];
+    if (total) {
+      const T = domainesTotal(liste);
+      doms = [...T.solides, ...T.dissous];
+      trous = T.solides.map((d) => d.poly.map(([p, e]) => [px(p), py(e)]));
+      lignes = (donnees.lignes || []).map((spec) => ligneTotal(spec, liste, T)).filter(Boolean);
+    } else {
+      doms = domaines(liste);
+      lignes = (donnees.lignes || []).map((spec) => ligne(spec, liste, doms)).filter(Boolean);
+    }
     const obstacles = lignes.flatMap((l) => echantillons(l.points)), cadres = [];
     const domainesHab = doms.map(({ s, poly }) => {
       const e = s.e, ref = base.domaines.find((d) => d.id === e.id);
@@ -305,14 +462,16 @@ const PourbaixCalc = (() => {
       if (h.mineraux) d.mineraux = h.mineraux;
       if (h.mineral) d.mineral = h.mineral;
       d.points = points;
-      const lab = placer(poly, { nom: h.nom, formule: h.formule, court: e.court || h.nom }, obstacles);
+      const lab = placer(poly, { nom: h.nom, formule: h.formule, court: e.court || h.nom }, obstacles, e.aq ? trous : []);
+      const couvert = (pt) => total && e.aq && doms.some((x) => !x.s.e.aq && dans(pt, x.poly));
       if (lab) { cadres.push(lab._cadre); delete lab._cadre; Object.assign(d, lab); }
-      else if (ref && ref.renvoi && dans(ref.renvoi, poly)) Object.assign(d, { etiquette: ref.etiquette, court: ref.court, renvoi: ref.renvoi });
+      else if (ref && ref.renvoi && dans(ref.renvoi, poly) && !couvert(ref.renvoi))
+        Object.assign(d, { etiquette: ref.etiquette, court: ref.court, renvoi: ref.renvoi });
       else d.etiquette = false;
       return d;
     });
     for (const l of lignes) l.etiquette = etiquetteLigne(l, cadres);
-    const sys = Object.assign({}, base, { domaines: domainesHab, lignes, logA });
+    const sys = Object.assign({}, base, { domaines: domainesHab, lignes, logA, total, superpose: total });
     cache.set(k, sys);
     return sys;
   }
@@ -342,5 +501,6 @@ const PourbaixCalc = (() => {
     return `≈ ${virgule(g, n).replace(/,0$/, "")} ${u}`;
   }
 
-  return { systeme, molaire, massique, DEFAUT, MIN, MAX, _domaines: (cle, logA) => domaines(plans(cle, logA), false) };
+  return { systeme, molaire, massique, DEFAUT, MIN, MAX, _domaines: (cle, logA) => domaines(plans(cle, logA), false),
+    _total: (cle, logA) => domainesTotal(plans(cle, logA)), _outils: { plans, domaines, solideTotal, logTotal } };
 })();

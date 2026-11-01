@@ -1,0 +1,126 @@
+/* Le sol au fil du temps (I.2, 25/10/2026) — sols-temps.js */
+.st-page { --st-crochet: #8a6a4a; --st-fond-duree: rgba(138, 106, 74, 0.08); --st-trait: rgba(11, 11, 11, 0.55); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .st-page { --st-crochet: #c9a77c; --st-fond-duree: rgba(201, 167, 124, 0.10); --st-trait: rgba(255, 255, 255, 0.55); }
+}
+:root[data-theme="dark"] .st-page { --st-crochet: #c9a77c; --st-fond-duree: rgba(201, 167, 124, 0.10); --st-trait: rgba(255, 255, 255, 0.55); }
+
+.st-choix { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; }
+.st-choix .chip { text-decoration: none; }
+.st-roches { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 12px; font-size: 13px; }
+.st-roches .chip { text-decoration: none; font-size: 12.5px; }
+.st-gris { opacity: .6; font-style: italic; }
+.st-sans { font-size: 13px; margin: 6px 0 0; }
+.st-ref { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+
+/* frise verticale : étapes et flèches en colonne 1, crochets des durées dans les colonnes suivantes */
+.st-grille { display: grid; column-gap: 10px; row-gap: 0; align-items: stretch; margin: 6px 0 4px; }
+.st-case { min-width: 0; }
+.st-etape { display: flex; gap: 10px; align-items: center; padding: 6px 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+.st-etape.st-mat { background: var(--page); border-style: dashed; }
+.st-etape-txt { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.st-rp { font-size: 14.5px; line-height: 1.25; }
+.st-wrb { font-size: 12px; color: var(--muted); }
+.st-note { font-size: 12px; color: var(--ink2); line-height: 1.3; }
+.st-profil { flex: none; border-radius: 3px; display: block; }
+.st-profil-vide { width: 38px; height: 76px; flex: none; border: 1px dashed var(--baseline); border-radius: 3px; }
+.st-cadre { fill: none; stroke: var(--st-trait); stroke-width: 1; }
+.st-hz { font: 600 8px/1 system-ui, sans-serif; }
+.st-fissure { fill: none; stroke: rgba(0, 0, 0, 0.35); stroke-width: 1; }
+.st-fleche { display: flex; gap: 8px; align-items: flex-start; padding: 5px 0 5px 22px; font-size: 13px; color: var(--ink2); line-height: 1.35; }
+.st-fl { font-size: 17px; line-height: 1; color: var(--muted); flex: none; }
+.st-cond { color: var(--muted); }
+.st-duree { position: relative; margin: 10px 0; padding: 2px 6px 2px 12px; border-left: 2px solid var(--st-crochet);
+  background: var(--st-fond-duree); border-radius: 0 6px 6px 0; font-size: 12.5px; line-height: 1.35; display: flex; flex-direction: column; gap: 3px; }
+.st-duree::before, .st-duree::after { content: ""; position: absolute; left: -2px; width: 8px; border-top: 2px solid var(--st-crochet); }
+.st-duree::before { top: 0; }
+.st-duree::after { bottom: 0; }
+.st-duree b { font-size: 13px; }
+.st-durees-liste { display: none; margin: 10px 0 0; padding-left: 18px; font-size: 13px; }
+.st-durees-liste li { margin: 0 0 6px; }
+.st-de { color: var(--muted); font-size: 12px; }
+
+.st-h3 { font-size: 15px; margin: 18px 0 6px; }
+.st-branche { border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; margin: 0 0 8px; }
+.st-branche-tete { margin: 0 0 6px; font-size: 13.5px; }
+.st-branche-suite { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.st-bfl { font-size: 12.5px; color: var(--ink2); }
+.st-durees-branche { margin: 8px 0 0; padding-left: 18px; font-size: 13px; }
+.st-avis { margin: 4px 0 0; font-size: 12.5px; color: var(--muted); font-style: italic; }
+.st-notes { padding-left: 18px; font-size: 13.5px; margin: 0; }
+.st-notes li { margin: 0 0 6px; }
+.st-legende { font-size: 12px; color: var(--muted); margin: 14px 0 0; }
+.st-sources ol { font-size: 12px; color: var(--ink2); padding-left: 20px; margin: 0; }
+.st-sources li { margin: 0 0 4px; }
+.st-lien-roche { margin: 6px 0 0 !important; }
+
+.st-table-wrap { overflow-x: auto; }
+.st-table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.st-table th, .st-table td { border-bottom: 1px solid var(--border); padding: 6px 8px; text-align: left; vertical-align: top; }
+.st-table thead th { font-size: 12px; color: var(--muted); font-weight: 600; }
+.st-table tbody th { font-weight: 600; white-space: nowrap; }
+.st-table a { text-decoration: none; }
+
+/* écran étroit : les crochets cèdent la place à la liste des durées */
+@media (max-width: 760px) {
+  .st-grille { grid-template-columns: 1fr !important; }
+  .st-duree { display: none; }
+  .st-durees-liste { display: block; }
+  .st-table tbody th { white-space: normal; }
+}
+.st-sources .st-src-liste { font-size: 12px; color: var(--muted); padding-left: 22px; margin: 2px 4px 8px; }
+.st-sources .st-src-liste li { margin: 0 0 3px; }
+
+/* 25/10/2026 (2) : fosses côte à côte, d'après la figure de Jamagne (2011) mise en couleur par Baize (2017) */
+.st-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+.st-planche { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 14px 10px 6px; margin: 4px 0 6px; }
+.st-defile { overflow-x: auto; overflow-y: hidden; }
+.st-fosses { display: block; margin: 0 auto; font-family: system-ui, -apple-system, sans-serif; }
+.st-fosses text { fill: #1d1b18; }
+.st-nom { font-size: 11.5px; font-weight: 650; font-variant: small-caps; letter-spacing: .02em; }
+.st-wrb { font-size: 9px; fill: #6b675f !important; }
+.st-wrb-gris { font-style: italic; fill: #a19c92 !important; }
+.st-note-f { font-size: 9.5px; font-style: italic; fill: #6b675f !important; }
+.st-hz { font-size: 10px; font-weight: 600; }
+.st-f-bord { stroke: #3a352e; stroke-width: 1; fill: none; }
+.st-ax { font-size: 9.5px; fill: #4a463f !important; }
+.st-axe { stroke: #4a463f; stroke-width: 1; fill: none; }
+.st-phase { stroke: #1d1b18; stroke-width: 1.6; fill: none; }
+.st-phase-t { stroke-dasharray: 7 5; }
+.st-phase-n { font-size: 12px; }
+.st-phase-c { font-size: 9.5px; font-style: italic; fill: #6b675f !important; }
+.st-crochet { stroke: #8a6a4a; stroke-width: 1.8; fill: none; }
+.st-d-t { font-size: 11px; font-weight: 650; }
+.st-d-q { font-size: 9.5px; fill: #55514a !important; }
+.st-branche .st-defile { background: #fff; border-radius: 8px; padding: 10px 6px 4px; }
+@media (min-width: 761px) { .st-fosses { max-width: 100%; height: auto; } }
+
+/* Les types de sols (sols-fiches.js, 25/10/2026, prototype) */
+.sf-gris, .sf-chip-gris { opacity: .5; }
+.sf-chip-gris { cursor: default; }
+.sf-avance { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
+.sf-cat h3 { font-size: 14px; margin: 16px 0 6px; color: var(--ink2); }
+.sf-ger { display: grid; grid-template-columns: 210px 1fr; gap: 10px; align-items: baseline; padding: 6px 0; border-top: 1px solid var(--border); }
+.sf-refs { display: flex; flex-wrap: wrap; gap: 5px; }
+.sf-refs .chip { font-size: 12.5px; text-decoration: none; }
+.sf-fil { margin: 0 0 10px; }
+.sf-tete { display: grid; grid-template-columns: 230px 1fr; gap: 22px; align-items: start; }
+.sf-profil { background: #fff; border-radius: 10px; border: 1px solid var(--border); padding: 10px 4px 0; }
+.sf-profil .st-fosses { width: 100%; height: auto; }
+.sf-id h1 { margin: 0 0 8px; }
+.sf-wrb { display: flex; gap: 8px; align-items: baseline; margin: 0 0 4px; font-size: 15px; }
+.sf-wrb-2006 { font-size: 13px; color: var(--ink2); }
+.sf-wrb-l { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; min-width: 72px; }
+.sf-wrb-n { font-size: 11.5px; color: var(--muted); }
+.sf-desc { margin: 12px 0; }
+.sf-seq, .sf-tab { border-collapse: collapse; font-size: 13.5px; }
+.sf-seq th, .sf-tab th { text-align: left; color: var(--ink2); font-weight: 600; padding: 5px 14px 5px 0; vertical-align: top; white-space: nowrap; }
+.sf-seq td { font-family: ui-monospace, Menlo, monospace; font-size: 13px; padding: 5px 0; }
+.sf-tab { width: 100%; }
+.sf-tab tr + tr th, .sf-tab tr + tr td { border-top: 1px solid var(--border); }
+.sf-tab td { padding: 6px 0; line-height: 1.45; }
+.sf-evol { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 12px; font-size: 13.5px; }
+.sf-liste { padding-left: 20px; margin: 0; }
+.sf-liste li { margin: 0 0 5px; }
+.sf-sous { font-size: 13px; color: var(--ink2); margin: 10px 0 0; }
+@media (max-width: 760px) { .sf-tete { grid-template-columns: 1fr; } .sf-profil { max-width: 230px; } .sf-ger { grid-template-columns: 1fr; gap: 4px; } .sf-tab th { white-space: normal; } }

@@ -409,7 +409,7 @@
           s += poly(haut.concat(bas.reverse()), j % 2 ? MIN.sableFonce : MIN.sable);
         }
         s += txt(W - 10, base(W - 10) - 5, "lits de sable", { a: "end", petit: true, op: fen(t, 0.35, 0.5) });
-        s += compteur(240, 20, lerp(478, 470, t), { sous: "le sable s'accumule sur le fond, pas sur la plage" });
+        s += compteur(240, 20, lerp(478, 470, t), { sous: "le sable se dépose sur le fond, et non sur la plage" });
         // trilobite qui marche sur le sable : ses traces se fossilisent (bilobites du grès armoricain)
         const x0 = 200, xt = lerp(x0, 428, fen(t, 0.08, 0.96));
         for (let x = x0; x < xt - 8; x += 5) {
@@ -484,7 +484,7 @@
         }
         if (p.thermo) {
           s += rect(344, 44, W - 344, H - 44, "#f3f1ea") + thermometre(420, 50, 130, T, 0, p.thermo, [0.25, 0.5, 0.75].map((f) => Math.round(p.thermo * f / 10) * 10));
-          s += txt(410, 70, `${nombre(T)} °C`, { a: "end" }) + txt(390, 212, p.texteThermo || "la croûte s'amincit : la chaleur monte", { a: "middle", petit: true })
+          s += txt(410, 70, `${nombre(T)} °C`, { a: "end" }) + txt(390, 212, p.texteThermo || "la croûte s'amincit et la chaleur remonte", { a: "middle", petit: true })
             + txt(390, 224, `≈ ${p.gradient} °C par km`, { a: "middle", petit: true });
           return s;
         }
@@ -496,7 +496,7 @@
           d += poly(forme(0.75, 0, 0).map(([a, b]) => [px + a * r, py + b * r * lerp(1, 0.96, t)]), p.grainLoupe || MIN.quartz, { stroke: "#7d766b", "stroke-width": 0.6 });
         }
         s += L.dans(d) + L.bord;
-        const lt = p.loupeTexte || ["au microscope : le sable se tasse", "sous le poids des couches"];
+        const lt = p.loupeTexte || ["au microscope : le sable se compacte", "sous le poids des couches"];
         s += txt(414, 186, lt[0], { a: "middle", petit: true })
           + txt(414, 198, lt[1], { a: "middle", petit: true })
           + txt(414, 214, `vides entre les grains : ${Math.round(lerp(VIDES[0], VIDES[1], t))} %`, { a: "middle" });
@@ -630,9 +630,9 @@
         // le moteur : deux plaques se rapprochent (flèches au bord du cadre), la série se raccourcit et s'épaissit
         const comp = fen(T, 0, 0.04) * (1 - fen(T, 0.44, 0.5));
         s += fleche(4, 200, 40, 200, { sw: 3, pointe: 9, op: comp }) + fleche(476, 200, 440, 200, { sw: 3, pointe: 9, op: comp });
-        s += txt(196, 13, T < 0.25 ? "la collision raccourcit et plisse les couches" : "épaissie, la croûte se soulève : la mer se retire",
+        s += txt(196, 13, T < 0.25 ? "la collision raccourcit et plisse les couches" : "une fois épaissie, la croûte s'élève : la mer se retire",
           { a: "middle", op: fen(T, 0.01, 0.05) * (1 - fen(T, 0.46, 0.5)) });
-        s += txt(196, 13, "l'érosion enlève le dessus ; allégée, la croûte remonte", { a: "middle", op: fen(T, 0.52, 0.58) * (1 - fen(T, 0.86, 0.9)) });
+        s += txt(196, 13, "l'érosion ôte la partie supérieure ; allégée, la croûte remonte", { a: "middle", op: fen(T, 0.52, 0.58) * (1 - fen(T, 0.86, 0.9)) });
         // remontée isostatique (épaississement, puis érosion)
         const iso = fen(T, 0.14, 0.24) * (1 - fen(T, 0.9, 1));
         for (const x of [70, 240, 410]) s += fleche(x, H - 6, x, H - 30, { c: "#c0392b", sw: 2, pointe: 7, op: op(iso * 0.8) });
@@ -713,7 +713,7 @@
           if (a <= 0.02) continue;
           s += circ(g.x, g.y + Math.sin(ta * 0.5 + g.ph * 6) * 0.8, g.r * a, MAGMA, { opacity: op(0.55 + 0.45 * a) });
         }
-        s += txt(240, cy + ry + 13, `fusion partielle vers ${nombre(zHaut)}–${nombre(zBas)} km, entre ${p.tFusion || "750 et 850 °C"}`, { a: "middle" });
+        s += txt(240, cy + ry + 13, `fusion partielle vers ${nombre(zHaut)} à ${nombre(zBas)} km, entre ${p.tFusion || "750 et 850 °C"}`, { a: "middle" });
         s += txt(150, 58, p.labCroute || "croûte épaissie par la collision", { clair: false });
         s += compteur(396, 18, lerp(p.age0 ?? 345, p.age1 ?? 335, t), { sous: p.sousFusion || "", libelle: p.libelleAge });
         return s;
@@ -883,16 +883,16 @@
         if (eD > 0.02) {
           const yl = clamp(yTip + 10, 58, 196);
           s += fleche(XP + 14, yTip + 30, XP + 14, yTip - 2, { c: "#27302d", sw: 1.6, op: 0.75 * eD })
-            + txt(XP + 22, yl, "moins dense que la roche autour", { petit: true, op: eD })
+            + txt(XP + 22, yl, "moins dense que les roches environnantes", { petit: true, op: eD })
             + txt(XP + 22, yl + 10, "(≈ 2,4 t/m³ contre 2,7), il remonte", { petit: true, op: eD });
           const ym = clamp(lerp(G.yCol, yTip, 0.5), 60, 196);
           s += txt(XP - 10, ym, "filon (dyke) : quelques mètres", { a: "end", petit: true, op: eD })
-            + txt(XP - 10, ym + 10, "de large, élargi sur le schéma", { a: "end", petit: true, op: eD });
+            + txt(XP - 10, ym + 10, "de large, représenté élargi sur le schéma", { a: "end", petit: true, op: eD });
         }
         const lab = (a, b) => (a > 0 ? fen(t, a, a + 0.04) : 1) * (1 - fen(t, b - 0.04, b));
-        s += txt(240, H - 9, "le liquide quitte les grains et se rassemble dans des veines", { a: "middle", op: lab(0, 0.32) });
-        s += txt(240, H - 9, p.labMontee || "il monte par une fracture qu'il ouvre lui-même : un filon", { a: "middle", op: lab(0.3, 0.8) });
-        s += txt(240, H - 9, `arrivé vers ${nombre(G.z0)}–${nombre(G.z1)} km, il s'étale à l'horizontale`, { a: "middle", op: fen(t, 0.78, 0.84) });
+        s += txt(240, H - 9, "le liquide s'échappe des grains et s'agglomère en veines", { a: "middle", op: lab(0, 0.32) });
+        s += txt(240, H - 9, p.labMontee || "il remonte en ouvrant lui-même une fracture : un filon", { a: "middle", op: lab(0.3, 0.8) });
+        s += txt(240, H - 9, `parvenu vers ${nombre(G.z0)} à ${nombre(G.z1)} km, il s'étale à l'horizontale`, { a: "middle", op: fen(t, 0.78, 0.84) });
         s += compteur(396, 18, lerp(p.age1 ?? 335, p.age2 ?? 330, t), { sous: p.dureeMontee || "1 000 à 100 000 ans", libelle: p.libelleAge });
         return s;
       },
@@ -936,14 +936,14 @@
         }
         const yF = G.yT + G.Th + 17;
         s += txt(XP + 14, yF, "le plancher s'enfonce :", { petit: true, op: eP })
-          + txt(XP + 14, yF + 9, "il fait la place au magma", { petit: true, op: eP });
+          + txt(XP + 14, yF + 9, "il ménage la place au magma", { petit: true, op: eP });
         // auréole de contact (demande du 23/09/2026 : plus de « l'encaissant cuit ») ; « cornéennes » seulement près de la surface
         const aur = p.labAureole || `les roches voisines recristallisent${G.z1 <= 15 ? " (cornéennes)" : ""}`;
         const dessous = G.yT - 30 < 58;
         const yA = dessous ? yF + 22 : G.yT - 24;
-        s += txt(240, yA, "auréole de contact : chauffées sans fondre,", { a: "middle", op: fen(t, 0.5, 0.7) })
+        s += txt(240, yA, "auréole de contact : portées à haute température sans fondre,", { a: "middle", op: fen(t, 0.5, 0.7) })
           + txt(240, yA + 10, aur, { a: "middle", petit: true, op: fen(t, 0.5, 0.7) });
-        s += txt(70, yF, `mise en place vers ${nombre(G.z0)}–${nombre(G.z1)} km`, { petit: true });
+        s += txt(70, yF, `mise en place vers ${nombre(G.z0)} à ${nombre(G.z1)} km`, { petit: true });
         s += compteur(396, 18, lerp(p.age2 ?? 330, p.age3 ?? 325, t), { libelle: p.libelleAge });
         return s;
       },
@@ -1191,7 +1191,7 @@
           v += rect(PX0, PY0, PX1 - PX0, PY1 - PY0, "none", { rx: 4, stroke: "#27302d", "stroke-width": 1.2 });
           // étiquettes de la vue rapprochée
           const eA = fen(t, 0.66, 0.72);
-          v += txt(PX0 + 6, PY0 + 10, "vue rapprochée : quelques centaines de mètres", { petit: true });
+          v += txt(PX0 + 6, PY0 + 10, "vue rapprochée, à l'échelle de quelques centaines de mètres", { petit: true });
           v += txt(PX0 + 6, PY1 - 5, "diaclases", { petit: true, op: z });
           v += txt(PX1 - 6, sol0(PX1 - 70) + 16, "arène (sable)", { a: "end", petit: true, op: eA * (1 - fen(t, 0.84, 0.9)) });
           const hautChaos = Math.min(...blocs.filter((bl) => Math.abs(bl.cx - XT) < 30).map((bl) => { const f = noyau(bl, degre(dW, bl.prof)); return f.cy + bl.chute * dec - f.hh; }));
@@ -1203,11 +1203,11 @@
         // textes
         const y1 = bas ? Math.max(38, yE - 28) : PY1 + 16;
         const f1 = 1 - fen(t, 0.52, 0.57), f2 = fen(t, 0.58, 0.63) * (1 - fen(t, 0.8, 0.85)), f3 = fen(t, 0.86, 0.92);
-        s += txt(240, y1, p.texteErosion || "l'érosion enlève les kilomètres de roches du dessus", { a: "middle", op: f1 });
+        s += txt(240, y1, p.texteErosion || "l'érosion retire plusieurs kilomètres de roches sus-jacentes", { a: "middle", op: f1 });
         s += txt(240, y1, "l'eau s'infiltre par les diaclases :", { a: "middle", op: f2 })
-          + txt(240, y1 + 11, "le granite pourrit en arène autour de noyaux sains", { a: "middle", petit: true, op: f2 });
-        s += txt(240, y1, p.texteAffleure || "le granite affleure : il se débite en boules et donne de l'arène", { a: "middle", op: f3 })
-          + txt(240, y1 + 11, p.texteArene || "l'arène part ensuite vers les rivières", { a: "middle", petit: true, op: f3 });
+          + txt(240, y1 + 11, "le granite se transforme en arène autour de noyaux intacts", { a: "middle", petit: true, op: f2 });
+        s += txt(240, y1, p.texteAffleure || "le granite émerge et se fragmente en boules, dont l'altération produit de l'arène", { a: "middle", op: f3 })
+          + txt(240, y1 + 11, p.texteArene || "l'arène est ensuite entraînée vers les cours d'eau", { a: "middle", petit: true, op: f3 });
         s += compteur(396, 18, lerp(p.age3 ?? 325, 0, t));
         return s;
       },
@@ -1284,7 +1284,7 @@
           const a = fen(t, 0.05 + g.ph * 0.6, 0.35 + g.ph * 0.6);
           if (a > 0.02) s += circ(g.x, g.y + Math.sin(ta * 0.5 + g.ph * 6) * 0.8, g.r * a, MAGMA, { opacity: op(0.5 + 0.5 * a) });
         }
-        const labF = `fusion partielle du manteau : ${p.tFusion || "1 250 à 1 350 °C"}`;
+        const labF = `fusion partielle du manteau : ${p.tFusion || "≈ 1 400 à 1 450 °C"}`;
         s += txt(Math.min(240, 340 - labF.length * 2.8), K(zH) - 10, labF, { a: "middle" });
         if (!p.ocean) s += txt(150, SURF + 14, p.labSurface || "croûte étirée, amincie", { petit: true });
         // loupe : le liquide s'insinue entre les grains d'olivine et de pyroxène
@@ -1327,7 +1327,7 @@
           s += line(226, KM2(1) - 2, 206, 24, "#27302d", 0.7, { opacity: op(c) }) + txt(204, 21, "réservoir : le magma s'y charge", { a: "end", petit: true, op: c })
             + txt(204, 32, "de cristaux d'olivine accumulés", { a: "end", petit: true, op: c });
         }
-        s += txt(240, Math.min(K(zDep) + 30, H - 8), p.texte || "il ouvre une fracture (dyke) et s'y engouffre", { a: "middle" });
+        s += txt(240, Math.min(K(zDep) + 30, H - 8), p.texte || "il perce une fracture (dyke) dans laquelle il se glisse", { a: "middle" });
         return s;
       },
     };
@@ -1408,12 +1408,12 @@
           if (mer && xf > 360) {
             const v = fen(xf, 360, 380);
             for (let k = 0; k < 6; k++) { const w = (ta * 0.22 + k / 6) % 1; s += circ(xf + 4 + Math.sin(w * 5 + k) * 5, MERY - 6 - w * 46, 5 + w * 11, "#f4f4f2", { opacity: op(0.75 * v * (1 - w)) }); }
-            s += txt(xf - 4, MERY - 60, "vapeur : la lave entre dans la mer", { a: "end", petit: true, op: v });
+            s += txt(xf - 4, MERY - 60, "vapeur : la lave pénètre dans la mer", { a: "end", petit: true, op: v });
           }
         }
         s += txt(xC, p.fissure ? topC - 80 : topC - 64, p.fissure ? "lave jaillie d'une fissure" : "fontaine de lave", { a: "middle", op: 0.4 + 0.6 * act });
-        if (!p.fissure) s += txt(x0 + 4, sol(x0) + 16, "la lave sort par une brèche au pied du cône", { petit: true, op: fen(t, 0.06, 0.14) * (1 - fen(t, 0.5, 0.6)) });
-        s += txt(mer ? 300 : 470, mer ? 70 : 132, `la coulée avance, de plus en plus lentement · ${p.laveT || "1 100 à 1 200 °C"}`, { a: mer ? "middle" : "end", petit: true, op: fen(t, 0.2, 0.3) });
+        if (!p.fissure) s += txt(x0 + 4, sol(x0) + 16, "c'est par une brèche au pied du cône que jaillit la lave", { petit: true, op: fen(t, 0.06, 0.14) * (1 - fen(t, 0.5, 0.6)) });
+        s += txt(mer ? 300 : 470, mer ? 70 : 132, `le front de la coulée ralentit progressivement · ${p.laveT || "1 100 à 1 200 °C"}`, { a: mer ? "middle" : "end", petit: true, op: fen(t, 0.2, 0.3) });
         s += txt(mer ? 300 : 470, mer ? 81 : 143, "croûte noire dessus, lave encore rouge dessous", { a: mer ? "middle" : "end", petit: true, op: fen(t, 0.35, 0.45) });
         s += compteur(396, 18, p.age ?? 0.0084, { sous: p.sousEruption || "", libelle: p.libelleAge });
         return s;
@@ -1451,7 +1451,7 @@
           s += line(x, y0 + 1, x, y0 + lerp(2, (y1 - y0) / 2 - 2, e), "rgba(20,18,16,.75)", 1.1)
             + line(x, y1 - 1, x, y1 - lerp(2, (y1 - y0) / 2 - 2, e), "rgba(20,18,16,.75)", 1.1);
         }
-        s += txt(10, y0 - 8, p.spinifex ? "la coulée fige : aiguilles d'olivine en haut, cristaux accumulés en bas" : "la coulée fige : croûte noire, puis prismes (orgues)", { petit: false });
+        s += txt(10, y0 - 8, p.spinifex ? "la coulée fige : aiguilles d'olivine en haut, cristaux accumulés en bas" : "le refroidissement fige la coulée : une croûte noire se forme, puis des prismes (orgues)", { petit: false });
         s += txt(xFin / 2, (y0 + y1) / 2 + 3, e < 0.6 ? "cœur encore rouge" : "cœur figé", { a: "middle", clair: true });
         // loupe : microlites de plagioclase dans le verre
         let d = rect(344, 52, 116, 116, e < 0.5 ? "#4a2b22" : "#2b2724");
@@ -1513,7 +1513,7 @@
           s += `<path d="M${r1(x)} ${FOND} q${r1(o)} -8 ${r1(o * 0.6)} -16" fill="none" stroke="#6f9d6a" stroke-width="2" stroke-linecap="round" opacity="${op(0.6 + 0.4 * g)}"/>`;
         }
         for (const [x, y, r, a] of coquilles) s += `<g transform="rotate(${r1(a)} ${r1(x)} ${r1(y)})">${ell(x, y, r, r * 0.55, "#efe6d0", { stroke: "#c6b79a", "stroke-width": 0.6 })}</g>`;
-        s += txt(186, FOND - 34, "coquillages, coraux et algues bâtissent leur squelette en calcite", { a: "middle" });
+        s += txt(186, FOND - 34, "mollusques, coraux et algues édifient leur squelette en calcite", { a: "middle" });
         // jauge verticale : le calcium dissous monte, et au-dessus du seuil la calcite précipite
         const niv = lerp(0.06, 0.92, fen(t, 0.05, 0.75));
         const yDe = (u) => JY + JH - u * JH;
@@ -1530,14 +1530,14 @@
             const y = g.y0 + Math.sin(ta * 0.35 + g.ph * 7) * 4 + trouble * 6;
             s += circ(g.x + Math.sin(ta * 0.22 + g.ph * 9) * 5, y, g.r, "#ffffff", { opacity: op(0.75 * trouble) });
           }
-          s += txt(186, MER + 24, "l'eau se charge de fines particules de calcite", { a: "middle", clair: true, op: fen(t, 0.3, 0.55) });
+          s += txt(186, MER + 24, "de fines particules de calcite viennent enrichir l'eau", { a: "middle", clair: true, op: fen(t, 0.3, 0.55) });
         }
         // les cristaux nés au-dessus du seuil tombent vers le fond
         if (niv > SEUIL) for (const c of cristaux) {
           const u = (c.ph + ta * 0.18) % 1, x = JX + c.dx * (0.4 + u), y = lerp(yDe(niv) + 6, FOND - 6, u);
           if (x > 360 && x < 470) s += poly(formeGrain(alea("cz" + c.ph), c.r, 6)(0.25, x, y, u * 6), "#f2ecdc", { stroke: "#c9bda0", "stroke-width": 0.6, opacity: op(Math.min(u * 5, (1 - u) * 5, 0.95)) });
         }
-        s += compteur(186, 20, lerp(p.age0 ?? 168, p.age1 ?? 166, t), { sous: p.sousMer || "plate-forme de moins de 100 m de fond" });
+        s += compteur(186, 20, lerp(p.age0 ?? 168, p.age1 ?? 166, t), { sous: p.sousMer || "plate-forme peu profonde, de moins de 100 m" });
         return s;
       },
     };
@@ -1572,7 +1572,7 @@
           const R2 = alea("lit" + i + p.graine);
           for (let c = 0; c < (p.coquilles ?? 0.25) * 24; c++) s += ell(R2() * W, y + EP / 2, 2.6, 1.3, p.couleurCoq || "#d8cdae", { opacity: op(Math.min(1, k * 2) * 0.9) });
         }
-        s += txt(240, Math.max(52, haut - 12), p.texte || "la boue calcaire et les débris couvrent le fond", { a: "middle", clair: true });
+        s += txt(240, Math.max(52, haut - 12), p.texte || "le fond est recouvert par une boue calcaire mêlée de débris", { a: "middle", clair: true });
         s += txt(10, 22, `${nombre(Math.min(N, Math.floor(pose)))} lits déposés · ${p.rythme || "≈ 25 m de boue par million d'années"}`, { petit: true, clair: true });
         s += compteur(396, 18, lerp(p.age0 ?? 166, p.age1 ?? 163, t));
         return s;
@@ -1625,7 +1625,7 @@
           const y = topCalc(x);
           if (y < niveau - 2) s += `<g opacity="${op(emerge)}">${rect(x - 0.7, y - 5, 1.4, 5, "#6b4f35")}${ell(x, y - 8, 3.4, 4.4, "#5d8a45")}</g>`;
         }
-        s += txt(240, 34, e < 0.75 ? "le niveau de la mer baisse et le continent se soulève" : "il ne reste que des flaques : le calcaire est à l'air libre", { a: "middle" });
+        s += txt(240, 34, e < 0.75 ? "le niveau de la mer baisse et le continent se soulève" : "seules subsistent des flaques : le calcaire est à l'air libre", { a: "middle" });
         for (const x of [90, 240, 390]) s += fleche(x, H - 12, x, H - 34, { c: "#c0392b", sw: 1.8, pointe: 6, op: 0.45 });
         s += txt(240, H - 40, "soulèvement lent du continent", { a: "middle", petit: true });
         s += compteur(396, 18, lerp(p.age0 ?? 100, p.age1 ?? 40, t));
@@ -1670,7 +1670,7 @@
           s += poly(profil.slice().reverse().concat(haut), "#6b533a");
           s += pline(haut, "#5d8a45", Math.min(3, solEp * 0.5));
           for (let i = 0; i < 9; i++) { const x = 20 + i * 52, y = solY(x) - solEp; s += `<g opacity="${op(fen(t, 0.5, 0.9))}">${rect(x - 0.7, y - 5, 1.4, 5, "#6b4f35")}${ell(x, y - 8, 3.4, 4.4, "#5d8a45")}</g>`; }
-          s += txt(470, 40, "un sol se forme sur le calcaire", { a: "end", petit: true, op: fen(t, 0.45, 0.7) });
+          s += txt(470, 40, "un sol se développe sur le calcaire", { a: "end", petit: true, op: fen(t, 0.45, 0.7) });
         }
         // rivière de surface qui se perd dans le plateau
         const perte = fen(t, 0.25, 0.55);
@@ -1708,8 +1708,8 @@
           }
           s += txt(196, 214, "galerie et rivière souterraine", { a: "middle", op: g });
         }
-        s += txt(160, 46, "l'eau de pluie chargée de CO₂ dissout le calcaire", { a: "middle" });
-        s += txt(240, H - 6, "CaCO₃ + CO₂ + H₂O → Ca²⁺ + 2 HCO₃⁻ : le calcaire part en solution", { a: "middle", petit: true });
+        s += txt(160, 46, "les eaux de pluie chargées de CO₂ dissolvent le calcaire", { a: "middle" });
+        s += txt(240, H - 6, "CaCO₃ + CO₂ + H₂O → Ca²⁺ + 2 HCO₃⁻ : le calcaire passe en solution", { a: "middle", petit: true });
         s += compteur(396, 18, lerp(p.age0 ?? 40, p.age1 ?? 0, t), { libelle: p.libelleAge });
         return s;
       },
@@ -1742,7 +1742,7 @@
           s += rect(0, y, W, EP + 0.5, i % 2 ? C1 : C2, { opacity: op(Math.min(1, k * 2)) });
           if (i % 3 === 0) for (let x = 18; x < W; x += 96) s += line(x, y + EP / 2, x + 22, y + EP / 2, "rgba(255,255,255,.14)", 1);
         }
-        s += txt(240, Math.max(46, haut - 12), p.texte || "argiles et limons décantent en eau calme", { a: "middle", clair: true });
+        s += txt(240, Math.max(46, haut - 12), p.texte || "argiles et limons sédimentent en eau calme", { a: "middle", clair: true });
         s += txt(10, 22, `${nombre(Math.min(N, Math.floor(pose)))} lits déposés · ${p.rythme || "chacun quelques milliers d'années"}`, { petit: true, clair: true });
         s += compteur(396, 18, lerp(p.age0 ?? 540, p.age1 ?? 480, t), { sous: p.sousDepot || "" });
         return s;
@@ -2207,10 +2207,10 @@
         // le magma arrive par un filon au début
         const arr = 1 - fen(t, 0.12, 0.3);
         s += rect(CX - 4, CY + RY - 3, 8, H - CY - RY + 3, melange("#4a3b33", cL0, arr));
-        s += txt(CX, 16, p.lieu || "réservoir à 10–12 km sous la chaîne des Puys", { a: "middle" });
+        s += txt(CX, 16, p.lieu || "Le réservoir se trouve sous la chaîne des Puys, à une profondeur comprise entre 10 et 12 km", { a: "middle" });
         s += txt(CX, CY + RY + 14, `liquide restant : ${nombre(liq(e) * 100)} %`, { a: "middle", petit: true });
         if (e > 0.25) s += txt(CX, Math.min(CY + RY - 5, (yT + CY + RY) / 2 + 3), "cumulats", { a: "middle", petit: true, op: fen(e, 0.25, 0.4) });
-        if (p.assimilation) s += txt(CX, CY - RY - 6, "des morceaux de croûte y tombent et fondent", { a: "middle", petit: true, op: fen(t, 0.15, 0.25) * (1 - fen(t, 0.8, 0.9)) });
+        if (p.assimilation) s += txt(CX, CY - RY - 6, "des fragments de croûte y tombent et fondent", { a: "middle", petit: true, op: fen(t, 0.15, 0.25) * (1 - fen(t, 0.8, 0.9)) });
         // jauges : silice du liquide, température
         const si = lerp(si0, si1, e), T = lerp(T0, T1, e);
         s += rect(389, SI(si), 7, SI(J0) - SI(si) - 1, "rgba(192,57,43,.55)") + poly([[386, SI(si)], [380, SI(si) - 4], [380, SI(si) + 4]], "#c0392b");
@@ -2304,7 +2304,7 @@
             s += poly([[q.x + Math.cos(q.a) * 3.2, q.y + Math.sin(q.a) * 3.2], [q.x - Math.cos(q.a) * 2 - Math.sin(q.a) * 2, q.y - Math.sin(q.a) * 2 + Math.cos(q.a) * 2], [q.x - Math.cos(q.a) * 2 + Math.sin(q.a) * 2, q.y - Math.sin(q.a) * 2 - Math.cos(q.a) * 2]], "#9a6a3a", { opacity: 0.55 * Math.min(1, u * 6, (1 - u) * 6) });
           }
         });
-        s += txt(34, Y(66), "le manteau est entraîné par la plaque", { petit: true, op: 0.9 });
+        s += txt(34, Y(66), "le manteau est entraîné avec la plaque", { petit: true, op: 0.9 });
         // flèche le long du plongement
         const [a0, b0] = dirPlong(-RB * TH - 12);
         s += fleche(a0[0], a0[1], b0[0], b0[1], { c: "#f4f1ea", sw: 2, pointe: 7 });
@@ -2332,7 +2332,7 @@
         s += `<text x="${bx + 7}" y="${by + 12}" class="fa-leg">vers 100 km, le manteau</text><text x="${bx + 7}" y="${by + 22}" class="fa-leg">est à ≈ 1 300 °C <tspan style="fill:#c0392b">▼</tspan></text>`;
         s += rect(X(800), yb - 4, X(860) - X(800), 8, "#3f8fd2") + rect(X(1450), yb - 4, 2.5, 8, "#27302d") + line(X(700), yb, X(1500), yb, "#27302d", 0.8);
         s += poly([[X(1300), yb - 1], [X(1300) - 4, yb - 8], [X(1300) + 4, yb - 8]], "#c0392b");
-        s += `<text x="${bx + 7}" y="${yb + 15}" class="fa-leg"><tspan style="fill:#2f7cc0">■</tspan> avec eau : fond dès 800 °C</text><text x="${bx + 7}" y="${yb + 26}" class="fa-leg">▮ à sec : vers 1 450 °C</text>`;
+        s += `<text x="${bx + 7}" y="${yb + 15}" class="fa-leg"><tspan style="fill:#2f7cc0">■</tspan> en présence d'eau : fusion dès 800 °C</text><text x="${bx + 7}" y="${yb + 26}" class="fa-leg">▮ à sec : vers 1 450 °C</text>`;
         return s;
       },
     };
@@ -2422,7 +2422,7 @@
           if (g > 0.03 && g < 0.97) {
             const xf = XV + fr, yf = lerp(yC(cur - 1, xf), yC(cur, xf), 0.6);
             s += fleche(xf + 16, yf - 12, xf + 3, yf - 2, { sw: 1.1, pointe: 5, op: fen(g, 0.03, 0.12) * (1 - fen(g, 0.9, 0.97)) })
-              + txt(190, 30, cur === 1 ? "1re poussée de lave : elle sort par la bouche et s'étale" : `${cur}e poussée : la lave sort au sommet et recouvre les couches précédentes`, { a: "middle", petit: true, op: fen(g, 0.03, 0.12) * (1 - fen(g, 0.9, 0.97)) });
+              + txt(190, 30, cur === 1 ? "1re poussée de lave : elle sort par la bouche et s'étale" : `${cur}e poussée : au sommet, la lave jaillit et couvre les strates antérieures`, { a: "middle", petit: true, op: fen(g, 0.03, 0.12) * (1 - fen(g, 0.9, 0.97)) });
           }
         }
         const P0 = profilDome(XV, SOL, h, w);
@@ -2467,7 +2467,7 @@
           }
         }
         // étiquettes
-        s += txt(190, 14, p.texte || "trop visqueuse pour couler, la lave s'empile", { a: "middle", op: 1 - fen(t, 0.5, 0.6) });
+        s += txt(190, 14, p.texte || "trop visqueuse pour s'écouler, la lave s'accumule", { a: "middle", op: 1 - fen(t, 0.5, 0.6) });
         s += txt(XV, SOL - h - (p.aiguille ? p.aiguille + 12 : 10), p.nomDome || `dôme de ${p.nom || "trachyte"}`, { a: "middle", op: fen(e, 0.2, 0.35) });
         s += txt(XV + w + 10, SOL - 12, "éboulis", { petit: true, op: fen(t, 0.45, 0.55) * (p.cones ? 1 - fen(t, 0.7, 0.8) : 1) });
         s += txt(XV + 8, H - 8, `conduit : magma à ${p.laveT || "≈ 800 °C"}`, { petit: true });
@@ -2577,7 +2577,7 @@
         const T = lerp(p.tDebut ?? 800, 40, e);
         s += thermometre(310, 64, 92, T, 0, 1000, [200, 500, 800]);
         s += txt(310, 54, `${nombre(T)} °C`, { a: "middle", petit: true });
-        s += txt(XV, SOL + 18, p.debit === "dalles" ? "en refroidissant, la lave se débite en dalles" : "des prismes poussent de la surface vers le cœur", { a: "middle", petit: true });
+        s += txt(XV, SOL + 18, p.debit === "dalles" ? "en refroidissant, la lave se débite en dalles" : "les prismes gagnent progressivement le cœur en partant de la surface", { a: "middle", petit: true });
         s += compteur(160, 14, 0, { libelle: t > 0.88 ? "aujourd'hui" : (p.libelleAge || "il y a ≈ 11 000 ans") });
         return s;
       },
@@ -2664,7 +2664,7 @@
           const top = prof(lo, XC);
           if (gi < 0.35) s += ell(XC, top - 2, 3.5, 4 + 3 * Math.sin(ta * 9) ** 2, "#f7b04a", { opacity: 0.85 });
           if (cur % 3 === 2 && gi < 0.5) for (let k = 0; k < 6; k++) { const u = (ta * 0.4 + k / 6) % 1; s += circ(XC + Math.sin(u * 4 + k) * 8, top - 8 - u * 60, 5 + u * 12, "#8b8580", { opacity: op(0.45 * (1 - u) * (1 - gi * 2)) }); }
-          s += txt(XC, 30, `coulée n° ${cur} : elle sort du cratère et recouvre le volcan d'un nouveau lit`, { a: "middle", petit: true, op: fen(gi, 0, 0.1) * (1 - fen(gi, 0.92, 1)) });
+          s += txt(XC, 30, `coulée n° ${cur} : elle jaillit du cratère et recouvre l'édifice d'une nouvelle couche`, { a: "middle", petit: true, op: fen(gi, 0, 0.1) * (1 - fen(gi, 0.92, 1)) });
         }
         s += pline(S, er > 0.5 ? "#6f9d4f" : "#5a4e45", 1.3);
         // ── effondrement ──
@@ -2729,14 +2729,14 @@
             + txt(XC + RM * 0.55, BASE - HM * 0.5, "12 coulées = 12 lits", { petit: true, op: c });
         }
         if (T > 0.34 && T <= 0.67) {
-          s += txt(XC + 40, 30, "trop haut et trop raide, le flanc se fissure…", { a: "middle", petit: true, op: fen(f, 0.02, 0.08) * (1 - fen(f, 0.16, 0.2)) });
-          s += txt(XC + 40, 30, "… glisse, se brise et dévale en avalanche de débris", { a: "middle", petit: true, op: fen(f, 0.21, 0.27) * (1 - fen(f, 0.6, 0.66)) });
+          s += txt(XC + 40, 30, "le flanc, trop élevé et trop abrupt, se fracture…", { a: "middle", petit: true, op: fen(f, 0.02, 0.08) * (1 - fen(f, 0.16, 0.2)) });
+          s += txt(XC + 40, 30, "… glisse, se fragmente et dévale sous forme d'avalanche de débris", { a: "middle", petit: true, op: fen(f, 0.21, 0.27) * (1 - fen(f, 0.6, 0.66)) });
           s += txt(W - 8, BASE - 26, "avalanche de débris : des buttes", { a: "end", petit: true, op: fen(f, 0.7, 0.8) });
-          s += fleche(W - 60, BASE + 14, W - 8, BASE + 14, { sw: 1.4, pointe: 6, op: fen(f, 0.75, 0.85) }) + txt(W - 64, BASE + 17, "et plus loin encore : des dizaines de km", { a: "end", petit: true, op: fen(f, 0.75, 0.85) });
+          s += fleche(W - 60, BASE + 14, W - 8, BASE + 14, { sw: 1.4, pointe: 6, op: fen(f, 0.75, 0.85) }) + txt(W - 64, BASE + 17, "jusqu'à des dizaines de kilomètres au-delà", { a: "end", petit: true, op: fen(f, 0.75, 0.85) });
           s += txt(XS - 6, BASE - HS - 6, "cicatrice en fer à cheval", { a: "end", petit: true, op: fen(f, 0.62, 0.72) });
         }
         if (T > 0.67) {
-          s += txt(XC, 14, "rivières puis glaciers creusent des vallées en étoile", { a: "middle", op: fen(T, 0.72, 0.78) * (1 - fen(T, 0.92, 0.96)) });
+          s += txt(XC, 14, "rivières puis glaciers creusent des vallées rayonnantes", { a: "middle", op: fen(T, 0.72, 0.78) * (1 - fen(T, 0.92, 0.96)) });
           s += txt(XC - 80, surf(XC - 80) - 16, "vallée", { a: "middle", petit: true, op: fen(T, 0.85, 0.92) });
           let im = 0; S.forEach(([x, y], i) => { if (x > 40 && x < 360 && y < S[im][1]) im = i; });
           s += txt(S[im][0], S[im][1] - 14, p.creteNom || "crête (puy Mary)", { a: "middle", petit: true, op: fen(T, 0.9, 0.97) });
@@ -2795,8 +2795,8 @@
         const v = fen(t, 0.86, 0.97);
         if (v > 0) s += vegetation(surf, 4, W - 4, alea("dcv" + p.graine), { op: v, pas: 21 });
         // textes
-        s += txt(240, 14, t < 0.3 ? "d'autres couches recouvrent la coulée, lit par lit" : t < 0.7 ? "l'érosion enlève d'abord les roches tendres" : "la coulée, dure, protège les grès dessous : elle reste en table", { a: "middle" });
-        if (t < 0.3) s += txt(CO.XA + 6, CO.G0 + 16, "la coulée (même coupe qu'avant), sur les grès", { petit: true, clair: true, op: 1 - fen(t, 0.2, 0.3) });
+        s += txt(240, 14, t < 0.3 ? "d'autres couches recouvrent la coulée, lit par lit" : t < 0.7 ? "l'érosion élimine d'abord les roches tendres" : "la coulée, dure, protège les grès sous-jacents : elle subsiste en table", { a: "middle" });
+        if (t < 0.3) s += txt(CO.XA + 6, CO.G0 + 16, "la coulée (même coupe que précédemment), reposant sur les grès", { petit: true, clair: true, op: 1 - fen(t, 0.2, 0.3) });
         if (b > 0.3 && e < 0.5) s += txt(12, Math.min(CO.G0 - 4, Ls + 16), C[0][1], { petit: true, clair: true, op: fen(b, 0.3, 0.5) });
         if (e > 0.5) s += txt(240, coTop(240) - 10, p.nom || "la coulée reste en relief", { a: "middle", op: fen(t, 0.6, 0.7) });
         const age = t < 0.3 ? lerp(A[0], A1, t / 0.3) : lerp(A1, A[1], (t - 0.3) / 0.7);
@@ -2847,7 +2847,7 @@
         s += `<g opacity="${op(pl)}">${pluie(250 + 1.6 * ta, 30, 50, 60, ta, 10, "dd1") + pluie(360 + 1.2 * ta, 26, 46, 70, ta, 10, "dd2")}${nuage(270 + 1.6 * ta, 22, 0.9) + nuage(380 + 1.2 * ta, 18, 0.8)}</g>`;
         const v = fen(t, 0.85, 0.97);
         if (v > 0) s += vegetation(surf, 4, W - 4, alea("ddv" + p.graine), { op: v, pas: 20, pente: 0.9 });
-        s += txt(250, 14, e < 0.55 ? (p.texte || "l'érosion enlève d'abord les roches tendres autour") : (p.texteFin || "plus dur, le dôme reste en relief"), { a: "middle" });
+        s += txt(250, 14, e < 0.55 ? (p.texte || "l'érosion élimine d'abord les roches tendres environnantes") : (p.texteFin || "plus résistant, le dôme demeure en relief"), { a: "middle" });
         if (e < 0.4) s += txt(300, SOL + 20, C[0][1], { petit: true, clair: true, op: 1 - fen(e, 0.3, 0.4) });
         if (t < 0.2) s += txt(XV + WM * 0.6 + 6, SOL - HM * 0.55, "le dôme de l'étape précédente", { petit: true, op: 1 - fen(t, 0.12, 0.2) });
         if (e > 0.3) s += txt(XV + LN + 4, Math.min(H - 8, Ls + 30), "son conduit, figé", { petit: true, clair: true, op: fen(e, 0.3, 0.45) });
@@ -2911,9 +2911,9 @@
         const v = fen(t, 0.85, 0.97);
         if (v > 0) for (const x of arbres) { const y = hauteur(surf, x); s += `<g opacity="${op(v)}">${rect(x - 0.7, y - 5, 1.4, 5, "#6b4f35")}${ell(x, y - 8, 3.2, 4.2, "#4f7d3c")}</g>`; }
         let im = 0; surf.forEach((q, i) => { if (q[1] < surf[im][1]) im = i; });
-        s += txt(clamp(surf[im][0], 60, 420), surf[im][1] - 14, p.nom || "la roche dure reste en relief", { a: "middle", op: fen(t, 0.5, 0.65) });
+        s += txt(clamp(surf[im][0], 60, 420), surf[im][1] - 14, p.nom || "la roche résistante demeure en relief", { a: "middle", op: fen(t, 0.5, 0.65) });
         if (couches[0][1]) s += txt(12, Math.min(H - 8, Math.max(Lv + 16, S0 + 16)), couches[Math.min(couches.length - 1, Math.floor((Lv - S0 + 16) / 42))][1] || "", { petit: true, clair: true });
-        s += txt(200, 14, e < 0.6 ? (p.texte || "l'érosion enlève d'abord les roches tendres") : (p.texteFin || "la roche dure reste en relief"), { a: "middle" });
+        s += txt(200, 14, e < 0.6 ? (p.texte || "l'érosion élimine d'abord les roches tendres") : (p.texteFin || "la roche résistante demeure en relief"), { a: "middle" });
         const age = p.ages ? lerp(p.ages[0], p.ages[1], t) : 0;
         s += compteur(412, 14, age, { libelle: t > 0.95 && p.libelleFin ? p.libelleFin : undefined });
         return s;
@@ -3018,7 +3018,7 @@
         else s += txt(W - 8, Y(fond(W)) - 5, "basaltes en coussins", { a: "end", petit: true, clair: true }) + txt(W - 8, Y(fond(W) + 1.7) + 3, "filons", { a: "end", petit: true, clair: true })
           + txt(W - 8, Y(fond(W) + 4.5) + 3, "gabbros", { a: "end", petit: true, clair: true }) + txt(W - 8, Y(fond(W) + 14) + 3, "manteau", { a: "end", petit: true });
         s += txt(XA, Y(fond(XA) + (lente ? 16 : 11)), p.texte || (lente ? "le manteau remonte presque jusqu'au fond de l'océan" : "le manteau remonte et fond"), { a: "middle", petit: true });
-        s += fleche(XA - 30, 12, XA - 70, 12, { sw: 2, pointe: 7 }) + fleche(XA + 30, 12, XA + 70, 12, { sw: 2, pointe: 7 }) + txt(XA + 76, 15, p.vitesse || (lente ? "≈ 1 cm par an de chaque côté" : "≈ 2 cm par an de chaque côté"), { petit: true });
+        s += fleche(XA - 30, 12, XA - 70, 12, { sw: 2, pointe: 7 }) + fleche(XA + 30, 12, XA + 70, 12, { sw: 2, pointe: 7 }) + txt(XA + 76, 15, p.vitesse || (lente ? "≈ 1 cm par an de part et d'autre" : "≈ 2 cm par an de part et d'autre"), { petit: true });
         s += line(6, Y(0), 6, Y(30), "#27302d", 1); for (const z of [10, 20, 30]) s += line(3, Y(z), 6, Y(z), "#27302d", 1) + txt(9, Y(z) + 3, `${z} km`, { petit: true });
         s += compteur(70, 12, p.ages ? lerp(p.ages[0], p.ages[1], t) : 0, { libelle: p.libelleAge });
         return s;
@@ -3114,9 +3114,9 @@
         for (const sg of [-1, 1]) d += fleche(412 + sg * 9, pointe + 26, 412 + sg * 19, pointe + 26, { sw: 1.1, pointe: 4, c: "#27302d" });
         s += L.dans(d) + L.bord;
         s += txt(412, 152, "au bout du filon :", { a: "middle", petit: true }) + txt(412, 163, "le magma écarte la fissure", { a: "middle", petit: true });
-        s += txt(170, 14, p.texte || (G.forme === "sill" ? "le magma monte par une fissure, puis s'étale entre deux couches (sill)" : G.forme === "reseau" ? "le dernier liquide s'engouffre dans les fissures du massif" : "le magma suit et écarte des fissures de la roche (dyke)"), { a: "middle", op: 1 - fen(t, 0.9, 0.97) });
+        s += txt(170, 14, p.texte || (G.forme === "sill" ? "le magma monte par une fissure, puis s'étale entre deux couches (sill)" : G.forme === "reseau" ? "le dernier liquide s'engouffre dans les fissures du massif" : "le magma s'insinue dans les fractures de la roche en les écartant (dyke)"), { a: "middle", op: 1 - fen(t, 0.9, 0.97) });
         s += txt(W - 8, H - 8, (G.enc === "granite" ? "granite encaissant" : G.enc === "socle" ? "socle" : "schistes encaissants") + " · fissures en traits fins", { a: "end", petit: true });
-        s += txt(G.forme === "reseau" ? 200 : G.XC + 14, G.forme === "reseau" ? H - 22 : Math.min(H - 22, G.Y((G.z[0] + G.z[1]) / 2)), p.largeur ? `${p.largeur} (dessiné plus large)` : "filons dessinés plus larges qu'en vrai", { petit: true, op: fen(t, 0.6, 0.75) });
+        s += txt(G.forme === "reseau" ? 200 : G.XC + 14, G.forme === "reseau" ? H - 22 : Math.min(H - 22, G.Y((G.z[0] + G.z[1]) / 2)), p.largeur ? `${p.largeur} (dessiné plus large)` : "filons représentés plus épais qu'en réalité", { petit: true, op: fen(t, 0.6, 0.75) });
         s += compteur(412, 14, p.ages ? lerp(p.ages[0], p.ages[1], t) : 0, { libelle: p.libelleAge });
         return s;
       },
@@ -3236,7 +3236,7 @@
           s += `<g opacity="${op(lp)}">${L.fond}${L.dans(d)}${L.bord}</g>` + txt(400, 138, G.forme === "sill" ? "plus dur, le sill forme" : "plus dur, le filon forme", { a: "middle", petit: true, op: lp })
             + txt(400, 149, G.forme === "sill" ? "une corniche de quelques mètres" : "une muraille de quelques mètres", { a: "middle", petit: true, op: lp });
         }
-        s += txt(250, 14, e < 0.7 ? (p.texte || "l'érosion enlève des kilomètres de roches") : (p.texteFin || "les filons affleurent"), { a: "middle" });
+        s += txt(250, 14, e < 0.7 ? (p.texte || "l'érosion retire des kilomètres de roches") : (p.texteFin || "les filons affleurent"), { a: "middle" });
         s += compteur(404, 226, p.ages ? lerp(p.ages[0], p.ages[1], t) : 0);
         return s;
       },
@@ -3271,16 +3271,16 @@
           for (let x = XV + 20; x <= W; x += 4) dep.push([x, Math.min(relief(x), SOL - 4 - ep + (x - XV) * 0.012)]);
           if (ep > 0.5) s += poly(dep.concat(dep.slice().reverse().map(([x]) => [x, relief(x)])), "#d9ccb5", { stroke: "#b8a98f", "stroke-width": 0.8 });
           s += txt(300, SOL - 30 - ep, "dépôt de nuées ardentes : l'ignimbrite", { a: "middle", petit: true, op: fen(t, 0.8, 0.9) });
-          s += txt(190, 14, t < 0.35 ? "colonne plinienne : cendres et ponces montent à des dizaines de km" : "trop lourde, la colonne s'effondre : les nuées dévalent", { a: "middle" });
+          s += txt(190, 14, t < 0.35 ? "colonne plinienne : cendres et ponces montent à des dizaines de km" : "la colonne, trop lourde, s'effondre et les nuées dévalent les pentes", { a: "middle" });
         } else {
           // retombées : cendres qui tombent sous le vent, couche de moins en moins épaisse en s'éloignant
           for (const c of cendres) { const u = (c.ph + ta * 0.25) % 1; if (c.x < 160 + 330 * fen(t, 0.1, 0.9)) s += circ(c.x + u * 8, lerp(40, relief(c.x), u), 0.9, "#6e6a66", { opacity: op(Math.sin(u * Math.PI) * 0.8) }); }
           const ep = fen(t, 0.2, 0.95), dep = [];
           for (let x = XV + 30; x <= W; x += 4) dep.push([x, relief(x) - ep * 12 * Math.exp(-(x - XV - 30) / 180)]);
           s += poly(dep.concat(dep.slice().reverse().map(([x]) => [x, relief(x)])), "#cfc4b0");
-          s += txt(190, 14, "les gaz se détendent : le magma est pulvérisé en cendres", { a: "middle" });
+          s += txt(190, 14, "les gaz se détendent : le magma se fragmente en cendres", { a: "middle" });
           s += fleche(300, 52, 360, 52, { sw: 2, pointe: 7 }) + txt(366, 55, "vent", { petit: true });
-          s += txt(330, relief(330) + 16, "couche de cendres, plus mince loin du volcan", { a: "middle", petit: true, clair: true, op: fen(t, 0.6, 0.7) });
+          s += txt(330, relief(330) + 16, "couche de cendres, d'épaisseur décroissante à mesure que l'on s'éloigne du volcan", { a: "middle", petit: true, clair: true, op: fen(t, 0.6, 0.7) });
         }
         s += txt(XV + 36, 60, p.hauteurColonne || "", { petit: true, op: col });
         s += compteur(412, 14, p.ages ? lerp(p.ages[0], p.ages[1], t) : 0, { libelle: p.libelleAge });
@@ -3315,7 +3315,7 @@
     const bulles = Array.from({ length: 9 }, () => ({ ph: R(), dx: (R() - 0.5) * 3 }));
     let fond = ciel(SOL) + `<defs>${grad}</defs>` + rect(0, SOL, W, H - SOL, "#8a7d68");
     for (let y = SOL + 9; y < H; y += 10) fond += line(0, y, W, y + 1.5, "rgba(50,40,30,.18)", 1);
-    fond += line(0, SOL, W, SOL, "#6d8a4a", 2) + txt(8, H - 8, "sol et vieilles coulées, en coupe", { petit: true, clair: true });
+    fond += line(0, SOL, W, SOL, "#6d8a4a", 2) + txt(8, H - 8, "sol et anciennes coulées, en coupe", { petit: true, clair: true });
     return {
       fond,
       anim(t, ta) {
@@ -3347,11 +3347,11 @@
           // fontaines : lambeaux projetés, orange à la sortie, rouges puis noirs en retombant
           for (const b of bombes) { const u = (b.ph + ta * 0.45) % 1, x = XC + b.vx * u * 40, y = topC - 4 - Math.sin(u * Math.PI) * b.h * (0.6 + 0.4 * act); if (y < prof(h, x)) s += circ(x, y, b.r, u < 0.4 ? MAGMA_CLAIR : u < 0.7 ? "#b5401f" : "#3b302b", { opacity: op(act) }); }
           s += ell(XC, topC, 6, 2.5, MAGMA_CLAIR, { opacity: op(act) });
-          s += txt(200, 16, "les bulles de gaz éclatent : des lambeaux de lave sont projetés", { a: "middle", op: act });
-          s += txt(XC + 12, SOL + 30, "le conduit (le filon de l'étape 2)", { petit: true, clair: true });
-          s += txt(XC + hL(Math.max(1, n)) / K * 0.55 + 8, SOL - hL(Math.max(1, n)) * 0.42, `lit n° ${Math.min(N, done + 1)} : les scories retombent et s'empilent`, { petit: true, op: fen(T, 0.06, 0.1) * act });
-          s += txt(12, 52, "scories rouges près de la bouche (fer oxydé à chaud),", { petit: true, op: fen(T, 0.3, 0.36) })
-            + txt(12, 63, "noires plus loin (refroidies en vol)", { petit: true, op: fen(T, 0.3, 0.36) });
+          s += txt(200, 16, "l'éclatement des bulles de gaz projette des lambeaux de lave", { a: "middle", op: act });
+          s += txt(XC + 12, SOL + 30, "le conduit, c'est-à-dire le filon de l'étape 2", { petit: true, clair: true });
+          s += txt(XC + hL(Math.max(1, n)) / K * 0.55 + 8, SOL - hL(Math.max(1, n)) * 0.42, `lit n° ${Math.min(N, done + 1)} : les scories retombent et s'accumulent`, { petit: true, op: fen(T, 0.06, 0.1) * act });
+          s += txt(12, 52, "près de l'évent, des scories rouges sont oxydées à chaud,", { petit: true, op: fen(T, 0.3, 0.36) })
+            + txt(12, 63, "noires plus loin, refroidies en vol", { petit: true, op: fen(T, 0.3, 0.36) });
         } else {
           // le temps passe : végétation ; puis une carrière entaille le flanc droit, en gradins
           const v = fen(T, 0.52, 0.66);
@@ -3359,9 +3359,9 @@
           if (q > 0) {
             s += rect(XC + HM / K + 22, SOL - 7, 12, 5, "#e2a93b", { rx: 1 }) + circ(XC + HM / K + 25, SOL - 1.5, 1.6, "#27302d") + circ(XC + HM / K + 32, SOL - 1.5, 1.6, "#27302d");
             s += txt(W - 8, 60, "carrière : la pouzzolane est exploitée,", { a: "end", petit: true, op: fen(T, 0.72, 0.78) })
-              + txt(W - 8, 71, "la coupe montre les lits et le cœur rouge", { a: "end", petit: true, op: fen(T, 0.72, 0.78) });
+              + txt(W - 8, 71, "la coupe met en évidence les lits et le cœur rouge", { a: "end", petit: true, op: fen(T, 0.72, 0.78) });
           }
-          s += txt(200, 16, T < 0.66 ? "l'éruption finie, le cône se couvre de végétation" : "une carrière entaille le cône et montre sa coupe", { a: "middle" });
+          s += txt(200, 16, T < 0.66 ? "l'éruption finie, le cône se couvre de végétation" : "une carrière entaille le cône et en dévoile la coupe", { a: "middle" });
           s += txt(XC - HM / K * 0.62, SOL - 20, "lits de scories inclinés", { a: "end", petit: true, clair: true, op: fen(T, 0.8, 0.9) });
         }
         s += compteur(412, 14, 0, { libelle: p.libelleAge || "" });
@@ -3511,7 +3511,7 @@
           d += rect(CX - RA, CY - RA, 2 * RA, 2 * RA, "#a8865c", { opacity: op(e * 0.38) });
           for (const z of zeo) { const k = fen(t, 0.3 + z.ph, 0.6 + z.ph); if (k > 0.02) d += `<rect x="${r1(z.x - z.r * k)}" y="${r1(z.y - z.r * k * 0.5)}" width="${r1(2 * z.r * k)}" height="${r1(z.r * k)}" fill="#ffffff" stroke="#9c9486" stroke-width=".5" transform="rotate(${r1(z.a)} ${r1(z.x)} ${r1(z.y)})"/>`; }
         }
-        let s = L.dans(d) + L.bord + txt(CX, CY + RA + 12, "même vue que le schéma de texture de la fiche", { a: "middle", petit: true });
+        let s = L.dans(d) + L.bord + txt(CX, CY + RA + 12, "vue identique au schéma de texture de la fiche", { a: "middle", petit: true });
         (p.lignes || []).forEach((l, i) => { s += txt(250, 40 + i * 12, l, { petit: true }); });
         s += legendeListe(lignes, 250, 110, 12);
         if (p.jauge) {
@@ -3541,7 +3541,7 @@
     vite.push([X(15), Y(0)]);
     const lent = courbe([[X(1300), Y(200)], [X(1280), Y(140)], [X(1230), Y(100)], [X(1180), Y(78)]], 8);
     let fond = rect(0, 0, W, H, "#f3f1ea") + (res ? texDefs(res, gid) : "") + L.fond + L.dans(res ? `<use href="#${gid}" transform="translate(${CX} ${CY}) scale(${Math.round(2 * RA / 252 * 1.02 * 1000) / 1000}) translate(-210 -126)"/>` : "") + L.bord;
-    fond += txt(CX, 22, "la kimberlite aujourd'hui, sciée", { a: "middle", petit: true }) + txt(CX, 33, "(même vue que le schéma de texture)", { a: "middle", petit: true });
+    fond += txt(CX, 22, "la kimberlite aujourd'hui, sciée", { a: "middle", petit: true }) + txt(CX, 33, "(vue identique au schéma de texture)", { a: "middle", petit: true });
     if (res) fond += legendeListe(lignesFiche(res), 176, 58);
     fond += txt(176, 118, "diamants : moins d'un gramme", { petit: true }) + txt(176, 129, "par tonne, invisibles ici", { petit: true });
     fond += txt(176, 152, "« Big Hole » de Kimberley :", { petit: true }) + txt(176, 163, "la cheminée, creusée", { petit: true }) + txt(176, 174, "à la main de 1871 à 1914", { petit: true });
@@ -3562,7 +3562,7 @@
         s += poly([[q.x, q.y - 5], [q.x + 4, q.y], [q.x, q.y + 5], [q.x - 4, q.y]], "#e9f4fb", { stroke: "#2b6ea3", "stroke-width": 1 });
         s += txt(X(1300) - 6, Y(200) + 4, "naissance", { a: "end", petit: true });
         if (u > 0.45) s += txt(X(600), Y(40), "remontée en quelques heures :", { a: "middle", petit: true, op: fen(t, 0.3, 0.36) })
-          + txt(X(600), Y(40) + 11, "pas le temps de se transformer", { a: "middle", petit: true, op: fen(t, 0.3, 0.36) });
+          + txt(X(600), Y(40) + 11, "trop peu de temps pour se transformer", { a: "middle", petit: true, op: fen(t, 0.3, 0.36) });
         const v = fen(t, 0.62, 0.85);
         if (v > 0) {
           const ql = lePlong(lent, v);
@@ -3586,7 +3586,7 @@
     const ponces = Array.from({ length: 34 }, () => ({ x: XL + 6 + R() * (XR - XL - 12), f: 0.12 + R() * 0.8, r: 2 + R() * 3 }));
     const cristaux = Array.from({ length: 40 }, () => ({ x: XL + 4 + R() * (XR - XL - 8), f: R(), r: 0.8 + R() * 0.8 }));
     const fond = rect(0, 0, W, H, "#f3f1ea") + (res ? texDefs(res, gid) : "") + rect(XL - 6, BAS, XR - XL + 12, H - BAS, "#8c7a64")
-      + txt(XL, H - 10, "ancien sol, cuit par le dépôt", { petit: true, clair: true }) + txt(XL, 18, "le dépôt de nuées ardentes, en coupe");
+      + txt(XL, H - 10, "ancien sol, chauffé par le dépôt", { petit: true, clair: true }) + txt(XL, 18, "le dépôt des nuées ardentes, en coupe");
     return {
       fond,
       anim(t) {
@@ -3610,12 +3610,12 @@
         s += txt(XR + 6, zone(0.47), "cœur soudé :", { petit: true, op: fen(t, 0.2, 0.3) }) + txt(XR + 6, zone(0.47) + 11, "ponces écrasées", { petit: true, op: fen(t, 0.2, 0.3) })
           + txt(XR + 6, zone(0.47) + 22, "en flammèches", { petit: true, op: fen(t, 0.2, 0.3) });
         s += txt(XR + 6, zone(0.06) + 3, "base : meuble", { petit: true });
-        s += line(XL - 8, BAS, XL - 8, top, "#27302d", 1) + txt(XL - 4, top - 5, soude < 0.2 ? "épaisseur au dépôt" : "le dépôt se tasse d'un tiers", { petit: true });
+        s += line(XL - 8, BAS, XL - 8, top, "#27302d", 1) + txt(XL - 4, top - 5, soude < 0.2 ? "épaisseur au dépôt" : "le dépôt se compacte d'un tiers", { petit: true });
         if (prisme > 0.3) s += txt((XL + XR) / 2, zone(0.47) + 3, "prismes de refroidissement", { a: "middle", petit: true, clair: true, op: fen(t, 0.7, 0.8) });
         // loupe : texture de la fiche, écrasée peu à peu
         const sy = lerp(2.3, 1, soude);
         s += L.fond + L.dans(res ? `<use href="#${gid}" transform="translate(${CX} ${CY}) scale(${Math.round(2 * RA / 252 * 1.02 * 1000) / 1000} ${Math.round(2 * RA / 252 * 1.02 * sy * 1000) / 1000}) translate(-210 -126)"/>` : "") + L.bord;
-        s += txt(CX, CY + RA + 14, "le cœur soudé, scié et poli", { a: "middle", petit: true }) + txt(CX, CY + RA + 25, "(même vue que la texture)", { a: "middle", petit: true });
+        s += txt(CX, CY + RA + 14, "le cœur soudé, débité puis poli", { a: "middle", petit: true }) + txt(CX, CY + RA + 25, "(même vue que la texture)", { a: "middle", petit: true });
         if (res) s += legendeListe([["#3a332e", "ponces écrasées : fiammes"], ["#e9e4da", "fragments de cristaux"], ["#cdb7a3", "échardes et cendre"]], CX - 60, CY + RA + 42, 11);
         s += thermometre(150, 30, 44, T, 0, 800, [600]) + txt(136, 50, `${nombre(T)} °C`, { a: "end", petit: true });
         s += txt(196, 38, "au-dessus de 600 °C,", { petit: true }) + txt(196, 49, "le verre est mou", { petit: true });
@@ -3673,7 +3673,7 @@
           for (const c of chute) { const u = (c.ph + ta * 0.3) % 1; if (c.x < XV + 50 + 150 * fen(t, 0.05, 0.3)) s += circ(c.x, lerp(38, relief(c.x) - 1, u), 0.9, "#f1ece1", { opacity: op(pl * Math.sin(u * Math.PI)) }); }
           const lb = pl * (1 - fen(t, 0.26, 0.3));
           s += txt(XV + 24, 70, "colonne plinienne", { petit: true, op: lb }) + txt(XV + 24, 81, p.hauteurColonne ? `(${p.hauteurColonne})` : "", { petit: true, op: lb });
-          s += txt(XV + 150, 60, "nuage en parapluie : les ponces retombent", { petit: true, op: lb });
+          s += txt(XV + 150, 60, "nuage en forme de parapluie : les ponces retombent", { petit: true, op: lb });
         }
         // effondrement de la colonne : fontaine qui retombe autour de la bouche
         if (eff > 0) for (const f of fontaine) {
@@ -3696,9 +3696,9 @@
           s += txt(Math.min(front - 10, 430), NIV - 34, "nuées ardentes", { a: "end", petit: true, op: fen(t, 0.4, 0.46) * vis });
           s += txt(Math.min(front - 10, 430), NIV - 23, "(plus de 100 km/h, 600 à 800 °C)", { a: "end", petit: true, op: fen(t, 0.4, 0.46) * vis });
         }
-        if (cald > 0.3) s += txt(XV, 232, "la chambre se vide : le sommet s'effondre", { a: "middle", petit: true, clair: true, op: fen(t, 0.62, 0.7) });
+        if (cald > 0.3) s += txt(XV, 232, "la chambre magmatique se vide : le sommet s'effondre", { a: "middle", petit: true, clair: true, op: fen(t, 0.62, 0.7) });
         s += txt(330, 150, "l'ignimbrite comble les vallées", { a: "middle", petit: true, op: fen(t, 0.86, 0.94) });
-        s += txt(240, 14, t < 0.32 ? "l'éruption explose : cendres et ponces montent en colonne" : t < 0.45 ? "trop lourde, la colonne s'effondre en fontaine" : "les nuées ardentes dévalent et comblent le relief", { a: "middle" });
+        s += txt(240, 14, t < 0.32 ? "l'éruption explose : cendres et ponces montent en colonne" : t < 0.45 ? "trop lourde, la colonne s'effondre en fontaine" : "les nuées ardentes déferlent sur les pentes et remplissent le relief", { a: "middle" });
         s += compteur(412, 42, p.ages ? lerp(p.ages[0], p.ages[1], t) : 0, { libelle: p.libelleAge });
         return s;
       },
@@ -3744,7 +3744,7 @@
         s += `<g opacity="${op(p.climat === "sec" ? 0.7 * (0.5 + 0.5 * Math.sin(ta * 0.8)) : 0.9)}">${nuage(80 + 1.2 * ta, 28, 0.9) + pluie(56 + 1.2 * ta, 36, 56, 70, ta, 12, "tc1")}</g>`;
         if (p.soulevement) for (const x of [40, 110]) s += fleche(x, H - 8, x, H - 28, { c: "#c0392b", sw: 2, pointe: 7, op: 0.7 });
         s += txt(20, SOL + 20, p.labRelief || "relief qui se soulève", { petit: true, clair: true });
-        s += txt(250, 62, T < 0.5 ? "les orages arrachent des blocs ; le torrent roule galets et graviers" : "au pied du relief, ils s'étalent en cône de déjection", { a: "middle" });
+        s += txt(250, 62, T < 0.5 ? "les orages arrachent des blocs ; le torrent roule galets et graviers" : "au pied du relief, ils forment un cône de déjection", { a: "middle" });
         s += txt(W - 8, SOL - 8, "cône", { a: "end", petit: true, op: co });
         s += compteur(404, 14, p.ages ? lerp(p.ages[0], p.ages[1], T) : 0, { libelle: p.libelleAge });
         return s;
@@ -3788,10 +3788,10 @@
         if (T < 0.5 && T > 0.36) {
           const L = loupe(400, 110, 44, { fond: "#8f7c62" });
           let d = ""; for (let k = 0; k < 70; k++) { const yy = 70 + (k % 10) * 8, rr = lerp(3.4, 0.8, (k % 10) / 9); d += circ(362 + Math.floor(k / 10) * 12 + (k % 3), 150 - (k % 10) * 8, rr, "#efe6d2"); }
-          s += `<g opacity="${op(fen(T, 0.36, 0.42))}">` + L.fond + L.dans(d) + L.bord + txt(400, 166, "grossier en bas, fin en haut :", { a: "middle", petit: true }) + txt(400, 177, "un banc granoclassé", { a: "middle", petit: true }) + `</g>`;
+          s += `<g opacity="${op(fen(T, 0.36, 0.42))}">` + L.fond + L.dans(d) + L.bord + txt(400, 166, "grossier à la base, fin au sommet :", { a: "middle", petit: true }) + txt(400, 177, "un banc granoclassé", { a: "middle", petit: true }) + `</g>`;
         }
         if (T >= 0.5) s += txt(W - 8, y - 8, `${nombre(nb)} bancs : grès et pélites alternent`, { a: "end", petit: true, clair: true });
-        s += txt(200, 16, T < 0.5 ? "le sable s'accumule au rebord du plateau, puis dévale la pente" : "chaque avalanche dépose un banc ; la boue retombe entre deux", { a: "middle", clair: true });
+        s += txt(200, 16, T < 0.5 ? "le sable s'accumule au rebord du plateau, puis dévale la pente" : "chaque avalanche forme un banc, puis la boue retombe dans l'intervalle", { a: "middle", clair: true });
         s += compteur(412, 14, p.ages ? lerp(p.ages[0], p.ages[1], T) : 0, { libelle: p.libelleAge });
         return s;
       },
@@ -3827,8 +3827,8 @@
         for (let k = 0; k < 10; k++) { const u = (k / 10 + ta * 0.25) % 1; s += circ(lerp(XC - 30, XC + 180, u), lerp(60, SOL - 1, Math.min(1, u * 1.6)), 1.4, "#6d9fc4"); }
         s += `<g opacity=".8">${nuage(60 + ta, 18, 0.8) + pluie(40 + ta, 26, 44, 30, ta, 8, "ap1")}</g>`;
         s += txt(40, 22, p.nomChaine || "la chaîne", { petit: true });
-        s += txt(XC + 140, SOL + 50, "la plaque fléchit sous le poids de la chaîne", { a: "middle", petit: true, clair: true });
-        s += txt(XC + 150, SOL - 8, "le creux se remplit : la molasse", { a: "middle", petit: true, op: fen(t, 0.3, 0.45) });
+        s += txt(XC + 140, SOL + 50, "sous le poids de la chaîne, la plaque se courbe", { a: "middle", petit: true, clair: true });
+        s += txt(XC + 150, SOL - 8, "le bassin se comble : la molasse", { a: "middle", petit: true, op: fen(t, 0.3, 0.45) });
         s += compteur(412, 14, p.ages ? lerp(p.ages[0], p.ages[1], t) : 0, { libelle: p.libelleAge });
         return s;
       },
@@ -3879,8 +3879,8 @@
         s += txt(426, 38, "concentration", { a: "middle", petit: true }) + txt(426, 48, "(× eau de mer)", { a: "middle", petit: true });
         s += poly([[418, yJ(conc)], [411, yJ(conc) - 4], [411, yJ(conc) + 4]], "#c0392b") + txt(408, yJ(conc) + 3, `× ${nombre(conc)}`, { a: "end", petit: true });
         const dernier = SEUILS.filter(([v]) => conc >= v).pop();
-        s += txt(235, 20, dernier ? `${dernier[1]} : il précipite et se dépose` : "le soleil évapore l'eau ; la mer la remplace par le seuil", { a: "middle" });
-        if (p.dolomie && t > 0.5) s += txt(235, FOND - 36, "la saumure dense s'infiltre : la calcite devient dolomite", { a: "middle", petit: true });
+        s += txt(235, 20, dernier ? `${dernier[1]} : il précipite et se dépose` : "l'évaporation solaire réduit l'eau ; la mer la renouvelle par-dessus le seuil", { a: "middle" });
+        if (p.dolomie && t > 0.5) s += txt(235, FOND - 36, "la saumure dense s'infiltre : la calcite se transforme en dolomite", { a: "middle", petit: true });
         s += txt(XS - 50, H - 10, "mer", { a: "middle", petit: true, clair: true }) + txt(XS + 30, MER + 14, "seuil", { petit: true });
         s += compteur(160, 58, p.ages ? lerp(p.ages[0], p.ages[1], t) : 0, { libelle: p.libelleAge });
         return s;
@@ -3903,7 +3903,7 @@
         s += poly(Array.from({ length: 121 }, (_, i) => [i * 4, toitSel(i * 4)]).concat([[W, H], [0, H]]), "#f1ede8", { stroke: "#b8b0a4", "stroke-width": 1 });
         for (let k = 0; k < 20; k++) { const x = 180 + (k * 37) % 120, y = S0 - (k * 11) % (h + 8); s += pline([[x - 6, y], [x, y - 3], [x + 6, y]], "rgba(150,140,130,.5)", 0.8); }
         for (const x of [120, 360]) s += fleche(x, S0 + 20, 240 + (x < 240 ? -40 : 40), S0 + 10, { c: "#7a6d5c", sw: 1.6, pointe: 6, op: 0.6 * (1 - fen(t, 0.8, 0.95)) });
-        s += txt(240, S0 - h - 18, p.texte || "le sel, moins dense et plastique, flue et monte", { a: "middle", op: fen(t, 0.2, 0.3) });
+        s += txt(240, S0 - h - 18, p.texte || "le sel, moins dense et plastique, s'écoule et remonte", { a: "middle", op: fen(t, 0.2, 0.3) });
         s += txt(W - 8, H - 8, "couche de sel", { a: "end", petit: true }) + txt(12, SOL + 14, "sédiments plus récents", { petit: true });
         s += compteur(412, 14, p.ages ? lerp(p.ages[0], p.ages[1], t) : 0, { libelle: p.libelleAge });
         return s;
@@ -3944,7 +3944,7 @@
         s += `<g opacity=".7">${nuage(140 + 1.2 * ta, 26, 0.9) + pluie(118 + 1.2 * ta, 34, 50, EAU - 40, ta, 10, "ma1") + nuage(360 + ta, 20, 0.8)}</g>`;
         if (sub > 0) for (const x of [80, 240, 400]) s += fleche(x, H - 28, x, H - 8, { c: "#c0392b", sw: 2, pointe: 7, op: 0.7 });
         s += txt(W - 8, y + 10, sub > 0.5 ? "tourbe, sables, nouvelle tourbe" : "tourbe", { a: "end", petit: true, clair: true });
-        s += txt(200, 16, T < 0.5 ? (p.texte1 || "dans l'eau sans oxygène, les végétaux morts ne pourrissent pas : la tourbe s'accumule") : (p.texte2 || "le bassin s'enfonce : des sables recouvrent la tourbe, une nouvelle forêt repousse"), { a: "middle" });
+        s += txt(200, 16, T < 0.5 ? (p.texte1 || "en milieu aquatique privé d'oxygène, les végétaux morts ne se décomposent pas : la tourbe s'accumule") : (p.texte2 || "le bassin subside : des sables recouvrent la tourbe, et une nouvelle forêt se développe"), { a: "middle" });
         s += compteur(412, 36, p.ages ? lerp(p.ages[0], p.ages[1], T) : 0, { libelle: p.libelleAge });
         return s;
       },
@@ -3981,7 +3981,7 @@
         s += line(424, yC(30), 448, yC(30), "#c0392b", 1.6) + txt(452, yC(30) + 3, "seuil", { petit: true });
         s += poly([[428, yC(ca)], [421, yC(ca) - 4], [421, yC(ca) + 4]], "#2f7cc0") + txt(418, yC(ca) + 3, `${nombre(ca)} mg/L`, { a: "end", petit: true });
         s += txt(436, 36, "calcium dissous", { a: "middle", petit: true });
-        s += txt(220, 20, e < 0.4 ? "à l'air, le CO₂ s'échappe : l'eau porte trop de calcium" : "la calcite se dépose sur les mousses : le travertin grandit", { a: "middle" });
+        s += txt(220, 20, e < 0.4 ? "à l'air, le CO₂ s'échappe : l'eau porte trop de calcium" : "la calcite précipite sur les mousses : le travertin croît", { a: "middle" });
         s += compteur(90, 36, 0, { libelle: p.libelleAge || "aujourd'hui" });
         return s;
       },
@@ -4008,7 +4008,7 @@
         if (ph > 0) for (let k = 0; k < 5; k++) { const u = (ta * 0.2 + k / 5) % 1; s += `<path d="M${r1(210 + k * 14)} ${r1(40 + u * 16)} l4 -4 l4 4" fill="none" stroke="#27302d" stroke-width="1.2" opacity="${op(ph * (1 - u))}"/>`; }
         s += txt(316, 120, T <= 0.5 ? "argiles rouges et os" : "le guano libère un", { petit: true }) + txt(316, 132, T <= 0.5 ? "tombent dans la poche" : "phosphate acide : l'apatite", { petit: true });
         if (T > 0.5) s += txt(316, 144, "tapisse les parois", { petit: true, op: ph });
-        s += txt(190, 20, T <= 0.5 ? "les poches du karst se remplissent" : "le guano des chauves-souris phosphatise la poche", { a: "middle" });
+        s += txt(190, 20, T <= 0.5 ? "les poches du karst se remplissent" : "le guano de chauves-souris phosphate la poche", { a: "middle" });
         s += compteur(412, 14, p.ages ? lerp(p.ages[0], p.ages[1], T) : 0, { libelle: p.libelleAge });
         return s;
       },
@@ -4050,7 +4050,7 @@
           s += pline(Array.from({ length: 21 }, (_, i) => { const x = 400 + i * 4; return [x, vallee(x) - 1 + Math.sin(i + ta) * 0.6]; }), "#7fb6d6", 2);
         }
         if (T < 0.5) for (let k = 0; k < 4; k++) s += fleche(40 + k * 80, vallee(40 + k * 80) - 30, 80 + k * 80, vallee(80 + k * 80) - 30, { c: "#5c7f93", sw: 1.6, pointe: 6, op: 0.6 });
-        s += txt(220, 18, T < 0.5 ? "le glacier arrache des blocs et broie la roche en farine ; il porte tout sans trier" : "il fond et recule : blocs et farine restent pêle-mêle, en moraines", { a: "middle" });
+        s += txt(220, 18, T < 0.5 ? "le glacier arrache des blocs et broie la roche en farine ; il porte tout sans trier" : "il fond et recule : blocs et farine demeurent mêlés, en moraines", { a: "middle" });
         if (dep > 0.5) s += txt(330, vallee(330) + 16, "moraines", { a: "middle", petit: true, clair: true });
         s += compteur(412, 36, p.ages ? lerp(p.ages[0], p.ages[1], T) : 0, { libelle: p.libelleAge });
         return s;
@@ -4089,7 +4089,7 @@
           s += poly(Array.from({ length: 81 }, (_, i) => { const x = 180 + i * 3.75; return [x, SOL - ep * (1 - Math.abs(x - 330) / 180) ** 0.7]; }).concat([[480, SOL], [180, SOL]]), "#d9c69e");
           for (let x = 190; x < W; x += 14) s += line(x, SOL - 1, x - 2, SOL - 6, "#8a8d4a", 1);
           for (const g of grains) { const u = (g.ph + ta * 0.35) % 1, x = lerp(110, 470, u), y = SOL - 10 - g.h - Math.sin(u * Math.PI) * 50 * g.y; s += circ(x, y, 0.8, "#b9a57e", { opacity: op(Math.sin(u * Math.PI)) }); }
-          s += txt(120, SOL + 16, "plaine nue, alluvions du glacier", { petit: true, clair: true }) + txt(330, SOL - ep - 8, "placage de lœss sur la steppe", { a: "middle", petit: true });
+          s += txt(120, SOL + 16, "plaine nue, alluvions du glacier", { petit: true, clair: true }) + txt(330, SOL - ep - 8, "dépôt de lœss sur la steppe", { a: "middle", petit: true });
         }
         s += fleche(160, 30, 230, 30, { sw: 2.4, pointe: 8 }) + txt(236, 34, "vent", { petit: true });
         s += compteur(412, 14, p.ages ? lerp(p.ages[0], p.ages[1], t) : 0, { libelle: p.libelleAge });
@@ -4117,8 +4117,8 @@
           for (const b of blocs) { if (b.tb > e + 0.02) continue; const u = clamp((e - b.tb) / 0.06), x = lerp(186, 196 + tal * 1.2 * (0.3 + 0.7 * b.d), u), y = lerp(70 + b.d * 60, 168 - b.r, u); s += `<rect x="${r1(x - b.r)}" y="${r1(y - b.r)}" width="${r1(2 * b.r)}" height="${r1(1.6 * b.r)}" fill="#a39880" transform="rotate(${r1(u * 300)} ${r1(x)} ${r1(y)})"/>`; }
           const gel = Math.sin(ta * 1.2) > 0;
           for (let k = 0; k < 4; k++) s += line(172 + k * 4, 70 + k * 22, 188, 74 + k * 22, gel ? "#9fd0ea" : "#6d5c48", 1.6);
-          s += txt(120, 40, gel ? "la nuit, l'eau gèle dans les fissures et gonfle de 9 %" : "le jour, la glace fond : le bloc se détache", { a: "middle", petit: true });
-          s += txt(300, 150, "talus d'éboulis : les gros blocs roulent le plus loin", { a: "middle", petit: true, op: fen(t, 0.3, 0.45) });
+          s += txt(120, 40, gel ? "la nuit, l'eau gèle dans les fissures et gonfle de 9 %" : "au cours de la journée, la glace fond : le bloc se détache", { a: "middle", petit: true });
+          s += txt(300, 150, "au pied du talus d'éboulis, les gros blocs parcourent la plus grande distance", { a: "middle", petit: true, op: fen(t, 0.3, 0.45) });
           s += `<g opacity="${op(Math.max(0, Math.sin(ta * 1.2)) * 0.8)}">${circ(420, 30, 8, "#eef3f5")}</g>`;
         } else {
           for (let x = 10; x < W; x += 12) s += line(x, pente(x) - 1, x + 6, pente(x + 6) - 1, "rgba(60,45,30,.35)", 1);
@@ -4126,7 +4126,7 @@
           for (let k = 0; k < 14; k++) { const u = (k / 14 + ta * 0.2) % 1, x = lerp(60, 430, u); s += circ(x, pente(x) - 1.5, 1.2, "#6d9fc4", { opacity: op(Math.sin(u * Math.PI)) }); }
           const ep = 22 * e;
           s += poly(Array.from({ length: 31 }, (_, i) => { const x = 330 + i * 5; return [x, pente(x) - ep * clamp((x - 330) / 120)]; }).concat([[480, pente(480)], [330, pente(330)]]), "#7d6246");
-          s += txt(160, 16, "sol mis à nu par le défrichement : la pluie ruisselle et l'emporte", { a: "middle" });
+          s += txt(160, 16, "sol mis à nu par le défrichement : les eaux de pluie ruissellent et l'emportent", { a: "middle" });
           s += txt(410, pente(410) - ep - 8, "colluvions", { a: "middle", petit: true, op: fen(t, 0.3, 0.45) });
         }
         s += compteur(412, 14, p.ages ? lerp(p.ages[0], p.ages[1], t) : 0, { libelle: p.libelleAge });
@@ -4175,7 +4175,7 @@
         for (let k = 0; k < 8; k++) { const u = (k / 8 + ta * 0.2) % 1; s += circ(lerp(160, 320, u), 108 + inc - 2, 0.9, "#b9a57e", { opacity: op(cr) }); }
         s += txt(100, 64, "terrasse ancienne", { a: "middle", petit: true }) + txt(240, 100 + inc - 8, "chenal : galets", { a: "middle", petit: true });
         s += txt(300, 124 + inc, "limons de crue", { a: "middle", petit: true, clair: true, op: fen(t, 0.2, 0.3) });
-        s += txt(220, 20, cr > 0.5 ? "en crue, la rivière déborde et dépose ses limons" : "le courant trie : galets au fond, sables sur les bancs", { a: "middle" });
+        s += txt(220, 20, cr > 0.5 ? "en crue, la rivière déborde et dépose ses limons" : "un tri s'opère sous l'effet du courant : galets au fond, sables en surface des bancs", { a: "middle" });
         s += compteur(412, 36, p.ages ? lerp(p.ages[0], p.ages[1], t) : 0, { libelle: p.libelleAge });
         return s;
       },
@@ -4240,7 +4240,7 @@
     const fe = Array.from({ length: 50 }, () => ({ x: 260 + R() * 220, y: 130 + R() * 90, ph: R() }));
     return {
       fond: rect(0, 0, W, H, "#5f8a84") + rect(0, 0, W, 26, "#f0d9b8") + poly(Array.from({ length: 121 }, (_, i) => [i * 4, fondY(i * 4)]).concat([[W, H], [0, H]]), "#6b6258")
-        + txt(W - 8, H - 8, "eau profonde sans oxygène : fer dissous (Fe²⁺)", { a: "end", petit: true, clair: true }),
+        + txt(W - 8, H - 8, "eau profonde privée d'oxygène : fer dissous (Fe²⁺)", { a: "end", petit: true, clair: true }),
       anim(t, ta) {
         const e = fen(t, 0.03, 0.95);
         let s = "";
@@ -4250,7 +4250,7 @@
         for (let k = 0; k < n; k++) s += rect(0, 120 - (k + 1) * 3.4, 250, 3.4, k % 2 ? "#9a9590" : "#a8452a");
         s += txt(120, 16, "cyanobactéries : elles produisent de l'oxygène", { a: "middle", petit: true });
         s += txt(340, 60, "les courants remontent le fer", { a: "middle", petit: true, clair: true });
-        s += txt(125, 132, "lits de fer et de silice alternent", { a: "middle", petit: true, clair: true, op: fen(t, 0.3, 0.45) });
+        s += txt(125, 132, "des lits de fer et de silice alternent", { a: "middle", petit: true, clair: true, op: fen(t, 0.3, 0.45) });
         s += compteur(412, 44, p.ages ? lerp(p.ages[0], p.ages[1], t) : 0, { libelle: p.libelleAge });
         return s;
       },
@@ -4311,6 +4311,33 @@
   const P_VUE = projDL(200, 26, 6), P_ZOOM = projDL(160, 41, 20, 3.85);
   const ZOOM = { x0: -8, x1: 8, z0: P_ZOOM.z(0), z1: P_ZOOM.z(H) };                  // ce que montre la vue rapprochée (km)
   const Pk = (pr, pts) => pts.map(([x, z]) => [pr.X(x), pr.Y(z)]);
+  // lentille de gabbro du Chenaillet (B.8, 27/10/2026) : 500 m sur 150 m (Nicollet et al. 2022 : lentilles de 50 à 200 m
+  // d'épaisseur et de quelques centaines de mètres de large, dans la serpentinite), juste sous la faille de détachement, que
+  // la faille amènera au fond (Masini et al. 2008 : la faille coiffe le manteau et les gabbros). En km : abscisse le long de
+  // la faille, distance sous elle, demi-largeur, demi-épaisseur ; centre ≈ 4,3 km sous le fond.
+  const LG_S = DK.versSN([-1.6, 7.95])[0], LG_N = 0.08, LG_A = 0.25, LG_B = 0.075;
+  const LG_C = DK.pt(LG_S, LG_N);
+  // montée du liquide jusqu'à la lentille (B.8, 27/10/2026, sa remarque : « la montée de magma est mal faite ») : dans le manteau
+  // qui fond, le liquide s'écoule entre les grains puis se concentre dans des chenaux qui convergent vers l'axe (Kelemen et al.
+  // 1999 : « most melt extraction must be in isolated conduits ») ; sous la lithosphère froide, il est guidé vers l'axe (Lin et al.
+  // 2025, d'après Sparks et Parmentier 1991) ; dans la lithosphère, il monte par une fissure, un filon (« gabbro dikes are
+  // lithospheric features », Kelemen et al. 1999), et s'arrête juste sous la faille. En km.
+  const LG_COL = [-1.2, 15.9];
+  // les chenaux se rejoignent en remontant, comme des affluents : [points (km), largeur en bas, largeur en haut (px)]
+  const LG_JA = [-8.6, 29.5], LG_JB = [-1.6, 29.2], LG_JC = [6.2, 29.8], LG_JAB = [-3.8, 24.4], LG_JH = [-1.1, 20.6];
+  const lgBranche = (pts, w0, w1) => [courbe(pts, 6), w0, w1];
+  const LG_CHENAUX = [
+    lgBranche([[-13, 36.5], [-11.2, 33.4], LG_JA], 0.5, 1), lgBranche([[-8.4, 37.6], [-8.9, 33.6], LG_JA], 0.5, 1),
+    lgBranche([[-4.4, 35.9], [-2.6, 32.6], LG_JB], 0.5, 1), lgBranche([[1.4, 36.9], [0, 32.9], LG_JB], 0.5, 1),
+    lgBranche([[6.4, 35.4], [6.6, 32.6], LG_JC], 0.5, 1), lgBranche([[12, 37.2], [9.6, 33.4], LG_JC], 0.5, 1),
+    lgBranche([LG_JA, [-6.6, 26.9], LG_JAB], 1.1, 1.5), lgBranche([LG_JB, [-2.6, 26.7], LG_JAB], 1.1, 1.5),
+    lgBranche([LG_JAB, [-2.4, 22.4], LG_JH], 1.6, 1.9), lgBranche([LG_JC, [3.6, 25.4], [1.2, 22.4], LG_JH], 1.1, 1.9),
+    lgBranche([LG_JH, [-1.2, 18.3], LG_COL], 2, 2.3),
+  ];
+  // le chemin de la goutte suivie, de la plus profonde à la lentille
+  const LG_SUIVI = courbe([[-8.4, 37.6], [-8.9, 33.6], LG_JA, [-6.6, 26.9], LG_JAB, [-2.4, 22.4], LG_JH, [-1.2, 18.3], LG_COL], 6);
+  const LG_FILON = [LG_COL, [-1.45, 12.5], [-1.6, LG_C[1] + LG_B]];
+  const LG_PORES = (() => { const R = alea("lgpores"); return Array.from({ length: 44 }, () => { const v = Math.sqrt(R()), u = R() - 0.5; return { x: u * 2 * 16 * v, z: lerp(23, 38, v), ph: R(), r: 0.6 + R() * 0.5 }; }); })();
   // fond de mer et compartiments, en km, pour une fenêtre [xa, xb]
   function dlRegions(xa, xb) {
     const pas = (xb - xa) / 160, fond = [], faille = [];
@@ -4380,7 +4407,7 @@
     const bande2 = []; for (let s0 = DK.L; s0 >= 0; s0 -= 0.8) bande2.push(DK.pt(s0, 1.2));
     fw += poly(Pk(pr, bande.concat(bande2)), OPH.serp, { opacity: 0.85 });
     for (const m of rep.mailleFW) { const sc = enBoucle(m.s + dep, rep.S0, DK.L), [x, z] = DK.pt(sc, m.n); fw += line(pr.X(x), pr.Y(z), pr.X(x) + Math.cos(m.a) * 3, pr.Y(z) + Math.sin(m.a) * 3, "rgba(40,55,30,.32)", 0.7); }
-    for (const l of rep.lentFW) { const sc = enBoucle(l.s + dep, rep.S0, DK.L); fw += poly(Pk(pr, lentilleSN(sc, l.n, l.a, l.b)), OPH.gab, { opacity: op(Math.min(1, (sc - rep.S0) / 3)) }); }
+    if (!o.lentille) for (const l of rep.lentFW) { const sc = enBoucle(l.s + dep, rep.S0, DK.L); fw += poly(Pk(pr, lentilleSN(sc, l.n, l.a, l.b)), OPH.gab, { opacity: op(Math.min(1, (sc - rep.S0) / 3)) }); }
     for (const c of rep.cousFW) {
       const sc = enBoucle(c.s + dep, DK.sT + 1, DK.sT + 60), x = DK.pt(sc)[0];
       fw += line(pr.X(x), pr.Y(DK.zFond(x)), pr.X(x + 0.15), pr.Y(DK.zFond(x) + 1.5), "rgba(28,34,30,.55)", 0.8) + monticule(pr, x, c.n, pr.k > 10 ? 3 : 2);
@@ -4393,7 +4420,7 @@
     const bf = []; for (const q of DK.F) if (q[0] <= DK.T[0] + 0.01) bf.push(q);
     hw += poly(Pk(pr, bf.concat(bf.slice().reverse().map(([x, z]) => [x - 0.35, z - 0.35]))), OPH.serp, { opacity: 0.6 });
     for (const m of rep.mailleHW) { const x = enBoucle(m.x - dep, -45, 0); hw += line(pr.X(x), pr.Y(m.z), pr.X(x) + Math.cos(m.a) * 3, pr.Y(m.z) + Math.sin(m.a) * 3, "rgba(40,55,30,.32)", 0.7); }
-    for (const l of rep.lentHW) { const x = enBoucle(l.x - dep, -45, 0); hw += poly(Pk(pr, lentilleXZ(x, l.z, l.a, l.b)), OPH.gab, { opacity: op(Math.min(1, -x / 3)) }); }
+    if (!o.lentille) for (const l of rep.lentHW) { const x = enBoucle(l.x - dep, -45, 0); hw += poly(Pk(pr, lentilleXZ(x, l.z, l.a, l.b)), OPH.gab, { opacity: op(Math.min(1, -x / 3)) }); }
     // filons : chacun se forme à l'axe (sous les coussins), puis la plaque l'emporte ; ils restent parallèles (sa demande :
     // « les traits parallèles qui défilaient », repris de l'ancienne vue)
     for (let k = 0; k < 46; k++) { const x = enBoucle(-0.5 - k - dep, -46, -0.5); hw += line(pr.X(x), pr.Y(DK.zFondHW(x) + 0.12), pr.X(x), pr.Y(DK.zFondHW(x) + 1.7), "rgba(28,34,30,.5)", pr.k > 10 ? 1.3 : 1); }
@@ -4414,20 +4441,40 @@
     s += pline(Pk(pr, [[-9.6, 16.4], [-10.4, 18.4], [-10, 19.6], [-10.9, 21.2], [-10.5, 22.6]]), "#3b3026", 1, { "stroke-dasharray": "2 2" });
     // la chambre sous l'axe, le chenal qui l'alimente, le filon et les coussins de l'axe
     const g = o.gouttes ?? 1, puls = 1 + 0.06 * Math.sin(ta * 2.2);
-    s += line(pr.X(0), pr.Y(20), pr.X(0), pr.Y(DK.CH.z + DK.CH.rz), MAGMA, 1.4, { opacity: 0.55 * g });
-    s += ell(pr.X(0), pr.Y(DK.CH.z), DK.CH.rx * pr.k * puls, DK.CH.rz * pr.k * puls, MAGMA, { stroke: "#5b4636", "stroke-width": 0.8 });
+    const [cx0, cz0] = [0, DK.CH.z + DK.CH.rz];                                       // où montent les gouttes
+    if (o.lentille) {
+      // le liquide entre les grains (il monte lentement), les chenaux qui s'élargissent vers le haut, où il file, puis le filon
+      for (const q of LG_PORES) { const u = (q.ph + ta * 0.05) % 1; s += circ(pr.X(q.x), pr.Y(q.z - u * 2.4), q.r, MAGMA, { opacity: op(0.9 * Math.sin(u * Math.PI)) }); }
+      for (const [c, w0, w1] of LG_CHENAUX) {
+        const ps = Pk(pr, c);
+        s += poly(ruban(ps, (u) => lerp(w0, w1, u)), MAGMA, { opacity: 0.9 });
+        s += pline(ps, MAGMA_CLAIR, Math.min(0.9, w1 * 0.4), { "stroke-dasharray": "2 6", "stroke-dashoffset": r1(-ta * 14) });
+      }
+      const f = o.fissure ?? 1, pf = Pk(pr, LG_FILON);
+      if (f > 0) {
+        const tete = lePlong(pf, f), part = partiel(pf, f);
+        s += poly(ruban(part, (u) => lerp(2.4, 1.4, u)), MAGMA, { stroke: "#7a2e17", "stroke-width": 0.4 });
+        if (f < 1) s += poly([[tete.x - 1.6, tete.y + 1], [tete.x + 1.6, tete.y + 1], [tete.x, tete.y - 4]], MAGMA);   // la pointe qui ouvre la fissure
+        else s += pline(part, MAGMA_CLAIR, 0.7, { "stroke-dasharray": "2 5", "stroke-dashoffset": r1(-ta * 14) });
+      }
+      const k = o.lentilleK ?? 1;
+      if (k > 0.02) s += ell(pr.X(LG_C[0]), pr.Y(LG_C[1]), 2.6 * k, 1.3 * k, MAGMA, { stroke: "#5b4636", "stroke-width": 0.5 });
+    } else {
+      s += line(pr.X(cx0), pr.Y(20), pr.X(cx0), pr.Y(cz0), MAGMA, 1.4, { opacity: 0.55 * g });
+      s += ell(pr.X(0), pr.Y(DK.CH.z), DK.CH.rx * pr.k * puls, DK.CH.rz * pr.k * puls, MAGMA, { stroke: "#5b4636", "stroke-width": 0.8 });
+    }
     // chaque filon naît dans l'axe : le magma perce le toit de la chambre et monte jusqu'au fond (rouge), puis il refroidit
     // (sombre) et la plaque l'emporte : ce sont les traits parallèles du compartiment de gauche (demande du 23/09/2026)
-    for (let k = 0; k < 46; k++) {
+    if (!o.lentille) for (let k = 0; k < 46; k++) {
       const x = enBoucle(-0.5 - k - dep, -46, -0.5), a = -0.5 - x;
       if (a > 1.6) continue;
       const zT = DK.CH.z - DK.CH.rz * Math.sqrt(Math.max(0, 1 - (x / DK.CH.rx) ** 2)), zF = DK.zFondHW(x);
       s += line(pr.X(x), pr.Y(zT), pr.X(x), pr.Y(lerp(zT, zF, clamp(a / 0.2))), melange(MAGMA, "#1c221e", clamp(a / 1.6)), pr.k > 10 ? 1.8 : 1.3, { opacity: op(1 - 0.6 * clamp(a / 1.6)) });
     }
     s += monticule(pr, 0, 6, pr.k > 10 ? 3 : 2.1, true);
-    for (const d of o.drops) {
+    if (!o.lentille) for (const d of o.drops) {
       const u = (d.ph + ta * 0.12) % 1;
-      const [x, z] = u < 0.7 ? [lerp(d.x0, 0, lisse(u / 0.7)), lerp(d.z0, 20, u / 0.7)] : [0, lerp(20, DK.CH.z + DK.CH.rz, (u - 0.7) / 0.3)];
+      const [x, z] = u < 0.7 ? [lerp(d.x0, cx0, lisse(u / 0.7)), lerp(d.z0, 20, u / 0.7)] : [cx0, lerp(20, cz0, (u - 0.7) / 0.3)];
       const r = d.r * (1 + 0.7 * u), a = op(Math.min(1, u * 8, (1 - u) * 12) * g);
       s += ell(pr.X(x), pr.Y(z), r * 0.85, r * 1.15, MAGMA, { opacity: a }) + circ(pr.X(x) - r * 0.3, pr.Y(z) - r * 0.35, r * 0.35, "#ffd08a", { opacity: op(a * 0.8) });
     }
@@ -4443,16 +4490,21 @@
     const R = alea("dl" + p.graine), pr = P_VUE;
     const reg = dlRegions(pr.x(-4), pr.x(W + 4)), rep = dlRepères(alea("dlrep"));
     const drops = Array.from({ length: 30 }, () => { const v = Math.sqrt(R()), u = R() - 0.5; return { x0: u * 2 * 18 * v, z0: lerp(21, 37, v), ph: R(), r: 1.3 + R() * 0.6 }; });
-    const suivi = p.suivi || "manteau";
+    const suivi = p.suivi || "manteau", sobre = !!p.sobre;
     const fractures = Array.from({ length: 5 }, (_, i) => ({ dx: -1.6 + i * 0.8 + R() * 0.3, l: 0.8 + R() * 0.7 }));
     return {
-      fond: ciel(pr.Y(0)) + rect(0, pr.Y(0), W, H, OPH.eau) + txt(8, pr.Y(0) + 10, p.nom || "océan", { petit: true, clair: true }),
+      fond: ciel(pr.Y(0)) + rect(0, pr.Y(0), W, H, OPH.eau) + (sobre ? "" : txt(8, pr.Y(0) + 10, p.nom || "océan", { petit: true, clair: true })),
       anim(t, ta) {
-        let s = dlVue({ pr, reg, rep, drops }, t, ta);
+        let s = dlVue({ pr, reg, rep, drops, lentille: sobre, fissure: fen(t, 0.3, 0.72), lentilleK: fen(t, 0.7, 0.88) }, t, ta);
         // la roche suivie : un morceau de manteau (ou de gabbro) qui remonte le long de la faille, ou les coussins de l'axe
         const dep = V_PLAQUE * ta;
         let q;
         if (suivi === "basalte") { const x = -dep * 0.9 - 0.3; q = [pr.X(x), pr.Y(DK.zFondHW(x) - 0.3)]; }
+        else if (suivi === "liquide") {                                                // une goutte : un chenal, puis le filon, juste derrière sa pointe
+          const ch = Pk(pr, LG_SUIVI), fi = Pk(pr, LG_FILON);
+          const qq = t < 0.3 ? lePlong(ch, fen(t, 0.04, 0.3)) : t < 0.74 ? lePlong(fi, Math.max(0, fen(t, 0.3, 0.72) - 0.05)) : { x: pr.X(LG_C[0]), y: pr.Y(LG_C[1]) };
+          q = [qq.x, qq.y];
+        }
         else { const [x, z] = DK.pt(DK.versSN(p.suiviDepart || [-8.2, 13.6])[0] + dep, suivi === "gabbro" ? 1.2 : p.suiviDepart ? 0.7 : 2.6); q = [pr.X(x), pr.Y(z)]; }
         // le mouvement des deux plaques : celle de gauche s'éloigne, celle de droite remonte le long de la faille puis s'éloigne
         const ff = Pk(pr, Array.from({ length: 9 }, (_, k) => DK.pt(DK.versSN([-6.5, 11.8])[0] + k * 1.6, 3.4)));
@@ -4467,19 +4519,28 @@
         s += circ(q[0], q[1], 4, "#c0392b", { stroke: "#fff", "stroke-width": 1.3 });
         // étiquettes
         const X0 = pr.X(0);
+        if (sobre) {                                                                   // peu de mots : le titre de l'étape dit le reste
+          s += txt(X0, pr.Y(0) - 5, "dorsale (axe)", { a: "middle", petit: true });
+          s += fleche(X0 - 30, 12, X0 - 62, 12, { sw: 2, pointe: 7 }) + fleche(X0 + 30, 12, X0 + 62, 12, { sw: 2, pointe: 7 }) + txt(X0 + 68, 15, p.vitesse || "≈ 1 cm par an", { petit: true });
+          s += txt(pr.X(-14), pr.Y(10.5), "faille de détachement", { a: "middle", petit: true }) + line(pr.X(-10.5), pr.Y(10.2), pr.X(-7), pr.Y(12.2), "#27302d", 0.7);
+          s += line(6, pr.Y(0), 6, pr.Y(30), "#27302d", 1); for (const z of [10, 20, 30]) s += line(3, pr.Y(z), 6, pr.Y(z), "#27302d", 1) + txt(9, pr.Y(z) + 3, `${z} km`, { petit: true });
+          const zf = p.zoom ? fen(t, 0.86, 0.96) : 0;
+          if (zf > 0) s += rect(pr.X(ZOOM.x0), pr.Y(ZOOM.z0), (ZOOM.x1 - ZOOM.x0) * pr.k, (ZOOM.z1 - ZOOM.z0) * pr.k, "none", { stroke: "#fff", "stroke-width": 1.4, "stroke-dasharray": "4 3", opacity: op(zf) });
+          return s + compteur(68, 12, p.ages ? lerp(p.ages[0], p.ages[1], t) : 0, { libelle: p.libelleAge });
+        }
         s += txt(X0, pr.Y(0) - 5, "dorsale (axe)", { a: "middle", petit: true });
-        s += fleche(X0 - 30, 12, X0 - 62, 12, { sw: 2, pointe: 7 }) + fleche(X0 + 30, 12, X0 + 62, 12, { sw: 2, pointe: 7 }) + txt(X0 + 68, 15, p.vitesse || "≈ 1 cm par an de chaque côté", { petit: true });
+        s += fleche(X0 - 30, 12, X0 - 62, 12, { sw: 2, pointe: 7 }) + fleche(X0 + 30, 12, X0 + 62, 12, { sw: 2, pointe: 7 }) + txt(X0 + 68, 15, p.vitesse || "≈ 1 cm par an de part et d'autre", { petit: true });
         s += txt(pr.X(DK.T[0]) + 6, pr.Y(0) + 9, "fumeur noir", { petit: true, clair: true });
         s += txt(12, pr.Y(6.0), "filons et coussins nés à l'axe,", { petit: true }) + txt(12, pr.Y(6.0) + 9, "puis emportés par la plaque", { petit: true });
         const fh = Pk(pr, Array.from({ length: 7 }, (_, k) => DK.pt(DK.versSN([-3.4, 8.6])[0] - k * 1.4, -1.1)));
         s += pline(fh, "rgba(30,35,30,.55)", 1.6) + fleche(fh[5][0], fh[5][1], fh[6][0], fh[6][1], { c: "rgba(30,35,30,.55)", sw: 1.6, pointe: 6 });
-        s += cartouche(330, 156, 146, [[null, "Dorsale lente : peu de magma."], [null, "Les plaques s'écartent surtout"], [null, "en glissant le long d'une grande"], [null, "faille inclinée (détachement) :"], [null, "le bloc du dessous y remonte."]]);
-        s += txt(W - 8, pr.Y(DK.zFond(pr.x(W - 8))) + 16, "le manteau remonte le long de la faille : un dôme", { a: "end", petit: true });
+        s += cartouche(330, 156, 146, [[null, "Dorsale lente : peu de magma."], [null, "Les plaques s'écartent surtout"], [null, "en glissant le long d'une vaste"], [null, "faille inclinée (détachement) :"], [null, "le bloc du dessous y remonte."]]);
+        s += txt(W - 8, pr.Y(DK.zFond(pr.x(W - 8))) + 16, "le long de la faille, le manteau s'élève et forme un dôme", { a: "end", petit: true });
         s += txt(pr.X(-14), pr.Y(10.5), "faille de détachement", { a: "middle", petit: true });
         s += line(pr.X(-10.5), pr.Y(10.2), pr.X(-7), pr.Y(12.2), "#27302d", 0.7);
         s += txt(pr.X(2.5), pr.Y(DK.CH.z) + 3, "chambre", { petit: true });
         s += txt(pr.X(-18), pr.Y(13.5), "manteau : péridotite (gabbros en lentilles)", { a: "middle", petit: true });
-        s += txt(X0, pr.Y(36) - 6, p.texte || "le manteau monte sous l'axe et fond en partie", { a: "middle", petit: true });
+        s += txt(X0, pr.Y(36) - 6, p.texte || "sous l'axe, le manteau monte et subit une fusion partielle", { a: "middle", petit: true });
         s += line(6, pr.Y(0), 6, pr.Y(30), "#27302d", 1); for (const z of [10, 20, 30]) s += line(3, pr.Y(z), 6, pr.Y(z), "#27302d", 1) + txt(9, pr.Y(z) + 3, `${z} km`, { petit: true });
         // cadre de la vue rapprochée (étape suivante)
         if (p.zoom) {
@@ -4506,13 +4567,13 @@
     const bf = reg.faille;
     hw += poly(Pk(pr, bf.concat(bf.slice().reverse().map(([x, z]) => [x - 0.3, z - 0.3]))), OPH.serp, { opacity: 0.6 });
     for (let k = 0; k < 90; k++) { const x = pr.x(Rm() * ZL), z = DK.zFondHW(x) + 0.2 + Rm() * 10; hw += line(pr.X(x), pr.Y(z), pr.X(x) + 3, pr.Y(z) + 2, "rgba(40,55,30,.32)", 0.7); }
-    hw += poly(Pk(pr, lentilleXZ(-5.5, 5.6, 1.1, 0.3)), OPH.gab);                     // une ancienne lentille de gabbro, partie vers la gauche
+    hw += poly(Pk(pr, o.vraies ? lentilleXZ(-5.5, 5.6, LG_A, LG_B) : lentilleXZ(-5.5, 5.6, 1.1, 0.3)), OPH.gab);   // une ancienne lentille de gabbro, partie vers la gauche
     for (let k = 0; k < 9; k++) { const x = -1 - k; hw += line(pr.X(x), pr.Y(DK.zFondHW(x) + 0.12), pr.X(x), pr.Y(DK.zFondHW(x) + 1.7), "rgba(28,34,30,.5)", 1.3); }
     s += `<g clip-path="url(#${cHW})">${hw}</g>`;
     s += `</g>`;
     return { fond: s, reg, cS, pr };
   }
-  function dlMurZoom(dep = 0, chambre = "") {
+  function dlMurZoom(dep = 0, chambre = "", o = {}) {
     // compartiment du dessous : dessiné en (s, n) pour pouvoir glisser le long de la faille (dep, km)
     const pr = P_ZOOM, Rm = alea("dlzf");
     let s = rect(-10, -10, W + 20, H + 20, OPH.peri);
@@ -4520,7 +4581,7 @@
     s += poly(Pk(pr, b1.concat(b2)), OPH.serp, { opacity: 0.85 });
     const sR = DK.versSN([-6.5, 11.6])[0];
     for (let k = 0; k < 190; k++) { const s0 = sR - 12 + Rm() * 34, n = 0.12 + Rm() * 9, a = Rm() * Math.PI; if (s0 + dep < 0) continue; const [x, z] = DK.pt(s0 + dep, n); s += line(pr.X(x), pr.Y(z), pr.X(x) + Math.cos(a) * 3, pr.Y(z) + Math.sin(a) * 3, "rgba(45,60,30,.33)", 0.7); }
-    s += poly(Pk(pr, lentilleSN(DK.versSN([4.2, 6.4])[0] + dep, 1.6, 1.1, 0.3)), OPH.gab);   // une lentille plus ancienne, déjà en route
+    s += poly(Pk(pr, o.vraies ? lentilleSN(DK.versSN([4.2, 6.4])[0] + dep, LG_N, LG_A, LG_B) : lentilleSN(DK.versSN([4.2, 6.4])[0] + dep, 1.6, 1.1, 0.3)), OPH.gab);   // une lentille plus ancienne, déjà en route
     return s + chambre;
   }
   // chenaux du liquide sous la chambre (vue rapprochée)
@@ -4660,8 +4721,8 @@
         s += rect(MP.X(ZOOM.x0), MP.Y(ZOOM.z0), (ZOOM.x1 - ZOOM.x0) * MP.k, (ZOOM.z1 - ZOOM.z0) * MP.k, "none", { stroke: "#fff", "stroke-width": 1.2, "stroke-dasharray": "3 2" });
         s += line(MP.X(ZOOM.x0), MP.Y(ZOOM.z0), ZL, 0, "rgba(0,0,0,.2)", 0.8) + line(MP.X(ZOOM.x0), MP.Y(ZOOM.z1), ZL, H, "rgba(0,0,0,.2)", 0.8);
         s += txt(400, 29, "la dorsale de l'étape 1", { a: "middle", petit: true });
-        (t > 0.43 && t < 0.85 ? ["trop pleine, la chambre casse", "son toit : le magma monte par", "un filon (en quelques jours)", "et sort en coussins sur le", "fond ; puis elle se remplit"]
-          : ["le liquide né dans le manteau", "monte sous l'axe et s'arrête", "juste sous la faille, 4 à 5 km", "sous le fond : la chambre", "gonfle à chaque arrivée"]).forEach((l, i) => { s += txt(ZL + 8, 160 + i * 10, l, { petit: true }); });
+        (t > 0.43 && t < 0.85 ? ["trop pleine, la chambre casse", "son toit : le magma remonte par", "un filon (en quelques jours)", "et se répand en coussins sur le", "fond ; puis elle se remplit"]
+          : ["le liquide formé dans le manteau", "monte sous l'axe et s'arrête", "juste sous la faille, 4 à 5 km", "sous le fond : la chambre", "gonfle à chaque arrivée"]).forEach((l, i) => { s += txt(ZL + 8, 160 + i * 10, l, { petit: true }); });
         s += compteur(400, 14, p.ages ? lerp(p.ages[0], p.ages[1], t) : 160, { libelle: p.libelleAge });
         return s;
       },
@@ -4709,7 +4770,7 @@
         s += `</g>`;
         s += txt(6, 12, "océan alpin, ≈ 3,5 km d'eau", { petit: true, clair: true });
         s += txt(pr.X(DK.T[0]) - 6, 24, "fumeur noir : la chaleur", { a: "end", petit: true, clair: true }) + txt(pr.X(DK.T[0]) - 6, 32, "part avec l'eau de mer", { a: "end", petit: true, clair: true });
-        s += txt(CHZ.x, 196, "plus d'arrivée de liquide : les chenaux se figent", { a: "middle", petit: true, op: arret });
+        s += txt(CHZ.x, 196, "l'alimentation en liquide cesse : les chenaux se figent", { a: "middle", petit: true, op: arret });
         if (e > 0.25) s += txt(CHZ.x, CHZ.y + CHZ.ry + 13, p.labCumulats || "cumulats : le futur gabbro", { a: "middle", petit: true, op: fen(e, 0.25, 0.4) });
         if (p.filons) s += txt(CHZ.x + CHZ.rx + 6, CHZ.y - CHZ.ry - 4, "filons clairs :", { petit: true, op: fen(t, 0.86, 0.96) }) + txt(CHZ.x + CHZ.rx + 6, CHZ.y - CHZ.ry + 5, "trondhjémite", { petit: true, op: fen(t, 0.86, 0.96) });
         s += dlRegle();
@@ -4721,7 +4782,7 @@
         s += thermometre(ZL + 16, 50, 126, T, lo, hi, [lo + 100, Math.round((lo + hi) / 200) * 100, hi - 100].filter((v, i, a) => a.indexOf(v) === i));
         s += txt(ZL + 16, 40, `${nombre(T)} °C`, { a: "middle", petit: true });
         s += txt(400, 212, `liquide restant : ${nombre(ch.liq(e) * 100)} %`, { a: "middle", petit: true });
-        s += txt(400, 224, "en quelques milliers d'années,", { a: "middle", petit: true }) + txt(400, 233, "la plaque n'a bougé que de ≈ 30 m", { a: "middle", petit: true });
+        s += txt(396, 224, "en quelques milliers d'années, la plaque", { a: "middle", petit: true }) + txt(396, 233, "ne s'est déplacée que d'environ 30 m", { a: "middle", petit: true });
         s += compteur(400, 14, p.ages ? lerp(p.ages[0], p.ages[1], t) : 160, { libelle: p.libelleAge });
         return s;
       },
@@ -4786,9 +4847,214 @@
         const q = Pk(pr, [DK.pt(suiviSN[0] + d, suiviSN[1])])[0];
         s += circ(q[0], q[1], 3.6, "#c0392b", { stroke: "#fff", "stroke-width": 1.2 });
         s += dlRegle();
-        s += txt(L4 / 2, 12, p.texte || "la faille fait remonter le gabbro jusqu'au fond de l'océan", { a: "middle", petit: true, clair: true });
+        s += txt(L4 / 2, 12, p.texte || "la faille ramène le gabbro jusqu'au plancher de l'océan", { a: "middle", petit: true, clair: true });
         if (t > 0.8) s += txt(L4 - 6, 26, p.texteFin || "gabbro et trondhjémite au fond", { a: "end", petit: true, clair: true, op: fen(t, 0.82, 0.9) });
         s += panneau + compteur(W - 66, 228, p.ages ? lerp(p.ages[0], p.ages[1], t) : 160, { libelle: p.libelleAge });
+        return s;
+      },
+    };
+  };
+
+  // ─────────── gabbro du Chenaillet, relu le 27/10/2026 (B.8) : la même lentille d'une diapo à l'autre ───────────
+  // Ses règles : peu de mots dans les scènes (le titre de l'étape dit le reste) ; le même objet suivi et une échelle lisible
+  // d'une diapo à l'autre. La lentille est à sa vraie taille dans la coupe (500 × 150 m : 10 × 3 px à 20 px par km) et grossie
+  // dans une loupe à 5 m par pixel, au même endroit dans les diapos 2 à 4, tournée comme la faille au-dessus d'elle.
+  // Sources : Nicollet et al. 2022 (taille, âge, refroidissement en quelques milliers d'années, veines d'albitite rares) ;
+  // Masini et al. 2008 (de la troctolite au gabbro à oxydes de Fe-Ti ; brèches puis laves en coussins sur la faille).
+  const LG_M = 5, LG_LX = 400, LG_LY = 122, LG_LR = 70;
+  // angle (degrés, à l'écran) de la faille au point s : la loupe tourne avec elle
+  const angleFaille = (s0, pr = P_ZOOM) => { const [x1, z1] = DK.pt(s0 - 0.3), [x2, z2] = DK.pt(s0 + 0.3); return Math.atan2(pr.Y(z2) - pr.Y(z1), pr.X(x2) - pr.X(x1)) * 180 / Math.PI; };
+  // contour lenticulaire (pointes aux deux bouts) ; k = gonflement (0–1)
+  function lentillePts(cx, cy, A, B, k = 1) {
+    const w = A * (0.4 + 0.6 * k), h = B * k, haut = [], bas = [];
+    for (let i = 0; i <= 20; i++) { const u = -1 + i / 10, e = 1 - u * u; haut.push([cx + w * u, cy - h * e]); bas.push([cx + w * u, cy + h * e * 0.85]); }
+    return haut.concat(bas.reverse());
+  }
+  // barres d'échelle (30 px au moins) : mètres, millimètres, kilomètres
+  function echelleU(x, y, pxParU, pas, unite) {
+    const L = pas.find((v) => v * pxParU >= 30) || pas[pas.length - 1], w = L * pxParU;
+    return rect(x - 4, y - 11, w + 8, 17, "rgba(255,255,255,.88)", { rx: 4 }) + line(x, y, x + w, y, "#27302d", 1.6)
+      + line(x, y - 3, x, y + 3, "#27302d", 1.2) + line(x + w, y - 3, x + w, y + 3, "#27302d", 1.2)
+      + txt(x + w / 2, y - 3.5, `${String(L).replace(".", ",")} ${unite}`, { a: "middle", petit: true });
+  }
+  // deux tirets du point observé aux bords de la loupe (plus léger qu'un cône, qui voilerait la coupe)
+  function visee(x, y, cx, cy, r) {
+    const d = Math.hypot(x - cx, y - cy), phi = Math.atan2(y - cy, x - cx), b = Math.acos(Math.min(1, r / d));
+    return [phi + b, phi - b].map((a) => line(x, y, cx + Math.cos(a) * r, cy + Math.sin(a) * r, "#27302d", 0.7, { "stroke-dasharray": "3 2", opacity: 0.75 })).join("");
+  }
+  const lectureLG = (x, y, texte) => rect(x - 72, y - 11, 144, 15, "rgba(255,255,255,.9)", { rx: 4 }) + txt(x, y, texte, { a: "middle", petit: true });
+  const kmDec = (v) => String(Math.round(v * 10) / 10).replace(".", ",");
+  // tirages fixes de la loupe (mêmes positions à chaque image)
+  const LGT = (() => {
+    const R = alea("lgloupe");
+    return {
+      maille: Array.from({ length: 46 }, () => [R() * 2 - 1, R() * 2 - 1, R() * Math.PI]),
+      fissures: [-0.55, -0.1, 0.4].map((u) => ({ u, j: (R() - 0.5) * 0.2 })),
+      breche: Array.from({ length: 22 }, () => ({ u: R() * 2 - 1, h: R(), r: 1.6 + R() * 2.2, a: R() * 180, c: R() < 0.5 ? OPH.gab : OPH.serp })),
+      oxydes: Array.from({ length: 5 }, () => [(R() - 0.5) * 0.7, (R() - 0.5) * 0.5, 1 + R() * 1.4]),
+    };
+  })();
+  // la lentille dans sa loupe. o : rot (degrés), dy (décalage vers le bas), liquide (0–1 : elle gonfle), suivi (0–1 : la goutte
+  // suivie monte et entre), cristal (0–1 : front de cristallisation depuis les bords), eau (0–1 : l'eau de mer descend par des
+  // fissures), fond (0–1 : au-dessus de la faille, la roche laisse place à la mer), breche, coussins (0–1), rangs (de coussins),
+  // dessus (couleur au-dessus de la faille quand elle est à nu), ta
+  function loupeLentille(cx, cy, r, o = {}) {
+    const L = loupe(cx, cy, r, { fond: OPH.peri }), A = LG_A * 1000 / LG_M, B = LG_B * 1000 / LG_M;
+    const yc = cy + (o.dy || 0), yF = yc - LG_N * 1000 / LG_M;                           // la faille, 80 m au-dessus du centre
+    const X0 = cx - 2 * r, X1 = cx + 2 * r, ta = o.ta || 0, fond = o.fond || 0;
+    let d = "";
+    for (const [u, v, a] of LGT.maille) { const x = cx + u * r * 1.4, y = yc + v * r * 1.4; if (y > yF + 2) d += line(x, y, x + Math.cos(a) * 6, y + Math.sin(a) * 6, "rgba(40,55,30,.4)", 0.8); }
+    // au-dessus de la faille : le compartiment du dessus (péridotite), puis la mer quand la lentille arrive au fond
+    d += rect(X0, cy - 2 * r, X1 - X0, yF - (cy - 2 * r), OPH.periH, { opacity: op(1 - fond) });
+    if (fond > 0) d += rect(X0, cy - 2 * r, X1 - X0, yF - (cy - 2 * r), o.dessus || OPH.eau, { opacity: op(fond) });
+    d += rect(X0, yF - 1.5, X1 - X0, 3, "#3b3026", { opacity: 0.85 });                      // la faille (roche broyée)
+    // chenal d'alimentation (diapo 2)
+    if (o.liquide != null) {
+      d += line(cx - 6, cy + 2 * r, cx - 2, yc + B * 0.8, MAGMA, 2.2, { opacity: 0.7 });
+      for (let k = 0; k < 4; k++) { const u = (ta * 0.35 + k / 4) % 1; d += ell(lerp(cx - 6, cx - 2, u), lerp(cy + r, yc + B * 0.8, u), 2.4, 1.6, MAGMA_CLAIR, { opacity: op(Math.sin(u * Math.PI) * 0.9) }); }
+    }
+    const kL = o.liquide != null ? Math.max(0.02, o.liquide) : 1, contour = lentillePts(cx, yc, A, B, kL);
+    if (o.cristal == null) {                                                          // encore liquide
+      d += poly(contour, MAGMA, { stroke: "#5b4636", "stroke-width": 0.8 }) + ell(cx - A * 0.15 * kL, yc - B * 0.25 * kL, A * 0.45 * kL, B * 0.3 * kL, MAGMA_CLAIR, { opacity: 0.45 });
+    } else {
+      const c = o.cristal;
+      d += poly(contour, OPH.gab, { stroke: "#4a4537", "stroke-width": 0.8 });
+      if (c < 1) d += poly(lentillePts(cx, yc, A, B, 1 - c), melange(MAGMA, "#8a4a2a", c));     // le liquide restant, au cœur
+      const ox = fen(c, 0.78, 1);                                                    // les derniers liquides : poches à oxydes
+      if (ox > 0) for (const [u, v, rr] of LGT.oxydes) d += circ(cx + u * A, yc + v * B, rr * ox, "#2f322e");
+      const vb = fen(c, 0.92, 1);                                                    // une veine d'albitite, rare et mince
+      if (vb > 0) d += pline([[cx - A * 0.55, yc + B * 0.5], [cx - A * 0.1, yc - B * 0.1], [cx + A * 0.35, yc - B * 0.55]], OPH.trond, 1.3, { opacity: op(vb) });
+    }
+    if (o.suivi != null) { const u = o.suivi; d += circ(lerp(cx - 6, cx, u), lerp(cy + r * 0.9, yc, u), 3.2, "#c0392b", { stroke: "#fff", "stroke-width": 1.1 }); }
+    // l'eau de mer descend par des fissures et refroidit la lentille
+    const eau = o.eau || 0;
+    if (eau > 0) for (const f of LGT.fissures) {
+      const x0 = cx + f.u * r, x1 = cx + (f.u + f.j) * A * 0.9, y1 = yc - B * 0.3;
+      d += line(x0, yF, x1, y1, "#27302d", 0.9, { opacity: op(eau) });
+      for (let k = 0; k < 3; k++) { const u = (ta * 0.3 + k / 3 + f.u + 1) % 1; d += circ(lerp(x0, x1, u), lerp(yF, y1, u), 1.6, "#7fc0e8", { opacity: op(Math.sin(u * Math.PI) * eau) }); }
+    }
+    // au fond : brèches (morceaux de gabbro et de serpentinite), puis laves en coussins (Masini et al. 2008)
+    const br = o.breche || 0, cs = o.coussins || 0, rangs = o.rangs || 5;
+    if (br > 0) d += rect(X0, yF - 9, X1 - X0, 8, "#6f6a58", { opacity: op(br) });           // la brèche, sur la faille
+    LGT.breche.forEach((b, i) => {
+      if (i / LGT.breche.length >= br) return;
+      const x = cx + b.u * r, y = yF - 2 - b.h * 7;
+      d += poly([[x - b.r, y], [x, y - b.r * 0.8], [x + b.r, y - b.r * 0.2], [x + b.r * 0.4, y + b.r * 0.6]], b.c, { stroke: "rgba(0,0,0,.35)", "stroke-width": 0.5, transform: `rotate(${r1(b.a)} ${r1(x)} ${r1(y)})` });
+    });
+    if (cs > 0) for (let j = 0; j < rangs; j++) {
+      const q = fen(cs, j / rangs, (j + 1) / rangs);
+      if (q <= 0) continue;
+      const y = yF - 10 - j * 8;
+      for (let x = X0 + (j % 2 ? 9 : 4); x < X1; x += 10) d += ell(x, y, 5, 4, OPH.cous, { stroke: "#56605a", "stroke-width": 0.6, opacity: op(q) });
+    }
+    const contenu = o.rot ? `<g transform="rotate(${r1(o.rot)} ${r1(cx)} ${r1(cy)})">${d}</g>` : d;
+    return L.fond + L.dans(contenu) + L.bord + echelleU(cx - 20, cy + r - 10, 1 / LG_M, [50, 100, 200, 500], "m");
+  }
+  // la texture de la fiche découpée en suites d'éléments du même minéral, DANS L'ORDRE DE DESSIN du schéma (les cristaux précoces
+  // y sont dessinés par-dessus les tardifs) : [[minéral, svg], …], pour les faire apparaître dans l'ordre de cristallisation
+  function texParMineral(res) {
+    if (res._suites) return res._suites;
+    const out = [];
+    try {
+      const doc = new DOMParser().parseFromString(`<svg xmlns="http://www.w3.org/2000/svg">${res.corps}</svg>`, "image/svg+xml"), ser = new XMLSerializer();
+      for (const el of Array.from(doc.documentElement.children)) {
+        const k = el.getAttribute("data-k") || "_", h = ser.serializeToString(el);
+        if (out.length && out[out.length - 1][0] === k) out[out.length - 1][1] += h; else out.push([k, h]);
+      }
+    } catch (e) { out.push(["_", res.corps]); }
+    return (res._suites = out);
+  }
+
+  // 2 · le liquide monte par des chenaux et gonfle une lentille juste sous la faille ; à sa vraie taille dans la coupe, grossie
+  // dans la loupe (même place aux diapos 3 et 4) ; on suit la goutte de la diapo 1
+  SCENES.lentilleGabbro = function (p) {
+    const R = alea("lgb" + p.graine), base = dlZoomFond({ vraies: true }), pr = P_ZOOM;
+    const [lx, lz] = LG_C, X = pr.X(lx), Y = pr.Y(lz);
+    const chenaux = [-1.4, 0, 1.3].map((dx) => Pk(pr, courbe([[lx + dx * 1.5, 14.6], [lx + dx * 1.2 + 0.3, 13.1], [lx + dx * 0.8 - 0.2, 11.5], [lx + dx * 0.35, 9.7], [lx + dx * 0.04, lz + LG_B]], 5)));
+    const gouttes = Array.from({ length: 18 }, (_, i) => ({ k: i % 3, ph: R() }));
+    const rot = angleFaille(LG_S), prof = lz - DK.zFond(lx);
+    return {
+      fond: base.fond + dlPanneau(),
+      anim(t, ta) {
+        const g = fen(t, 0.08, 0.85), us = fen(t, 0.04, 0.45);
+        let m = "";
+        for (const c of chenaux) m += pline(c, MAGMA, 1.4, { opacity: 0.45 });
+        for (const d of gouttes) { const u = (d.ph + ta * 0.16) % 1, q = lePlong(chenaux[d.k], u); m += ell(q.x, q.y, 2.2, 1.4, MAGMA, { opacity: op(Math.min(1, u * 6, (1 - u) * 10)) }); }
+        m += poly(Pk(pr, lentilleSN(LG_S, LG_N, LG_A * (0.4 + 0.6 * g), Math.max(0.006, LG_B * g))), MAGMA, { stroke: "#5b4636", "stroke-width": 0.5 });
+        const cFW = nid("zfw");
+        let s = `<g clip-path="url(#${base.cS})"><clipPath id="${cFW}"><polygon points="${P(Pk(pr, base.reg.fw))}"/></clipPath><g clip-path="url(#${cFW})">${dlMurZoom(0, m, { vraies: true })}</g>`;
+        s += dlZoomHaut({}) + fumeur(pr, ta) + `</g>` + dlRegle();
+        const qs = us < 1 ? lePlong(chenaux[1], us) : { x: X, y: Y };
+        s += circ(qs.x, qs.y, 3.4, "#c0392b", { stroke: "#fff", "stroke-width": 1.1 });
+        s += rect(X - 9, Y - 9, 18, 18, "none", { stroke: "#27302d", "stroke-width": 1, "stroke-dasharray": "3 2" }) + visee(X + 9, Y, LG_LX, LG_LY, LG_LR + 2);
+        s += loupeLentille(LG_LX, LG_LY, LG_LR, { rot, liquide: g, suivi: fen(t, 0.4, 0.62), ta });
+        s += lectureLG(LG_LX, LG_LY + LG_LR + 17, `${kmDec(prof)} km sous le fond · ≈ 1 200 °C`);
+        s += compteur(LG_LX, 14, 161, { libelle: p.libelleAge });
+        return s;
+      },
+    };
+  };
+
+  // 3 · la lentille cristallise (vue au microscope = schéma de texture de la fiche, minéral par minéral dans l'ordre), puis
+  // l'eau de mer infiltrée la refroidit ; à droite, la même loupe qu'à la diapo 2
+  SCENES.cristallisationLentille = function (p, roche) {
+    let T = null;
+    try { T = roche && window.Textures ? Textures.tirage(roche) : null; } catch (e) { T = null; }
+    const suites = T ? texParMineral(T.res) : [], presents = new Set(suites.map(([k]) => k));
+    const ORDRE = (p.ordre || [["olivine", 0, 0.3], ["plagioclases", 0.15, 0.5], ["pyroxenes", 0.45, 0.8], ["magnetite", 0.78, 0.95]]).filter(([k]) => presents.has(k));
+    const NOMS = { olivine: "olivine", plagioclases: "plagioclase", pyroxenes: "clinopyroxène", magnetite: "magnétite" };
+    const COUL = {};                                                                   // couleurs du schéma de la fiche
+    if (T) for (const g of T.res.legende.groupes) for (const l of g.lignes) if (l.cle && l.couleur) COUL[l.cle] = l.couleur;
+    const CX = 118, CY = 110, RA = 92, gid = nid("clg"), Lm = loupe(CX, CY, RA, { fond: MAGMA });
+    let defs = "<defs>";
+    suites.forEach(([, h], i) => { defs += `<g id="${gid}_${i}">${h}</g>`; });
+    defs += "</defs>";
+    const kT = 2 * RA / 252 * 1.02, pxmm = 420 / ((T && T.t && T.t.champ) || 20) * kT;
+    const use = (i, o) => `<use href="#${gid}_${i}" opacity="${op(o)}" transform="translate(${r1(CX)} ${r1(CY)}) scale(${kT.toFixed(3)}) translate(-210 -126)"/>`;
+    const T0 = p.tDebut ?? 1200, T1 = p.tFin ?? 1000, TF = p.tFroid ?? 500;
+    const rot = angleFaille(LG_S), prof = LG_C[1] - DK.zFond(LG_C[0]);
+    return {
+      fond: rect(0, 0, W, H, "#f3f1ea") + defs + Lm.fond,
+      anim(t, ta) {
+        const c = fen(t, 0.04, 0.62), froid = fen(t, 0.66, 0.95);
+        const Tc = c < 1 ? lerp(T0, T1, c) : lerp(T1, TF, froid);
+        let m = "";
+        suites.forEach(([k], i) => { const o = ORDRE.find(([q]) => q === k), v = o ? fen(c, o[1], o[2]) : c; if (v > 0.01) m += use(i, v); });
+        let s = Lm.dans(m) + Lm.bord + echelleU(CX - 30, CY + RA - 12, pxmm, [0.5, 1, 2, 5], "mm");
+        s += visee(LG_LX, LG_LY, CX, CY, RA + 2);
+        s += loupeLentille(LG_LX, LG_LY, LG_LR, { rot, cristal: c, eau: froid, ta });
+        s += circ(LG_LX, LG_LY, 3.4, "#c0392b", { stroke: "#fff", "stroke-width": 1.1 });
+        s += lectureLG(LG_LX, LG_LY + LG_LR + 17, `${kmDec(prof)} km sous le fond · ${nombre(Math.round(Tc / 10) * 10)} °C`);
+        ORDRE.forEach(([k, a, b], i) => {                                               // les minéraux dans l'ordre ; celui qui pousse en gras
+          const x = 14 + i * 72, vu = 0.35 + 0.65 * fen(c, a, a + 0.05), actif = c > a && c < b;
+          s += rect(x, 222, 9, 9, COUL[k] || couleurMin(k), { rx: 2, stroke: "rgba(0,0,0,.35)", "stroke-width": 0.6, opacity: op(vu) })
+            + txt(x + 12, 230, NOMS[k] || nomMin(k), { petit: !actif, op: vu });
+        });
+        s += compteur(LG_LX, 14, 161, { libelle: p.libelleAge });
+        return s;
+      },
+    };
+  };
+
+  // 4 · la faille de détachement remonte la lentille (le compartiment du dessous glisse le long d'elle, en (s, n)) jusqu'au
+  // fond ; dans la loupe, la mer, des brèches puis des laves en coussins la recouvrent
+  SCENES.remonteeLentille = function (p) {
+    const base = dlZoomFond({ vraies: true }), pr = P_ZOOM, DEP = DK.sT + 0.6 - LG_S;
+    return {
+      fond: base.fond + dlPanneau(),
+      anim(t, ta) {
+        const d = DEP * fen(t, 0.05, 0.72), sC = LG_S + d;
+        const lent = poly(Pk(pr, lentilleSN(sC, LG_N, LG_A, LG_B)), OPH.gab, { stroke: "#4a4537", "stroke-width": 0.6 });
+        const cFW = nid("zfw"), [x, z] = DK.pt(sC, LG_N), X = pr.X(x), Y = pr.Y(z), cs = fen(t, 0.86, 0.97);
+        let s = `<g clip-path="url(#${base.cS})"><clipPath id="${cFW}"><polygon points="${P(Pk(pr, base.reg.fw))}"/></clipPath><g clip-path="url(#${cFW})">${dlMurZoom(d, lent, { vraies: true })}</g>`;
+        s += dlZoomHaut({}) + fumeur(pr, ta);
+        if (cs > 0) s += `<g opacity="${op(cs)}">${monticule(pr, x + 0.2, 5, 2.6, false)}</g>`;
+        s += `</g>` + dlRegle();
+        s += circ(X, Y, 3.4, "#c0392b", { stroke: "#fff", "stroke-width": 1.1 }) + visee(X, Y, LG_LX, LG_LY, LG_LR + 2);
+        const prof = z - DK.zFond(x), auFond = prof < 0.12 && t > 0.72;
+        s += loupeLentille(LG_LX, LG_LY, LG_LR, { rot: angleFaille(sC), cristal: 1, fond: fen(t, 0.7, 0.78), breche: fen(t, 0.76, 0.86), coussins: cs, ta });
+        s += lectureLG(LG_LX, LG_LY + LG_LR + 17, auFond ? "au fond de l'océan · ≈ 2 °C" : t < 0.06 ? `${kmDec(prof)} km sous le fond · ≈ 500 °C` : `${kmDec(prof)} km sous le fond`);
+        s += compteur(LG_LX, 14, p.ages ? lerp(p.ages[0], p.ages[1], t) : 161, { libelle: p.libelleAge });
         return s;
       },
     };
@@ -4892,9 +5158,10 @@
         + txt(cx, cy + r + 12, "l'écaille de près (≈ 600 m)", { a: "middle", petit: true });
       return s;
     })();
+    const sobre = !!p.sobre;                                                            // gabbro (B.8, 27/10/2026) : peu de mots, échelle, loupe de la diapo 4
     return {
       fond: ciel(MER) + rect(0, MER, W, H - MER, OPH.eau),
-      devant,
+      devant: sobre ? "" : devant,
       anim(t, ta) {
         const E = etat(t), { D, fB, fC, I } = E, EC = ecailles(E);
         const nt = EC[NOTRE].pg, xE = (nt[0][0] + nt[NP - 1][0]) / 2;
@@ -4940,29 +5207,36 @@
         const yE = (nt[Math.floor(NP / 2)][1] + nt[2 * NP - 1 - Math.floor(NP / 2)][1]) / 2;
         s += line(0, MER, W, MER, "rgba(40,90,130,.35)", 0.8, { "stroke-dasharray": "4 3" });
         // loupe : cône vers l'écaille
-        const [lx, ly, lr] = LOUPE, phi = Math.atan2(yE - ly, xE - lx);
-        s += line(lx + Math.cos(phi) * (lr + 2), ly + Math.sin(phi) * (lr + 2), xE, yE, "#27302d", 0.9, { "stroke-dasharray": "3 2", opacity: 0.7 });
+        if (sobre) {
+          // la même loupe qu'à la fin de la diapo 4 (lentille, brèches, coussins) ; au-dessus, l'empilement, puis l'air à la fin
+          const [lx, ly, lr] = [76, 166, 54];
+          s += visee(xE, yE, lx, ly, lr + 2) + loupeLentille(lx, ly, lr, { dy: 18, cristal: 1, fond: 1, breche: 1, coussins: 1, rangs: 3, dessus: melange("#a4a9b0", "#cfe3ef", fen(fC, 0.5, 0.8)) });
+          s += echelleU(W - 66, H - 12, PX, [5, 10, 20, 50], "km");
+        } else {
+          const [lx, ly, lr] = LOUPE, phi = Math.atan2(yE - ly, xE - lx);
+          s += line(lx + Math.cos(phi) * (lr + 2), ly + Math.sin(phi) * (lr + 2), xE, yE, "#27302d", 0.9, { "stroke-dasharray": "3 2", opacity: 0.7 });
+        }
         s += circ(xE, yE, 3.4, "#c0392b", { stroke: "#fff", "stroke-width": 1.1 });
         // étiquettes
-        const titre = t < 0.1 ? (p.texte || "l'océan alpin se ferme : son fond plonge sous la plaque apulienne")
+        const titre = t < 0.1 ? (p.texte || "la fermeture de l'océan alpin entraîne son plancher sous la plaque apulienne")
           : t < 0.45 ? "le haut du fond est raboté en écailles qui s'empilent"
           : t < 0.76 ? "la marge européenne passe dessous : tout l'empilement se soulève"
           : "l'érosion entame l'empilement des écailles";
-        s += txt(286, 14, titre, { a: "middle" });
-        if (t < 0.5) s += txt(160, 60, "océan alpin", { a: "middle", petit: true, clair: true, op: 1 - fen(t, 0.35, 0.5) });
+        if (!sobre) s += txt(286, 14, titre, { a: "middle" });
+        if (t < 0.5 && !sobre) s += txt(160, 60, "océan alpin", { a: "middle", petit: true, clair: true, op: 1 - fen(t, 0.35, 0.5) });
         s += txt(8, 104, "marge européenne", { petit: true });
         s += txt(476, 86, "plaque", { a: "end", petit: true }) + txt(476, 95, "apulienne (Adria)", { a: "end", petit: true });
         const xp = XH + 64 - 14 * fB;
         s += txt(xp, (S(xp) + I(xp)) / 2 + 3, "prisme : schistes lustrés", { a: "middle", petit: true });
         const ps = pt(30, 5);
-        s += `<text x="${r1(ps[0])}" y="${r1(ps[1])}" text-anchor="middle" class="fa-lab fa-petit" transform="rotate(30 ${r1(ps[0])} ${r1(ps[1])})">le reste du fond océanique plonge</text>`;
-        s += fleche(12, 138, 50, 138, { sw: 2, pointe: 7, op: 0.8 }) + txt(56, 141, "la plaque européenne avance", { petit: true });
+        if (!sobre) s += `<text x="${r1(ps[0])}" y="${r1(ps[1])}" text-anchor="middle" class="fa-lab fa-petit" transform="rotate(30 ${r1(ps[0])} ${r1(ps[1])})">le reste du plancher océanique s'enfonce</text>`
+          + fleche(12, 138, 50, 138, { sw: 2, pointe: 7, op: 0.8 }) + txt(56, 141, "la plaque européenne avance", { petit: true });
         if (fC > 0.4) {
           const yt = yE - 2;
           s += line(xE - 8, yt - 1, xE - 24, yt - 6, "#27302d", 0.8, { opacity: op(fen(fC, 0.4, 0.7)) })
             + txt(xE - 26, yt - 4, p.nomEcaille || "le Chenaillet, 2 650 m", { a: "end", petit: true, op: fen(fC, 0.4, 0.7) });
         }
-        if (t > 0.12 && t < 0.76) s += txt(XH - 40, 88, "écailles du fond de l'océan", { a: "end", petit: true, op: fen(t, 0.12, 0.2) * (1 - fen(t, 0.7, 0.76)) });
+        if (t > 0.12 && t < 0.76 && !sobre) s += txt(XH - 40, 88, "écailles du fond de l'océan", { a: "end", petit: true, op: fen(t, 0.12, 0.2) * (1 - fen(t, 0.7, 0.76)) });
         // âge : 50 → 45 Ma (écaille), 45 → 35 Ma (collision), puis jusqu'à aujourd'hui
         const A = p.ages || [50, 45, 35, 0];
         const age = A.length >= 4 ? (t < 0.45 ? lerp(A[0], A[1], t / 0.45) : t < 0.76 ? lerp(A[1], A[2], (t - 0.45) / 0.31) : lerp(A[2], A[3], (t - 0.76) / 0.24)) : lerp(A[0], A[1], t);
@@ -5041,19 +5315,23 @@
     for (let z = 0; z <= 60; z += 10) s += line(7, MG.Y0 + z * MG.PX, 10, MG.Y0 + z * MG.PX, "#27302d", 1) + (z % 20 === 0 ? txt(13, MG.Y0 + z * MG.PX + 3, `${z} km`, { petit: true }) : "");
     return s;
   }
+  // p.sobre (pyroxénite, 27/10/2026, sa demande « moins de texte ») : ni phrase en haut, ni calcaires, Moho, brèches et flysch
+  // nommés ; la marque suivie porte p.suivi et sa seule profondeur. Étape d'un seul tenant (T0 = 0, T1 = 1) : curseur sur 45 → 0 km.
   function marge(p, T0, T1) {
+    const sobre = !!p.sobre;
     return {
       fond: ciel(MG.MER),
       curseur: (t) => {                                                   // le curseur du diagramme suit la profondeur réelle
         const G = margeGeom(lerp(T0, T1, t)), z = (G.marque[1] - G.top(G.marque[0])) / MG.PX;
+        if (T0 === 0 && T1 === 1) return (45 - z) / 45;
         return T0 < 0.5 ? (45 - z) / 25 : (20 - z) / 20;
       },
       anim(t, ta) {
         const T = lerp(T0, T1, t), G = margeGeom(T), { XC } = MG;
         let s = rect(0, MG.MER, W, H - MG.MER, "#4f84ad") + mgDessin(G.it);
         // le manteau remonte : lignes d'écoulement qui montent sous l'axe puis s'écartent sous la croûte amincie
-        const vig = 1 - 0.7 * fen(T, 0.75, 0.95);
-        for (const c of [-46, -24, -9, 9, 24, 46]) {
+        const vig = 1 - 0.7 * fen(T, 0.75, 0.95), expl = !!p.explique;
+        if (!expl) for (const c of [-46, -24, -9, 9, 24, 46]) {
           const l = [[XC + c * 0.7, 250], [XC + c * 0.9, lerp(250, G.moho(XC + c) + 28, 0.5)], [XC + c * 1.3, G.moho(XC + c * 1.3) + 22], [XC + c * 2.4 + Math.sign(c) * 30, G.moho(XC + c * 2.4 + Math.sign(c) * 30) + 14]];
           const cb = courbe(l, 8);
           for (let k = 0; k < 4; k++) {
@@ -5062,18 +5340,41 @@
             s += poly([[q.x + ca * 4, q.y + sa * 4], [q.x - ca * 2.5 - sa * 2.6, q.y - sa * 2.5 + ca * 2.6], [q.x - ca * 2.5 + sa * 2.6, q.y - sa * 2.5 - ca * 2.6]], "#5f6b3a", { opacity: op(0.7 * vig * Math.min(1, u * 5, (1 - u) * 5)) });
           }
         }
-        s += fleche(62, 214, 18, 214, { sw: 2.4, pointe: 8, op: 0.85 }) + txt(22, 206, "Ibérie", { petit: true })
+        if (!expl) s += fleche(62, 214, 18, 214, { sw: 2.4, pointe: 8, op: 0.85 }) + txt(22, 206, "Ibérie", { petit: true })
           + fleche(418, 214, 462, 214, { sw: 2.4, pointe: 8, op: 0.85 }) + txt(458, 206, "Europe", { a: "end", petit: true });
         s += mgRegle();
-        s += txt(40, MG.Y0 + 16, "calcaires du Jurassique", { petit: true }) + txt(40, MG.Y0 + 44, "croûte continentale", { petit: true });
-        s += txt(40, G.moho(40) + 12, "Moho : base de la croûte", { petit: true, clair: true });
-        s += txt(300, 196, "manteau (péridotite)", { petit: true, clair: true });
+        if (expl) {
+          // p.explique (27/10/2026, sa remarque « on a du mal à comprendre comment ça remonte ») : les deux bords de la croûte TIRÉS
+          // vers l'extérieur (flèches posées sur les blocs, qui s'écartent avec eux), l'épaisseur de croûte qui reste au-dessus du
+          // manteau (30 km → 0), le manteau qui monte à sa place (flèches), et le trajet du morceau suivi
+          const f = fen(T, 0, 0.75), xa = XC - 112 * (1 + 0.35 * f), xb = XC + 112 * (1 + 0.35 * f), ya = MG.Y0 + 23;
+          s += fleche(xa, ya, xa - 36, ya, { sw: 2.6, pointe: 8 }) + txt(xa - 40, ya + 3, "Ibérie", { a: "end", petit: true })
+            + fleche(xb, ya, xb + 36, ya, { sw: 2.6, pointe: 8 }) + txt(xb + 40, ya + 3, "Europe", { petit: true });
+          const xg = XC - 26, e = (G.moho(xg) - G.top(xg)) / MG.PX, vg = 1 - fen(T, 0.72, 0.8);
+          if (vg > 0) s += `<g opacity="${op(vg)}">` + line(xg, G.top(xg) + 1, xg, G.moho(xg) - 1, "#27302d", 1.2)
+            + line(xg - 4, G.top(xg) + 1, xg + 4, G.top(xg) + 1, "#27302d", 1.2) + line(xg - 4, G.moho(xg) - 1, xg + 4, G.moho(xg) - 1, "#27302d", 1.2)
+            + txt(xg - 7, (G.top(xg) + G.moho(xg)) / 2 + 3, `croûte : ${nombre(e)} km`, { a: "end", petit: true }) + "</g>";
+          const vm = 1 - fen(T, 0.8, 0.9);
+          for (const c of [-48, 58]) {
+            const x = XC + c, y0 = Math.min(232, G.moho(x) + 52), y1 = G.moho(x) + 14;
+            if (y0 - y1 > 12) s += fleche(x, y0, x, y1, { c: "#4f5b2c", sw: 2.6, pointe: 8, op: vm });
+          }
+          s += txt(XC - 56, Math.min(226, G.moho(XC - 48) + 40), "le manteau monte", { a: "end", petit: true, op: vm });
+          const [xm0, ym0] = G.marque;
+          s += line(MG.XM, MG.Y0 + 45 * MG.PX, xm0, ym0 + 6, "#2f6f3a", 1.2, { "stroke-dasharray": "2 3", opacity: 0.8 });
+        }
+        if (!sobre) s += txt(40, MG.Y0 + 16, "calcaires du Jurassique", { petit: true });
+        s += txt(40, MG.Y0 + 44, sobre ? "croûte" : "croûte continentale", { petit: true });
+        if (!sobre) s += txt(40, G.moho(40) + 12, "Moho : base de la croûte", { petit: true, clair: true });
+        s += txt(p.explique ? 40 : 300, p.explique ? 206 : 196, sobre ? "manteau" : "manteau (péridotite)", { petit: true, clair: true });
         // la lherzolite suivie, avec sa profondeur et sa température
         const [xm, ym] = G.marque, z = Math.max(0, (ym - G.top(xm)) / MG.PX);             // profondeur SOUS le fond de la mer
-        s += mgMarque(xm, ym, z > 1 ? `la future lherzolite de Lers : ${nombre(z)} km, ≈ ${nombre(Math.round(mgTemp(z) / 10) * 10)} °C` : "la lherzolite de Lers, au fond de la mer");
-        if (T >= 0.5 && fen(T, 0.72, 0.86) > 0.4) s += txt(XC - 70, G.top(XC - 70) - 4, "brèches", { a: "end", petit: true, clair: true, op: fen(T, 0.74, 0.8) * (1 - fen(T, 0.84, 0.88)) });
-        if (T > 0.82) s += txt(XC - 16, MG.MER - 4, "flysch : boues déposées lit par lit", { a: "end", petit: true, clair: true, op: fen(T, 0.83, 0.88) });
-        s += txt(220, 16, T < 0.5 ? "l'Ibérie s'écarte de l'Europe : la croûte s'amincit, le manteau remonte" : T < 0.76 ? "la croûte se rompt : le manteau arrive au fond de la mer" : "le manteau à nu est cassé en brèches, puis recouvert de boues", { a: "middle" });
+        const suivi = p.suivi || "la lherzolite de Lers";
+        s += mgMarque(xm, ym, p.marqueSeule ? "" : sobre ? (z > 1 ? `${suivi} : ${nombre(z)} km` : `${suivi}, sur le fond marin`)
+          : z > 1 ? `la future lherzolite de Lers : ${nombre(z)} km, ≈ ${nombre(Math.round(mgTemp(z) / 10) * 10)} °C` : "la lherzolite de Lers, sur le fond marin");
+        if (!sobre && T >= 0.5 && fen(T, 0.72, 0.86) > 0.4) s += txt(XC - 70, G.top(XC - 70) - 4, "brèches", { a: "end", petit: true, clair: true, op: fen(T, 0.74, 0.8) * (1 - fen(T, 0.84, 0.88)) });
+        if (!sobre && T > 0.82) s += txt(XC - 16, MG.MER - 4, "flysch : boues sédimentées couche après couche", { a: "end", petit: true, clair: true, op: fen(T, 0.83, 0.88) });
+        if (!sobre) s += txt(220, 16, T < 0.5 ? "l'Ibérie s'écarte de l'Europe : la croûte s'amincit, le manteau remonte" : T < 0.76 ? "la croûte se rompt : le manteau arrive au fond de la mer" : "le manteau mis à nu se fragmente en brèches, puis se recouvre de boues", { a: "middle" });
         s += compteur(412, 36, p.ages ? lerp(p.ages[0], p.ages[1], t) : 0, { libelle: p.libelleAge });
         return s;
       },
@@ -5081,6 +5382,7 @@
   }
   SCENES.margeEtirement = (p) => marge(p, 0, 0.5);
   SCENES.margeManteau = (p) => marge(p, 0.5, 1);
+  SCENES.margeRemontee = (p) => marge(p, 0, 1);                           // étirement et mise à nu en une seule étape
   // la collision referme le bassin : le MÊME dessin que la fin de l'étape précédente, raccourci et épaissi (les deux bords se
   // rapprochent, le bassin et son manteau sont serrés et poussés vers le haut, les failles rejouent en failles inverses) ;
   // l'érosion, en même temps puis après, rabote la chaîne jusqu'à mettre la lherzolite au jour. p.ages [début, fin de la
@@ -5089,19 +5391,29 @@
     const G = margeGeom(1), { XC, MER } = MG;
     const cible = (x) => 35 + 2.5 * Math.sin(x / 37) + 1.5 * Math.sin(x / 13 + 1) + 5 * Math.exp(-(((x - (MG.XM + 26)) / 9) ** 2));
     const clipE = nid("mc");
+    const trDe = (t) => {
+      const c = fen(t, 0.04, 0.62);
+      return (x, y) => {
+        // raccourcissement fort sur le bassin aminci (les deux bords se rejoignent), épaississement autour de y = 60, et le
+        // coin de manteau serré au milieu est poussé vers le haut (écaille), le tout un peu soulevé
+        const f = 1 - 0.6 * c * Math.exp(-(((x - XC) / 110) ** 2));
+        const y1 = 60 + (y - 60) / f - c * 22 * Math.exp(-(((x - XC) / 45) ** 2)) * clamp((150 - y) / 60) - 6 * c;
+        return [XC + (x - XC) * f, y1];
+      };
+    };
+    const Ede = (t) => { const er = fen(t, 0.22, 0.95); return (x) => lerp(-30, cible(x), er); };
     return {
       fond: ciel(MER),
       curseur: (t) => fen(t, 0.2, 0.95),
+      // marque suivie à l'instant t : [x, y, profondeur sous la surface en km]
+      // profondeur sous la surface VISIBLE : le dessus de la pile (vases de 12 px comprises, épaissies par la collision) ou la surface
+      // d'érosion si elle est plus basse
+      marque(t) {
+        const tr = trDe(t), E = Ede(t), [xm, ym] = tr(G.marque[0], G.marque[1]), yh = tr(G.marque[0], G.top(G.marque[0]) - 12)[1];
+        return [xm, Math.max(ym, E(xm) + 1), Math.max(0, (ym - Math.max(E(xm), yh)) / MG.PX)];
+      },
       anim(t, ta) {
-        const c = fen(t, 0.04, 0.62), er = fen(t, 0.22, 0.95);
-        const tr = (x, y) => {
-          // raccourcissement fort sur le bassin aminci (les deux bords se rejoignent), épaississement autour de y = 60, et le
-          // coin de manteau serré au milieu est poussé vers le haut (écaille), le tout un peu soulevé
-          const f = 1 - 0.6 * c * Math.exp(-(((x - XC) / 110) ** 2));
-          const y1 = 60 + (y - 60) / f - c * 22 * Math.exp(-(((x - XC) / 45) ** 2)) * clamp((150 - y) / 60) - 6 * c;
-          return [XC + (x - XC) * f, y1];
-        };
-        const E = (x) => lerp(-30, cible(x), er);
+        const tr = trDe(t), E = Ede(t);
         const bord = []; for (let x = -4; x <= W + 4; x += 4) bord.push([x, E(x)]);
         let s = rect(0, MER, W, H - MER, "#4f84ad");
         s += `<clipPath id="${clipE}"><polygon points="${P(bord.concat([[W + 4, H + 5], [-4, H + 5]]))}"/></clipPath>`;
@@ -5115,20 +5427,292 @@
         if (v > 0) s += vegetation((x) => E(x), 4, W - 4, alea("mgc" + p.graine), { op: v, pas: 19, coniferes: 0.5 });
         s += mgRegle();
         // rapprochement des plaques
-        s += fleche(18, 214, 58, 214, { sw: 2.4, pointe: 8, op: 0.85 * (1 - fen(t, 0.62, 0.7)) }) + txt(22, 206, "Ibérie", { petit: true })
+        if (!p.explique) s += fleche(18, 214, 58, 214, { sw: 2.4, pointe: 8, op: 0.85 * (1 - fen(t, 0.62, 0.7)) }) + txt(22, 206, "Ibérie", { petit: true })
           + fleche(462, 214, 422, 214, { sw: 2.4, pointe: 8, op: 0.85 * (1 - fen(t, 0.62, 0.7)) }) + txt(458, 206, "Europe", { a: "end", petit: true });
+        else {
+          // p.explique : les deux bords POUSSÉS l'un vers l'autre (flèches sur la croûte), puis l'érosion nommée là où elle rabote
+          const vp = 1 - fen(t, 0.62, 0.7), ya = 70;
+          s += fleche(30, ya, 70, ya, { sw: 2.6, pointe: 8, op: vp }) + txt(34, ya - 7, "Ibérie", { petit: true, op: vp })
+            + fleche(450, ya, 410, ya, { sw: 2.6, pointe: 8, op: vp }) + txt(446, ya - 7, "Europe", { a: "end", petit: true, op: vp });
+          const ve = fen(t, 0.3, 0.4) * (1 - fen(t, 0.88, 0.94));
+          if (ve > 0) {
+            // surface VISIBLE : le haut de la croûte déformée, ou la surface d'érosion si elle est plus basse
+            const surf = [];
+            for (let x0 = -130; x0 <= 610; x0 += 6) { const [X, Y] = tr(x0, G.top(x0)); surf.push([X, Math.max(Y, E(X))]); }
+            const sV = (x) => { const i = surf.findIndex(([X]) => X >= x); if (i <= 0) return surf[Math.max(0, i)][1]; const [a, b] = [surf[i - 1], surf[i]]; return lerp(a[1], b[1], (x - a[0]) / ((b[0] - a[0]) || 1)); };
+            for (const x of [XC - 80, XC - 50, XC - 20]) { const y = Math.max(14, sV(x)); s += fleche(x, y - 12, x, y - 1, { sw: 1.4, pointe: 5, op: ve }); }
+            s += txt(XC - 86, Math.max(26, sV(XC - 86)) - 15, "érosion", { a: "end", petit: true, op: ve });
+          }
+        }
         // la lherzolite suivie
         const [xm, ym] = tr(G.marque[0], G.marque[1]);
         const dehors = ym <= E(xm) + 3;                                    // l'érosion a atteint la lherzolite
         s += mgMarque(xm, Math.max(ym, E(xm) + 1), "");
-        s += txt(220, 16, t < 0.3 ? "l'Ibérie revient vers l'Europe : le bassin se referme et se soulève" : t < 0.7 ? "serrés, le bassin et son manteau montent dans la chaîne ; l'érosion la rabote" : "l'érosion met au jour la lherzolite, prise entre les calcaires", { a: "middle" });
-        if (t > 0.1 && t < 0.62) s += txt(XC + 50, tr(XC + 50, 60)[1] + 22, "failles inverses", { petit: true, clair: true, op: fen(t, 0.14, 0.22) * (1 - fen(t, 0.52, 0.6)) });
+        if (!p.sobre) s += txt(220, 16, t < 0.3 ? "l'Ibérie revient vers l'Europe : le bassin se referme et se soulève" : t < 0.7 ? "serrés, le bassin et son manteau montent dans la chaîne ; l'érosion la rabote" : "l'érosion dégage la lherzolite, prise entre les calcaires", { a: "middle" });
+        if (!p.sobre && t > 0.1 && t < 0.62) s += txt(XC + 50, tr(XC + 50, 60)[1] + 22, "failles inverses", { petit: true, clair: true, op: fen(t, 0.14, 0.22) * (1 - fen(t, 0.52, 0.6)) });
         if (dehors) s += line(xm - 4, E(xm) + 5, xm - 12, E(xm) + 15, "#27302d", 0.8, { opacity: op(fen(t, 0.86, 0.92)) })
           + txt(xm - 14, E(xm) + 22, p.creteNom || "lherzolite de l'étang de Lers", { a: "end", petit: true, op: fen(t, 0.86, 0.92) });
         if (lac > 0.5) s += txt(xl + 12, cible(xl) + 11, "étang", { petit: true, op: lac });
         const A = p.ages || [85, 20, 0];
         const age = t < 0.62 ? lerp(A[0], A[1], t / 0.62) : lerp(A[1], A[2], (t - 0.62) / 0.38);
         s += compteur(412, 36, age);
+        return s;
+      },
+    };
+  };
+
+  // ─────────────── pyroxénite de l'Ariège (B.8, 27/10/2026) ───────────────
+  // Quatre diapos qui suivent LE MÊME morceau de manteau (ses demandes : « plus claire, moins de texte », puis « plus de lien et de
+  // précision ») : 1 · coupe 0–66 km + vue rapprochée au centimètre : les pyroxènes cristallisent sur les parois d'une fissure
+  // (cumulats de haute pression, Bodinier et al. 1987) ; 2 · la même vue s'éloigne jusqu'au mètre : le liquide imprègne la
+  // harzburgite, qui devient lherzolite, et, le manteau se déformant, se rassemble en bandes parallèles de quelques centimètres
+  // (Le Roux, Tommasi et Vauchez 2008) ; 3 et 4 · coupe de la marge pyrénéenne + loupe sur le même mètre de roche (mêmes lits,
+  // même échelle). Peu de mots dans les scènes : le titre de l'étape dit le reste.
+  const PXY = (z) => 40 + z * 3;                                       // coupe de la croûte et du manteau, 3 px par km (0 à 66 km)
+  const PX_AUG = "#55663f", PX_EN = "#7b7c4d", PX_SPL = "#1f2a20", PX_BANDE = "#3e4a33", PX_LIQ = "#d9542b";
+  const PX_HZ = ["#c9c58f", "#d3c99a", "#bdbd82"];                     // harzburgite : olivine claire, peu de pyroxène
+  const PX_LZ = ["#a9b471", "#b8bd7f", "#7f8f55"];                     // lherzolite : plus de pyroxène, plus verte
+  const PX_CM1 = 33.3, PX_CM2 = 3;                                     // px par cm : vue de la diapo 1 (chenal de 2,4 cm) ; diapos 2 à 4
+  // bandes du morceau suivi, VERTICALES à leur formation (fissures comme celle de la diapo 1) : [x en cm, largeur en cm] ; la bande de
+  // la diapo 1 est en x = 0. Puis la déformation du manteau les fait tourner, les étire et les amincit jusqu'à les coucher toutes dans
+  // le même plan (cisaillement simple x' = x − γ·y ; γ = 5 : bandes à ≈ 11° du plan, 5 fois plus minces). À Lherz, ce litage est
+  // repris par des plis serrés (isoclinaux) d'une déformation du manteau antérieure aux Alpes (Avé Lallemant 1969) : il a bien tourné.
+  const PX_BANDES = [[0, 2.4]].concat([-210, -180, -150, -120, -90, -60, -30, 30, 60, 90, 120, 150, 180, 210]
+    .map((x, i) => [x + ((i * 7) % 11) - 5, [8, 5, 11, 6, 9, 4, 10, 7, 12, 5, 8, 6, 9, 7][i]]));
+  const PX_GAM = 5;
+  const PZ = { X: 222, Y: 22, W: 250, H: 210 }, PZC = PZ.X + PZ.W / 2, PZM = PZ.Y + PZ.H / 2;
+  // grains de péridotite en motif PÉRIODIQUE (cellules de Voronoï des sites et de leurs 8 copies : pas de couture) ; l'échelle
+  // vient du patternTransform, 1 = 33 px par cm (grains d'environ 1 cm)
+  const PX_MOTIFS = new Map();
+  function motifPx(id, cols, graine, x0, y0, k, biais = 0) {
+    const T = 120, cle = cols.join() + graine;
+    if (!PX_MOTIFS.has(cle)) PX_MOTIFS.set(cle, cellulesPx(cols, graine, T));
+    return `<pattern id="${id}" patternUnits="userSpaceOnUse" width="${T}" height="${T}" patternTransform="translate(${r1(x0)} ${r1(y0)}) skewX(${r1(biais)}) scale(${Math.max(0.001, k).toFixed(4)})">${PX_MOTIFS.get(cle)}</pattern>`;
+  }
+  // biais des grains pour un cisaillement γ (grains aplatis en douceur : 0,2 γ, au plus ≈ 34°)
+  const biaisPx = (g) => -Math.atan(0.2 * g) * 180 / Math.PI;
+  function cellulesPx(cols, graine, T) {
+    const R = alea("mpx" + graine), base = [];
+    for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) base.push([(i + 0.5 + (R() - 0.5) * 0.7) * T / 4, (j + 0.5 + (R() - 0.5) * 0.7) * T / 4]);
+    const tous = [];
+    for (const dx of [-T, 0, T]) for (const dy of [-T, 0, T]) for (const [x, y] of base) tous.push([x + dx, y + dy]);
+    const teinte = base.map(() => cols[Math.floor(R() * cols.length)]);
+    return voronoi(tous, 0, 0, T, T).map((pg, i) => pg.length > 2 ? poly(pg, teinte[i % base.length], { stroke: "#8d9459", "stroke-width": 0.9 }) : "").join("");
+  }
+  // barre d'échelle à une longueur ronde, 30 à 90 px
+  function echellePx(x, y, s) {
+    const L = [0.5, 1, 2, 5, 10, 20, 50, 100].find((v) => v * s >= 30) || 100, w = L * s;
+    return rect(x - 4, y - 11, w + 8, 17, "rgba(255,255,255,.88)", { rx: 4 }) + line(x, y, x + w, y, "#27302d", 1.6)
+      + line(x, y - 3, x, y + 3, "#27302d", 1.2) + line(x + w, y - 3, x + w, y + 3, "#27302d", 1.2)
+      + txt(x + w / 2, y - 3.5, L < 100 ? `${String(L).replace(".", ",")} cm` : "1 m", { a: "middle", petit: true });
+  }
+  // le morceau de roche suivi, vu de près (diapos 2 à 4) : harzburgite, bandes de pyroxénite entourées d'un liseré de lherzolite (le
+  // liquide a imprégné la roche autour, Le Roux et al. 2008), le tout cisaillé de γ ; rot = basculement de l'ensemble (diapo 4)
+  //   o : { X0, Y0 (écran du point 0 = milieu de la bande de la diapo 1), s (px par cm), x0, x1, y0, y1 (cadre), idH, idL, gam, rot,
+  //         bandes: (i) => [couleur, opacité], voile }
+  function metrePx(o) {
+    const g = o.gam || 0, S = o.s, P = (x, y) => [o.X0 + (x - g * y) * S, o.Y0 + y * S];
+    const bande = (x, e) => { const h = 600 / S + 50; return [P(x - e / 2, -h), P(x + e / 2, -h), P(x + e / 2, h), P(x - e / 2, h)]; };
+    const m = 400, W0 = o.x1 - o.x0 + 2 * m, H0 = o.y1 - o.y0 + 2 * m;
+    let d = rect(o.x0 - m, o.y0 - m, W0, H0, `url(#${o.idH})`), b = "";
+    PX_BANDES.forEach(([x, e], i) => {
+      const [c, a] = o.bandes ? o.bandes(i) : [PX_BANDE, 1];
+      if (a <= 0.01) return;
+      d += poly(bande(x, e + 7), `url(#${o.idL})`, { opacity: op(a) });                 // liseré de lherzolite
+      b += poly(bande(x, e), c, { opacity: op(a), stroke: "#1f281a", "stroke-width": 0.6 });
+    });
+    if (o.voile > 0) d += rect(o.x0 - m, o.y0 - m, W0, H0, "#fbf8ee", { opacity: op(o.voile) });  // grains en sourdine
+    d += b;
+    return o.rot ? `<g transform="rotate(${r1(o.rot)} ${r1(o.X0)} ${r1(o.Y0)})">${d}</g>` : d;
+  }
+
+  // la coupe des diapos 1 et 2 : croûte, manteau, règle ; la fissure (de bas en haut), le cadre de la vue rapprochée
+  const PXF = 118;
+  const pxFissure = (() => { const f = []; for (let z = 66; z >= 40; z -= 2) f.push([PXF + Math.sin(z * 0.8) * 2.4 + (z - 52) * 0.3, PXY(z)]); return f; })();
+  function pxCoupeFond(p) {
+    const LW = 206, Rg = alea("cpg" + p.graine);
+    let fond = ciel(PXY(0)) + rect(0, PXY(0), LW, PXY(10) - PXY(0), CROUTE[0]) + rect(0, PXY(10), LW, PXY(20) - PXY(10), CROUTE[1])
+      + rect(0, PXY(20), LW, PXY(30) - PXY(20), CROUTE[2]) + rect(0, PXY(30), LW, H - PXY(30), MANTEAU)
+      + line(0, PXY(30), LW, PXY(30), "#8d7b5e", 1, { "stroke-dasharray": "5 3" });
+    for (let i = 0; i < 40; i++) fond += ell(Rg() * LW, PXY(31) + Rg() * (H - PXY(31) - 3), 2.5 + Rg() * 2.5, 1.6 + Rg() * 1.6, "#98a066", { opacity: 0.5 });
+    fond += line(12, PXY(0), 12, PXY(66), "#27302d", 1);
+    for (let z = 0; z <= 60; z += 10) fond += line(9, PXY(z), 12, PXY(z), "#27302d", 1) + (z % 20 === 0 ? txt(15, PXY(z) + 3, z === 0 ? "0" : `${z} km`, { petit: true }) : "");
+    fond += txt(78, PXY(15) + 3, "croûte", { petit: true }) + txt(150, PXY(36), "manteau", { petit: true });
+    return fond + rect(LW, 0, W - LW, H, "#f3f1ea") + line(LW, 0, LW, H, "rgba(0,0,0,.15)", 1);
+  }
+  function pxCoupe(monte, fige, labMagma, labPx) {
+    const yTete = lerp(PXY(66), PXY(40), monte), pts = pxFissure.filter(([, y]) => y >= yTete);
+    if (pts.length && yTete < pts[pts.length - 1][1]) pts.push([pxFissure[0][0] + (pxFissure[pxFissure.length - 1][0] - pxFissure[0][0]) * monte, yTete]);
+    let s = pts.length > 1 ? pline(pts, melange(MAGMA, PX_BANDE, fige), 4.2) : "";
+    if (monte > 0.05 && monte < 1) s += circ(pts[pts.length - 1][0], yTete, 3.4, MAGMA);
+    s += txt(PXF + 10, PXY(60), "magma", { petit: true, op: labMagma }) + txt(PXF + 10, PXY(60), "pyroxénite", { petit: true, op: labPx });
+    const fy = PXY(45);
+    return s + rect(PXF - 12, fy - 10, 24, 20, "none", { stroke: "#27302d", "stroke-width": 1.1 })
+      + line(PXF + 12, fy - 10, PZ.X, PZ.Y, "#27302d", 0.6, { "stroke-dasharray": "3 2" }) + line(PXF + 12, fy + 10, PZ.X, PZ.Y + PZ.H, "#27302d", 0.6, { "stroke-dasharray": "3 2" });
+  }
+  // cristaux de la fissure (diapo 1), dans le repère de la vue rapprochée au centimètre
+  const PX_DEMI = 40, PX_RANGS = 4, PX_E = PX_DEMI / PX_RANGS;
+  function pxCristaux(graine) {
+    const R = alea("cp" + graine), out = [];
+    for (const cote of [-1, 1]) for (let k = 0; k < PX_RANGS; k++) {
+      let y = PZ.Y - 4 + R() * 8;
+      while (y < PZ.Y + PZ.H + 6) {
+        const h = 9 + R() * 6;
+        out.push({ cote, k, y: y + h / 2, h, a: (R() - 0.5) * 0.45, l: PX_E * (1.15 + R() * 0.3), col: R() < 0.62 ? PX_AUG : PX_EN, spl: R() < 0.16 });
+        y += h + 1.5 + R() * 3;
+      }
+    }
+    return out;
+  }
+  function pxPrisme(c, g) {
+    // cristal posé contre la paroi (ou contre le rang précédent), qui pousse vers le milieu du chenal
+    const x0 = PZC + c.cote * (PX_DEMI - c.k * PX_E), lg = c.l * g, dir = -c.cote;
+    const ca = Math.cos(c.a), sa = Math.sin(c.a), b = Math.min(3, lg * 0.3);
+    const pts = [[0, -c.h / 2], [lg - b, -c.h / 2], [lg, 0], [lg - b, c.h / 2], [0, c.h / 2]]
+      .map(([u, v]) => [x0 + dir * (u * ca - v * sa), c.y + u * sa * dir + v * ca]);
+    return poly(pts, c.col, { stroke: "#2b3522", "stroke-width": 0.6 })
+      + (lg > 6 ? line(x0 + dir * 2 * ca, c.y + 2 * sa * dir, x0 + dir * (lg - b) * ca, c.y + (lg - b) * sa * dir, "rgba(255,255,255,.28)", 0.7) : "")
+      + (c.spl && g > 0.6 ? circ(x0 + dir * lg * 0.55 * ca, c.y + lg * 0.55 * sa * dir, 2.1, PX_SPL) : "");
+  }
+
+  // 1 · un magma monte dans une fissure du manteau ; à droite, vue rapprochée (1 cm = 33 px) : les pyroxènes cristallisent sur
+  // les parois, rang après rang, le chenal se resserre, puis se ferme : il reste une bande de pyroxénite dans la péridotite
+  SCENES.conduitPyroxenite = function (p) {
+    const R = alea("cpf" + p.graine), cristaux = pxCristaux("px");
+    const filets = Array.from({ length: 16 }, () => ({ dx: R() - 0.5, ph: R(), l: 7 + R() * 9 }));
+    const clip = nid("cp"), idH = nid("ph");
+    return {
+      fond: pxCoupeFond(p) + `<clipPath id="${clip}"><rect x="${PZ.X}" y="${PZ.Y}" width="${PZ.W}" height="${PZ.H}"/></clipPath>`
+        + `<defs>${motifPx(idH, PX_HZ, "px", PZC, PZM, 1)}</defs>`,
+      anim(t, ta) {
+        const monte = fen(t, 0.02, 0.2), G = PX_DEMI * fen(t, 0.2, 0.88), ouvert = PX_DEMI - G, fige = fen(t, 0.55, 0.92);
+        let s = pxCoupe(monte, fige, fen(t, 0.04, 0.12) * (1 - fen(t, 0.55, 0.7)), fen(t, 0.8, 0.92));
+        let z = rect(PZ.X, PZ.Y, PZ.W, PZ.H, `url(#${idH})`);
+        z += rect(PZC - PX_DEMI, PZ.Y, 2 * PX_DEMI, PZ.H, PX_BANDE) + line(PZC - PX_DEMI, PZ.Y, PZC - PX_DEMI, PZ.Y + PZ.H, "#5c6440", 0.9) + line(PZC + PX_DEMI, PZ.Y, PZC + PX_DEMI, PZ.Y + PZ.H, "#5c6440", 0.9);
+        if (ouvert > 0.3) {
+          z += rect(PZC - ouvert, PZ.Y, 2 * ouvert, PZ.H, MAGMA);
+          for (const f of filets) {
+            const u = (f.ph + ta * 0.35) % 1, y = PZ.Y + PZ.H - u * (PZ.H + f.l), x = PZC + f.dx * ouvert * 1.4;
+            z += line(x, y, x, y + f.l, MAGMA_CLAIR, 1.4, { opacity: op(0.75 * Math.min(1, ouvert / 12)) });
+          }
+        }
+        for (const c of cristaux) { const g = clamp((G - c.k * PX_E) / PX_E); if (g > 0.02) z += pxPrisme(c, g); }
+        s += `<g clip-path="url(#${clip})">${z}</g>` + rect(PZ.X, PZ.Y, PZ.W, PZ.H, "none", { stroke: "#27302d", "stroke-width": 1.2 });
+        s += txt(PZ.X + 8, PZ.Y + 13, "péridotite", { petit: true }) + echellePx(PZ.X + 12, PZ.Y + PZ.H - 10, PX_CM1);
+        if (ouvert > 8) s += fleche(PZC, PZ.Y + 120, PZC, PZ.Y + 84, { c: "#fff", sw: 1.8, pointe: 6, op: Math.min(1, ouvert / 20) })
+          + txt(PZC, PZ.Y + 134, "magma", { a: "middle", petit: true, op: Math.min(1, ouvert / 20) });
+        const vp = fen(t, 0.3, 0.42) * (1 - fen(t, 0.86, 0.92));
+        if (vp > 0) s += line(PZC - PX_DEMI + 6, PZ.Y + 58, PZC - PX_DEMI - 22, PZ.Y + 40, "#27302d", 0.7, { opacity: op(vp) }) + txt(PZC - PX_DEMI - 24, PZ.Y + 37, "pyroxènes", { a: "end", petit: true, op: vp });
+        const fin = fen(t, 0.9, 0.97);
+        if (fin > 0) s += rect(PZC - 62, PZ.Y + PZ.H - 24, 124, 17, "rgba(255,255,255,.9)", { rx: 5, opacity: op(fin) }) + txt(PZC, PZ.Y + PZ.H - 12.5, "bande de pyroxénite", { a: "middle", op: fin });
+        return s;
+      },
+    };
+  };
+
+  // 2 · la vue rapprochée de la diapo 1 RECULE (33 → 3 px par cm, la barre d'échelle passe de 1 cm à 10 cm) : la bande devient un
+  // trait ; d'autres fissures voisines, verticales elles aussi, se remplissent de liquide puis de pyroxènes (liseré de lherzolite
+  // autour) ; enfin le manteau se déforme : toutes les bandes TOURNENT, s'étirent et s'amincissent jusqu'à se coucher dans un même
+  // plan (sa remarque du 27/10 : « il doit y avoir un moment où ça se tourne »)
+  SCENES.litsPyroxenite = function (p) {
+    const cristaux = pxCristaux("px");
+    const clip = nid("lp"), idH = nid("lh"), idL = nid("ll");
+    return {
+      fond: pxCoupeFond(p) + `<clipPath id="${clip}"><rect x="${PZ.X}" y="${PZ.Y}" width="${PZ.W}" height="${PZ.H}"/></clipPath>`,
+      anim(t, ta) {
+        const u = fen(t, 0.04, 0.32), w = fen(t, 0.3, 0.46), gam = PX_GAM * fen(t, 0.48, 0.95);
+        const s1 = PX_CM1 * Math.pow(PX_CM2 / PX_CM1, u), k = s1 / PX_CM1;
+        let s = pxCoupe(1, 1, 0, 1);
+        const vd = fen(t, 0.46, 0.54), fy = PXY(45);
+        if (vd > 0) s += fleche(PXF - 14, fy - 17, PXF + 16, fy - 17, { sw: 1.8, pointe: 6, op: vd }) + fleche(PXF + 14, fy + 17, PXF - 16, fy + 17, { sw: 1.8, pointe: 6, op: vd });
+        let z = `<defs>${motifPx(idH, PX_HZ, "px", PZC, PZM, k, biaisPx(gam))}${motifPx(idL, PX_LZ, "px", PZC, PZM, k, biaisPx(gam))}</defs>`;
+        z += metrePx({ X0: PZC, Y0: PZM, s: s1, x0: PZ.X, x1: PZ.X + PZ.W, y0: PZ.Y, y1: PZ.Y + PZ.H, idH, idL, gam, voile: 0.35 * u,
+          bandes: (i) => {
+            if (i === 0) return [PX_BANDE, k > 0.3 ? 0 : 1];                                   // la bande de la diapo 1
+            const q = clamp(w * 1.4 - (i % 5) * 0.1);                                          // les autres fissures, l'une après l'autre
+            return [melange(PX_LIQ, PX_BANDE, clamp((q - 0.4) / 0.6)), q];
+          } });
+        // la bande de la diapo 1, dessinée cristal par cristal tant qu'on est près (fondu vers le trait plein)
+        if (k > 0.18) {
+          const g = `<g transform="translate(${PZC} ${PZM}) scale(${k.toFixed(4)}) translate(${-PZC} ${-PZM})">`;
+          z += `<g opacity="${op(fen(k, 0.18, 0.35))}">` + g + rect(PZC - PX_DEMI, PZ.Y - 2000, 2 * PX_DEMI, PZ.H + 4000, PX_BANDE) + cristaux.map((c) => pxPrisme(c, 1)).join("") + "</g></g>";
+        }
+        s += `<g clip-path="url(#${clip})">${z}</g>` + rect(PZ.X, PZ.Y, PZ.W, PZ.H, "none", { stroke: "#27302d", "stroke-width": 1.2 });
+        // le manteau se déforme : le haut vers la droite, le bas vers la gauche
+        if (vd > 0) s += rect(PZC - 58, PZ.Y + 5, 116, 15, "rgba(255,255,255,.9)", { rx: 4, opacity: op(vd) }) + txt(PZC, PZ.Y + 16, "le manteau se déforme", { a: "middle", petit: true, op: vd })
+          + fleche(PZC + 64, PZ.Y + 12, PZC + 112, PZ.Y + 12, { sw: 2, pointe: 7, op: vd }) + fleche(PZC + 24, PZ.Y + PZ.H - 34, PZC - 24, PZ.Y + PZ.H - 34, { sw: 2, pointe: 7, op: vd });
+        s += txt(PZ.X + 8, PZ.Y + 13, w < 0.05 ? "péridotite" : "harzburgite", { petit: true });
+        const vl = fen(t, 0.42, 0.5);
+        if (vl > 0) s += txt(PZ.X + PZ.W - 8, PZ.Y + PZ.H - 10, "liseré de lherzolite", { a: "end", petit: true, op: vl });
+        const vb = 1 - fen(t, 0.03, 0.1);
+        if (vb > 0) s += rect(PZC - 62, PZ.Y + PZ.H - 24, 124, 17, "rgba(255,255,255,.9)", { rx: 5, opacity: op(vb) }) + txt(PZC, PZ.Y + PZ.H - 12.5, "bande de pyroxénite", { a: "middle", op: vb });
+        s += echellePx(PZ.X + 12, PZ.Y + PZ.H - 10, s1);
+        const fin = fen(t, 0.9, 0.97);
+        if (fin > 0) s += rect(PZC - 82, PZ.Y + 140, 164, 17, "rgba(255,255,255,.9)", { rx: 5, opacity: op(fin) }) + txt(PZC, PZ.Y + 151.5, "lits de pyroxénite", { a: "middle", op: fin });
+        return s;
+      },
+    };
+  };
+
+  // la loupe des diapos 3 et 4 : le même mètre de roche (≈ 55 cm de large), mêmes lits, même échelle que la fin de la diapo 2
+  function pxLoupe(p, LX, LY, LR, vers, o = {}) {
+    const L = loupe(LX, LY, LR, { vers, fond: "#c9c58f" });
+    const idH = `${o.id}h`, idL = `${o.id}l`, k = PX_CM2 / PX_CM1;
+    let d = `<defs>${motifPx(idH, PX_HZ, "px", LX, LY, k, biaisPx(PX_GAM))}${motifPx(idL, PX_LZ, "px", LX, LY, k, biaisPx(PX_GAM))}</defs>`;
+    d += metrePx({ X0: LX, Y0: LY, s: PX_CM2, x0: LX - LR - 2, x1: LX + LR + 2, y0: LY - LR - 2, y1: LY + LR + 2, idH, idL, gam: PX_GAM, rot: o.rot || 0, voile: 0.35 });
+    if (o.fissures > 0) for (const f of PX_FISSURES) d += pline(f.map(([x, y]) => [LX + x * LR, LY + y * LR]), "#3a3326", 1, { opacity: op(o.fissures) });
+    if (o.mer > 0) d += rect(LX - LR, LY - LR, 2 * LR, LR * 0.42, "#4f84ad", { opacity: op(o.mer) }) + line(LX - LR, LY - LR * 0.58, LX + LR, LY - LR * 0.58, "#2e5b80", 1, { opacity: op(o.mer) });
+    if (o.vases > 0) for (let k = 0; k < 3; k++) {                               // les vases du fond recouvrent la roche, lit par lit
+      const q = fen(o.vases, k / 3, (k + 1) / 3), y = LY - LR * 0.58 - k * 6;
+      if (q > 0) d += rect(LX - LR, y - 6 * q, 2 * LR, 6 * q, k % 2 ? "#a2a6a7" : "#7c8187");
+    }
+    if (o.air > 0) {
+      const sol = []; for (let x = -1; x <= 1.01; x += 0.1) sol.push([LX + x * LR, LY - LR * 0.38 + Math.sin(x * 5) * 3]);
+      d += poly([[LX - LR, LY - LR], [LX + LR, LY - LR]].concat(sol.slice().reverse()), "#cfe3ef", { opacity: op(o.air) })
+        + poly(sol.concat(sol.slice().reverse().map(([x, y]) => [x, y + 9])), "#b0824a", { opacity: op(0.55 * o.air) })
+        + pline(sol, "#6b5434", 1.2, { opacity: op(o.air) });
+    }
+    return L.fond + L.dans(d) + L.bord + echellePx(LX - 20, LY + LR - 10, PX_CM2);
+  }
+  const PX_FISSURES = [[[-1, -0.2], [-0.3, -0.05], [0.4, -0.3], [1, -0.15]], [[-1, 0.45], [-0.2, 0.3], [0.5, 0.55], [1, 0.4]], [[-0.1, -1], [0.05, -0.2], [-0.2, 0.4], [0.1, 1]]];
+
+  // 3 · au Crétacé, le manteau remonte (même coupe à l'échelle vraie que la lherzolite de Lers) ; la loupe garde le même mètre de
+  // roche : ses lits ne bougent pas, la roche refroidit (950 → 150 °C, chemin P–T de la fiche), se fissure près du fond, puis la
+  // mer la recouvre
+  SCENES.remonteePyroxenite = function (p) {
+    const base = marge(Object.assign({}, p, { sobre: true, marqueSeule: true, explique: true }), 0, 1), id = nid("lr");
+    const LX = 408, LY = 150, LR = 58;
+    return {
+      fond: base.fond,
+      curseur: base.curseur,
+      anim(t, ta) {
+        let s = base.anim(t, ta);
+        const G = margeGeom(t), [xm, ym] = G.marque, z = Math.max(0, (ym - G.top(xm)) / MG.PX);
+        let ep = 0;                                                                  // vases déposées sur le fond (mêmes lits que margeGeom)
+        for (let k = 1; k <= 4; k++) ep += 3 * fen(t, 0.8 + (k - 1) * 0.045, 0.8 + k * 0.045);
+        const vases = ep / 12;
+        s += pxLoupe(p, LX, LY, LR, [xm, ym], { id, fissures: fen(t, 0.62, 0.78), mer: fen(t, 0.74, 0.82), vases });
+        s += rect(LX - 66, LY + LR + 4, 132, 15, "rgba(255,255,255,.9)", { rx: 4 })
+          + txt(LX, LY + LR + 15, z > 1 ? `${nombre(z)} km · ≈ ${nombre(Math.round(mgTemp(z) / 10) * 10)} °C` : ep < 1.5 ? "fond de la mer · ≈ 150 °C" : `sous ${nombre((ym - G.top(xm) + ep) / MG.PX)} km de vases`, { a: "middle", petit: true });
+        return s;
+      },
+    };
+  };
+
+  // 4 · la collision : même coupe déformée, même loupe ; quand l'érosion atteint la roche, la loupe montre l'affleurement (air,
+  // surface altérée couleur rouille)
+  SCENES.collisionPyroxenite = function (p) {
+    const base = SCENES.margeCollision(Object.assign({}, p, { sobre: true, explique: true })), id = nid("lc");
+    const LX = 408, LY = 150, LR = 58;
+    return {
+      fond: base.fond,
+      curseur: base.curseur,
+      anim(t, ta) {
+        let s = base.anim(t, ta);
+        const [xm, ym, z] = base.marque(t), dehors = z < 0.4;
+        s += pxLoupe(p, LX, LY, LR, [xm, ym], { id, fissures: 1, rot: -62 * fen(t, 0.06, 0.6), air: dehors ? fen(t, 0.72, 0.84) : 0 });
+        s += rect(LX - 66, LY + LR + 4, 132, 15, "rgba(255,255,255,.9)", { rx: 4 })
+          + txt(LX, LY + LR + 15, dehors ? "à l'affleurement" : `${nombre(z)} km sous la surface`, { a: "middle", petit: true });
         return s;
       },
     };
@@ -5156,7 +5740,7 @@
         s += txt(250, H - 8, "le magma arrive de 150 à 250 km", { petit: true, clair: true });
         s += txt(330, SOL + 40, "cheminée remplie de brèche", { petit: true, op: fen(t, 0.6, 0.75) });
         s += txt(330, SOL + 52, "◆ diamants, ● morceaux de manteau", { petit: true, op: fen(t, 0.6, 0.75) });
-        s += txt(220, 16, "près de la surface, le gaz explose : la cheminée se remplit de brèche", { a: "middle" });
+        s += txt(220, 16, "près de la surface, la détente du gaz fragmente la roche : la cheminée se comble de brèche", { a: "middle" });
         s += compteur(412, 36, p.ages ? lerp(p.ages[0], p.ages[1], t) : 0, { libelle: p.libelleAge });
         return s;
       },
@@ -5178,8 +5762,8 @@
         s += `<path d="M${CX - 90 * e} ${H} C${CX - 80 * e} ${CY - 50 * e} ${CX + 80 * e} ${CY - 50 * e} ${CX + 90 * e} ${H} Z" fill="${p.couleurGranite || "#e2b39a"}"/>`;
         if (p.fluides) for (let k = 0; k < 14; k++) { const u = (ta * 0.3 + k / 14) % 1, a = -Math.PI / 2 + (k - 7) * 0.2; s += circ(CX + Math.cos(a) * (40 + u * 110), CY - 10 + Math.sin(a) * (30 + u * 80), 1.6, p.couleurFluide || "#4fa3d8", { opacity: op(fen(t, 0.35, 0.5) * Math.sin(u * Math.PI)) }); }
         s += txt(CX, H - 12, p.nomPluton || "granite", { a: "middle", petit: true, op: e });
-        s += txt(CX + 140, 90, p.labAureole || "auréole : chauffée sans être comprimée, la roche recristallise", { a: "middle", petit: true, op: fen(t, 0.3, 0.45) });
-        if (p.fluides) s += txt(CX + 140, 102, p.labFluides || "des fluides chauds entrent dans la roche", { a: "middle", petit: true, op: fen(t, 0.4, 0.55) });
+        s += txt(CX + 140, 90, p.labAureole || "auréole : portée à haute température sans compression, la roche recristallise", { a: "middle", petit: true, op: fen(t, 0.3, 0.45) });
+        if (p.fluides) s += txt(CX + 140, 102, p.labFluides || "des fluides chauds pénètrent dans la roche", { a: "middle", petit: true, op: fen(t, 0.4, 0.55) });
         s += txt(W - 8, 56, enc === "calcaire" ? "calcaires" : "argiles et schistes", { a: "end", petit: true });
         const T = lerp(p.tDebut ?? 160, p.tMax ?? 560, fen(t, 0.1, 0.6)) - (p.tMax ?? 560 - 200) * 0 ;
         s += thermometre(440, 110, 90, t < 0.7 ? T : lerp(p.tMax ?? 560, 300, fen(t, 0.7, 1)), 0, 800, [200, 400, 600]);
@@ -5203,11 +5787,11 @@
           s += rect(0, Z0, W, H - Z0, "#c9b8a3");
           for (let k = 0; k < 260; k++) { const x = (k * 97.3) % W, y = Z0 + ((k * 53.7) % (H - Z0)); s += circ(x, y, 1.1, k % 5 === 0 ? "#3e342c" : k % 3 === 0 ? "#e2ad94" : "#f1ece2", { opacity: 0.8 }); }
           const zf = { mylonite: 15, cataclasite: 5, pseudotachylite: 9 }[focus];
-          s += line(0, Y(12), W, Y(12), "#c0392b", 1, { "stroke-dasharray": "5 4" }) + txt(W - 8, Y(12) - 4, "≈ 300 °C, 10–15 km", { a: "end", petit: true });
+          s += line(0, Y(12), W, Y(12), "#c0392b", 1, { "stroke-dasharray": "5 4" }) + txt(W - 8, Y(12) - 4, "≈ 300 °C, 10 à 15 km", { a: "end", petit: true });
           s += txt(XF + 16, Y(4), "au-dessus : la roche casse", { petit: true }) + txt(XF + 16, Y(17), "en dessous : elle flue", { petit: true });
           s += circ(XF, Y(zf), 4.2, "#c0392b", { stroke: "#fff", "stroke-width": 1.4 });
           s += line(6, Z0, 6, Y(24), "#27302d", 1); for (const z of [5, 10, 15, 20]) s += line(3, Y(z), 6, Y(z), "#27302d", 1) + txt(9, Y(z) + 3, `${z} km`, { petit: true });
-          s += txt(160, 14, p.texte || "un granite en profondeur, avant la faille", { a: "middle" });
+          s += txt(160, 14, p.texte || "un granite en profondeur, antérieur à la faille", { a: "middle" });
           s += compteur(412, 16, p.ages ? lerp(p.ages[0], p.ages[1], t) : 0, { libelle: p.libelleAge });
           return s;
         }
@@ -5225,10 +5809,10 @@
         if (focus === "pseudotachylite") s += line(XF - 1, Y(7), XF + 1, Y(10), "#1f1b18", 3 * fen(t, 0.3, 0.6));
         s += txt(XF + 16, Y(4), "cassant : la roche est broyée", { petit: true, op: focus === "mylonite" ? 0.5 : 1 });
         s += txt(XF + 16, Y(15), "ductile : les grains s'étirent", { petit: true, op: focus === "mylonite" ? 1 : 0.5 });
-        s += txt(W - 8, yb - 4, "≈ 300 °C, 10–15 km", { a: "end", petit: true });
+        s += txt(W - 8, yb - 4, "≈ 300 °C, 10 à 15 km", { a: "end", petit: true });
         s += line(6, Z0, 6, Y(24), "#27302d", 1); for (const z of [5, 10, 15, 20]) s += line(3, Y(z), 6, Y(z), "#27302d", 1) + txt(9, Y(z) + 3, `${z} km`, { petit: true });
         s += fleche(XF - 40, 20, XF - 40, 34, { sw: 1.8, pointe: 6 }) + fleche(XF + 40, 34, XF + 40, 20, { sw: 1.8, pointe: 6 });
-        s += txt(160, 14, p.texte || "les deux blocs glissent le long de la faille", { a: "middle" });
+        s += txt(160, 14, p.texte || "de part et d'autre de la faille, les deux blocs coulissent", { a: "middle" });
         s += compteur(412, 16, p.ages ? lerp(p.ages[0], p.ages[1], t) : 0, { libelle: p.libelleAge });
         return s;
       },
@@ -5258,8 +5842,8 @@
           if (T < 0.45) for (const c of eclats) { const u = fen(T, 0.12, 0.45), x = XC + Math.cos(c.a) * c.v * u, y = SOL + Math.sin(c.a) * c.v * u + 120 * u * u; if (y < SOL + 2) s += circ(x, y, c.r, "#8a7c68"); }
         }
         if (er > 0) s += rect(0, 0, W, surfE, "#cfe2ec") + rect(0, surfE - 1, W, 2, "#6f9d4f");
-        s += txt(220, 16, T < 0.12 ? "un astéroïde de ≈ 1,5 km arrive à ≈ 20 km/s" : T < 0.3 ? "l'onde de choc traverse la roche : quartz choqué (10–15 GPa)"
-          : T < 0.5 ? "au-delà de ≈ 60 GPa, la roche fond : cratère de ≈ 20 km" : "l'érosion efface le cratère ; ses brèches restent", { a: "middle" });
+        s += txt(220, 16, T < 0.12 ? "un astéroïde de ≈ 1,5 km arrive à ≈ 20 km/s" : T < 0.3 ? "l'onde de choc traverse la roche : quartz choqué (10 à 15 GPa)"
+          : T < 0.5 ? "au-delà de ≈ 60 GPa, la roche fond : cratère de ≈ 20 km" : "l'érosion efface le cratère ; ses brèches subsistent", { a: "middle" });
         if (cr > 0.5 && T < 0.5) s += txt(XC, SOL + dc * 0.55 + 3, "roche fondue et brèches", { a: "middle", petit: true, clair: true });
         s += compteur(412, 36, p.ages ? lerp(p.ages[0], p.ages[1], T) : 0, { libelle: p.libelleAge });
         return s;

@@ -17,8 +17,8 @@
     { k: "cubique", nom: "Cubique", m: [1, 1, 1, 90, 90, 90], regle: "a = b = c, trois angles droits" },
     { k: "quadratique", nom: "Quadra\u00adtique", m: [1, 1, 1.45, 90, 90, 90], regle: "a = b ≠ c, trois angles droits" },
     { k: "orthorhombique", nom: "Ortho\u00adrhom\u00adbique", m: [1.25, 0.8, 1.45, 90, 90, 90], regle: "a ≠ b ≠ c, trois angles droits" },
-    { k: "hexagonal", nom: "Hexagonal", hex: true, regle: "prisme à six côtés : a = b, angle de 120°, axe c d'ordre 6" },
-    { k: "trigonal", nom: "Trigonal", m: [1, 1, 1, 72, 72, 72], regle: "axe de symétrie d'ordre 3 ; maille hexagonale (comme le quartz) ou en rhomboèdre, a = b = c et trois angles égaux non droits (comme la calcite)" },
+    { k: "hexagonal", nom: "Hexagonal", hex: true, regle: "prisme à six côtés : a et b égaux, angle de 120°, axe c d'ordre 6" },
+    { k: "trigonal", nom: "Trigonal", m: [1, 1, 1, 72, 72, 72], regle: "Un axe d'ordre 3 caractérise ce système : la maille peut être hexagonale, comme celle du quartz, ou rhomboédrique, auquel cas les trois côtés sont égaux et les trois angles identiques sans être droits, comme dans la calcite." },
     { k: "monoclinique", nom: "Mono\u00adclinique", m: [1.2, 0.85, 1.4, 90, 112, 90], regle: "a ≠ b ≠ c, un seul angle non droit" },
     { k: "triclinique", nom: "Tri\u00adclinique", m: [1.15, 0.9, 1.35, 78, 106, 84], regle: "a ≠ b ≠ c, aucun angle droit" },
   ];

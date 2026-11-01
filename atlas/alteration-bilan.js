@@ -32,38 +32,40 @@
     schiste_vert: "fin", corneenne: "fin", skarn: "grossier", mylonite: "fin", cataclasite: "mixte", pseudotachylite: "tres_fin",
     greisen: "moyen", fenite: "moyen", rodingite: "moyen", calcschiste: "fin", impactite: "mixte", spilite: "fin",
   };
+  // grains d'un minéral plus gros que ceux de la roche : rognons de silex de la craie, centimétriques à décimétriques
+  const GRAIN_MIN = { craie: { calcedoine: "tres_grossier" } };
   // devenir d'1 g de minéral : res = part qui reste en grains (répartie selon GRAIN), puis parts directes
   const R = (o) => o;
-  const PYROX = R({ argile: 0.35, oxydes: 0.1, dissous: 0.55, pourquoi: "pyroxène → argiles (smectites) + oxydes de fer ; calcium, magnésium et silice partent en solution" });
-  const AMPH = R({ argile: 0.4, oxydes: 0.12, dissous: 0.48, pourquoi: "amphibole → argiles + oxydes de fer ; le reste part en solution" });
-  const AL2SIO5 = R({ res: 0.8, argile: 0.15, dissous: 0.05, pourquoi: "très résistant : reste surtout en grains" });
+  const PYROX = R({ argile: 0.35, oxydes: 0.1, dissous: 0.55, pourquoi: "Le pyroxène donne des smectites et des oxydes de fer, tandis que le calcium, le magnésium et la silice passent en solution." });
+  const AMPH = R({ argile: 0.4, oxydes: 0.12, dissous: 0.48, pourquoi: "L'amphibole se change en argiles et en oxydes de fer ; le reste est entraîné en solution." });
+  const AL2SIO5 = R({ res: 0.8, argile: 0.15, dissous: 0.05, pourquoi: "Très résistant, il subsiste surtout sous forme de grains." });
   const CARB = R({ dissous: 1, pourquoi: "carbonate : entièrement dissous (Ca²⁺, Mg²⁺, HCO₃⁻)" });
   const SEL = R({ dissous: 1, pourquoi: "sel soluble : entièrement dissous" });
   const ARGILE = R({ argile: 0.88, limon: 0.12, pourquoi: "minéral argileux hérité : reste argile" });
   const DEVENIR = {
     quartz: R({ res: 0.99, dissous: 0.01, pourquoi: "quartz : presque insoluble, reste en grains" }),
-    calcedoine: R({ res: 0.95, dissous: 0.05, pourquoi: "silice microcristalline : reste en grains et en éclats" }),
-    opale: R({ res: 0.5, dissous: 0.5, pourquoi: "opale : moitié dissoute, moitié en grains fins" }),
-    orthose: R({ argile: 0.5, dissous: 0.5, pourquoi: "feldspath potassique → kaolinite ou illite ; potassium et silice dissous (2 KAlSi₃O₈ → Al₂Si₂O₅(OH)₄ + 2 K⁺ + 4 H₄SiO₄)" }),
+    calcedoine: R({ res: 0.95, dissous: 0.05, pourquoi: "La silice microcristalline demeure sous forme de grains et d'éclats." }),
+    opale: R({ res: 0.5, dissous: 0.5, pourquoi: "L'opale se dissout pour moitié, le reste subsistant sous forme de grains fins." }),
+    orthose: R({ argile: 0.5, dissous: 0.5, pourquoi: "Le feldspath potassique se transforme en kaolinite ou en illite, et libère potassium et silice en solution (2 KAlSi₃O₈ + 2 H⁺ + 9 H₂O → Al₂Si₂O₅(OH)₄ + 2 K⁺ + 4 H₄SiO₄)." }),
     sanidine: R({ argile: 0.5, dissous: 0.5, pourquoi: "feldspath potassique → argile ; potassium et silice dissous" }),
     albite: R({ argile: 0.5, dissous: 0.5, pourquoi: "albite → kaolinite ; sodium et silice dissous" }),
-    plagioclases: R({ argile: 0.62, dissous: 0.38, pourquoi: "plagioclase → kaolinite ou smectite ; calcium, sodium et silice dissous" }),
-    nepheline: R({ argile: 0.35, dissous: 0.65, pourquoi: "feldspathoïde, très altérable : peu d'argile, beaucoup de dissous" }),
-    hauyne: R({ argile: 0.3, dissous: 0.7, pourquoi: "feldspathoïde, très altérable" }),
-    muscovite: R({ limon: 0.3, argile: 0.55, dissous: 0.15, pourquoi: "muscovite : paillettes qui restent en partie, le reste devient illite ou kaolinite" }),
-    biotite: R({ argile: 0.6, oxydes: 0.12, dissous: 0.28, pourquoi: "biotite → vermiculite, kaolinite + oxydes de fer ; potassium et magnésium dissous" }),
-    phlogopite: R({ argile: 0.62, oxydes: 0.03, dissous: 0.35, pourquoi: "phlogopite → vermiculite ; potassium et magnésium dissous" }),
-    zinnwaldite: R({ argile: 0.6, oxydes: 0.08, dissous: 0.32, pourquoi: "mica lithinifère → argiles ; lithium et potassium dissous" }),
+    plagioclases: R({ argile: 0.62, dissous: 0.38, pourquoi: "Le plagioclase donne de la kaolinite ou de la smectite, et libère calcium, sodium et silice en solution." }),
+    nepheline: R({ argile: 0.9, dissous: 0.1, pourquoi: "Très altérable, la néphéline se change en kaolinite ou en halloysite ; seul le sodium part en solution (2 NaAlSiO₄ + 2 H⁺ + H₂O → Al₂Si₂O₅(OH)₄ + 2 Na⁺ : 91 % de la masse reste en argile)." }),
+    hauyne: R({ argile: 0.7, dissous: 0.3, pourquoi: "Très altérable, l'haüyne se change en kaolinite ; sodium, calcium et sulfate partent en solution (≈ 70 % de la masse reste en argile)." }),
+    muscovite: R({ limon: 0.3, argile: 0.55, dissous: 0.15, pourquoi: "La muscovite conserve en partie ses paillettes ; le reste se transforme en illite ou en kaolinite." }),
+    biotite: R({ argile: 0.6, oxydes: 0.12, dissous: 0.28, pourquoi: "La biotite se change en vermiculite, en kaolinite et en oxydes de fer ; le potassium et le magnésium passent en solution." }),
+    phlogopite: R({ argile: 0.62, oxydes: 0.03, dissous: 0.35, pourquoi: "La phlogopite se transforme en vermiculite, et libère potassium et magnésium en solution." }),
+    zinnwaldite: R({ argile: 0.6, oxydes: 0.08, dissous: 0.32, pourquoi: "Le mica lithinifère donne des argiles et libère lithium et potassium en solution." }),
     glauconie: R({ argile: 0.7, oxydes: 0.15, dissous: 0.15, pourquoi: "glauconie → argiles + oxydes de fer" }),
-    chlorite_m: R({ argile: 0.7, oxydes: 0.12, dissous: 0.18, pourquoi: "chlorite → vermiculite ou kaolinite + oxydes de fer" }),
+    chlorite_m: R({ argile: 0.7, oxydes: 0.12, dissous: 0.18, pourquoi: "La chlorite se change en vermiculite ou en kaolinite, accompagnées d'oxydes de fer." }),
     illite_m: ARGILE, kaolinite_m: ARGILE, smectites_m: ARGILE,
-    serpentine: R({ argile: 0.35, oxydes: 0.08, dissous: 0.57, pourquoi: "serpentine → smectites + oxydes ; beaucoup de magnésium dissous" }),
-    olivine: R({ argile: 0.15, oxydes: 0.12, dissous: 0.73, pourquoi: "olivine, très altérable : magnésium et silice dissous, fer en oxydes" }),
+    serpentine: R({ argile: 0.35, oxydes: 0.08, dissous: 0.57, pourquoi: "La serpentine donne des smectites et des oxydes, et libère une grande quantité de magnésium en solution." }),
+    olivine: R({ argile: 0.15, oxydes: 0.12, dissous: 0.73, pourquoi: "Très altérable, l'olivine libère magnésium et silice en solution ; le fer se fixe dans des oxydes." }),
     pyroxenes: PYROX, augite: PYROX, diopside: PYROX, enstatite: PYROX, aegyrine: PYROX, omphacite: PYROX,
-    wollastonite: R({ argile: 0.1, dissous: 0.9, pourquoi: "wollastonite : calcium et silice presque entièrement dissous" }),
+    wollastonite: R({ argile: 0.1, dissous: 0.9, pourquoi: "La wollastonite se dissout presque entièrement, calcium et silice passant en solution." }),
     amphiboles: AMPH, hornblende: AMPH, actinote: AMPH, glaucophane: AMPH, arfvedsonite: AMPH,
-    grenat: R({ res: 0.3, argile: 0.25, oxydes: 0.15, dissous: 0.3, pourquoi: "grenat : résiste en partie, le reste → argiles + oxydes" }),
-    andradite: R({ res: 0.3, argile: 0.2, oxydes: 0.2, dissous: 0.3, pourquoi: "grenat ferrifère : résiste en partie, le reste → oxydes + dissous" }),
+    grenat: R({ res: 0.3, argile: 0.25, oxydes: 0.15, dissous: 0.3, pourquoi: "Le grenat résiste en partie ; le reste se change en argiles et en oxydes." }),
+    andradite: R({ res: 0.3, argile: 0.2, oxydes: 0.2, dissous: 0.3, pourquoi: "Le grenat ferrifère résiste en partie ; le reste donne des oxydes et des éléments dissous." }),
     grossulaire: R({ res: 0.3, argile: 0.25, dissous: 0.45, pourquoi: "grenat calcique : résiste en partie" }),
     epidote: R({ argile: 0.4, oxydes: 0.08, dissous: 0.52, pourquoi: "épidote → argiles + oxydes ; calcium dissous" }),
     vesuvianite: R({ argile: 0.35, oxydes: 0.05, dissous: 0.6, pourquoi: "vésuvianite → argiles ; calcium dissous" }),
@@ -73,33 +75,34 @@
     andalousite: AL2SIO5, sillimanite: AL2SIO5, disthene: AL2SIO5, topaze: AL2SIO5, beryl: AL2SIO5,
     tourmaline: R({ res: 0.95, dissous: 0.05, pourquoi: "tourmaline : presque inaltérable" }),
     calcite: CARB, aragonite: CARB, dolomite: CARB,
-    siderite: R({ oxydes: 0.6, dissous: 0.4, pourquoi: "sidérite → goethite ; le carbonate part en solution" }),
+    siderite: R({ oxydes: 0.6, dissous: 0.4, pourquoi: "La sidérite se transforme en goethite, et le carbonate passe en solution." }),
     gypse_m: SEL, anhydrite: SEL, halite_m: SEL, sylvite: SEL,
     fluorine: R({ res: 0.1, dissous: 0.9, pourquoi: "fluorine : lentement dissoute" }),
-    apatite: R({ res: 0.15, dissous: 0.85, pourquoi: "apatite : phosphate et calcium dissous, un peu résiste" }),
-    pyrite: R({ oxydes: 0.6, dissous: 0.4, pourquoi: "pyrite → goethite ; le soufre part en sulfate" }),
-    magnetite: R({ oxydes: 1, pourquoi: "oxyde de fer : reste (se change en hématite ou goethite)" }),
+    apatite: R({ res: 0.6, dissous: 0.4, pourquoi: "Plus résistante que les carbonates, l'apatite s'accumule dans le résidu (gisements résiduels des carbonatites et des phosphorites) ; en sol acide, elle cède lentement phosphate et calcium." }),
+    pyrite: R({ oxydes: 0.6, dissous: 0.4, pourquoi: "La pyrite se change en goethite, et le soufre est évacué en sulfate." }),
+    magnetite: R({ oxydes: 1, pourquoi: "L'oxyde de fer subsiste et se transforme en hématite ou en goethite." }),
     hematite: R({ oxydes: 1, pourquoi: "oxyde de fer : reste" }), goethite: R({ oxydes: 1, pourquoi: "oxyde de fer : reste" }),
     gibbsite: R({ oxydes: 1, pourquoi: "hydroxyde d'aluminium : reste" }),
     chromite: R({ oxydes: 1, pourquoi: "oxyde de chrome : inaltérable" }), rutile: R({ oxydes: 1, pourquoi: "oxyde de titane : inaltérable" }),
     cassiterite: R({ oxydes: 1, pourquoi: "oxyde d'étain : inaltérable" }), pyrochlore: R({ oxydes: 1, pourquoi: "oxyde de niobium : résistant" }),
     graphite: R({ limon: 1, pourquoi: "graphite : inaltéré, en paillettes" }),
-    matorg: R({ autre: 1, pourquoi: "matière organique : oxydée, repart en CO₂" }),
+    matorg: R({ autre: 1, pourquoi: "La matière organique s'oxyde et repart sous forme de CO₂." }),
     verre: R({ argile: 0.4, oxydes: 0.05, dissous: 0.55, pourquoi: "verre volcanique → halloysite, allophane, smectite ; silice et alcalins dissous" }),
     // minéraux des météorites (B.5, 08/10/2026)
-    fer_natif: R({ oxydes: 0.9, dissous: 0.1, pourquoi: "fer-nickel : rouille en goethite et akaganéite ; le nickel part avec l'eau" }),
-    taenite: R({ oxydes: 0.65, dissous: 0.35, pourquoi: "taénite (fer-nickel riche en nickel) : le fer rouille, le nickel part avec l'eau" }),
-    troilite: R({ oxydes: 0.6, dissous: 0.4, pourquoi: "sulfure de fer : fer en oxydes, soufre emporté en sulfate" }),
-    pyrrhotite: R({ oxydes: 0.6, dissous: 0.4, pourquoi: "sulfure de fer : fer en oxydes, soufre emporté en sulfate" }),
-    schreibersite: R({ oxydes: 0.75, dissous: 0.25, pourquoi: "phosphure de fer et de nickel : fer en oxydes, phosphore et nickel dissous" }),
-    cohenite: R({ oxydes: 0.9, autre: 0.1, pourquoi: "carbure de fer : fer en oxydes, carbone oxydé en CO₂" }),
-    oldhamite: R({ dissous: 1, pourquoi: "sulfure de calcium : se dissout entièrement" }),
-    daubreelite: R({ oxydes: 0.7, dissous: 0.3, pourquoi: "sulfure de fer et de chrome : chrome et fer restent en oxydes, soufre emporté" }),
+    fer_natif: R({ oxydes: 0.9, dissous: 0.1, pourquoi: "Le fer-nickel se rouille en goethite et en akaganéite ; le nickel est entraîné par l'eau." }),
+    taenite: R({ oxydes: 0.65, dissous: 0.35, pourquoi: "La taénite, alliage de fer riche en nickel, rouille par son fer, tandis que le nickel part avec l'eau." }),
+    troilite: R({ oxydes: 0.6, dissous: 0.4, pourquoi: "Le sulfure de fer laisse son fer en oxydes, et son soufre est emporté en sulfate." }),
+    pyrrhotite: R({ oxydes: 0.6, dissous: 0.4, pourquoi: "Le sulfure de fer laisse son fer en oxydes, et son soufre est emporté en sulfate." }),
+    schreibersite: R({ oxydes: 0.75, dissous: 0.25, pourquoi: "Le phosphure de fer et de nickel donne des oxydes de fer ; le phosphore et le nickel passent en solution." }),
+    cohenite: R({ oxydes: 0.9, autre: 0.1, pourquoi: "Le carbure de fer laisse son fer en oxydes, et son carbone est oxydé en CO₂." }),
+    oldhamite: R({ dissous: 1, pourquoi: "Le sulfure de calcium se dissout entièrement." }),
+    daubreelite: R({ oxydes: 0.7, dissous: 0.3, pourquoi: "Le sulfure de fer et de chrome conserve le chrome et le fer sous forme d'oxydes, le soufre étant emporté." }),
     merrillite: R({ res: 0.1, dissous: 0.9, pourquoi: "phosphate de calcium : dissous lentement" }),
     moissanite: R({ res: 1, pourquoi: "carbure de silicium : inaltérable" }),
-    pigeonite: PYROX, tridymite: R({ res: 0.97, dissous: 0.03, pourquoi: "silice de haute température : reste en grains" }),
-    cristobalite: R({ res: 0.95, dissous: 0.05, pourquoi: "silice de haute température : reste en grains" }),
-    ilmenite: R({ oxydes: 1, pourquoi: "oxyde de fer et de titane : résistant" }),
+    pigeonite: PYROX, tridymite: R({ res: 0.97, dissous: 0.03, pourquoi: "La silice de haute température subsiste sous forme de grains." }),
+    cristobalite: R({ res: 0.95, dissous: 0.05, pourquoi: "La silice de haute température subsiste sous forme de grains." }),
+    ilmenite: R({ oxydes: 1, pourquoi: "L'oxyde de fer et de titane est très résistant." }),
+    spinelle: R({ oxydes: 1, pourquoi: "Le spinelle, oxyde de magnésium et d'aluminium, est très résistant." }),
   };
   if (!DEVENIR.anorthite && DEVENIR.plagioclases) DEVENIR.anorthite = DEVENIR.plagioclases;
   const DEFAUT = R({ argile: 0.35, dissous: 0.65, pourquoi: "règle par défaut : silicate altérable" });
@@ -121,7 +124,8 @@
     for (const [id, p] of L) {
       const d = DEVENIR[id] || DEFAUT, m = p / tot * 1000;
       const part = Object.fromEntries(CLES.map((k) => [k, (d[k] || 0) * m]));
-      if (d.res) { part.sable += d.res * m * g[0]; part.limon += d.res * m * g[1]; part.argile += d.res * m * g[2]; }
+      const gm = (GRAIN_MIN[r.id] || {})[id], gg = gm ? TAILLES[gm] : g;
+      if (d.res) { part.sable += d.res * m * gg[0]; part.limon += d.res * m * gg[1]; part.argile += d.res * m * gg[2]; }
       // argiles néoformées : 10 % en agrégats de la taille des limons
       if (d.argile && d !== ARGILE) { part.limon += d.argile * m * 0.1; part.argile -= d.argile * m * 0.1; }
       for (const k of CLES) somme[k] += part[k];
@@ -141,7 +145,9 @@
     const nom = (id) => (typeof MINERAUX !== "undefined" && MINERAUX[id] ? MINERAUX[id].nom.split(" (")[0].toLowerCase() : id);
     const morceaux = Object.entries(c.produits).filter(([, v]) => v >= 40).sort((a, b) => b[1] - a[1]).map(([k, v]) => {
       const top = c.detail.slice().sort((x, y) => y.part[k] - x.part[k])[0];
-      return `${v} g ${LIB[k]} (apport principal : ${nom(top.id)})`;
+      // fraction < 2 µm venue de grains résiduels (silice, quartz) : ce ne sont pas des minéraux argileux
+      const lib = k === "argile" && !(DEVENIR[top.id] || DEFAUT).argile ? "de particules de moins de 2 µm" : LIB[k];
+      return `${v} g ${lib} (apport principal : ${nom(top.id)})`;
     });
     return `Sur 1 kg : ${morceaux.join(", ")}.`;
   }
@@ -159,16 +165,16 @@
       r.produitsNote = resume(r, c) + (r.produitsNote && !CHIFFRES.test(r.produitsNote) ? " " + r.produitsNote : "");
     }
   }
-  const NOM_GRAIN = { sable: "de la taille des sables (ils restent entiers)", tres_grossier: "très grossiers", grossier: "grossiers", moyen: "moyens", fin: "fins", limon: "de la taille des limons", tres_fin: "très fins", mixte: "de toutes tailles" };
+  const NOM_GRAIN = { sable: "Ils sont de la taille des sables et demeurent intacts.", tres_grossier: "très grossiers", grossier: "grossiers", moyen: "moyens", fin: "fins", limon: "de la taille des limons", tres_fin: "très fins", mixte: "de toutes tailles" };
   // encart repliable : d'où viennent les chiffres
   function explicationHTML(r) {
     if (!r.produitsDetail) return "";
     const nom = (id) => (typeof MINERAUX !== "undefined" && MINERAUX[id] ? MINERAUX[id].nom.split(" (")[0] : id);
     const lignes = r.produitsDetail.slice().sort((a, b) => b.g - a.g).map((d) => `<li><b>${nom(d.id)}</b> (${Math.round(d.g)} g) : ${d.pourquoi.replace(/^[^:→(]{2,30} : /, "")}.</li>`).join("");
-    return `<details class="reperes-climat"><summary>Comment ce bilan est calculé</summary>
-      <p>Il est calculé à partir de la composition de la roche (« De quoi est-elle faite ? ») : chaque minéral se partage selon ce qu'il devient quand il s'altère complètement en climat tempéré. Les grains qui résistent, surtout le quartz, se répartissent entre sable, limons et argiles selon la taille des grains de la roche, ici ${NOM_GRAIN[r.produitsGrain]}. La masse d'eau fixée par les argiles n'est pas comptée ; les argiles formées sont comptées à 10 % en limons (agrégats).</p>
+    return `<details class="reperes-climat"><summary>Mode de calcul du bilan</summary>
+      <p>La composition de la roche (« De quoi est-elle faite ? ») fixe ce que chaque minéral devient lorsqu'il s'altère complètement en climat tempéré. Les grains résistants, surtout le quartz, se répartissent entre sables, limons et argiles selon la taille des grains de la roche, ici ${NOM_GRAIN[r.produitsGrain]}. L'eau fixée par les argiles n'entre pas dans le bilan, et les argiles néoformées sont comptées à 10 % en limons (agrégats).</p>
       <ul>${lignes}</ul>
-      <p>Proportions tirées des réactions d'hydrolyse : par exemple 2 KAlSi₃O₈ + 2 H⁺ + 9 H₂O → Al₂Si₂O₅(OH)₄ + 2 K⁺ + 4 H₄SiO₄ garde 46 % de la masse d'un feldspath potassique sous forme de kaolinite. Des ordres de grandeur : le vrai bilan dépend du climat, de la durée et de ce que l'eau emporte (calcul : alteration-bilan.js).</p>
+      <p>Les proportions proviennent des réactions d'hydrolyse : par exemple, 2 KAlSi₃O₈ + 2 H⁺ + 9 H₂O → Al₂Si₂O₅(OH)₄ + 2 K⁺ + 4 H₄SiO₄ conserve 46 % de la masse d'un feldspath potassique sous forme de kaolinite. Ces chiffres sont des ordres de grandeur : le bilan réel dépend du climat, de la durée et de ce que l'eau emporte (calcul : alteration-bilan.js).</p>
     </details>`;
   }
   // ─────────────── réactions d'altération des minéraux de la roche (tâche D.4, 25/09/2026) ───────────────
@@ -176,20 +182,20 @@
   // repart en HCO₃⁻, la silice en H₄SiO₄ (silice dissoute, pas du quartz), le fer ferreux s'oxyde et précipite en goethite.
   const RX = {
     fk: ["Feldspath potassique → kaolinite", "2 KAlSi₃O₈ + 2 H⁺ + 9 H₂O → Al₂Si₂O₅(OH)₄ + 2 K⁺ + 4 H₄SiO₄"],
-    fkt: ["Feldspath potassique → gibbsite (climat tropical, altération poussée)", "KAlSi₃O₈ + H⁺ + 7 H₂O → Al(OH)₃ + K⁺ + 3 H₄SiO₄"],
+    fkt: ["Le feldspath potassique donne de la gibbsite, sous climat tropical et par altération poussée.", "KAlSi₃O₈ + H⁺ + 7 H₂O → Al(OH)₃ + K⁺ + 3 H₄SiO₄"],
     ab: ["Albite → kaolinite", "2 NaAlSi₃O₈ + 2 H⁺ + 9 H₂O → Al₂Si₂O₅(OH)₄ + 2 Na⁺ + 4 H₄SiO₄"],
     an: ["Anorthite (plagioclase calcique) → kaolinite", "CaAl₂Si₂O₈ + 2 H⁺ + H₂O → Al₂Si₂O₅(OH)₄ + Ca²⁺"],
     ne: ["Néphéline → kaolinite", "2 NaAlSiO₄ + 2 H⁺ + H₂O → Al₂Si₂O₅(OH)₄ + 2 Na⁺"],
     ms: ["Muscovite → kaolinite", "2 KAl₂(AlSi₃O₁₀)(OH)₂ + 2 H⁺ + 3 H₂O → 3 Al₂Si₂O₅(OH)₄ + 2 K⁺"],
     bt: ["Biotite (pôle ferreux) → kaolinite + goethite", "4 KFe₃AlSi₃O₁₀(OH)₂ + 3 O₂ + 4 H⁺ + 20 H₂O → 2 Al₂Si₂O₅(OH)₄ + 12 FeOOH + 4 K⁺ + 8 H₄SiO₄"],
-    fo: ["Olivine (forstérite) : dissolution par l'eau chargée de CO₂", "Mg₂SiO₄ + 4 CO₂ + 4 H₂O → 2 Mg²⁺ + 4 HCO₃⁻ + H₄SiO₄"],
+    fo: ["L'olivine (forstérite) se dissout dans l'eau chargée de CO₂.", "Mg₂SiO₄ + 4 CO₂ + 4 H₂O → 2 Mg²⁺ + 4 HCO₃⁻ + H₄SiO₄"],
     fa: ["Olivine (fayalite) : le fer s'oxyde", "2 Fe₂SiO₄ + O₂ + 6 H₂O → 4 FeOOH + 2 H₄SiO₄"],
     px: ["Pyroxène (diopside) : dissolution", "CaMgSi₂O₆ + 4 H⁺ + 2 H₂O → Ca²⁺ + Mg²⁺ + 2 H₄SiO₄"],
     amp: ["Amphibole (trémolite) : dissolution", "Ca₂Mg₅Si₈O₂₂(OH)₂ + 14 H⁺ + 8 H₂O → 2 Ca²⁺ + 5 Mg²⁺ + 8 H₄SiO₄"],
     serp: ["Serpentine : dissolution", "Mg₃Si₂O₅(OH)₄ + 6 H⁺ → 3 Mg²⁺ + 2 H₄SiO₄ + H₂O"],
     kao: ["Kaolinite → gibbsite (climat tropical, bauxites)", "Al₂Si₂O₅(OH)₄ + 5 H₂O → 2 Al(OH)₃ + 2 H₄SiO₄"],
     qz: ["Quartz : dissolution très lente", "SiO₂ + 2 H₂O → H₄SiO₄"],
-    cc: ["Calcite : dissolution par l'eau chargée de CO₂", "CaCO₃ + CO₂ + H₂O → Ca²⁺ + 2 HCO₃⁻"],
+    cc: ["La calcite se dissout dans l'eau chargée de CO₂.", "CaCO₃ + CO₂ + H₂O → Ca²⁺ + 2 HCO₃⁻"],
     dol: ["Dolomite : dissolution", "CaMg(CO₃)₂ + 2 CO₂ + 2 H₂O → Ca²⁺ + Mg²⁺ + 4 HCO₃⁻"],
     sid: ["Sidérite → goethite", "4 FeCO₃ + O₂ + 2 H₂O → 4 FeOOH + 4 CO₂"],
     gy: ["Gypse : dissolution", "CaSO₄·2H₂O → Ca²⁺ + SO₄²⁻ + 2 H₂O"],
@@ -217,8 +223,8 @@
       for (const k of RX_DE[id] || []) if (!vus.has(k)) { vus.add(k); items.push(RX[k]); }
     }
     if (!items.length) return "";
-    return `<details class="reperes-climat"><summary>Les réactions d'altération de ses minéraux</summary>
-      <p>L'eau de pluie, un peu acide (elle porte du CO₂ : H₂O + CO₂ → H⁺ + HCO₃⁻), attaque les liaisons des minéraux. Ce qui part en solution est écrit à droite en ions ; la silice part en silice dissoute (H₄SiO₄), pas en quartz ; le fer ferreux libéré s'oxyde et précipite sur place en goethite (FeOOH). Réactions écrites pour le pôle pur de chaque minéral (minéraux de plus de 3 % de la roche).</p>
+    return `<details class="reperes-climat"><summary>Réactions d'altération des minéraux de la roche</summary>
+      <p>L'eau de pluie, légèrement acide puisqu'elle porte du CO₂ (H₂O + CO₂ → H⁺ + HCO₃⁻), attaque les liaisons des minéraux. Les espèces passées en solution figurent à droite sous forme d'ions ; la silice part sous forme de silice dissoute (H₄SiO₄) et non de quartz ; le fer ferreux libéré s'oxyde et précipite sur place en goethite (FeOOH). Les réactions concernent le pôle pur de chaque minéral présent à plus de 3 % dans la roche.</p>
       <ul class="rx">${items.map(([t, e]) => `<li><b>${t}</b><br><span class="rx-eq">${e}</span></li>`).join("")}</ul>
     </details>`;
   }
@@ -239,7 +245,7 @@
     if (!a || a.vmin == null || a.vmax == null) return "";
     return `<div class="pluie" data-pluie>
       <h3>Et sous une autre pluie ?</h3>
-      <p class="sub">C'est l'eau qui traverse la roche qui l'altère : celle qui s'évapore ou qui ruisselle n'y fait presque rien. La vitesse suit donc la pluie qui s'infiltre${soluble(r) ? "" : " et, pour une roche silicatée, la température, qui accélère les réactions"}.</p>
+      <p class="sub">Ce qui altère la roche, c'est l'eau qui la traverse : l'eau qui s'évapore ou ruisselle n'agit presque pas. La vitesse suit donc la pluie infiltrée${soluble(r) ? "" : " ainsi que, pour une roche silicatée, la température, dont l'effet accélère les réactions"}.</p>
       <div class="pluie-ctrl">
         <label>Pluie <input type="range" min="200" max="2500" step="50" value="800" data-p> <b data-pv></b></label>
         <label>Température moyenne <input type="range" min="0" max="28" step="1" value="11" data-t> <b data-tv></b></label>
@@ -247,7 +253,7 @@
       </div>
       <p class="pluie-eq">eau infiltrée = (pluie − évapotranspiration) × (1 − part ruisselée) = <b data-i></b><br>
       vitesse = vitesse de la fiche × (eau infiltrée ÷ ${Math.round(I_REF)} mm)${soluble(r) ? "" : " × facteur de température"} = <b data-v></b></p>
-      <p class="pl-note">Évapotranspiration réelle par la formule de Turc (1961). Référence : 800 mm de pluie, 11 °C, 30 % ruisselés, soit ≈ ${Math.round(I_REF)} mm infiltrés par an, le climat tempéré des vitesses de la fiche. Vitesse proportionnelle à l'eau infiltrée (Maher 2011) ; pour les silicates, énergie d'activation de 59 kJ/mol (White et Blum 1995). Un ordre de grandeur : la nature de la roche, sa fissuration et la végétation comptent aussi.</p>
+      <p class="pl-note">L'évapotranspiration réelle est calculée selon la formule de Turc (1961). Référence : 800 mm de pluie, 11 °C et 30 % ruisselés, soit ≈ ${Math.round(I_REF)} mm infiltrés chaque année, climat tempéré auquel se rapportent les vitesses de la fiche. La vitesse est proportionnelle à l'eau infiltrée (Maher 2011) ; pour les silicates, l'énergie d'activation vaut 59 kJ/mol (White et Blum 1995). Un ordre de grandeur seulement : la nature de la roche, sa fissuration et la végétation interviennent aussi.</p>
     </div>`;
   }
   function brancherPluie(racine, r) {
@@ -267,44 +273,5 @@
     el.addEventListener("input", maj);
     maj();
   }
-  // ─────────────── sols possibles sur chaque matériau parental (tâche D.3, 25/09/2026) ───────────────
-  // Références du Référentiel pédologique 2008 (AFES, Baize et Girard 2009), en majuscules comme dans le Référentiel. Posées par
-  // grand type de matériau ; les 12 fiches qui avaient déjà leur champ `pedologie` (écrit à partir du Référentiel et de Baize)
-  // le gardent.
-  const SOLS = {
-    acide: "Sur ce matériau acide, pauvre en calcium : surtout des ALOCRISOLS et des BRUNISOLS acides sous forêt et prairie, des RANKOSOLS peu épais sur les pentes, des PODZOSOLS sur les arènes sableuses sous lande ou résineux, et des RÉDOXISOLS dans les creux mal drainés.",
-    intermediaire: "Des BRUNISOLS moyennement à bien pourvus en calcium et magnésium ; des ALOCRISOLS en altitude sous forte pluie ; sur les cendres et projections volcaniques récentes, des ANDOSOLS, légers et très riches en matière organique.",
-    basique: "Des BRUNISOLS saturés, foncés et fertiles ; des ANDOSOLS sur les scories et cendres récentes (chaîne des Puys) ; des VERTISOLS dans les bas-fonds argileux ; des FERSIALSOLS rouges sous climat méditerranéen.",
-    ultrabasique: "Des MAGNÉSISOLS : sols très riches en magnésium, souvent en nickel et en chrome, pauvres en calcium et en potassium, qui portent une flore très particulière ; des RÉGOSOLS et LITHOSOLS minces sur les pentes.",
-    carbonate: "Des RENDOSOLS et RENDISOLS peu épais, pleins de cailloux calcaires ; des CALCOSOLS puis des CALCISOLS quand le sol s'épaissit et perd son calcaire ; sur les vieux plateaux, des sols rouges décarbonatés (FERSIALSOLS).",
-    marne: "Des CALCOSOLS et CALCISOLS argileux, des VERTISOLS là où les argiles gonflent, et sur les pentes nues des RÉGOSOLS entaillés en ravines (badlands des Terres Noires).",
-    argileux: "Des PÉLOSOLS et des VERTISOLS lourds, souvent engorgés d'eau en hiver (RÉDOXISOLS, RÉDUCTISOLS dans les fonds).",
-    schisteux: "Des BRUNISOLS et ALOCRISOLS acides et caillouteux, des RANKOSOLS minces sur les pentes, des RÉDOXISOLS sur les replats.",
-    sableux: "Des ARÉNOSOLS et PODZOSOLS sur les sables pauvres (landes, forêts de pins) ; des ALOCRISOLS et BRUNISOLS acides sur les grès ; des LUVISOLS quand un placage de limon les recouvre.",
-    mixte: "Des BRUNISOLS et LUVISOLS ; des RÉDOXISOLS là où les niveaux argileux retiennent l'eau ; des CALCOSOLS si la roche contient du calcaire.",
-    silice: "Roche siliceuse et dure : sols minces et caillouteux (RANKOSOLS, LITHOSOLS) sur les affleurements, ALOCRISOLS et PODZOSOLS acides ; souvent couverte de limons portant des LUVISOLS.",
-    gypse: "Des GYPSOSOLS, rares en France (affleurements du Trias alpin et provençal), pauvres et secs, à flore spécialisée.",
-    sel: "Presque jamais à l'affleurement sous le climat de la France : la roche est dissoute avant de porter un sol. En climat aride, elle donne des SALISOLS.",
-    charbon: "Rarement à l'affleurement ; sur les déblais des mines et les terrils, des ANTHROPOSOLS, acides quand ils contiennent de la pyrite.",
-    lateritique: "Formations fossiles en France : elles portent des FERSIALSOLS et des sols rouges argileux, ou restent à nu en cuirasse sous des sols très minces.",
-    ferrugineux: "À l'affleurement, des sols minces et caillouteux (LITHOSOLS, RÉGOSOLS), rouges d'oxydes de fer.",
-    phosphate: "Dans les poches karstiques, des sols rouges argileux (FERSIALSOLS), riches en phosphore.",
-    moraine: "Sur une telle moraine, si elle affleurait : des BRUNISOLS et LUVISOLS, des RÉDOXISOLS là où la matrice argileuse retient l'eau.",
-  };
-  const SOL_DE = {
-    acide: "granite granodiorite tonalite trondhjemite microgranite aplite pegmatite porphyre gneiss migmatite leptynite granulite_meta charnockite micaschiste greisen rhyolite ignimbrite dacite mylonite cataclasite corneenne arkose impactite pseudotachylite fenite",
-    intermediaire: "diorite monzonite monzodiorite syenite trachyte trachyandesite andesite latite phonolite syenite_nephelinique microdiorite lamprophyre tuf_volcanique breche_volcanique obsidienne",
-    basique: "basalte gabbro dolerite trachybasalte basanite pouzzolane essexite hornblendite pyroxenite amphibolite eclogite schiste_vert schiste_bleu spilite rodingite picrite foidolite",
-    ultrabasique: "peridotite serpentinite komatiite kimberlite",
-    carbonate: "calcaire craie dolomie tuffeau falun travertin marbre cargneule breche_sedimentaire carbonatite skarn calcschiste",
-    marne: "marne", argileux: "argile", schisteux: "ardoise schiste_bitumineux siltite",
-    sableux: "sable gres quartzite conglomerat", mixte: "grauwacke flysch molasse",
-    silice: "meuliere silex radiolarite gaize diatomite", gypse: "gypse", sel: "sel sylvinite anhydrite",
-    charbon: "houille lignite anthracite", lateritique: "laterite bauxite", ferrugineux: "roche_ferrifere", phosphate: "phosphorite", moraine: "tillite",
-  };
-  const SOL = {}; for (const [g, l] of Object.entries(SOL_DE)) for (const id of l.split(" ")) SOL[id] = g;
-  function appliquerSols(roches) {
-    for (const r of roches) if (!r.pedologie && SOL[r.id]) { r.pedologie = SOLS[SOL[r.id]]; r.pedologieAuto = true; }
-  }
-  window.BilanAlteration = { appliquerSols, SOLS, SOL, calcul, appliquer, explicationHTML, reactionsHTML, RX, RX_DE, pluieHTML, brancherPluie, turc, DEVENIR, GRAIN };
+  window.BilanAlteration = { calcul, appliquer, explicationHTML, reactionsHTML, RX, RX_DE, pluieHTML, brancherPluie, turc, DEVENIR, GRAIN };
 })();

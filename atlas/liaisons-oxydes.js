@@ -237,16 +237,16 @@
     const e = [], suite = O.suite, ch = `${M}²⁺`, hyd = d.hydrate || `${M}(H₂O)₆²⁺`;
     e.push({ A, B, L: {}, g: [6, 0], h: { v: hv === null ? null : 0 },
       titre: "Le bord d'un feuillet, quand l'eau stagne",
-      texte: `${T.debut || ""} Dans l'eau du sol arrive un polyphénol, une petite molécule organique lâchée par les feuilles mortes et les racines.`.trim() });
+      texte: `${T.debut || ""} En solution dans l'eau du sol apparaît un polyphénol, petite molécule organique issue des feuilles mortes et des racines.`.trim() });
     e.push(suite(e[0], {
       titre: "Le polyphénol se fixe sur le manganèse du bord",
-      texte: `Ses deux OH chassent les deux OH du bord, qui partent en molécules d'eau, et ses deux oxygènes se lient au ${M}⁴⁺. C'est l'étape lente : ${o.lettres || "durée non mesurée"} en moyenne par manganèse de la surface${o.lettres ? ", au laboratoire" : ""} ; une fois le polyphénol accroché, la suite va très vite.${T.lent_reduit ? " " + T.lent_reduit : ""}`,
+      texte: `Deux OH du polyphénol évincent les deux OH de la bordure, qui quittent la structure sous forme d'eau, et ses deux oxygènes se fixent sur le ${M}⁴⁺. Étape lente : ${o.lettres || "durée non mesurée"} en moyenne par manganèse de la surface${o.lettres ? ", au laboratoire" : ""} ; une fois le polyphénol accroché, la suite survient très rapidement.${T.lent_reduit ? " " + T.lent_reduit : ""}`,
       A: { P: { x: pc[0], y: pc[1], a: 150 }, Ou: { t: "eau", x: 470, y: 62, a: -60 }, Hu: { x: 470, y: 62, o: 0 }, Od: { t: "eau", x: 476, y: 300, a: 60 }, Hd: { x: 476, y: 300, o: 0 } },
       B: { eu: 0, ed: 0, hu: 0, hd: 0, pu: io("C", po[0]), pd: io("C", po[1]) }, h: Object.assign({ cours: true }, H),
     }));
     e.push(suite(e[1], {
       titre: `Deux électrons passent : ${M}⁴⁺ devient ${ch}`,
-      texte: `Le polyphénol cède deux électrons au manganèse, l'un après l'autre (${M}⁴⁺ → ${M}³⁺ → ${ch}) : il devient une quinone. Avec deux charges au lieu de quatre, le manganèse ne tient plus ses oxygènes qu'à moitié (traits plus fins).`,
+      texte: `Deux électrons passent du polyphénol au manganèse, l'un après l'autre (${M}⁴⁺ → ${M}³⁺ → ${ch}) : la molécule devient une quinone. Ne portant plus que deux charges, le manganèse retient ses oxygènes à demi seulement (traits plus fins).`,
       A: { E1: { x: x + 14, y: yc - 6, o: 1 }, E2: { x: x + 14, y: yc + 6, o: 1 }, P: { cls: "q" } },
       B: { cu: io("C", [xi, yu], v2, p2), cd: io("C", [xi, yd], v2, p2), rv: io("C", "CV", v2, p2), ra: io("C", B.ra.b, v2, p2), pu: io("C", po[0], v2, p2), pd: io("C", po[1], v2, p2) },
       L: { lF: { x: xe + 4, y: yc + 34, t: ch } }, h: H,
@@ -255,7 +255,7 @@
     const s = { x: 520, y: 100 };
     e.push(suite(e[2], {
       titre: `Le ${ch} part, habillé d'eau`,
-      texte: `Ses dernières liaisons au feuillet lâchent : le ${ch} part entouré de six molécules d'eau (${hyd}), et la quinone s'éloigne. Cette étape est rapide.`,
+      texte: `Ses dernières liaisons avec le feuillet se rompent : le ${ch} s'éloigne, entouré de six molécules d'eau (${hyd}), et la quinone se détache. Cette étape est rapide.`,
       A: { C: s, halo: { x: s.x, y: s.y, o: 0 }, Ou: { x: s.x, y: s.y - 30, a: -90 }, Od: { x: s.x, y: s.y + 30, a: 90 },
         Wa: { x: s.x - 30, y: s.y, a: 180, o: 1 }, Wb: { x: s.x + 30, y: s.y, a: 0, o: 1 }, P: { x: 590, y: 236, a: 110 }, E1: { o: 0 }, E2: { o: 0 } },
       B: { cu: 0, cd: 0, rv: 0, ra: 0, pu: 0, pd: 0, wa: { a: "C", b: "Wa", k: "eau", v: v2, p: p2 }, wb: { a: "C", b: "Wb", k: "eau", v: v2, p: p2 },
@@ -265,7 +265,7 @@
     const v = [cx(NE - 1), yc];
     e.push(suite(e[3], {
       titre: "Le bord recule d'un cran",
-      texte: `Le manganèse voisin se retrouve au bord et attend son polyphénol. ${T.fin_reduit || ""}`.trim(),
+      texte: `Le manganèse voisin se place désormais en bordure et attend son polyphénol. ${T.fin_reduit || ""}`.trim(),
       A: { halo: { x: v[0], y: v[1], o: 1 } }, h: H,
     }));
     return e;
@@ -299,26 +299,26 @@
       : dbl ? { Ha: { t: "h", x: xe + 8, y: yu + 6 }, Hb: { t: "h", x: xe + 4, y: yd + 9 } }
       : { Ha: { t: "h", x: xe + 8, y: yu + 6 }, Hb: { t: "h", x: xe + 8, y: yd - 6 } };
     if (red) {   // sol engorgé : l'électron d'abord, puis les H⁺, puis le Fe²⁺ part (étape lente)
-      const ch = `${M}²⁺`, hyd = `${M}(H₂O)₆²⁺`, sansAir = "Sans air, les bactéries qui mangent la matière organique « respirent » le fer : elles lui cèdent les électrons qu'elles auraient donnés à l'oxygène.";
+      const ch = `${M}²⁺`, hyd = `${M}(H₂O)₆²⁺`, sansAir = "En l'absence d'air, les bactéries qui décomposent la matière organique « respirent » le fer et lui cèdent les électrons qu'elles destinaient à l'oxygène.";
       e.push({ A, B, L: {}, g: [6, 0], h: { v: hv === null ? null : 0 },
         titre: "Le bord du cristal, sans air",
         texte: d.onglets.eau ? sansAir : `${T.debut || ""} ${sansAir}`.trim() });
       e.push(suite(e[0], {
         titre: `Un électron arrive : ${M}³⁺ devient ${ch}`,
-        texte: `${Le} suivi reçoit un électron. Avec deux charges au lieu de trois, il tient moins ses six oxygènes : chaque liaison passe d'une demi-liaison à un tiers (traits plus fins).`,
+        texte: `Un électron s'ajoute à ${Le} suivi. Porteur de deux charges au lieu de trois, il retient ses six oxygènes plus faiblement : la liaison glisse d'une demi-liaison à un tiers (traits plus fins).`,
         A: { E: { x: x + 6, y: yc, o: 0 } },
         B: { cu: io2("C", [xi, yu]), cd: io2("C", [xi, yd]), eu: io2("C", "Ou"), ed: io2("C", "Od"), rv: io2("C", "CV"), ra: io2("C", B.ra.b) },
         L: { lF: { x: xe + 22, y: yc + 5, t: ch } },
       }));
       e.push(suite(e[1], {
         titre: "Des H⁺ se fixent sur les oxygènes du bord",
-        texte: `Deux H⁺ se posent sur les oxygènes du bord : chacun devient une molécule d'eau, à peine retenue par le ${ch}.`,
+        texte: `Le bord reçoit deux H⁺ : chacun de ses oxygènes devient une molécule d'eau, à peine retenue par le ${ch}.`,
         A: hp, B: { eu: we("Ou"), ed: we("Od"), ha: oh("Ou", "Ha"), hb: oh("Od", "Hb") }, g: [4, 2],
       }));
       const s = { x: 520, y: 96 };
       e.push(suite(e[2], {
         titre: `Le ${ch} part, habillé d'eau`,
-        texte: `Ses dernières liaisons au cristal lâchent et l'eau prend leur place : le ${ch} part, entouré de six molécules d'eau (${hyd}). C'est l'étape lente, et non l'arrivée de l'électron : ${o.lettres || "durée non mesurée"} en moyenne par fer de la surface, au laboratoire, où l'acide ascorbique (la vitamine C) remplace les bactéries.${T.lent_reduit ? " " + T.lent_reduit : ""}`,
+        texte: `Les dernières liaisons avec le cristal cèdent et l'eau occupe leur place : le ${ch} se détache, enveloppé de six molécules d'eau (${hyd}). Étape lente, et non arrivée de l'électron : ${o.lettres || "durée non mesurée"} en moyenne par fer de la surface, mesure de laboratoire où la vitamine C (acide ascorbique) remplace les bactéries.${T.lent_reduit ? " " + T.lent_reduit : ""}`,
         A: { C: s, halo: { x: s.x, y: s.y, o: 0 }, Ou: { t: "eau", x: s.x, y: s.y - 30, a: -90 }, Hu: { x: s.x, y: s.y - 30, o: 0 }, Ha: { x: s.x, y: s.y - 30, o: 0 },
           Od: { t: "eau", x: s.x, y: s.y + 30, a: 90 }, Hd: { x: s.x, y: s.y + 30, o: 0 }, Hb: { x: s.x, y: s.y + 30, o: 0 },
           Wa: { x: s.x - 30, y: s.y, a: 180 }, Wb: { x: s.x + 30, y: s.y, a: 0 } },
@@ -328,7 +328,7 @@
       const v = [cx(NE - 1), yc];
       e.push(suite(e[3], {
         titre: "Le bord recule d'un cran",
-        texte: `Les oxygènes qu'il partageait restent à son voisin, qui se retrouve au bord et attend son électron. ${T.fin_reduit || "Le Fe²⁺, soluble, part avec l'eau qui stagne."}`,
+        texte: `Son voisin, qui se retrouve en bordure, conserve les oxygènes qu'il partageait avec lui et attend son électron. ${T.fin_reduit || "Soluble, le Fe²⁺ s'éloigne avec l'eau qui stagne."}`,
         A: { halo: { x: v[0], y: v[1], o: 1 } }, h: H,
       }));
       return e;
@@ -336,18 +336,18 @@
     e.push({ A, B, L: {}, g: [6, 0], h: { v: hv === null ? null : 0 },
       titre: k === "eau" ? (ox1 ? "Le bord du cristal" : "Le bord d'un paquet de feuillets") : "Le même bord, dans l'acide",
       texte: k === "eau"
-        ? (T.debut || `Chaque feuillet : une couche ${O.art(M, "de")} entre deux couches d'OH ; chaque ${nom} tient six OH, en octaèdre. D'un feuillet au suivant, les OH ne se tiennent que par des liaisons hydrogène. Au bord, on suit ${O.art(M, "un")} (cerclé).`)
-        : "L'acide libère des ions H⁺ (en vert) et des ions chlorure Cl⁻ (en gris), qui ne réagissent pas. Les H⁺ sont attirés par les OH du bord.",
+        ? (T.debut || `Chaque feuillet se compose d'une couche ${O.art(M, "de")} prise entre deux couches d'OH ; chaque ${nom} est entouré de six OH, en octaèdre. D'un feuillet au suivant, les OH ne sont reliés que par des liaisons hydrogène. Sur le bord, on suit ${O.art(M, "un")} (cerclé).`)
+        : "En se dissociant, l'acide libère des ions H⁺ (en vert) et des ions chlorure Cl⁻ (en gris), ces derniers restant inactifs. Les H⁺ sont attirés par les OH du bord.",
     });
     e.push(suite(e[0], {
       titre: "Des H⁺ se fixent sur les OH du bord",
-      texte: `${T.deuxH || `Deux H⁺ se posent sur les OH du bord : chacun devient une molécule d'eau, encore accrochée ${O.art(M, "au")}, mais bien moins fortement qu'un OH.`}${k === "eau" && T.eauH ? " " + T.eauH : ""}`,
+      texte: `${T.deuxH || `Le bord reçoit deux H⁺ : chaque OH devient une molécule d'eau, encore retenue ${O.art(M, "au")}, mais bien moins fortement qu'un OH.`}${k === "eau" && T.eauH ? " " + T.eauH : ""}`,
       A: hp, B: { eu: we("Ou"), ed: we("Od"), ha: oh("Ou", "Ha"), hb: oh("Od", "Hb") }, g: [4, 2],
     }));
     const s = { x: 520, y: 96 };
     e.push(suite(e[1], {
       titre: `${Le} part, habillé d'eau`,
-      texte: `Les liaisons ${pM} qui le tenaient encore au feuillet lâchent une à une, et l'eau prend leur place : ${le} part, entouré de six molécules d'eau (${d.hydrate}). C'est l'étape lente : ${o.lettres || "durée non mesurée"} en moyenne par unité de la surface.${T["lent_" + k] ? " " + T["lent_" + k] : ""}`,
+      texte: `Les liaisons ${pM} qui le fixaient encore au feuillet cèdent une à une ; l'eau vient occuper leur place : ${le} se détache, entouré de six molécules d'eau (${d.hydrate}). Étape lente : ${o.lettres || "durée non mesurée"} en moyenne par unité de la surface.${T["lent_" + k] ? " " + T["lent_" + k] : ""}`,
       A: { C: s, halo: { x: s.x, y: s.y, o: 0 }, Ou: { t: "eau", x: s.x, y: s.y - 30, a: -90 }, Hu: { x: s.x, y: s.y - 30, o: 0 }, Ha: { x: s.x, y: s.y - 30, o: 0 },
         Od: { t: "eau", x: s.x, y: s.y + 30, a: 90 }, Hd: { x: s.x, y: s.y + 30, o: 0 }, Hb: { x: s.x, y: s.y + 30, o: 0 },
         Wa: { x: s.x - 30, y: s.y, a: 180 }, Wb: { x: s.x + 30, y: s.y, a: 0 } },
@@ -357,12 +357,12 @@
     if (T.reste) {   // titane (rutile, anatase) : les H⁺ se fixent, mais les liaisons Ti–O tiennent ; rien ne part, les H⁺ repartent
       e[2] = suite(e[1], {
         titre: `${Le} ne part pas`,
-        texte: `${T.reste} ${o.lettres ? "" : "Aucune vitesse de départ n'a été mesurée à 25 °C."}`.trim(),
+        texte: `${T.reste} ${o.lettres ? "" : "Nulle vitesse de départ n'a pu être mesurée à 25 °C."}`.trim(),
         h: Object.assign({ cours: true }, H),
       });
       e.push(suite(e[2], {
         titre: "Les H⁺ repartent, le bord ne bouge pas",
-        texte: `Les deux molécules d'eau rendent leur H⁺ à l'eau du sol et redeviennent des OH : le bord est le même qu'au début.${T["fin_" + k] ? " " + T["fin_" + k] : ""}`,
+        texte: `Les deux molécules d'eau restituent leur H⁺ à l'eau du sol et redeviennent des OH : le bord est identique à celui du départ.${T["fin_" + k] ? " " + T["fin_" + k] : ""}`,
         A: { Ha: { t: "hp", x: 470, y: 130 }, Hb: { t: "hp", x: 520, y: 180 } },
         B: { eu: io("C", "Ou"), ed: io("C", "Od"), ha: 0, hb: 0 }, g: [6, 0], h: H,
       }));
@@ -371,7 +371,7 @@
     const v = [cx(vide(d, NE - 1) ? NE - 2 : NE - 1), yc];
     e.push(suite(e[2], {
       titre: "Le bord recule d'un cran",
-      texte: `Les OH qu'il partageait avec son voisin restent à celui-ci : ${le} voisin se retrouve au bord, et tout recommence.${T["fin_" + k] ? " " + T["fin_" + k] : ""}`,
+      texte: `Les OH partagés avec son voisin demeurent à celui-ci : ${le} voisin arrive alors au bord, et le cycle recommence.${T["fin_" + k] ? " " + T["fin_" + k] : ""}`,
       A: { halo: { x: v[0], y: v[1], o: 1 } }, h: H,
     }));
     return e;
@@ -382,11 +382,11 @@
     const duo = [
       { titre: `${M}–O`, sous: `liaison ${O.nature(`${M}–O`)} (électrons ${/mi-/.test(O.nature(`${M}–O`)) ? "en partie " : ""}cédés)`,
         schema: { type: "don", a: M, la: `${M}${z}`, ra: 17, fa: 12, b: "O", aria: `${majuscule(O.art(M, "le"))} cède ses électrons aux OH` },
-        li: [`Ionique ${O.fraction(O.ionicite(M, "O"))} (Pauling). ${T.duoM || ""}`.trim(), T.lache || "C'est elle qui lâche : elle règle la vitesse."] },
+        li: [`Ionique ${O.fraction(O.ionicite(M, "O"))} (Pauling). ${T.duoM || ""}`.trim(), T.lache || "C'est elle qui se rompt : elle détermine la vitesse."] },
       { titre: "O–H", sous: `liaison ${O.nature("O–H")} (électrons partagés)`,
-        schema: { type: "partage", a: "O", b: "H", aria: "L'oxygène et l'hydrogène partagent leurs électrons" },
-        li: [T.liOH || "Ionique à moins d'un tiers (Pauling) : l'hydrogène reste accroché à son oxygène. L'OH ne se casse pas : il part entier, devenu molécule d'eau.",
-          T.entre || "Entre deux feuillets, les OH ne se tiennent que par des liaisons hydrogène, bien plus faibles : d'où le clivage parfait et la faible dureté."] },
+        schema: { type: "partage", a: "O", b: "H", aria: "Électrons mis en commun entre oxygène et hydrogène" },
+        li: [T.liOH || "Caractère ionique inférieur au tiers (Pauling) : l'hydrogène reste lié à son oxygène. L'OH n'est pas rompu : il s'en va en bloc, devenu molécule d'eau.",
+          T.entre || "Entre deux feuillets, les OH sont seulement reliés par des liaisons hydrogène, nettement plus fragiles : d'où le clivage parfait et une dureté faible."] },
     ];
     const EA = [["eaAcide", "Dans l'acide (H⁺)", "dans l'acide"], ["eaNeutre", "Vers la neutralité", "vers la neutralité"]].filter(([c]) => E[c] != null);
     let barres = null;
@@ -394,50 +394,50 @@
       const fac = (x) => fr1(Math.exp((x * 1000) / 8.314 * (1 / 298.15 - 1 / 308.15)));
       barres = { titre: "Énergie d'activation de la dissolution", unite: "kJ/mol", max: 100, graduations: [0, 25, 50, 75, 100], onglets: [{ k: "ea", nom: "Mesurée" }],
         rangs: EA.map(([c, nom]) => { const [a, b] = E[c]; return { nom, el: M, hachure: true, val: { ea: [a, b] }, txt: { ea: a === b ? `${fr1(a)} kJ/mol` : `${fr1(a)} à ${fr1(b)} kJ/mol` } }; }),
-        explic: { ea: `L'énergie qu'il faut fournir pour que la réaction se fasse : plus elle est grande, plus la chaleur accélère la dissolution. De 25 à 35 °C, la vitesse est multipliée par ${EA.map(([c, , dans]) => E[c][0] === E[c][1] ? `${fac(E[c][0])} ${dans}` : `${fac(E[c][0])} à ${fac(E[c][1])} ${dans}`).join(", ")}.` } };
+        explic: { ea: `Cette énergie à fournir pour déclencher la réaction, à un niveau élevé, fait que la chaleur accélère fortement la dissolution. Entre 25 et 35 °C, la vitesse est multipliée par ${EA.map(([c, , dans]) => E[c][0] === E[c][1] ? `${fac(E[c][0])} ${dans}` : `${fac(E[c][0])} à ${fac(E[c][1])} ${dans}`).join(", ")}.` } };
     }
     let temps = null;
     const ce = d.onglets.eau;
     if (rep && rep.eau && rep.eau.t && ce && ce.t) {
       const f = O.rond2(ce.t / rep.eau.t);
-      temps = { titre: T.tempsTitre || "Ce que changent les OH", explic: `${T.tempsExplic || ""} ${majuscule(rep.la)} sert de repère. Barres : écart entre les valeurs publiées.`.trim(),
+      temps = { titre: T.tempsTitre || "Ce que changent les OH", explic: `Le repère est ${T.tempsExplic || ""} ${majuscule(rep.la)} ; les barres traduisent l'écart entre valeurs publiées.`.trim(),
         rangees: [{ titre: "Une unité de la surface quitte le cristal, dans l'eau du sol à 25 °C",
           fois: f >= 1 ? `environ ${nb(f, O)} fois plus lent pour ${d.la}` : `environ ${nb(O.rond2(1 / f), O)} fois plus rapide pour ${d.la}`,
           pts: [{ el: rep.cation, min: rep.eau.tmin, max: rep.eau.tmax, v: rep.eau.t, et: `${rep.nom} · ${rep.eau.court}`, ou: "haut" },
             { el: M, min: ce.tmin, max: ce.tmax, v: ce.t, et: `${d.nom} · ${ce.court}`, ou: "bas" }] }] };
     }
     if (T.ilmenite) duo[1] = { titre: "Ti–O", sous: `liaison ${O.nature("Ti–O")} (électrons en partie cédés)`,
-      schema: { type: "don", a: "Ti", la: "Ti⁴⁺", ra: 17, fa: 12, b: "O", aria: "Le titane cède ses électrons aux oxygènes" },
-      li: [`Ionique ${O.fraction(O.ionicite("Ti", "O"))} (Pauling). Le titane répartit ses quatre charges sur six oxygènes : deux tiers de liaison chacune, deux fois plus que Fe–O.`,
-        "C'est pourquoi le titane reste quand le fer part : le grain d'ilménite devient peu à peu un grain d'oxyde de titane (leucoxène)."] };
+      schema: { type: "don", a: "Ti", la: "Ti⁴⁺", ra: 17, fa: 12, b: "O", aria: "Les oxygènes reçoivent les électrons du titane" },
+      li: [`Caractère ionique ${O.fraction(O.ionicite("Ti", "O"))} (Pauling). Quatre charges du titane se répartissent sur six oxygènes : deux tiers de liaison pour chacun, soit le double de Fe-O.`,
+        "C'est pourquoi le titane demeure lorsque le fer s'éloigne : le grain d'ilménite se transforme peu à peu en oxyde de titane (leucoxène)."] };
     // sol engorgé : les oxydes de fer réduits côte à côte (même réducteur, même pH), d'après LIAISONS_DONNEES
     const red = d.onglets && d.onglets.reduit;
     if (red && !d.onglets.eau && !T.mn) duo.splice(0, duo.length,
       { titre: `${M}³⁺–O`, sous: `liaison ${O.nature(`${M}–O`)} (électrons en partie cédés)`,
-        schema: { type: "don", a: M, la: `${M}³⁺`, ra: 17, fa: 12, b: "O", aria: `Le fer à trois charges cède ses électrons aux oxygènes` },
-        li: [`Ionique ${O.fraction(O.ionicite(M, "O"))} (Pauling). Le fer répartit ses trois charges sur six oxygènes : chaque liaison vaut une demi-liaison simple.`,
-          "Tant que le fer garde ses trois charges, elle tient : à l'air, les oxydes de fer sont les minéraux les plus stables des sols."] },
+        schema: { type: "don", a: M, la: `${M}³⁺`, ra: 17, fa: 12, b: "O", aria: `Les oxygènes accueillent les électrons du fer trivalent` },
+        li: [`Caractère ionique ${O.fraction(O.ionicite(M, "O"))} (Pauling). Les trois charges du fer se répartissent sur six oxygènes : une demi-liaison simple par liaison.`,
+          "À l'air, les oxydes ferriques figurent parmi les minéraux les plus stables des sols, tant que le fer conserve ses trois charges."] },
       { titre: `${M}²⁺–O`, sous: "après l'arrivée d'un électron",
-        schema: { type: "don", a: M, la: `${M}²⁺`, ra: 17, fa: 12, b: "O", aria: `Le fer à deux charges tient moins ses oxygènes` },
-        li: ["Deux charges sur six oxygènes : un tiers de liaison seulement.", "Plus lâche, elle finit par céder : c'est le départ du Fe²⁺ qui règle la vitesse."] });
+        schema: { type: "don", a: M, la: `${M}²⁺`, ra: 17, fa: 12, b: "O", aria: `Le fer divalent tient ses oxygènes d'une prise plus lâche` },
+        li: ["Seulement deux charges à répartir entre six oxygènes : un tiers de liaison, pas davantage.", "Moins solide, elle finit par se défaire : le départ du Fe²⁺ commande la vitesse."] });
     if (T.mn) duo.splice(0, duo.length,
       { titre: `${M}⁴⁺–O`, sous: `liaison ${O.nature(`${M}–O`)} (électrons en partie cédés)`,
-        schema: { type: "don", a: M, la: `${M}⁴⁺`, ra: 17, fa: 12, b: "O", aria: "Le manganèse à quatre charges cède ses électrons aux oxygènes" },
-        li: [`Ionique ${O.fraction(O.ionicite(M, "O"))} (Pauling). Le manganèse répartit ses quatre charges sur six oxygènes : deux tiers de liaison chacune, plus que Fe³⁺–O (une demi).`,
-          "Tant qu'il garde ses quatre charges, il tient bon : à l'air, les oxydes de manganèse ne se dissolvent pas."] },
+        schema: { type: "don", a: M, la: `${M}⁴⁺`, ra: 17, fa: 12, b: "O", aria: "Les oxygènes accueillent les électrons du manganèse tétravalent" },
+        li: [`Caractère ionique ${O.fraction(O.ionicite(M, "O"))} (Pauling). Les quatre charges du manganèse se répartissent sur six oxygènes : deux tiers de liaison chacune, davantage que la liaison Fe³⁺-O, qui ne vaut qu'une demie.`,
+          "Tant qu'il conserve ses quatre charges, il résiste : à l'air, les oxydes de manganèse restent insolubles."] },
       { titre: `${M}²⁺–O`, sous: "après l'arrivée de deux électrons",
-        schema: { type: "don", a: M, la: `${M}²⁺`, ra: 17, fa: 12, b: "O", aria: "Le manganèse à deux charges tient moins ses oxygènes" },
-        li: ["Deux charges sur six oxygènes : un tiers de liaison seulement, deux fois moins qu'avant.",
-          "Le Mn²⁺ est soluble : il part avec l'eau, puis noircit en taches et en petites billes là où l'air revient."] });
+        schema: { type: "don", a: M, la: `${M}²⁺`, ra: 17, fa: 12, b: "O", aria: "Le manganèse divalent tient ses oxygènes d'une prise plus lâche" },
+        li: ["Ici, deux charges seulement pour six oxygènes, d'où un tiers de liaison, deux fois moins que précédemment.",
+          "Le Mn²⁺ est soluble : il s'éloigne avec l'eau, puis forme des taches et de petites billes noires là où l'air revient."] });
     const tous = [].concat(temps || []);
     if (red) {
       const D = (window.LIAISONS_DONNEES || {}).mineraux || {};
       const ids = ["vernadite", "birnessite", "ferrihydrite", "lepidocrocite", "goethite", "hematite"].filter((i) => D[i] && D[i].onglets.reduit && D[i].onglets.reduit.t);
       const avecMn = ids.some((i) => D[i].cation === "Mn");
-      if (ids.length > 1) tous.push({ titre: avecMn ? "Réduits, le manganèse part avant le fer" : "Réduits, les oxydes de fer ne partent pas au même rythme",
+      if (ids.length > 1) tous.push({ titre: avecMn ? "Réduits, le manganèse part avant le fer" : "Réduits, les oxydes de fer ne se libèrent pas tous à la même vitesse",
         explic: avecMn
           ? "Un atome de métal de la surface quitte le cristal, au laboratoire, avec 10 mmol/L de réducteur : vitamine C à pH 3 pour le fer (Larsen et Postma 2001), polyphénol (catéchol) vers pH 4 à 6 pour le manganèse (Matocha et al. 2001). Les réducteurs diffèrent, mais l'écart est trop grand pour venir d'eux seuls : avec la même vitamine C, un oxyde de manganèse (la manganite) part encore environ cent fois plus vite que la ferrihydrite (Jun et Martin 2003). C'est pourquoi, quand l'eau stagne, le manganèse quitte le sol avant le fer. Barres : écart entre les échantillons mesurés."
-          : "Un fer de la surface quitte le cristal, sans air, avec le même réducteur et au même pH (3). Seul l'arrangement des atomes change : plus les grains sont fins et mal rangés, plus le fer part vite. Barres : écart entre les échantillons mesurés.",
+          : "Un fer de surface s'échappe du cristal sans air, avec le même réducteur et à pH 3. Seule la disposition des atomes varie : plus les grains sont fins et désordonnés, plus le fer part vite. Les barres figurent l'écart entre les mesures.",
         rangees: ids.map((i) => { const r = D[i].onglets.reduit; return { titre: `${majuscule(D[i].nom)}${i === d.id ? " (cette fiche)" : ""}`,
           pts: [{ el: D[i].cation, min: r.tmin, max: r.tmax, v: r.t, et: r.court, ou: "haut" }] }; }) });
     }
@@ -448,11 +448,11 @@
     onglets: (d) => [["eau", "Dans l'eau du sol"], ["acide", "Dans l'acide"], ["reduit", "Sol engorgé"]].filter(([k]) => d.onglets && d.onglets[k]).map(([k, nom]) => ({ k, nom })),
     decor, etapes, energie,
     legende: (d) => ({ "e:O": (d && d.textes && d.textes.legO) || "oxygène d'un OH du cristal", "i:Cl−": "Cl⁻, ne réagit pas",
-      "t:avant": "atome juste devant le plan du dessin (en contour)", "t:arriere": "couche juste derrière le plan du dessin (plus petite, pâle)",
-      "t:elec": "électron cédé par la bactérie", "t:bact": "bactérie du sol (en vrai, deux cents à quatre cents fois plus longue que tout le dessin)",
-      "l:Fe²⁺–O:ion": "liaison Fe²⁺–O, plus faible (un tiers de liaison)", "l:Fe²⁺–O:eau": "liaison Fe²⁺–O avec l'eau",
-      "l:Mn²⁺–O:ion": "liaison Mn²⁺–O, plus faible (un tiers de liaison)", "l:Mn²⁺–O:eau": "liaison Mn²⁺–O avec l'eau",
-      "t:phenol": "polyphénol des feuilles mortes et des racines (ici le catéchol ; vert : ses carbones)" }),
-    aria: (d) => estMn(d) ? `Coupe du bord d'un paquet de feuillets de ${d.nom}, étape par étape` : estOx(d) ? `Coupe du bord d'un cristal d'${d.nom}, étape par étape` : `Coupe du bord d'un paquet de feuillets de ${d.nom}, étape par étape`,
+      "t:avant": "atome placé en avant du plan de la figure, figuré en contour", "t:arriere": "couche située derrière le plan de la figure, plus petite et plus claire",
+      "t:elec": "électron cédé par la bactérie", "t:bact": "bactérie du sol (en réalité, sa longueur dépasse de deux cents à quatre cents fois celle de tout le dessin)",
+      "l:Fe²⁺–O:ion": "lien Fe²⁺-O, plus fragile, ne valant qu'un tiers de liaison", "l:Fe²⁺–O:eau": "liaison Fe²⁺-O avec l'eau",
+      "l:Mn²⁺–O:ion": "lien Mn²⁺-O, plus fragile, ne valant qu'un tiers de liaison", "l:Mn²⁺–O:eau": "liaison Mn²⁺-O avec l'eau",
+      "t:phenol": "polyphénol issu des feuilles mortes et des racines (ici le catéchol ; en vert, ses atomes de carbone)" }),
+    aria: (d) => estMn(d) ? `Vue en coupe de la bordure d'un paquet de feuillets de ${d.nom}, étape après étape` : estOx(d) ? `Vue en coupe du bord d'un cristal d'${d.nom}, étape après étape` : `Vue en coupe de la bordure d'un paquet de feuillets de ${d.nom}, étape après étape`,
   });
 })();

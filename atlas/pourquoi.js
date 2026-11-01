@@ -77,7 +77,7 @@
     chambre: {
       scene: "chambre",
       titre: "Une chambre magmatique : plusieurs roches possibles",
-      intro: "Un basalte venu du manteau refroidit dans une chambre, sous un volcan. Ses minéraux cristallisent l'un après l'autre et emportent surtout le magnésium, le fer et le calcium : le liquide qui reste s'enrichit en silice. La roche obtenue dépend du moment et de ce qui est prélevé : les cristaux tombés au fond, le liquide sorti en éruption, ou le liquide resté sur place.",
+      intro: "Sous un volcan, un basalte venu du manteau se refroidit dans une chambre magmatique. Les minéraux qui cristallisent l'un après l'autre captent surtout magnésium, fer et calcium, si bien que le liquide restant s'appauvrit en ces éléments et s'enrichit en silice. La roche finale dépend de ce qui est prélevé à chaque instant : cristaux sédimentés au fond, liquide expulsé en éruption ou liquide resté en profondeur.",
       mesure: "Chemin mesuré en laboratoire : un basalte à 3 % d'eau, refroidi par paliers de 1 170 à 700 °C sous 0,7 GPa (environ 25 km de profondeur) ; à chaque palier, les cristaux formés sont retirés, comme s'ils tombaient au fond de la chambre (Nandedkar et al. 2014).",
       // Nandedkar, Ulmer et Müntener (2014), chaîne principale des expériences : T (°C) ; F = part restée liquide, en % de la
       // masse de départ (tableau 2, « Liq (abs) ») ; si = silice du verre, recalculée sans l'eau à partir du tableau 4 ;
@@ -113,34 +113,34 @@
       // ailleurs = la fiche de cette roche portera le graphique d'un autre phénomène
       roches: [
         { id: "peridotite", at: 1150, sortie: "fond", court: "péridotite", ailleurs: true, nomY: 154,
-          texte: "Les premiers cristaux, d'olivine, se forment dès 1 150 °C et tombent au fond : ils donnent une péridotite faite presque d'olivine seule, la dunite. La péridotite décrite dans sa fiche vient, elle, du manteau." },
+          texte: "Les premiers cristaux, d'olivine, apparaissent dès 1 150 °C et sédimentent au fond de la chambre : ils forment une péridotite constituée presque exclusivement d'olivine, la dunite. La péridotite décrite dans sa fiche provient, quant à elle, du manteau." },
         { id: "pyroxenite", at: 1070, sortie: "fond", court: "pyroxénite", nomY: 154,
-          texte: "Entre 1 100 et 1 040 °C, c'est surtout du pyroxène qui cristallise ; accumulé au fond de la chambre, il donne une pyroxénite. Avec l'olivine d'avant, ces premiers cristaux représentent 35 à 40 % du magma de départ." },
+          texte: "De 1 100 à 1 040 °C, le pyroxène domine la cristallisation ; s'il s'accumule au fond de la chambre, il forme une pyroxénite. Ajoutés à l'olivine formée plus tôt, ces premiers cristaux comptent pour 35 à 40 % du magma initial." },
         { id: "hornblendite", at: 1030, sortie: "fond", variante: true, court: "hornblendite", nomY: 140,
           texte: "Variante : plus profond (vers 35 km) ou plus riche en eau, l'amphibole cristallise avant le plagioclase, entre 1 050 et 950 °C. Accumulée presque seule au fond, elle donne une hornblendite (Ulmer et al. 2018)." },
         { id: "gabbro", at: 1010, sortie: "fond", court: "gabbro", nomY: 126,
-          texte: "Vers 1 040 °C, le plagioclase rejoint le pyroxène, puis l'amphibole prend le relais vers 1 010 °C : les cristaux accumulés forment alors un gabbro, ici à amphibole. Sous une dorsale, à faible profondeur et avec peu d'eau, le plagioclase cristallise dès le début, avec l'olivine : les gabbros s'y forment plus tôt, sans amphibole (Villiger et al. 2004)." },
+          texte: "Vers 1 040 °C, le plagioclase rejoint le pyroxène, puis l'amphibole prend le relais vers 1 010 °C : les cristaux accumulés forment alors un gabbro, ici à amphibole. Sous une dorsale, avec peu d'eau, le plagioclase cristallise dès le début avec l'olivine, et l'amphibole n'apparaît qu'à la fin, en couronne autour du pyroxène : au Chenaillet, la suite va de la troctolite au gabbro à olivine, puis aux gabbros riches en magnétite et en ilménite (Masini et al. 2008 ; Nicollet et al. 2022)." },
         { id: "basalte", at: 1100, sortie: "lave", court: "basalte", ailleurs: true,
-          texte: "Tant que moins d'un quart du magma a cristallisé (au-dessus de 1 055 °C), le liquide garde environ 50 % de silice : sorti en éruption à ce moment, il donne un basalte." },
+          texte: "Tant que moins d'un quart du magma a cristallisé (au-dessus de 1 055 °C), le liquide conserve environ 50 % de silice ; s'il est expulsé à ce stade, il forme un basalte." },
         { id: "andesite", at: 980, sortie: "lave", court: "andésite",
-          texte: "Vers 980 °C, près de 60 % du magma a cristallisé et le liquide qui reste contient 60 % de silice : sorti en éruption, il donne une andésite." },
+          texte: "Vers 980 °C, près de 60 % du magma a cristallisé et le liquide résiduel renferme 60 % de silice ; expulsé en éruption, il forme une andésite." },
         { id: "diorite", at: 980, sortie: "place", court: "diorite",
-          texte: "Le même liquide que l'andésite (60 % de silice, vers 980 °C), resté dans la croûte, cristallise lentement en cristaux visibles à l'œil nu : une diorite." },
+          texte: "Ce liquide, identique à celui de l'andésite (60 % de silice, vers 980 °C), reste dans la croûte où il cristallise lentement en grains visibles à l'œil nu : c'est une diorite." },
         { id: "dacite", at: 920, sortie: "lave", court: "dacite",
-          texte: "Vers 920 °C, il ne reste qu'un tiers du magma, un liquide à 65 % de silice : sorti en éruption, c'est une dacite." },
+          texte: "Vers 920 °C, il ne subsiste qu'un tiers du magma, sous la forme d'un liquide à 65 % de silice ; expulsé en éruption, il donne une dacite." },
         { id: "tonalite", at: 920, sortie: "place", court: "tonalite",
           texte: "Le liquide de la dacite, resté en profondeur, cristallise en plagioclase, quartz et amphibole, presque sans feldspath potassique : une tonalite. À la fin, la bouillie de cristaux d'où s'échappe le dernier liquide, très riche en silice, est elle aussi une diorite ou une tonalite (Nandedkar et al. 2014)." },
         { id: "granodiorite", at: 890, sortie: "place", court: "granodiorite",
-          texte: "Vers 890 °C, le liquide atteint 69 % de silice et s'enrichit en potassium : figé en profondeur, il donne une granodiorite, où le feldspath potassique accompagne le plagioclase." },
+          texte: "Vers 890 °C, le liquide grimpe à 69 % de silice en s'enrichissant en potassium. Figé en profondeur, il engendre une granodiorite dans laquelle le feldspath potassique se joint au plagioclase." },
         { id: "rhyolite", at: 780, sortie: "lave", court: "rhyolite",
-          texte: "Vers 780 °C, il ne reste qu'un cinquième du magma, un liquide à 75 % de silice : sorti en éruption, c'est une rhyolite." },
+          texte: "Vers 780 °C, il ne subsiste qu'un cinquième du magma, sous la forme d'un liquide à 75 % de silice ; expulsé en éruption, il donne une rhyolite." },
         { id: "trondhjemite", at: 730, sortie: "place", variante: true, court: "trondhjémite", nomDessous: true,
           texte: "Variante : au même stade, un magma pauvre en potassium, comme sous une dorsale, laisse un dernier liquide qui cristallise en plagioclase sodique et en quartz, presque sans feldspath potassique : une trondhjémite. Sous une dorsale, il faut pour cela que plus de 90 % du magma ait cristallisé, avec un apport de croûte océanique fondue (Wanless et al. 2010)." },
         { id: "granite", at: 700, sortie: "place", court: "granite", ailleurs: true,
-          texte: "Vers 700 °C, il ne reste que 14 % du magma, un liquide à 78 % de silice ; il cristallise presque d'un coup, entre 700 et 650 °C, en quartz, feldspaths et biotite : un granite. La plupart des granites de France viennent pourtant d'une autre voie, la fusion de la croûte." },
+          texte: "Vers 700 °C, il ne subsiste que 14 % du magma, sous la forme d'un liquide à 78 % de silice, qui cristallise presque d'un seul tenant entre 700 et 650 °C en quartz, feldspaths et biotite : il forme un granite. La plupart des granites de France proviennent toutefois d'une autre voie, la fusion de la croûte." },
       ],
-      legende: `<span class="pq-sym">▲</span> sorti en éruption : une lave · <span class="pq-sym">■</span> resté en profondeur : une roche grenue · <span class="pq-sym">▼</span> cristaux tombés au fond : un cumulat · en pointillé : une variante, expliquée dans le texte de la roche.`,
-      sources: `Chemin du liquide, minéraux formés et part restée liquide : Nandedkar R. H., Ulmer P. et Müntener O. (2014), <i>Contributions to Mineralogy and Petrology</i> 167, 1015 (tableaux 2 et 4 ; silice du liquide recalculée sans l'eau). Hornblendite : Ulmer P., Kaegi R. et Müntener O. (2018), <i>Journal of Petrology</i> 59, 11. Gabbros de dorsale : Villiger S., Ulmer P., Müntener O. et Thompson A. B. (2004), <i>Journal of Petrology</i> 45, 2369. Trondhjémite de dorsale : Wanless V. D., Perfit M. R., Ridley W. I. et Klein E. (2010), <i>Journal of Petrology</i> 51, 2377. Domaines de silice (basique, intermédiaire, acide) : Le Bas M. J. et al. (1986), <i>Journal of Petrology</i> 27, 745.`,
+      legende: `<span class="pq-sym">▲</span> lave émise lors d'une éruption · <span class="pq-sym">■</span> roche grenue figée en profondeur · <span class="pq-sym">▼</span> cumulat formé de cristaux tombés au fond · pointillé : variante, expliquée dans le texte de la roche.`,
+      sources: `Chemin du liquide, minéraux formés et part restée liquide : Nandedkar R. H., Ulmer P. et Müntener O. (2014), <i>Contributions to Mineralogy and Petrology</i> 167, 1015 (tableaux 2 et 4 ; silice du liquide recalculée sans l'eau). Hornblendite : Ulmer P., Kaegi R. et Müntener O. (2018), <i>Journal of Petrology</i> 59, 11. Gabbros de dorsale : Masini E., Manatschal G. et al. (2008), <i>Geophysical Research Abstracts</i> 10, EGU2008-A-07896 ; Nicollet C. et al. (2022), <i>Lithos</i> 414–415, 106620. Trondhjémite de dorsale : Wanless V. D., Perfit M. R., Ridley W. I. et Klein E. (2010), <i>Journal of Petrology</i> 51, 2377. Domaines de silice (basique, intermédiaire, acide) : Le Bas M. J. et al. (1986), <i>Journal of Petrology</i> 27, 745.`,
     },
   };
   // roche → phénomène de SA fiche (les roches `ailleurs` n'y sont pas) ; les autres phénomènes sont ajoutés par
@@ -193,10 +193,10 @@
     s += txt(8, 15, "silice du liquide (%)", { petit: true });
     // fond de la chambre : les ▼ des cumulats y aboutissent (la bande des minéraux palier par palier a été retirée le
     // 25/09/2026 : « je ne comprends pas trop »)
-    s += line(X0, B0, X1, B0, "#6f6a60", 1.4) + txt(X0 + 4, B0 + 10, "fond de la chambre : les cristaux s'y accumulent", { petit: true });
+    s += line(X0, B0, X1, B0, "#6f6a60", 1.4) + txt(X0 + 4, B0 + 10, "fond de la chambre, où les cristaux s'accumulent", { petit: true });
     // axe des températures
     for (const T of [1200, 1100, 1000, 900, 800, 700]) s += line(X(T), B1, X(T), B1 + 3, "#8f897d", 0.8) + txt(X(T), B1 + 12, T === 700 ? "700 °C" : nombre(T), { a: "middle", petit: true });
-    s += txt((X0 + X1) / 2, B1 + 24, "température du magma : il refroidit de gauche à droite", { a: "middle", petit: true });
+    s += txt((X0 + X1) / 2, B1 + 24, "axe des températures : le magma se refroidit de gauche à droite", { a: "middle", petit: true });
     // jauge « liquide restant »
     const GX = 448, GW = 10;
     s += txt(GX + GW / 2, Y0 - 12, "liquide", { a: "middle", petit: true }) + txt(GX + GW / 2, Y0 - 4, "restant", { a: "middle", petit: true });
@@ -505,7 +505,7 @@
     const cle = roche && PHENOMENE_DE[roche.id];
     if (!cle) return "";
     const ph = PHENOMENES[cle];
-    return `<details class="card pourquoi replie-travaux" id="pourquoi"><summary><h2>${ph.titre} <span class="en-travaux">🚧 en travaux</span></h2></summary>
+    return `<details class="card pourquoi replie-travaux" id="pourquoi" open><summary><h2>${ph.titre}</h2></summary>
     <p class="sub">${insecable(ph.intro)}</p>
     <div class="pq"></div>
   </details>`;
@@ -513,7 +513,7 @@
 
   function sources(roche) {
     const cle = roche && PHENOMENE_DE[roche.id];
-    return cle ? `<p class="page-source"><b>${PHENOMENES[cle].titre}</b> — ${PHENOMENES[cle].sources}</p>` : "";
+    return cle ? `<p class="page-source"><b>${PHENOMENES[cle].titre}</b> : ${PHENOMENES[cle].sources}</p>` : "";
   }
 
   function monter(el, roche) {
@@ -556,7 +556,7 @@
     function majInfo() {
       const id = ui.choix || ui.page, rc = roches[id], estPage = id === ui.page;
       pastille.classList.toggle("choix", !estPage);
-      texte.innerHTML = `<b>${nomFiche(id)}</b>${estPage ? " · cette fiche" : ""} — ${insecable(rc.texte)}`;
+      texte.innerHTML = `<b>${nomFiche(id)}</b>${estPage ? " · cette fiche" : ""} : ${insecable(rc.texte)}`;
       if (estPage) { lien.hidden = true; lien.removeAttribute("href"); }
       else { lien.hidden = false; lien.href = "#roche/" + id; lien.textContent = "Voir sa fiche →"; }
     }

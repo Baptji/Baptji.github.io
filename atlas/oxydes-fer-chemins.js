@@ -43,7 +43,7 @@
     gehring1994: "Gehring A. U., Hofmeister A. M. (1994). The transformation of lepidocrocite during heating: a magnetic and spectroscopic study. <i>Clays and Clay Minerals</i> 42, 409–415.",
     pomies1998: "Pomiès M.-P., Morin G., Vignaud C. (1998). XRD study of the goethite-hematite transformation: application to the identification of heated prehistoric pigments. <i>European Journal of Solid State and Inorganic Chemistry</i> 35, 9–25.",
     bigham1996: "Bigham J. M., Schwertmann U., Traina S. J., Winland R. L., Wolf M. (1996). Schwertmannite and the chemical modeling of iron in acid sulfate waters. <i>Geochimica et Cosmochimica Acta</i> 60, 2111–2121.",
-    wikifr: "Wikipédia en français, article « Ferrihydrite » (consulté le 12/10/2026) : dépôts dans les drains, rôle des bactéries du fer. Les articles « Goethite », « Hématite » et « Lépidocrocite » ne décrivent pas les chemins de formation.",
+    wikifr: "Article « Ferrihydrite » de Wikipédia en français, consulté le 12/10/2026 : il évoque les dépôts dans les drains et le rôle des bactéries du fer. Rien sur les chemins de formation dans les articles « Goethite », « Hématite » et « Lépidocrocite ».",
     cites: "Travaux cités d'après Schwertmann (1985) : Schwertmann (1959), oxydation d'une solution de Fe²⁺ avec du CO₂ ; Taylor et Graley (1967), Tasmanie ; Chen et al. (1980), rizières ; Kämpf et Schwertmann (1982), Brésil du Sud ; Schwertmann, Murad et Schulze (1982), Allemagne du Sud ; Torrent et al. (1982), humidité relative ; Curi (1983), Brésil central ; Torrent et al. (1984), rougeur et hématite.",
   };
   // ordre d'affichage de la liste des sources
@@ -57,32 +57,32 @@
     roche: { x: 500, y: 38, w: 640, h: 52, type: "roche", nom: "Minéraux de la roche qui contiennent du fer",
       sous: "biotite · olivine · pyroxènes · amphiboles · chlorites · pyrite",
       liens: ["biotite", "olivine", "augite", "hornblende", "pyrite", "siderite", "magnetite"],
-      texte: "Dans les roches, le fer est surtout à l'état réduit, Fe²⁺, au cœur des silicates sombres : biotite, olivine, pyroxènes, amphiboles, chlorites. On en trouve aussi dans la pyrite (sulfure) et la sidérite (carbonate) ; la magnétite contient Fe²⁺ et Fe³⁺. En s'altérant, ces minéraux libèrent leur fer, qui s'oxyde et forme les oxydes : la part du fer total passée en oxydes mesure l'avancement de l'altération d'un sol (Schwertmann 1985).",
+      texte: "Dans les roches, le fer se trouve surtout à l'état réduit, Fe²⁺, au cœur des silicates sombres : biotite, olivine, pyroxènes, amphiboles, chlorites. Il figure aussi dans la pyrite (sulfure) et la sidérite (carbonate), tandis que la magnétite renferme à la fois Fe²⁺ et Fe³⁺. Lors de l'altération, ces minéraux libèrent leur fer, qui s'oxyde pour former des oxydes ; la part du fer total passée sous forme d'oxydes mesure l'avancement de l'altération d'un sol (Schwertmann 1985).",
       src: ["schw1985"] },
     fe2: { x: 500, y: 140, w: 250, h: 56, type: "dissous", nom: "Fe²⁺ dissous", sous: "fer réduit, mobile, incolore",
-      texte: "Le fer réduit est soluble : entouré de six molécules d'eau, incolore, il voyage avec l'eau du sol. Il ne dure qu'en l'absence d'oxygène (sol engorgé, nappe) ou dans une eau acide, où il s'oxyde lentement : il faut environ un mois pour en oxyder la moitié à pH 5, quelques minutes à pH 7 (aiguillage 1). Le Fe³⁺, lui, est presque insoluble : il ne reste dissous que dans une eau très acide, ou tenu par les acides de l'humus en complexes organiques, sous lesquels il peut descendre dans le sol, comme dans les podzols (Schwertmann 1985).",
+      texte: "À l'état réduit, le fer se dissout : six molécules d'eau l'entourent et il reste incolore, voyageant avec l'eau du sol. Il ne persiste qu'en absence d'oxygène (sol engorgé, nappe) ou en eau acide, où il s'oxyde lentement : environ un mois pour la moitié à pH 5, quelques minutes à pH 7 (aiguillage 1). Le Fe³⁺ est, lui, presque insoluble : seule une eau très acide le garde en solution, ou bien les acides de l'humus qui le complexent, et il peut alors descendre dans le profil, comme dans les podzols (Schwertmann 1985).",
       src: ["singer1970", "schw1985"] },
-    rv: { x: 215, y: 268, w: 230, h: 60, id: "fougerite", nom: "Rouille verte", sous: "fougérite : Fe²⁺ et Fe³⁺ en feuillets", ic: "feuillets", sw: "#5a7060",
-      texte: "Un hydroxyde en feuillets où Fe²⁺ et Fe³⁺ (et, à Fougères, un peu de magnésium) se partagent les octaèdres ; l'excès de charge positive dû au Fe³⁺ est compensé par des anions et de l'eau entre les feuillets. Bleu-vert, elle donne leur couleur aux horizons engorgés des gleys ; à l'air, elle vire à l'ocre en devenant lépidocrocite. Découverte dans les sols de la forêt de Fougères (Ille-et-Vilaine) en 1996, homologuée par l'Association internationale de minéralogie en février 2004 sous le nom de fougérite (Trolard 2006).",
+    rv: { x: 215, y: 268, w: 230, h: 60, id: "fougerite", nom: "Rouille verte", sous: "fougérite : feuillets de Fe²⁺ et de Fe³⁺", ic: "feuillets", sw: "#5a7060",
+      texte: "Cet hydroxyde en feuillets répartit Fe²⁺ et Fe³⁺ (et, à Fougères, un peu de magnésium) entre ses octaèdres. L'excès de charge positive dû au Fe³⁺ est compensé par des anions et de l'eau placés entre les feuillets. Bleu-vert, elle donne leur couleur aux horizons engorgés des gleys ; à l'air, elle s'oxyde en lépidocrocite, de teinte ocre. Découverte en 1996 dans les sols de la forêt de Fougères (Ille-et-Vilaine), elle a été homologuée par l'Association internationale de minéralogie en février 2004 sous le nom de fougérite (Trolard 2006).",
       forme: "plaquettes hexagonales faites de feuillets", couleur: "bleu-vert, fugace", src: ["trolard2006", "jol2006"] },
     frh: { x: 785, y: 268, w: 230, h: 60, id: "ferrihydrite", nom: "Ferrihydrite", sous: "grains de 2 à 5 nm, pleins d'eau", ic: "grains", sw: "#8a4a2a",
-      texte: "Le premier solide du Fe³⁺ : des grains de 2 à 5 nanomètres, mal ordonnés, pleins d'eau ; environ un fer sur cinq y est entouré de quatre oxygènes au lieu de six (Michel et al. 2007). Elle se forme quand le Fe³⁺ apparaît plus vite qu'un cristal ne peut grandir, ou quand de la silice, de l'humus ou du phosphate gênent la croissance. Instable, elle devient goethite ou hématite en quelques mois à quelques années à 25 °C, sauf si la silice ou l'humus la protègent : des sols de Nouvelle-Zélande en gardent depuis 200 000 ans (Jolivet et al. 2006). C'est un indice de sols frais et humides, où le fer vient de précipiter (Schwertmann 1985).",
-      forme: "grains de 2 à 5 nm, assemblés en agrégats", couleur: "médiane 6,6 YR (de 2,8 à 9,2 YR) : brun-rouille", src: ["michel2007", "jol2006", "schw1985", "scheinost1999"] },
+      texte: "Des grains de 2 à 5 nm, mal ordonnés et gorgés d'eau, constituent le tout premier solide du Fe³⁺ ; environ un fer sur cinq n'y est entouré que de quatre oxygènes (Michel et al. 2007). Cette phase apparaît lorsque le Fe³⁺ arrive plus vite qu'un cristal ne grandit, ou lorsque silice, humus ou phosphate freinent la croissance. Elle se convertit en goethite ou en hématite en quelques mois à quelques années à 25 °C, sauf si silice ou humus la protègent, comme dans des sols néo-zélandais qui en conservent depuis 200 000 ans (Jolivet et al. 2006). Sa présence signale un sol frais et humide où le fer précipite (Schwertmann 1985).",
+      forme: "grains de 2 à 5 nm regroupés en agrégats", couleur: "médiane 6,6 YR (de 2,8 à 9,2 YR) : brun-rouille", src: ["michel2007", "jol2006", "schw1985", "scheinost1999"] },
     lep: { x: 130, y: 402, w: 210, h: 60, id: "lepidocrocite", nom: "Lépidocrocite", sous: "γ-FeO(OH) · lattes orange", ic: "lattes", sw: "#c96a2e",
-      texte: "Même formule que la goethite, FeO(OH), mais une autre charpente : des feuillets ondulés d'octaèdres tenus entre eux par des liaisons hydrogène. Elle ne naît qu'en présence de Fe²⁺, quand celui-ci s'oxyde assez vite et sans carbonate (Schwertmann 1985 ; Jolivet et al. 2006). Un peu moins stable que la goethite, elle dure pourtant des temps pédologiques. On la trouve en taches, en gaines autour des racines et en bandes orange dans les sols argileux non calcaires, engorgés par intermittence, des climats tempérés (Schwertmann 1985).",
+      texte: "FeO(OH), comme la goethite, mais dans une charpente différente : des feuillets ondulés d'octaèdres, tenus par des liaisons hydrogène. Elle se forme seulement quand Fe²⁺ s'oxyde assez vite sans carbonate (Schwertmann 1985 ; Jolivet et al. 2006). Moins stable que la goethite, elle persiste pourtant à l'échelle pédologique. Dans les sols argileux non calcaires, engorgés par intermittence, des climats tempérés, elle forme des taches, des gaines autour des racines et des bandes orange (Schwertmann 1985).",
       forme: "lattes allongées", couleur: "médiane 6,8 YR (de 4,9 à 7,9 YR) : orange", src: ["schw1985", "jol2006", "scheinost1999"] },
     goe: { x: 500, y: 402, w: 240, h: 64, id: "goethite", nom: "Goethite", sous: "α-FeO(OH) · aiguilles jaune-brun", ic: "aiguilles", sw: "#b07830",
-      texte: "Des doubles chaînes d'octaèdres qui laissent des tunnels, en aiguilles jaune-brun. C'est l'oxyde de fer le plus répandu des sols et le plus stable dans la plupart d'entre eux (Schwertmann 1985). Elle naît par les deux chemins : directement de l'eau, ion par ion, ou en recristallisant la ferrihydrite ; plus lentement, de la rouille verte et de la lépidocrocite. Dans les sols très altérés, jusqu'à un fer sur trois y est remplacé par de l'aluminium ; dans les sols engorgés et les sols peu acides, presque aucun (Schwertmann 1985).",
+      texte: "Elle est formée de doubles chaînes d'octaèdres qui délimitent des tunnels, et se présente en aiguilles jaune-brun. C'est l'oxyde de fer le plus répandu dans les sols et, dans la plupart d'entre eux, le plus stable (Schwertmann 1985). Elle naît selon deux voies : directement à partir de l'eau, ion par ion, ou par recristallisation de la ferrihydrite ; plus lentement, à partir de la rouille verte et de la lépidocrocite. Dans les sols très altérés, jusqu'à un fer sur trois peut être remplacé par de l'aluminium ; dans les sols engorgés et peu acides, presque aucun (Schwertmann 1985).",
       forme: "aiguilles (au laboratoire, environ 200 nm de long et 15 nm de large : Chen et al. 2022)", couleur: "médiane 0,4 Y (de 7,3 YR à 1,6 Y) : jaune-brun", src: ["schw1985", "chen2022", "scheinost1999"] },
     hem: { x: 865, y: 402, w: 210, h: 64, id: "hematite", nom: "Hématite", sous: "α-Fe₂O₃ · plaquettes rouges", ic: "plaquette", sw: "#a04030",
-      texte: "Un oxyde sans eau : des oxygènes serrés, deux sites sur trois occupés par du fer. C'est le pigment le plus puissant des sols : 0,5 à 1 % de ces produits rouges suffisent à rougir un sol pauvre en humus (Lamouroux 1972), et la rougeur d'un sol croît en ligne droite avec sa teneur en hématite (Torrent et al. 1984, d'après Schwertmann 1985). Dans un sol, elle ne vient pas de la goethite, qui ne se déshydrate pas à ces températures, mais de la ferrihydrite (Schwertmann 1985). Elle domine dans les sols chauds à saison sèche et bien drainés ; dans les sols frais et humides, elle manque.",
+      texte: "L'hématite ne contient pas d'eau : ses oxygènes sont serrés et deux sites sur trois portent du fer. Ce pigment est le plus puissant des sols, puisque 0,5 à 1 % de ces produits rouges suffisent à rougir un sol pauvre en humus (Lamouroux 1972). La rougeur croît en ligne droite avec la teneur en hématite (Torrent et al. 1984, d'après Schwertmann 1985). Dans le sol, elle vient de la ferrihydrite et non de la goethite, qui ne se déshydrate pas à ces températures (Schwertmann 1985). Elle domine dans les sols chauds, bien drainés et soumis à une saison sèche ; elle manque dans les sols frais et humides.",
       forme: "plaquettes hexagonales (au laboratoire, environ 60 nm de diamètre : Chen et al. 2022)", couleur: "médiane 1,2 YR (de 3,5 R à 4,1 YR) : rouge", src: ["lamouroux1972", "schw1985", "chen2022", "scheinost1999"] },
     mag: { x: 110, y: 636, w: 180, h: 54, id: "magnetite", nom: "Magnétite", sous: "Fe₃O₄ · noire, magnétique", ic: "octaedre", sw: "#3a3a40",
       texte: "Fe²⁺ et Fe³⁺ dans une charpente de spinelle ; noire et magnétique. Dans les sols, elle est surtout héritée de la roche, mais des cristaux de moins de 100 nm s'y forment aussi, ce qui rend les horizons de surface plus magnétiques que la roche (Maher et Taylor 1988 ; Liu et al. 2016). Au laboratoire, il faut beaucoup de Fe²⁺ au contact de la ferrihydrite (Hansel et al. 2005).",
-      forme: "octaèdres ; néoformée, grains de moins de 100 nm", couleur: "noire", src: ["maher1988", "liu2016", "hansel2005"] },
+      forme: "octaèdres ; formée sur place, grains de moins de 100 nm", couleur: "noire", src: ["maher1988", "liu2016", "hansel2005"] },
     mgh: { x: 500, y: 636, w: 190, h: 54, id: "maghemite", nom: "Maghémite", sous: "γ-Fe₂O₃ · brune, magnétique", ic: "lacunes", sw: "#7d4a38",
-      texte: "La charpente de la magnétite, mais tout le fer oxydé et des sites laissés vides ; même formule que l'hématite, mais magnétique. Fréquente dans les sols tropicaux et subtropicaux, surtout les sols rouges ; en climat tempéré, seulement en surface, près de charbons de bois : le feu en est la principale origine (Schwertmann 1985). Elle peut aussi venir d'une magnétite oxydée à l'air (Liu et al. 2016).",
-      forme: "grains fins, souvent pseudomorphes de l'oxyde chauffé", couleur: "médiane 8,3 YR, sombre (clarté 3,1) : brune", src: ["schw1985", "liu2016", "scheinost1999"] },
+      texte: "Elle reprend la charpente de la magnétite, mais tout son fer est oxydé et des sites demeurent vides ; sa formule est celle de l'hématite, dont elle se distingue par son magnétisme. Fréquente dans les sols tropicaux et subtropicaux, surtout les sols rouges, elle ne se rencontre en climat tempéré qu'en surface, près de charbons de bois : le feu en constitue la principale origine (Schwertmann 1985). Elle peut aussi provenir de l'oxydation à l'air d'une magnétite (Liu et al. 2016).",
+      forme: "grains fins, souvent pseudomorphes de l'oxyde qui a été chauffé", couleur: "médiane 8,3 YR, sombre (clarté 3,1) : brune", src: ["schw1985", "liu2016", "scheinost1999"] },
     gfrh: { x: 110, y: 540, w: 150, h: 34, type: "fantome", de: "frh" },
     glep: { x: 575, y: 540, w: 140, h: 34, type: "fantome", de: "lep" },
     ggoe: { x: 760, y: 540, w: 140, h: 34, type: "fantome", de: "goe" },
@@ -94,75 +94,75 @@
   // red = réduction par des bactéries, feu = chauffage) ; d : tracé(s) ; lab : [x, y, ancre, lignes] (une par tracé pour red) ;
   // num : pastille d'étape ; vig : vignettes « à l'échelle des atomes » montrées dans le détail
   const TYPES = {
-    dis: "le fer passe dans l'eau", ox: "oxydation", cri: "cristallisation dans l'eau, ion par ion",
-    sol: "réarrangement sur place, dans le solide", red: "réduction par des bactéries", feu: "chauffage par un feu",
+    dis: "le fer passe dans l'eau", ox: "oxydation", cri: "cristallisation à partir de l'eau, ion par ion",
+    sol: "réarrangement sur place au sein du solide", red: "réduction par des bactéries", feu: "chauffage par un feu",
   };
   const F = {
     a1: { de: "roche", vers: "fe2", t: "dis", d: "M500 64 L500 110", lab: [516, 92, "start", ["le fer passe dans l'eau"]], num: [500, 87],
       titre: "Le fer quitte le minéral",
-      texte: "L'eau de pluie, rendue un peu acide par le CO₂ du sol et les acides de l'humus, attaque les minéraux qui contiennent du fer. Le fer y est surtout réduit, Fe²⁺ : il passe dans l'eau, entouré de six molécules d'eau. Dans un sol aéré, il est oxydé presque aussitôt, au contact même du grain ; dans un sol engorgé, il reste dissous et voyage avec l'eau.",
-      cond: ["Eau acide : CO₂ du sol, acides de l'humus.",
-        "Plus la roche est riche en fer et s'altère vite, plus le fer arrive vite, ce qui favorise ensuite l'hématite : au Natal (Afrique du Sud), des sols rouges sur des filons de dolérite côtoient des sols jaunes sur schiste (Schwertmann 1985)."],
-      duree: "Au rythme de l'altération du minéral (voir sa fiche, carte « Énergie de liaison et cinétique »).",
+      texte: "Acidifiée par le CO₂ du sol et les acides de l'humus, l'eau de pluie attaque les minéraux ferrifères. Le fer s'y trouve surtout à l'état réduit, Fe²⁺ : il passe en solution, entouré de six molécules d'eau. Dans un sol aéré, il s'oxyde presque aussitôt, au contact même du grain ; dans un sol engorgé, il demeure dissous et se déplace avec l'eau.",
+      cond: ["Cette eau acide tient son acidité du CO₂ du sol et des acides de l'humus.",
+        "Sur des roches riches en fer qui s'altèrent vite, le fer afflue et favorise l'hématite : au Natal (Afrique du Sud), des sols rouges reposent sur des filons de dolérite, à côté de sols jaunes sur schiste (Schwertmann 1985)."],
+      duree: "Il suit la vitesse d'altération du minéral (voir sa fiche, carte « Énergie de liaison et cinétique »).",
       src: ["schw1985", "jol2006"], vig: ["v1"] },
     a2: { de: "fe2", vers: "rv", t: "ox", d: "M405 168 L302 236", lab: [338, 187, "end", ["peu d'oxygène :", "oxydation partielle"]], num: [353, 202],
       titre: "Peu d'oxygène : la rouille verte",
-      texte: "Quand l'oxygène manque, seule une partie du fer s'oxyde. Fe²⁺ et Fe³⁺ s'assemblent alors en feuillets d'hydroxyde ; l'excès de charge positive dû au Fe³⁺ est compensé par des anions (carbonate, sulfate, chlorure) et de l'eau logés entre les feuillets. C'est la rouille verte. Dans les sols, elle porte un nom de minéral : la fougérite, découverte dans les gleys de la forêt de Fougères et homologuée en 2004. Elle donne leur teinte bleu-vert aux horizons engorgés.",
-      cond: ["Sol gorgé d'eau : peu d'oxygène, beaucoup de Fe²⁺.",
+      texte: "Sans suffisamment d'oxygène, seule une fraction du fer s'oxyde : Fe²⁺ et Fe³⁺ se regroupent en feuillets d'hydroxyde, et l'excès de charge du Fe³⁺ est équilibré par des anions (carbonate, sulfate, chlorure) et de l'eau entre les feuillets. Cette rouille verte, nommée fougérite dans les sols après sa découverte dans les gleys de Fougères et son homologation en 2004, colore en bleu-vert les horizons engorgés.",
+      cond: ["Dans un sol gorgé d'eau, l'oxygène est rare et le Fe²⁺ abondant.",
         "Au laboratoire, environ un fer sur trois oxydé (Jolivet et al. 2006) ; dans les gleys de Fougères, l'eau du sol est en équilibre avec une rouille verte dont 42 à 86 % du fer est oxydé (Trolard 2006)."],
-      duree: "Pendant les périodes d'engorgement, au fil des saisons (Trolard 2006).",
+      duree: "Sa formation suit les épisodes d'engorgement qui se succèdent au fil des saisons (Trolard 2006).",
       src: ["trolard2006", "jol2006"], vig: ["v7a"] },
     a3: { de: "fe2", vers: "frh", t: "ox", d: "M595 168 L698 236", lab: [662, 187, "start", ["oxygène abondant :", "oxydation complète"]], num: [647, 202],
       titre: "Assez d'oxygène : la ferrihydrite",
-      texte: "Avec assez d'oxygène, tout le fer passe à l'état Fe³⁺. Plus chargé, cet ion arrache des H⁺ à ses molécules d'eau (hydrolyse) ; les ions se soudent aussitôt les uns aux autres par des ponts OH, puis O. En un instant naissent des grains de 2 à 5 nanomètres, mal ordonnés et pleins d'eau : la ferrihydrite, brun-rouille, premier solide du fer dans un sol aéré. Le Fe³⁺ relâché par l'humus suit le même chemin.",
-      cond: ["Oxygène : à pH 7, la moitié du Fe²⁺ est oxydée en quelques minutes ; à pH 6, en quelques heures ; à pH 5, en un mois environ (calcul d'après Singer et Stumm 1970 : aiguillage 1).",
-        "Le Fe³⁺ apparaît plus vite qu'un cristal ne peut grandir : oxydation rapide, fer abondant.",
-        "Silice, humus ou phosphate gênent la croissance des cristaux et font de la ferrihydrite : une eau à 20 mg/L de Fe²⁺ oxydée vite donne de la lépidocrocite jusqu'à 4 mg/L de silicium, de la ferrihydrite de 5 à 12 mg/L (Schwertmann 1985)."],
+      texte: "Lorsque l'oxygène est suffisant, tout le fer passe à l'état Fe³⁺. Plus chargé, cet ion arrache des H⁺ à ses molécules d'eau (hydrolyse) ; les ions se soudent aussitôt entre eux par des ponts OH, puis O. Il en résulte des grains de 2 à 5 nanomètres, mal ordonnés et gorgés d'eau : la ferrihydrite, brun-rouille, premier solide du fer dans un sol aéré. Le Fe³⁺ libéré par l'humus emprunte la même voie.",
+      cond: ["Avec l'oxygène de l'air, la moitié du Fe²⁺ s'oxyde en quelques minutes à pH 7, en quelques heures à pH 6 et en un mois environ à pH 5 (calcul d'après Singer et Stumm 1970 : aiguillage 1).",
+        "Le Fe³⁺ apparaît plus vite qu'un cristal ne peut croître, du fait d'une oxydation rapide et d'un fer abondant.",
+        "La silice, l'humus ou le phosphate entravent la croissance des cristaux et favorisent la ferrihydrite : une eau contenant 20 mg/L de Fe²⁺ oxydé rapidement donne de la lépidocrocite jusqu'à 4 mg/L de silicium, et de la ferrihydrite entre 5 et 12 mg/L (Schwertmann 1985)."],
       duree: "Quasi instantané une fois le Fe³⁺ formé (Jolivet et al. 2006).",
       src: ["singer1970", "jol2006", "schw1985", "michel2007"], vig: ["v2", "v3", "v4"] },
     a4: { de: "fe2", vers: "goe", t: "cri", d: "M500 168 L500 368", lab: [512, 258, "start", ["fer apporté peu à peu :", "goethite ion par ion"]], num: [500, 312],
       titre: "Fer apporté peu à peu : la goethite directe",
-      texte: "Quand le fer arrive lentement — minéral qui s'altère peu à peu, fer retenu puis relâché par l'humus —, le Fe³⁺ dissous reste trop rare pour que la ferrihydrite précipite, mais assez abondant pour la goethite, bien moins soluble. Les ions se posent alors un à un sur des germes et construisent des aiguilles. C'est, selon Schwertmann (1985), la raison pour laquelle l'humus abondant des sols frais et humides fait de la goethite et empêche l'hématite, qui a besoin de ferrihydrite.",
+      texte: "Lorsque le fer est libéré lentement, par l'altération progressive d'un minéral ou parce que l'humus le retient puis le relâche, le Fe³⁺ dissous demeure trop rare pour que la ferrihydrite précipite, mais suffisamment abondant pour la goethite, nettement moins soluble. Les ions se fixent alors un à un sur des germes et édifient des aiguilles. Selon Schwertmann (1985), c'est pourquoi l'humus abondant des sols frais et humides favorise la goethite et empêche la formation de l'hématite, laquelle requiert de la ferrihydrite.",
       cond: ["Fer libéré lentement.",
         "Humus : il retient le Fe³⁺ en complexes et maintient sa concentration sous le seuil de la ferrihydrite (produit de solubilité 10⁻³⁷ à 10⁻³⁹) mais au-dessus de celui de la goethite (≈ 10⁻⁴²). C'est une hypothèse de Schwertmann (1985), pas encore démontrée par l'expérience.",
         "Frais et humide."],
-      duree: "Lent : c'est le rythme d'arrivée du fer qui fixe celui de la croissance.",
+      duree: "La lenteur de l'arrivée du fer fixe le rythme de la croissance.",
       src: ["schw1985"], vig: ["v5b"] },
     a5: { de: "rv", vers: "lep", t: "sol", d: "M165 298 L146 368", lab: [140, 330, "end", ["l'air entre vite,", "sans carbonate"]], num: [156, 333],
       titre: "L'air entre vite : la lépidocrocite",
-      texte: "Quand la nappe baisse et que l'air entre d'un coup dans les pores, la rouille verte s'oxyde sur place : ses feuillets perdent des électrons et des H⁺, se plissent et deviennent les feuillets ondulés de la lépidocrocite, sans repasser par l'eau (Cudennec et Lecerf 2003 ; Jolivet et al. 2006). La lépidocrocite ne se forme qu'en présence de Fe²⁺ : d'où ses taches et ses gaines orange le long des pores et des racines des sols engorgés par intermittence, presque jamais dans les sols calcaires (Schwertmann 1985).",
-      cond: ["Oxydation rapide, beaucoup d'oxygène d'un coup ; trop lente, elle donne un mélange avec de la goethite, ou de la goethite seule (Cudennec et Lecerf 2003).",
+      texte: "La rouille verte s'oxyde sur place lorsque la nappe baisse et que l'air pénètre brusquement : ses feuillets, en perdant électrons et H⁺, se plissent en feuillets ondulés de lépidocrocite, sans passer par l'eau (Cudennec et Lecerf 2003 ; Jolivet et al. 2006). La lépidocrocite exige la présence de Fe²⁺ ; on la voit donc en taches et gaines orangées le long des pores et des racines, dans les sols engorgés par intermittence, rarement dans les sols calcaires (Schwertmann 1985).",
+      cond: ["Une oxydation rapide, avec un apport soudain d'oxygène, donne la lépidocrocite ; si elle est trop lente, il en résulte un mélange avec de la goethite, voire de la goethite seule (Cudennec et Lecerf 2003).",
         "pH entre 5 et 7 (Schwertmann 1985).",
         "Ni carbonate ni CO₂ abondant (aiguillage 2).",
-        "Peu de silice (moins de 4 mg/L de silicium) et peu d'aluminium (moins de 10 % du fer) (Schwertmann 1985)."],
-      duree: "Rapide : un gley mis à l'air vire du bleu-vert à l'ocre (Trolard 2006).",
+        "La lépidocrocite exige une silice peu abondante, moins de 4 mg/L de silicium, et un aluminium rare, inférieur à 10 % du fer (Schwertmann 1985)."],
+      duree: "Ce passage est rapide : un gley mis à l'air passe du bleu-vert à l'ocre (Trolard 2006).",
       src: ["schw1985", "cud2003", "jol2006", "trolard2006"], vig: ["v7"] },
     a6: { de: "rv", vers: "goe", t: "cri", d: "M295 298 L405 366", lab: [362, 318, "start", ["oxydation lente", "ou carbonates"]], num: [350, 333],
       titre: "Oxydation lente ou carbonates : la goethite",
-      texte: "Si l'oxygène arrive lentement, ou si l'eau contient des carbonates, la même rouille verte donne de la goethite au lieu de lépidocrocite. Le carbonate stabilise la rouille verte et ralentit son oxydation (Schwertmann 1985 ; Cudennec et Lecerf 2003). Au laboratoire, un peu de CO₂ ajouté à l'oxygène suffit à faire basculer le produit (aiguillage 2) ; dans un sol, le CO₂ rejeté par les racines peut favoriser la goethite à leur contact (Schwertmann 1985).",
-      cond: ["Oxydation lente.", "Carbonates ou CO₂ : sols calcaires, voisinage des racines.",
-        "Aluminium abondant (plus de 10 % du fer) : il supprime la lépidocrocite au laboratoire (Schwertmann 1985)."],
-      duree: "Au rythme de l'oxygène qui entre.",
+      texte: "Un apport lent d'oxygène, ou une eau riche en carbonates, transforme la même rouille verte en goethite plutôt qu'en lépidocrocite. Le carbonate stabilise la rouille verte et freine son oxydation (Schwertmann 1985 ; Cudennec et Lecerf 2003). En laboratoire, un peu de CO₂ ajouté à l'oxygène suffit à faire basculer le produit (aiguillage 2) ; dans le sol, le CO₂ des racines peut en faire autant à leur contact (Schwertmann 1985).",
+      cond: ["Oxydation lente.", "Ces conditions réunissent carbonates ou CO₂ : on les rencontre dans les sols calcaires et au voisinage des racines.",
+        "Un aluminium abondant, supérieur à 10 % du fer, supprime la lépidocrocite au laboratoire (Schwertmann 1985)."],
+      duree: "Ce rythme dépend de l'arrivée de l'oxygène.",
       src: ["schw1985", "cud2003"], vig: [] },
     a7: { de: "lep", vers: "goe", t: "cri", lent: true, d: "M235 410 L376 410", lab: [306, 435, "middle", ["très lent"]], num: [306, 410],
       titre: "Lépidocrocite → goethite : très lent",
       texte: "La lépidocrocite est un peu moins stable que la goethite, mais elle se transforme si lentement dans un sol qu'elle y dure des temps pédologiques. Les deux minéraux naissent le plus souvent côte à côte, par deux chemins concurrents, plutôt que l'un de l'autre (Schwertmann 1985). Du Fe²⁺ dissous accélère la transformation (Hansel et al. 2005).",
-      cond: ["Temps.", "Fe²⁺ dissous au contact des grains."],
+      cond: ["Temps.", "Le Fe²⁺ dissous se trouve au contact des grains."],
       duree: "Très lente dans un sol.",
       src: ["schw1985", "hansel2005"], vig: [] },
     a8: { de: "frh", vers: "goe", t: "cri", d: "M700 298 L600 366", lab: [634, 318, "end", ["frais, humide :", "se redissout"]], num: [650, 332],
       titre: "Frais et humide : la ferrihydrite se redissout en goethite",
       texte: "La ferrihydrite est instable. Entourée d'eau, elle se redissout très lentement ; les ions Fe³⁺ libérés vont se poser sur des germes de goethite, qui grandissent en aiguilles faites de doubles chaînes d'octaèdres (Jolivet et al. 2006). Ce passage par l'eau est favorisé quand la ferrihydrite est un peu plus soluble : vers pH 4, ou en milieu très basique, d'après Schwertmann et Murad (1983).",
-      cond: ["Frais : la chaleur favorise l'hématite (aiguillage 3).", "Humide : beaucoup d'eau autour des grains.", "Humus abondant.",
+      cond: ["Un climat frais est défavorable à l'hématite, la chaleur la favorisant (aiguillage 3).", "Humide : beaucoup d'eau autour des grains.", "Humus abondant.",
         "pH vers 4, ou au-dessus de 10, quand il est maintenu constant (Schwertmann et Murad 1983) ; une autre expérience trouve un résultat différent quand le pH est laissé libre (Chen et al. 2022) : aiguillage 3."],
       duree: "De quelques mois à quelques années à 25 °C au laboratoire : jusqu'à trois ans chez Schwertmann et Murad (1983), 1 517 jours chez Chen et al. (2022).",
       src: ["sm1983", "schw1985", "jol2006", "chen2022"], vig: ["v5"] },
     a9: { de: "frh", vers: "hem", t: "sol", d: "M840 298 L860 366", lab: [870, 322, "start", ["chaud, sec :", "se déshydrate"]], num: [850, 332],
       titre: "Chaud et sec : la ferrihydrite se déshydrate en hématite",
-      texte: "Dans un sol chaud qui se dessèche, les grains de ferrihydrite se collent, perdent l'eau qu'ils contiennent et leurs atomes se réarrangent sans repasser par l'eau : l'hématite naît en petites plaquettes (Schwertmann et Murad 1983 ; Jolivet et al. 2006). La goethite, elle, ne se change pas en hématite à la température d'un sol : la ferrihydrite est le passage obligé (Schwertmann 1985). Ce mécanisme « sur place » est aujourd'hui discuté : Chen et al. (2022) voient le pH de l'eau changer pendant la réaction et pensent que du fer dissous y participe. Barrón et Torrent (2002) proposent en outre un passage par une forme magnétique, une maghémite hydratée.",
+      texte: "Dans un sol chaud en voie de dessèchement, les grains de ferrihydrite se rassemblent, perdent leur eau et réorganisent leurs atomes sans repasser par l'eau : il en naît de petites plaquettes d'hématite (Schwertmann et Murad 1983 ; Jolivet et al. 2006). La goethite, elle, ne devient pas hématite à la température d'un sol ; la ferrihydrite reste donc le passage obligé (Schwertmann 1985). Chen et al. (2022) jugent ce mécanisme « sur place » discutable : selon eux, le pH de l'eau varie pendant la réaction, et du fer dissous pourrait y prendre part. Barrón et Torrent (2002) avancent en outre qu'une maghémite hydratée sert d'intermédiaire.",
       cond: ["Chaleur : toutes les expériences trouvent plus d'hématite quand la température monte (Schwertmann 1985 ; Chen et al. 2022).",
         "Saison sèche : moins d'eau autour des grains, plus d'hématite (Torrent et al. 1982, d'après Schwertmann 1985).",
-        "Peu d'humus.", "Fer libéré vite (roches riches en fer qui s'altèrent vite).",
+        "Peu d'humus.", "Il s'agit d'un fer libéré rapidement, par des roches riches en fer qui s'altèrent vite.",
         "pH vers 7 à 8 quand il est maintenu (Schwertmann et Murad 1983) ; pH 3 à 5 ou 9 à 10 quand il est laissé libre (Chen et al. 2022)."],
       duree: "Lent à la température d'un sol : à 28 °C, la transformation est 50 fois plus lente qu'à 45 °C (Torrent et al. 1982, d'après Schwertmann 1985). Il suffit ensuite de 0,5 à 1 % de ces produits rouges pour rougir un sol pauvre en humus (Lamouroux 1972).",
       src: ["schw1985", "sm1983", "jol2006", "chen2022", "barron2002", "lamouroux1972"], vig: ["v6"] },
@@ -170,37 +170,37 @@
       d: ["M902 256 C955 185 770 112 627 126", "M25 392 C-4 250 205 118 373 126"],
       lab: [[845, 112, "middle", ["réduction (bactéries)"]], [252, 118, "middle", ["réduction (bactéries)"]]], num: [834, 157],
       titre: "Réduction par les bactéries : le fer repart",
-      texte: "Quand le sol est gorgé d'eau, l'oxygène vient à manquer. Des bactéries continuent à respirer en cédant aux oxydes de fer les électrons tirés de la matière organique : le Fe³⁺ redevient Fe²⁺ et se dissout (Schwertmann 1985). Les oxydes les moins ordonnés cèdent les premiers : réduite au laboratoire, la ferrihydrite se dissout plus vite que la lépidocrocite, elle-même plus vite que la goethite (Larsen et Postma 2001). Le fer remis en mouvement quitte certaines zones, qui se décolorent en gris, et précipite ailleurs en taches et en concrétions (Schwertmann 1985).",
+      texte: "Dans un sol gorgé d'eau, l'oxygène vient à manquer. Les bactéries, qui respirent malgré tout, prélèvent sur la matière organique les électrons qu'elles cèdent aux oxydes de fer : Fe³⁺ repasse à Fe²⁺ et se dissout (Schwertmann 1985). Les oxydes les moins ordonnés partent en premier : au laboratoire, la ferrihydrite se dissout plus vite que la lépidocrocite, et celle-ci plus vite que la goethite (Larsen et Postma 2001). Le fer mobilisé quitte alors certaines zones, qui blanchissent en gris, et se dépose ailleurs en taches et concrétions (Schwertmann 1985).",
       cond: ["Sol engorgé, sans oxygène.", "Matière organique, nourriture des bactéries.",
-        "Température assez douce pour l'activité des micro-organismes (Trolard 2006)."],
-      duree: "Au rythme des saisons d'engorgement (Trolard 2006).",
+        "Les micro-organismes restent actifs à cette température modérée (Trolard 2006)."],
+      duree: "Ce processus suit le rythme des saisons d'engorgement (Trolard 2006).",
       src: ["schw1985", "larsen2001", "trolard2006"], vig: [] },
     b1: { de: "gfrh", vers: "mag", t: "sol", d: "M110 557 L110 607", lab: [126, 580, "start", ["beaucoup de Fe²⁺", "(bactéries)"]], num: [110, 582],
       titre: "Beaucoup de Fe²⁺ : la magnétite",
-      texte: "Quand des bactéries réduisent une partie de la ferrihydrite, le Fe²⁺ produit se fixe sur les grains restants et les transforme : avec peu de Fe²⁺, en goethite et en lépidocrocite ; avec beaucoup, en magnétite, l'oxyde noir et magnétique où Fe²⁺ et Fe³⁺ cohabitent (Hansel et al. 2003, 2005). Dans les sols bien drainés, de très petits cristaux de magnétite, de moins de 100 nm, se forment aussi et rendent les horizons de surface plus magnétiques que la roche ; leur mode de formation est encore discuté (Maher et Taylor 1988 ; Liu et al. 2016).",
+      texte: "Quand des bactéries réduisent une partie de la ferrihydrite, le Fe²⁺ libéré se fixe sur les grains restants et les transforme. Peu de Fe²⁺ donnent goethite et lépidocrocite ; beaucoup donnent de la magnétite, oxyde noir et magnétique qui associe Fe²⁺ et Fe³⁺ (Hansel et al. 2003, 2005). Dans les sols bien drainés, il se forme aussi de minuscules cristaux de magnétite, de moins de 100 nm, qui rendent les horizons de surface plus magnétiques que la roche ; leur origine reste débattue (Maher et Taylor 1988 ; Liu et al. 2016).",
       cond: ["Au-delà d'environ 1 millimole de Fe²⁺ par gramme de ferrihydrite, sans bicarbonate (Hansel et al. 2005) ; dans une eau qui circule, au-delà de 0,3 mmol/L de Fe²⁺ (Hansel et al. 2003).",
         "pH 8 accélère la formation de magnétite, pH 6 la freine (Hansel et al. 2005)."],
       duree: "16 jours dans l'expérience en colonne de Hansel et al. (2003).",
       src: ["hansel2003", "hansel2005", "maher1988", "liu2016"], vig: [] },
     b2: { de: "mag", vers: "mgh", t: "sol", d: "M200 636 L403 636", lab: [318, 626, "middle", ["à l'air, lentement"]], num: [240, 636],
       titre: "À l'air : la magnétite devient maghémite",
-      texte: "Exposée à l'oxygène, la magnétite s'oxyde dans le solide : ses Fe²⁺ deviennent Fe³⁺ et une partie du fer s'en va, laissant des sites vides, sans que la charpente change. C'est la maghémite : même formule que l'hématite, mais magnétique. Les grains de quelques nanomètres s'oxydent très facilement (Jolivet et al. 2006). C'est une des origines proposées pour la maghémite des sols, à côté du feu (Schwertmann 1985 ; Liu et al. 2016).",
+      texte: "La magnétite, au contact de l'oxygène, s'oxyde à l'intérieur du solide : ses Fe²⁺ passent à Fe³⁺, une partie du fer s'échappe et laisse des sites vides, sans modifier la charpente. On obtient ainsi la maghémite, de même formule que l'hématite, mais magnétique. Ses grains, de quelques nanomètres, s'oxydent très facilement (Jolivet et al. 2006). Le feu et cette oxydation sont proposés pour expliquer la maghémite des sols (Schwertmann 1985 ; Liu et al. 2016).",
       cond: ["Oxygène.", "Grains très fins."], duree: "",
       src: ["jol2006", "schw1985", "liu2016"], vig: [] },
     c1: { de: "glep", vers: "mgh", t: "feu", d: "M556 557 L532 607", lab: [522, 582, "end", ["200 à 300 °C"]], num: [544, 582],
       titre: "Feu : la lépidocrocite devient maghémite",
-      texte: "Chauffée, la lépidocrocite perd son eau et se réorganise en maghémite : la transformation commence vers 175 °C, se fait vers 200 °C et s'achève vers 300 °C ; plus chaud, la maghémite finit en hématite (Gehring et Hofmeister 1994).",
+      texte: "Sous l'effet de la chaleur, la lépidocrocite perd son eau et se réorganise en maghémite : la transformation débute vers 175 °C, se poursuit vers 200 °C et s'achève vers 300 °C ; à plus haute température, la maghémite se change en hématite (Gehring et Hofmeister 1994).",
       cond: ["De 200 à 300 °C."], duree: "",
       src: ["gehring1994"], vig: [] },
     c2: { de: "ggoe", vers: "mgh", t: "feu", d: "M728 557 L597 624", lab: [676, 616, "start", ["+ matière organique :", "300 à 500 °C"]], num: [663, 590],
       titre: "Feu et matière organique : la maghémite",
-      texte: "Chauffées vers 300 à 500 °C au contact de matière organique, la goethite et les autres oxydes de fer du sol donnent de la maghémite, magnétique, au lieu d'hématite. Une goethite riche en aluminium chauffée deux heures à 450 °C avec du sucre devient une maghémite riche en aluminium ; or les maghémites des sols tropicaux sont riches en aluminium, ce qui désigne d'anciens feux. En climat tempéré, on n'en trouve qu'en surface, là où il y a du charbon de bois (Schwertmann 1985).",
+      texte: "Au contact d'une matière organique portée à 300 à 500 °C, la goethite et les autres oxydes de fer du sol se convertissent en maghémite magnétique plutôt qu'en hématite. Chauffer deux heures à 450 °C avec du sucre une goethite riche en aluminium la transforme en maghémite également riche en aluminium, comme celles des sols tropicaux : la présence d'aluminium signale donc d'anciens feux. Sous climat tempéré, cette maghémite n'apparaît qu'en surface, là où subsistent des charbons de bois (Schwertmann 1985).",
       cond: ["De 300 à 500 °C.", "Matière organique : litière, racines, humus."], duree: "",
       src: ["schw1985"], vig: [] },
     c3: { de: "ggoe", vers: "ghem", t: "feu", d: "M792 557 L872 614", lab: [880, 556, "start", ["sans matière", "organique :", "dès 240 à 270 °C"]], num: [832, 585],
       titre: "Feu sans matière organique : la goethite rougit",
       texte: "Chauffée, la goethite perd l'eau de sa structure — 2 FeO(OH) → Fe₂O₃ + H₂O — et devient de l'hématite : l'ocre jaune devient rouge. La perte d'eau culmine vers 240 à 270 °C selon la teneur en aluminium (Ruan et Gilkes 1995). Au Paléolithique, on a utilisé de l'hématite naturelle et, parfois, de la goethite chauffée (Pomiès et al. 1998).",
-      cond: ["Dès 240 à 270 °C.", "Peu de matière organique : milieu oxydant."], duree: "",
+      cond: ["Dès 240 à 270 °C.", "Milieu oxydant, pauvre en matière organique."], duree: "",
       src: ["ruan1995", "pomies1998", "schw1985"], vig: [] },
   };
 
@@ -208,70 +208,70 @@
   const MIL = [
     { id: "brun", court: "Sol brun sur granite", nom: "Sol brun sur granite", lieu: "Massif armoricain, Massif central",
       cond: ["tempéré (8 à 15 °C)", "humide", "acide", "humus abondant", "bien drainé"],
-      etapes: [["a1", "La biotite et les autres minéraux ferreux du granite s'altèrent lentement ; leur fer passe dans l'eau du sol."],
-        ["a4", "L'humus abondant retient le fer et le relâche peu à peu : la ferrihydrite n'atteint pas son seuil, la goethite cristallise directement."],
-        ["a3", "Là où le fer arrive plus vite, un peu de ferrihydrite se forme…"],
-        ["a8", "… et, au frais et à l'humidité, elle vieillit elle aussi en goethite."]],
-      res: { min: ["goe"], t: "Goethite seule : sol brun-jaune. Au frais et à l'humidité, les sols sont sans hématite (Schwertmann 1985)." },
+      etapes: [["a1", "Dans le granite, la biotite et les autres minéraux ferreux s'altèrent lentement, et leur fer gagne l'eau du sol."],
+        ["a4", "Quand l'humus est abondant, il retient le fer puis le libère lentement. La ferrihydrite n'atteint donc jamais son seuil, et la goethite cristallise tout de suite."],
+        ["a3", "Là où le fer arrive plus rapidement, une faible quantité de ferrihydrite se forme…"],
+        ["a8", "… puis, au frais et dans l'humidité, elle se transforme à son tour en goethite."]],
+      res: { min: ["goe"], t: "Goethite seule : le sol est brun-jaune. Au frais et à l'humidité, les sols ne contiennent pas d'hématite (Schwertmann 1985)." },
       src: ["schw1985"] },
-    { id: "rossa", court: "Terra rossa", nom: "Terra rossa sur calcaire", lieu: "Provence, Languedoc ; décrite aussi au Liban par Lamouroux (1972)",
+    { id: "rossa", court: "Terra rossa", nom: "Terra rossa sur calcaire", lieu: "Provence et Languedoc ; ce sol est aussi décrit au Liban par Lamouroux (1972)",
       cond: ["étés chauds et secs", "pluie > 500 mm", "décarbonaté, bien drainé", "peu d'humus"],
-      etapes: [["a1", "En se dissolvant, le calcaire libère les impuretés qu'il contenait : argiles et fer."],
-        ["a3", "Le sol décarbonaté, bien drainé, s'aère : le fer précipite en ferrihydrite."],
-        ["a9", "Étés chauds et secs, peu d'humus : la ferrihydrite se déshydrate en hématite ; 0,5 à 1 % suffit à rougir le sol."],
-        ["a8", "Pendant les saisons humides, une partie devient goethite : les deux coexistent."]],
-      res: { min: ["hem", "goe"], t: "Hématite et goethite : sol rouge. La rubéfaction ne se produit qu'en milieu bien drainé et décarbonaté, avec des saisons humides et sèches qui alternent ; elle demande plus de 500 mm de pluie (Lamouroux 1972)." },
+      etapes: [["a1", "Lorsqu'il se dissout, le calcaire libère les impuretés qu'il renfermait, à savoir argiles et fer."],
+        ["a3", "Décarbonaté et bien drainé, le sol s'aère : le fer précipite alors sous forme de ferrihydrite."],
+        ["a9", "Dans des étés chauds et secs, avec peu d'humus, la ferrihydrite perd son eau et devient hématite ; il suffit de 0,5 à 1 % pour rougir le sol."],
+        ["a8", "Durant les saisons humides, une partie se transforme en goethite : les deux oxydes coexistent."]],
+      res: { min: ["hem", "goe"], t: "Le sol est rouge quand il porte hématite et goethite. La rubéfaction exige un milieu bien drainé et décarbonaté, où saisons humides et sèches se succèdent, avec plus de 500 mm de pluie (Lamouroux 1972)." },
       src: ["lamouroux1972", "schw1985"] },
-    { id: "pseudogley", court: "Pseudogley", nom: "Sol à nappe perchée (pseudogley)", lieu: "sols limoneux posés sur une couche peu perméable",
+    { id: "pseudogley", court: "Pseudogley", nom: "Sol à nappe perchée (pseudogley)", lieu: "sols limoneux, dont la couche sous-jacente est peu perméable",
       cond: ["engorgé l'hiver", "ressuyé au printemps", "non calcaire"],
-      etapes: [["red", "Hiver : l'eau s'accumule au-dessus de la couche peu perméable. Privées d'oxygène, des bactéries réduisent les oxydes : le fer redevient Fe²⁺, se déplace, et la terre qu'il quitte se décolore en gris."],
-        ["a2", "Le Fe²⁺ peu oxydé passe souvent par une rouille verte fugace (Schwertmann 1985)."],
-        ["a5", "Printemps : la nappe baisse, l'air entre par les gros pores et les fissures ; oxydation rapide : taches et gaines orange de lépidocrocite."],
-        ["a6", "Là où l'oxydation est plus lente, ou au contact des racines qui rejettent du CO₂ : goethite."]],
-      res: { min: ["lep", "goe"], t: "Sol marbré : taches orange (lépidocrocite, goethite) sur fond gris. La lépidocrocite manque presque toujours dans les sols calcaires (Schwertmann 1985)." },
+      etapes: [["red", "Durant l'hiver, l'eau s'accumule au-dessus de la couche peu perméable. Les bactéries, privées d'oxygène, réduisent alors les oxydes : le fer repasse à Fe²⁺ et se déplace, tandis que le sol d'où il part prend une teinte grise."],
+        ["a2", "Le Fe²⁺ peu oxydé passe souvent par un stade de rouille verte, qui ne dure guère (Schwertmann 1985)."],
+        ["a5", "Au printemps, la nappe s'abaisse et l'air se glisse dans les gros pores et les fissures. L'oxydation qui s'ensuit est rapide : il se forme des taches et des gaines orange de lépidocrocite."],
+        ["a6", "La goethite apparaît là où l'oxydation avance lentement, ou au contact des racines qui rejettent du CO₂."]],
+      res: { min: ["lep", "goe"], t: "Sol marbré : sur un fond gris ressortent des taches orange (lépidocrocite, goethite). Dans les sols calcaires, la lépidocrocite fait presque toujours défaut (Schwertmann 1985)." },
       src: ["schw1985", "trolard2006"] },
     { id: "gley", court: "Gley de Fougères", nom: "Gley de la forêt de Fougères", lieu: "Ille-et-Vilaine, sur granite",
       cond: ["engorgé presque toute l'année", "nappe qui monte et descend"],
-      etapes: [["red", "Gorgé d'eau, le sol perd son oxygène ; les bactéries réduisent le fer, qui passe en solution."],
-        ["a2", "Une partie seulement s'oxyde : la fougérite colore l'horizon en bleu-vert."],
-        ["a5", "Quand la nappe baisse, ou quand on ouvre une fosse, l'air oxyde la fougérite : l'horizon vire à l'ocre, en lépidocrocite."]],
-      res: { min: ["rv", "lep"], t: "Horizon bleu-vert à fougérite, qui vire à l'ocre au contact de l'air (Trolard 2006)." },
+      etapes: [["red", "Une fois gorgé d'eau, le sol manque d'oxygène, et les bactéries réduisent le fer, qui se met en solution."],
+        ["a2", "Seule une partie du fer s'oxyde ; la fougérite teinte alors l'horizon en bleu-vert."],
+        ["a5", "Lorsque la nappe baisse, ou qu'une fosse est ouverte, l'air oxyde la fougérite : l'horizon passe à l'ocre, par formation de lépidocrocite."]],
+      res: { min: ["rv", "lep"], t: "Un horizon bleu-vert renferme de la fougérite ; au contact de l'air, il devient ocre (Trolard 2006)." },
       src: ["trolard2006"] },
     { id: "ocre", court: "Source ferrugineuse", nom: "Source ferrugineuse, drain bouché par l'ocre", lieu: "eau souterraine qui sort à l'air libre",
       cond: ["eau souterraine sans oxygène", "riche en Fe²⁺", "silice, humus"],
-      etapes: [["a3", "L'eau souterraine, sans oxygène, transporte du Fe²⁺ ; à l'air libre (source, fossé, drain), il s'oxyde d'un coup, aidé par des bactéries du fer. La silice et l'humus de l'eau empêchent les cristaux de grandir : boue ocre de ferrihydrite, qui peut boucher les drains."],
-        ["a8", "Avec le temps, une partie devient goethite : les dépôts anciens de fer des marais mêlent les deux (Schwertmann 1985)."]],
-      res: { min: ["frh", "goe"], t: "Ocre de ferrihydrite, puis mélange ferrihydrite et goethite (Schwertmann 1985 ; Wikipédia, « Ferrihydrite »)." },
+      etapes: [["a3", "Privée d'oxygène, l'eau souterraine transporte du Fe²⁺ ; à l'air libre (source, fossé, drain), ce fer s'oxyde brusquement, aidé par des bactéries. La silice et l'humus contenus dans l'eau empêchent les cristaux de grandir : il se forme une boue ocre de ferrihydrite, qui peut obstruer les drains."],
+        ["a8", "Avec le temps, une partie se transforme en goethite : les anciens dépôts de fer des marais associent les deux oxydes (Schwertmann 1985)."]],
+      res: { min: ["frh", "goe"], t: "D'abord de l'ocre de ferrihydrite, puis un mélange de ferrihydrite et de goethite (Schwertmann 1985 ; Wikipédia, « Ferrihydrite »)." },
       src: ["schw1985", "wikifr"] },
-    { id: "podzol", court: "Podzol", nom: "Podzol des Landes", lieu: "sable acide sous pins et bruyères",
+    { id: "podzol", court: "Podzol", nom: "Podzol des Landes", lieu: "sable acide sous les pins et les bruyères",
       cond: ["très acide", "humus brut", "sableux, drainant"],
-      etapes: [["a1", "Les acides de l'humus brut attaquent les rares minéraux ferreux du sable."],
-        ["a3", "Le fer descend avec l'eau, tenu par les acides organiques ; plus bas, il précipite avec eux en ferrihydrite, que l'humus empêche de cristalliser : horizon brun-rouille, parfois cimenté (l'alios des Landes)."],
-        ["a8", "Lentement, une partie devient goethite ; jamais d'hématite sous tant d'humus."]],
-      res: { min: ["frh", "goe"], t: "Ferrihydrite et goethite liées à l'humus : dans les horizons enrichis des podzols, une forte part du fer reste en ferrihydrite (Schwertmann 1985)." },
+      etapes: [["a1", "Dans le sable, les acides de l'humus brut dissolvent les rares minéraux ferreux."],
+        ["a3", "Retenu par les acides organiques, le fer descend avec l'eau. Plus bas, il précipite avec eux en ferrihydrite, que l'humus empêche de cristalliser : d'où un horizon brun-rouille, parfois cimenté, comme l'alios des Landes."],
+        ["a8", "Lentement, une partie se transforme en goethite ; sous tant d'humus, l'hématite ne se forme jamais."]],
+      res: { min: ["frh", "goe"], t: "Ferrihydrite et goethite associées à l'humus : dans les horizons enrichis des podzols, une part importante du fer demeure sous forme de ferrihydrite (Schwertmann 1985)." },
       src: ["schw1985"] },
     { id: "tropical", court: "Sol rouge tropical", nom: "Sol rouge tropical, haut de versant", lieu: "basalte, Brésil central (Curi 1983)",
       cond: ["chaud", "saison sèche", "bien drainé"],
-      etapes: [["a1", "Le basalte, riche en fer, s'altère vite : le fer arrive en abondance."],
+      etapes: [["a1", "Riche en fer, le basalte s'altère rapidement, et le fer arrive en abondance."],
         ["a3", "Il précipite en ferrihydrite."],
-        ["a9", "En haut de versant, le sol bien drainé sèche à la saison sèche : hématite (goethite / (goethite + hématite) = 0,19 ; teinte 2,5 YR)."],
-        ["a8", "176 m plus loin et 2 m plus bas, dans le creux plus humide : goethite seule, sol jaune (10 YR)."]],
-      res: { min: ["hem", "goe"], t: "Rouge en haut, jaune en bas, sur la même roche et sous le même climat : sur 176 m, seul le drainage change (Curi 1983, d'après Schwertmann 1985)." },
+        ["a9", "Sur le haut de versant, bien drainé, le sol sèche pendant la saison sèche et contient de l'hématite (goethite / (goethite + hématite) = 0,19 ; teinte 2,5 YR)."],
+        ["a8", "À 176 m de là et 2 m plus bas, dans le creux plus humide, on ne trouve que de la goethite : le sol est jaune (10 YR)."]],
+      res: { min: ["hem", "goe"], t: "Sur une même roche, sous un même climat, le sol passe du rouge en haut de pente au jaune en bas : seul le drainage varie sur 176 m (Curi 1983, d'après Schwertmann 1985)." },
       src: ["schw1985"] },
-    { id: "magnetique", court: "Surface magnétique", nom: "Horizon de surface magnétique", lieu: "sols bien drainés d'Angleterre étudiés par Maher et Taylor (1988)",
+    { id: "magnetique", court: "Surface magnétique", nom: "Horizon de surface magnétique", lieu: "sols d'Angleterre bien drainés, décrits par Maher et Taylor (1988)",
       cond: ["bien drainé", "épisodes humides"],
-      etapes: [["a1", "Le fer quitte les minéraux de la roche."],
+      etapes: [["a1", "Le fer s'échappe des minéraux de la roche."],
         ["a3", "Il précipite en ferrihydrite."],
-        ["b1", "Une des explications proposées : lors des épisodes humides, un peu de Fe²⁺ produit par des bactéries réagit avec la ferrihydrite et donne de la magnétite en grains de moins de 100 nm."],
-        ["b2", "À l'air, ces grains s'oxydent lentement en maghémite."]],
+        ["b1", "Une explication est avancée : lors des épisodes humides, un peu de Fe²⁺ produit par des bactéries réagit avec la ferrihydrite pour former de la magnétite en grains inférieurs à 100 nm."],
+        ["b2", "Exposés à l'air, ces grains se transforment lentement en maghémite."]],
       res: { min: ["mag", "mgh"], t: "Un horizon de surface plus magnétique que la roche. D'autres explications sont proposées : bactéries, feux, passage de la ferrihydrite par une forme magnétique avant l'hématite (Liu et al. 2016)." },
       src: ["maher1988", "liu2016", "hansel2005"] },
-    { id: "feu", court: "Après un feu", nom: "Surface d'un sol après un incendie", lieu: "les premiers centimètres chauffés par le feu",
+    { id: "feu", court: "Après un feu", nom: "Surface d'un sol après un incendie", lieu: "les premiers centimètres du sol, chauffés par le feu",
       cond: ["300 à 500 °C en surface", "litière et humus"],
-      etapes: [["c3", "Là où il y a peu de matière organique, la goethite perd son eau : le sol rougit (hématite)."],
-        ["c2", "Au contact de l'humus et des débris brûlés, vers 300 à 500 °C : maghémite, magnétique."],
-        ["c1", "La lépidocrocite des sols engorgés donne de la maghémite dès 200 °C environ."]],
-      res: { min: ["mgh", "hem"], t: "Maghémite et hématite en surface : en climat tempéré, la maghémite se trouve près des charbons de bois (Schwertmann 1985)." },
+      etapes: [["c3", "Lorsque la matière organique est peu abondante, la goethite perd son eau : le sol rougit et devient hématite."],
+        ["c2", "Au contact de l'humus et des débris brûlés, entre 300 et 500 °C, il se forme de la maghémite, magnétique."],
+        ["c1", "La lépidocrocite issue des sols engorgés se transforme en maghémite à partir d'environ 200 °C."]],
+      res: { min: ["mgh", "hem"], t: "En climat tempéré, la maghémite n'apparaît en surface qu'à proximité des charbons de bois, à côté de l'hématite (Schwertmann 1985)." },
       src: ["schw1985", "ruan1995", "gehring1994"] },
   ];
 
@@ -329,14 +329,14 @@
     return s + "</g>";
   }
   function carteSVG() {
-    return `<svg class="chf-svg" viewBox="0 0 1000 680" role="group" aria-label="Carte des chemins de formation des oxydes de fer dans les sols">
+    return `<svg class="chf-svg" viewBox="0 0 1000 680" role="group" aria-label="Schéma des chemins de formation des oxydes de fer dans les sols">
       <rect class="chf-vallee chf-vallee-e" x="8" y="200" width="344" height="256" rx="14"/>
       <rect class="chf-vallee chf-vallee-a" x="648" y="200" width="344" height="256" rx="14"/>
-      <text class="chf-vt" x="20" y="449">SOL ENGORGÉ : LE FER RESTE EN PARTIE RÉDUIT</text>
-      <text class="chf-vt" x="980" y="449" text-anchor="end">SOL AÉRÉ : TOUT LE FER S'OXYDE</text>
+      <text class="chf-vt" x="20" y="449">Sol engorgé : une partie du fer reste réduite</text>
+      <text class="chf-vt" x="980" y="449" text-anchor="end">Sol aéré : le fer s'oxyde entièrement</text>
       <line class="chf-sep" x1="8" y1="470" x2="992" y2="470"/>
-      <text class="chf-vt" x="16" y="494">OXYDES MAGNÉTIQUES</text>
-      <text class="chf-vt" x="984" y="494" text-anchor="end">APRÈS UN FEU</text>
+      <text class="chf-vt" x="16" y="494">Oxydes magnétiques</text>
+      <text class="chf-vt" x="984" y="494" text-anchor="end">Après un feu</text>
       ${Object.keys(F).map(fleche).join("")}
       ${Object.keys(N).map(boite).join("")}
       <g class="chf-etapes" aria-hidden="true"></g>
@@ -394,18 +394,18 @@
     return r;
   }
   const VIG = {
-    v1: { t: "Le fer quitte la roche", leg: "Libéré par un minéral qui s'altère, l'ion Fe²⁺ s'entoure de six molécules d'eau ; incolore, il voyage avec l'eau du sol.",
+    v1: { t: "Le fer quitte la roche", leg: "Libéré par l'altération d'un minéral, l'ion Fe²⁺ est entouré de six molécules d'eau ; incolore, il se déplace avec l'eau du sol.",
       d: () => `<path d="M4 136 L4 106 Q 18 98 38 103 L 58 110 L 62 136 Z" class="chf-v-grain"/>` + vT(32, 128, "biotite", "middle", "chf-v-pt")
         + vFl(52, 106, 76, 92, "dis") + vComplexe(120, 60, 2, ["eau", "eau", "eau", "eau", "eau", "eau"]) + vT(120, 112, "Fe²⁺ et ses six H₂O") },
-    v2: { t: "L'oxygène lui prend un électron", leg: "Fe²⁺ devient Fe³⁺. Dans une eau aérée, la moitié du fer est oxydée en quelques minutes à pH 7, en un mois environ à pH 5.",
+    v2: { t: "L'oxygène lui prend un électron", leg: "Une fois oxydé, le Fe²⁺ prend la forme Fe³⁺. Dans une eau aérée, il faut quelques minutes à pH 7, et environ un mois à pH 5, pour que la moitié du fer s'oxyde.",
       d: () => vFe(46, 84, 2, 12) + vFl(62, 84, 128, 84, "ox") + vFe(146, 84, 3, 12)
         + vCourbe("M54 71 Q 70 30 112 26", "e") + vE(76, 39) + vO(122, 24) + vO(130.6, 24) + vT(126, 13, "O₂")
         + vT(100, 124, "un électron part vers l'oxygène") },
-    v3: { t: "L'eau perd des H⁺", leg: "Plus chargé, le Fe³⁺ attire les électrons de ses molécules d'eau : certaines lâchent un H⁺ et deviennent des OH. L'eau devient plus acide.",
+    v3: { t: "L'eau perd des H⁺", leg: "Le Fe³⁺, plus chargé, tire vers lui les électrons de ses molécules d'eau : certaines perdent un H⁺ et deviennent des OH⁻, si bien que l'eau s'acidifie.",
       d: () => vComplexe(96, 64, 3, ["eau", "oh", "eau", "eau", "oh", "eau"])
         + vFl(117, 97, 138, 110) + vHp(144, 113) + vFl(76, 31, 61, 22) + vHp(55, 18, true)
         + vT(100, 132, "Fe(OH)₂⁺") },
-    v4: { t: "Les ions se soudent : ferrihydrite", leg: "Deux ions voisins partagent leurs OH (ponts OH), puis des O : en un instant naissent des grains de 2 à 5 nm, mal ordonnés et pleins d'eau.",
+    v4: { t: "Les ions se soudent : ferrihydrite", leg: "Deux ions voisins mettent leurs OH en commun (ponts OH), puis des O ; il en résulte aussitôt des grains de 2 à 5 nm, mal ordonnés et gorgés d'eau.",
       d: () => {
         let s = vLien(40, 54, 53, 48) + vLien(40, 66, 53, 72) + vLien(74, 54, 61, 48) + vLien(74, 66, 61, 72);
         s += vOH(57, 46, -90) + vOH(57, 74, 90) + vFe(32, 60, 3, 10) + vFe(82, 60, 3, 10) + vT(57, 100, "ponts OH");
@@ -415,14 +415,14 @@
         s += `<path d="M138 98 L182 98 M138 95 L138 101 M182 95 L182 101" class="chf-v-ech"/>` + vT(160, 110, "≈ 3 nm", "middle", "chf-v-pt") + vT(160, 128, "ferrihydrite");
         return s;
       } },
-    v5: { t: "Frais et humide : goethite", leg: "La ferrihydrite se redissout lentement ; les ions se reposent un à un au bout d'aiguilles de goethite, faites de doubles chaînes d'octaèdres.",
+    v5: { t: "Frais et humide : goethite", leg: "Lentement redissoute, la ferrihydrite libère ses ions, qui viennent se fixer un à un au bout des aiguilles de goethite, constituées de doubles chaînes d'octaèdres.",
       d: () => vAmas(34, 66, 5, RANGS_7) + vFl(47, 58, 62, 49) + vIon(67, 46) + vFl(49, 68, 66, 73) + vIon(71, 75) + vFl(42, 79, 54, 92) + vIon(57, 96)
         + vT(34, 116, "se redissout") + vAiguille(100, 62, 9, 4.8, "goe") + vFl(188, 42, 184, 54) + vIon(190, 37)
         + vT(140, 92, "aiguille de goethite") + vT(140, 104, "longueur : ≈ 200 nm", "middle", "chf-v-pt") },
-    v5b: { t: "Goethite, ion par ion", leg: "Quand le fer arrive peu à peu, les ions Fe³⁺ dissous se posent directement au bout d'aiguilles de goethite, sans passer par la ferrihydrite.",
+    v5b: { t: "Goethite, ion par ion", leg: "Lorsque le fer arrive progressivement, les ions Fe³⁺ dissous se fixent directement au bout des aiguilles de goethite, sans passer par la ferrihydrite.",
       d: () => vIon(30, 40) + vIon(48, 78) + vIon(26, 96) + vFl(38, 44, 92, 58) + vFl(56, 76, 92, 66) + vFl(34, 94, 92, 70)
         + vT(36, 118, "Fe³⁺ dissous") + vAiguille(100, 62, 9, 4.8, "goe") + vT(140, 92, "aiguille de goethite") },
-    v6: { t: "Chaud et sec : hématite", leg: "Les grains de ferrihydrite se collent, perdent leur eau, et leurs atomes se réarrangent sur place : plaquettes d'hématite.",
+    v6: { t: "Chaud et sec : hématite", leg: "Les grains de ferrihydrite s'agglomèrent : ils perdent leur eau, et leurs atomes se réarrangent en place, si bien que naissent des plaquettes d'hématite.",
       d: () => {
         let s = vAmas(28, 54, 4.2, RANGS_7) + vAmas(50, 70, 4.2, RANGS_7) + vAmas(28, 86, 4.2, RANGS_7);
         s += vEau(50, 46, -90) + vFl(50, 38, 50, 24) + vEau(66, 56, -90) + vFl(66, 48, 70, 34) + vT(78, 30, "H₂O", "start", "chf-v-pt");
@@ -431,11 +431,11 @@
           + `<path d="M126 53 L174 53 M118 68 L182 68 M126 83 L174 83" class="chf-v-plan"/>`;
         return s + vT(150, 116, "plaquette d'hématite") + vT(150, 128, "au laboratoire : ≈ 60 nm", "middle", "chf-v-pt");
       } },
-    v7a: { t: "Rouille verte", leg: "Peu oxydé, le fer forme des feuillets où Fe²⁺ (vert) et Fe³⁺ (rouille) se partagent les octaèdres ; anions et eau logent entre les feuillets.",
+    v7a: { t: "Rouille verte", leg: "Peu oxydé, le fer forme des feuillets où Fe²⁺ (vert) et Fe³⁺ (rouille) se répartissent les octaèdres ; des anions et de l'eau se logent entre eux.",
       d: () => vCouche(46, 36, 10, 5.5, (k) => (k % 3 === 1 ? "fe3" : "fe2")) + vCouche(46, 92, 10, 5.5, (k) => (k % 3 === 1 ? "fe3" : "fe2"))
         + [62, 108, 146].map((x) => `<path d="M${x} 59 L${x + 4.5} 67 L${x - 4.5} 67 Z" class="chf-v-anion"/>`).join("")
         + vEau(84, 64, -90) + vEau(128, 66, -90) + vT(100, 120, "rouille verte : feuillets, anions et eau") },
-    v7: { t: "Sol engorgé : lépidocrocite", leg: "La rouille verte s'oxyde sur place quand l'air entre vite : ses feuillets deviennent les feuillets plissés de la lépidocrocite, tenus par des liaisons hydrogène.",
+    v7: { t: "Sol engorgé : lépidocrocite", leg: "Lorsque l'air pénètre rapidement, la rouille verte s'oxyde sur place : ses feuillets deviennent ceux, plissés, de la lépidocrocite, maintenus par des liaisons hydrogène.",
       d: () => vCouche(12, 36, 7, 5.5, (k) => (k % 3 === 1 ? "fe3" : "fe2")) + vCouche(12, 92, 7, 5.5, (k) => (k % 3 === 1 ? "fe3" : "fe2"))
         + [24, 56].map((x) => `<path d="M${x} 59 L${x + 4.5} 67 L${x - 4.5} 67 Z" class="chf-v-anion"/>`).join("") + vEau(40, 64, -90) + vEau(72, 62, -90)
         + vT(45, 118, "rouille verte") + vFl(92, 64, 113, 64, "ox") + vT(102, 55, "O₂", "middle", "chf-v-pt")
@@ -489,7 +489,7 @@
       if (lp > 10 && lp < 100) s += `<text x="${x + w / 2}" y="${f1(Y0 - hl / 2 + 4)}" text-anchor="middle" class="chf-g-in">${lp}</text>`;
       s += `<text x="${x + w / 2}" y="${Y0 + 16}" text-anchor="middle" class="chf-g-t">${lab}</text>`;
     });
-    s += `<text x="${X0 + (CO2.length * L) / 2}" y="${Y0 + 36}" text-anchor="middle" class="chf-g-t">CO₂ ajouté à l'oxygène (mL par minute)</text>`;
+    s += `<text x="${X0 + (CO2.length * L) / 2}" y="${Y0 + 36}" text-anchor="middle" class="chf-g-t">CO₂ injecté avec l'oxygène (mL par minute)</text>`;
     return s + `</svg>`;
   }
   // 7c. Deux expériences, deux réponses sur le pH (énoncés des auteurs, pas de lecture de figure)
@@ -498,7 +498,7 @@
     const bande = (a, b, y, c) => `<rect x="${f1(px(a) - 7)}" y="${y - 7}" width="${f1(px(b) - px(a) + 14)}" height="14" rx="7" class="chf-g-${c}"/>`;
     const point = (ph, y, c) => `<circle cx="${f1(px(ph))}" cy="${y}" r="7" class="chf-g-${c}"/>`;
     let s = `<svg class="chf-graph" viewBox="0 0 560 160" role="img" aria-label="Effet du pH selon deux expériences">`;
-    s += `<text x="10" y="44" class="chf-g-t chf-g-gras">Schwertmann et Murad 1983</text><text x="10" y="58" class="chf-g-pt">pH maintenu, 24 °C, jusqu'à 3 ans</text>`
+    s += `<text x="10" y="44" class="chf-g-t chf-g-gras">Schwertmann et Murad 1983</text><text x="10" y="58" class="chf-g-pt">pH imposé, 24 °C, pendant jusqu'à 3 ans</text>`
       + `<line x1="${X0 - 10}" y1="50" x2="${X1 + 10}" y2="50" class="chf-g-grille"/>`
       + point(4, 50, "goe") + bande(7, 8, 50, "hem") + point(12, 50, "goe");
     s += `<text x="10" y="99" class="chf-g-t chf-g-gras">Chen et al. 2022</text><text x="10" y="113" class="chf-g-pt">pH de départ, 25 °C, 1 517 jours</text>`
@@ -511,8 +511,8 @@
     return s + `</svg>`;
   }
   // 7d. Tasmanie, basaltes du nord-ouest (Taylor et Graley 1967, tableau 1 de Schwertmann 1985) : part d'hématite = 1 − Gt/(Gt + Hm)
-  const TASMANIE = [["0–175 m", "12 °C", "1 020–1 140 mm", "3,75 YR", 0.58], ["150–275 m", "11 °C", "1 140–1 400 mm", "4,3 YR", 0.71],
-    ["275–450 m", "10 °C", "1 400–1 780 mm", "6,0 YR", 0.75], ["400–575 m", "9 °C", "1 520 mm", "7,5 YR", 0.74]];
+  const TASMANIE = [["0 à 175 m", "12 °C", "1 020 à 1 140 mm", "3,75 YR", 0.58], ["150 à 275 m", "11 °C", "1 140 à 1 400 mm", "4,3 YR", 0.71],
+    ["275 à 450 m", "10 °C", "1 400 à 1 780 mm", "6,0 YR", 0.75], ["400 à 575 m", "9 °C", "1 520 mm", "7,5 YR", 0.74]];
   function graphTasmanie() {
     const X0 = 70, Y0 = 150, H = 120, L = 118;
     let s = `<svg class="chf-graph" viewBox="0 0 560 222" role="img" aria-label="Part d'hématite selon l'altitude en Tasmanie">`;
@@ -567,17 +567,17 @@
       + `<p class="chf-res">${res}<span>${m.res.t}</span></p>`
       + `<p class="chf-liens"><span class="chf-src-court">Sources : ${cite(m.src)}</span></p>`;
   }
-  const LECTURE = `<h3>Comment lire la carte</h3>
-    <p><b>Deux vallées et un point de rencontre.</b> À gauche, le chemin du fer qui reste en partie réduit, dans les sols engorgés : rouille verte, puis lépidocrocite. À droite, le chemin du fer entièrement oxydé, dans les sols aérés : ferrihydrite, puis goethite ou hématite. Au centre, la goethite, qui peut naître des deux. En tirets bleus, le retour en arrière : des bactéries redissolvent les oxydes quand le sol est gorgé d'eau. En bas, deux chemins plus rares : les oxydes magnétiques et le feu ; les cases en pointillés y renvoient aux cases du haut.</p>
-    <p>Choisis un milieu au-dessus de la carte pour voir, numérotées, les étapes qu'y suit le fer ; clique sur une flèche ou une case pour lire le passage.</p>`;
+  const LECTURE = `<h3>Lecture de la carte</h3>
+    <p><b>Deux vallées et un point de rencontre.</b> Sur la gauche, le fer demeure en partie réduit dans les sols engorgés : la rouille verte précède la lépidocrocite. Sur la droite, le fer s'oxyde entièrement dans les sols aérés, en passant par la ferrihydrite, puis la goethite ou l'hématite. La goethite, au centre, peut venir de l'un ou l'autre chemin. Les tirets bleus signalent un retour en arrière : des bactéries redissolvent alors les oxydes dans un sol gorgé d'eau. En bas se trouvent deux chemins plus rares, celui des oxydes magnétiques et celui du feu ; les cases en pointillés renvoient aux cases du haut.</p>
+    <p>Pour voir, numérotées, les étapes suivies par le fer dans un milieu donné, sélectionner ce milieu au-dessus de la carte ; une flèche ou une case, cliquée, en détaille le passage.</p>`;
 
   // ---------- 9. La page ----------
   const plusLoin = [
-    "<b>Une couleur, un oxyde.</b> Couleurs médianes des oxydes purs : hématite 1,2 YR, ferrihydrite 6,6 YR, lépidocrocite 6,8 YR, goethite 0,4 Y. Toutes les hématites mesurées sont plus rouges que 4,1 YR, toutes les goethites plus jaunes que 7,3 YR : la teinte suffit à les distinguer, pas à reconnaître la ferrihydrite (Scheinost et Schwertmann 1999).",
+    "<b>Une couleur, un oxyde.</b> Les teintes médianes des oxydes purs sont : hématite 1,2 YR, ferrihydrite 6,6 YR, lépidocrocite 6,8 YR, goethite 0,4 Y. Hématites et goethites mesurées se départagent nettement, les premières restant plus rouges que 4,1 YR et les secondes plus jaunes que 7,3 YR ; la ferrihydrite, elle, échappe à cette identification par la seule couleur (Scheinost et Schwertmann 1999).",
     "<b>Un thermomètre du passé.</b> La part d'hématite dans un sol (hématite / (hématite + goethite)) sert à retrouver les températures et les pluies anciennes (Chen et al. 2022). Chen et al. préviennent qu'elle dépend aussi du pH et de la capacité du sol à le tenir.",
-    "<b>Pas de seuil net de température.</b> Dans le sud de l'Allemagne, sur graviers calcaires du Würm, des sols formés entre 7,5 et 10,6 °C de moyenne annuelle contiennent un peu d'hématite, d'autant plus que le climat est doux (Schwertmann, Murad et Schulze 1982, d'après Schwertmann 1985).",
+    "<b>Pas de seuil net de température.</b> Dans le sud de l'Allemagne, des sols développés sur des graviers calcaires du Würm, dont la température moyenne annuelle est comprise entre 7,5 et 10,6 °C, renferment un peu d'hématite ; la quantité croît avec la douceur du climat (Schwertmann, Murad et Schulze 1982, d'après Schwertmann 1985).",
     "<b>Une ferrihydrite de 200 000 ans.</b> Dans de très vieux sols de Nouvelle-Zélande, la silice a empêché la ferrihydrite de cristalliser (Jolivet et al. 2006).",
-    "<b>L'aluminium dans la goethite.</b> De 0 à 33 % du fer des goethites des sols est remplacé par de l'aluminium : peu dans les sols engorgés et les fers des marais, beaucoup dans les sols tropicaux très altérés (Schwertmann 1985, tableau 3).",
+    "<b>L'aluminium dans la goethite.</b> Selon les sols, de 0 à 33 % du fer des goethites peut être remplacé par de l'aluminium. La part reste faible dans les sols engorgés et les fers des marais, mais atteint des valeurs élevées dans les sols tropicaux très altérés (Schwertmann 1985, tableau 3).",
     "<b>En une saison.</b> Autour des racines du riz, lépidocrocite et goethite se forment ensemble en une seule saison de culture (Chen et al. 1980, d'après Schwertmann 1985).",
     "<b>Le sol superficiel est magnétique.</b> En 1955, le géophysicien E. Le Borgne décrit une susceptibilité magnétique anormalement forte dans le sol de surface. On y attribue aujourd'hui des magnétites et maghémites de moins de 100 nm nées sur place ; leur mode de formation reste discuté (Liu et al. 2016).",
     "<b>Un ocre rouge par le feu.</b> Chauffer de l'ocre jaune (goethite) donne de l'ocre rouge (hématite). Des pigments paléolithiques du sud de la France portent la marque d'un chauffage : on a utilisé à la fois de l'hématite naturelle et de la goethite chauffée (Pomiès et al. 1998).",
@@ -592,70 +592,70 @@
       <h1><span class="sw-big chf-sw-titre"></span> Comment naissent les oxydes de fer</h1>
       <p class="sub crumb"><b data-chf-aller="oxydes" class="chf-fil">Oxydes</b> <span>→</span> <b data-chf-aller="oxyde/fer" class="chf-fil">Fer</b> <span>→</span> Chemins de formation
         <span class="badge outline">nouvelle partie, à valider</span></p>
-      <p class="desc">Tout oxyde de fer d'un sol est passé par l'eau : le fer quitte un minéral de la roche, voyage dissous sous forme de Fe²⁺, puis précipite. Deux carrefours décident de sa couleur finale : la façon dont le fer s'oxyde, puis la façon dont le premier précipité vieillit. La lépidocrocite orange ne naît qu'en présence de fer encore réduit ; l'hématite rouge, dans un sol, vient d'un précipité qui s'est desséché ; la goethite jaune-brun peut naître des deux chemins.</p>
+      <p class="desc">Tout oxyde de fer d'un sol a transité par l'eau : le fer se détache d'un minéral de la roche, circule dissous sous forme de Fe²⁺, puis précipite. Deux étapes fixent sa couleur finale : le mode d'oxydation du fer, puis l'évolution du premier précipité. La lépidocrocite orangée n'apparaît qu'en présence de fer encore réduit ; l'hématite rouge, dans un sol, vient d'un précipité déshydraté ; la goethite brun-jaune peut se former par l'une ou l'autre voie.</p>
     </div>
 
     <div class="card chf-carte">
-      <h2>La carte des chemins</h2>
-      <p class="sub">Chaque case est une forme du fer, chaque flèche un passage. Choisis un milieu pour voir le chemin qu'y suit le fer ; clique sur une flèche ou une case pour lire le passage.</p>
+      <h2>Carte des chemins de formation</h2>
+      <p class="sub">Chaque case représente une forme du fer, chaque flèche un passage. Sélectionner un milieu affiche le chemin suivi par le fer dans ce milieu ; cliquer sur une flèche ou sur une case en détaille le passage.</p>
       <div class="chips chf-milieux">${chips}<button class="chip chf-tout" data-mil="">Tout afficher</button></div>
       <div class="chf-cadre">${carteSVG()}</div>
       <div class="chf-leg">${leg}</div>
       <div class="chf-detail" aria-live="polite">${LECTURE}</div>
-      <p class="note">Schéma construit d'après Schwertmann (1985, figure 10), Jolivet et al. (2006, figure 1) et Cudennec et Lecerf (2003). Les positions ne sont pas à l'échelle ; les flèches sont des passages observés dans les sols ou reproduits au laboratoire.</p>
+      <p class="note">Schéma établi d'après Schwertmann (1985, figure 10), Jolivet et al. (2006, figure 1) et Cudennec et Lecerf (2003). Les positions ne respectent pas l'échelle ; les flèches correspondent à des passages observés dans les sols ou reproduits en laboratoire.</p>
     </div>
 
     <div class="card">
-      <h2>Pas à pas, à l'échelle des atomes</h2>
-      <p class="sub">Le chemin central — du Fe²⁺ dissous à la ferrihydrite, puis à la goethite ou à l'hématite — et celui des sols engorgés, vers la lépidocrocite.</p>
+      <h2>Pas à pas, au niveau des atomes</h2>
+      <p class="sub">Le chemin central, du Fe²⁺ dissous à la ferrihydrite puis à la goethite ou à l'hématite, et celui des sols engorgés menant à la lépidocrocite.</p>
       <div class="chf-pas">
         ${vignette("v1", "1")}${vignette("v2", "2")}${vignette("v3", "3")}${vignette("v4", "4")}
-        <p class="chf-pas-sep">Puis, selon le sol :</p>
+        <p class="chf-pas-sep">Puis, suivant la nature du sol :</p>
         ${vignette("v5", "5a", true)}${vignette("v6", "5b", true)}${vignette("v7", "6", true)}
       </div>
-      <p class="note">Dessins schématiques, tailles non à l'échelle. Cercle rouge : oxygène ; cercle blanc : hydrogène ; losange : un octaèdre vu de côté, le fer au centre et six O ou OH autour ; triangle : un fer entouré de quatre oxygènes. D'après Jolivet et al. (2006), Cudennec et Lecerf (2003), Michel et al. (2007) et Schwertmann (1985) ; tailles mesurées au laboratoire : Chen et al. (2022).</p>
+      <p class="note">Figures schématiques, tailles non respectées. Rond rouge : oxygène ; rond blanc : hydrogène ; losange : octaèdre vu de côté, fer au centre et six O ou OH autour ; triangle : fer entouré de quatre oxygènes. Sources : Jolivet et al. (2006), Cudennec et Lecerf (2003), Michel et al. (2007), Schwertmann (1985) ; tailles mesurées en laboratoire par Chen et al. (2022).</p>
     </div>
 
     <div class="card chf-aig">
       <h2>Les trois aiguillages</h2>
-      <p class="sub">Ce qui décide du chemin, avec les mesures publiées.</p>
+      <p class="sub">Ce qui oriente le chemin, appuyé sur les mesures publiées.</p>
 
       <h3>1 · Le fer dissous s'oxyde-t-il ?</h3>
-      <p>Sans oxygène, le fer reste Fe²⁺ et voyage avec l'eau : c'est ce qui permet aux sols engorgés de déplacer leur fer. Avec de l'oxygène, sa durée de vie dépend surtout du pH : la vitesse d'oxydation est multipliée par cent à chaque unité de pH (Singer et Stumm 1970). Dans un sol acide, le Fe²⁺ peut parcourir un bon chemin avant de précipiter ; dans un sol neutre, il précipite presque sur place.</p>
+      <p>Sans oxygène, le fer demeure à l'état Fe²⁺ et voyage avec l'eau : les sols engorgés doivent à cela le transport de leur fer. Avec de l'oxygène, c'est surtout le pH qui fixe sa durée : la vitesse d'oxydation croît cent fois à chaque unité de pH (Singer et Stumm 1970). En sol acide, le Fe²⁺ peut migrer loin avant de précipiter ; en sol neutre, il précipite presque sur place.</p>
       <div class="chf-graph-cadre">${graphDemiVie()}</div>
-      <p class="chf-legende">Temps au bout duquel la moitié du Fe²⁺ est oxydée, dans une eau à 25 °C en équilibre avec l'air, calculé avec la loi mesurée par Singer et Stumm (1970), valable au-dessus de pH 4,5. Plus acide, l'oxygène seul n'oxyde presque plus le fer ; des bactéries accélèrent alors la réaction plus d'un million de fois (Singer et Stumm 1970).</p>
+      <p class="chf-legende">Temps nécessaire pour oxyder la moitié du Fe²⁺ : eau à 25 °C en équilibre avec l'air, selon la loi de Singer et Stumm (1970), valable au-dessus de pH 4,5. En milieu plus acide, l'oxygène seul n'oxyde presque plus le fer, mais des bactéries accélèrent la réaction de plus d'un million de fois (Singer et Stumm 1970).</p>
 
       <h3>2 · Quel premier solide ?</h3>
-      <p>Il dépend de la vitesse à laquelle le Fe³⁺ apparaît et de ce que contient l'eau.</p>
+      <p>Ce choix dépend de la vitesse d'apparition du Fe³⁺ et de la composition de l'eau.</p>
       <div class="chf-tab-cadre"><table class="chf-tab">
         <thead><tr><th>Quand…</th><th>Premier solide</th><th>Repère chiffré</th></tr></thead>
         <tbody>
-          <tr><td>l'oxygène manque et le Fe²⁺ abonde (sol engorgé)</td><td>rouille verte (fougérite)</td><td>dans les gleys de Fougères, 42 à 86 % de son fer est oxydé (Trolard 2006)</td></tr>
-          <tr><td>l'oxygène arrive vite, à pH 5 à 7, sans carbonate</td><td>lépidocrocite, souvent par une rouille verte fugace</td><td>au laboratoire, lépidocrocite pure seulement sans CO₂ (Schwertmann 1985 ; Cudennec et Lecerf 2003)</td></tr>
-          <tr><td>l'oxydation est très rapide, ou l'eau contient silice, humus ou phosphate</td><td>ferrihydrite</td><td>eau à 20 mg/L de Fe²⁺ : lépidocrocite jusqu'à 4 mg/L de silicium, ferrihydrite de 5 à 12 mg/L (Schwertmann 1985)</td></tr>
-          <tr><td>l'oxydation est lente, ou il y a des carbonates (CO₂)</td><td>goethite</td><td>voir le graphique ci-dessous (Schwertmann 1959)</td></tr>
-          <tr><td>le Fe³⁺ est relâché peu à peu (humus, altération lente)</td><td>goethite directe</td><td>la goethite est bien moins soluble que la ferrihydrite : produit de solubilité ≈ 10⁻⁴² contre 10⁻³⁷ à 10⁻³⁹ (Schwertmann 1985)</td></tr>
+          <tr><td>l'oxygène fait défaut et le Fe²⁺ abonde (sol engorgé)</td><td>rouille verte (fougérite)</td><td>dans les gleys de Fougères, de 42 à 86 % du fer est oxydé (Trolard 2006)</td></tr>
+          <tr><td>l'oxygène arrive rapidement, à pH 5 à 7, sans carbonate</td><td>lépidocrocite, souvent après une rouille verte éphémère</td><td>au laboratoire, lépidocrocite pure seulement en l'absence de CO₂ (Schwertmann 1985 ; Cudennec et Lecerf 2003)</td></tr>
+          <tr><td>l'oxydation est très rapide, ou l'eau renferme de la silice, de l'humus ou du phosphate</td><td>ferrihydrite</td><td>eau à 20 mg/L de Fe²⁺ : lépidocrocite jusqu'à 4 mg/L de silicium, ferrihydrite entre 5 et 12 mg/L (Schwertmann 1985)</td></tr>
+          <tr><td>l'oxydation est lente, ou des carbonates (CO₂) sont présents</td><td>goethite</td><td>voir le graphique ci-dessous (Schwertmann 1959)</td></tr>
+          <tr><td>le Fe³⁺ est libéré progressivement (humus, altération lente)</td><td>goethite directe</td><td>la goethite se dissout beaucoup moins que la ferrihydrite : produit de solubilité ≈ 10⁻⁴² contre 10⁻³⁷ à 10⁻³⁹ (Schwertmann 1985)</td></tr>
         </tbody></table></div>
       <div class="chf-graph-cadre">${graphCO2()}</div>
-      <p class="chf-legende">Oxydation à l'air d'une solution de chlorure ferreux (0,05 mol/L) à pH 7 et à température ambiante, avec de plus en plus de CO₂ ajouté à l'oxygène : dès 3 mL de CO₂ par minute, la goethite l'emporte (Schwertmann 1959, repris par Schwertmann 1985, tableau 2). Pourcentages de lépidocrocite indiqués dans les barres mixtes.</p>
+      <p class="chf-legende">Oxydation à l'air d'une solution de chlorure ferreux (0,05 mol/L) à pH 7 et à température ambiante, avec des quantités croissantes de CO₂ ajouté à l'oxygène : dès 3 mL de CO₂ par minute, la goethite l'emporte (Schwertmann 1959, repris par Schwertmann 1985, tableau 2). Les pourcentages de lépidocrocite figurent dans les barres mixtes.</p>
 
       <h3>3 · La ferrihydrite vieillit : goethite ou hématite ?</h3>
-      <p>Deux chemins concurrents (Schwertmann 1985) : la goethite naît d'ions repassés dans l'eau, l'hématite d'une ferrihydrite qui perd son eau sur place. Ce qui garde de l'eau autour des grains ou retient le fer dans l'eau pousse vers la goethite ; la chaleur et la sécheresse poussent vers l'hématite.</p>
+      <p>Deux voies concurrentes (Schwertmann 1985) : la goethite naît d'ions repassés en solution, l'hématite d'une ferrihydrite qui perd son eau sur place. Ce qui maintient de l'eau autour des grains ou retient le fer en solution favorise la goethite ; la chaleur et la sécheresse favorisent l'hématite.</p>
       <div class="chf-tab-cadre"><table class="chf-tab">
         <thead><tr><th>Facteur</th><th>Pousse vers</th><th>Ce qu'on a mesuré</th></tr></thead>
         <tbody>
-          <tr><td>température plus haute</td><td class="chf-vers-hem">hématite</td><td>Brésil du Sud : la part d'hématite croît de 14 à 20 °C de moyenne annuelle (Kämpf et Schwertmann 1982) ; au laboratoire, plus d'hématite à chaud à tous les pH (Chen et al. 2022)</td></tr>
-          <tr><td>saison sèche, moins d'eau autour des grains</td><td class="chf-vers-hem">hématite</td><td>à 45 °C, quand l'humidité de l'air passe de 100 à 75 %, la transformation ralentit mais donne plus d'hématite (Torrent et al. 1982) ; plus de goethite dans une suspension plus diluée (Chen et al. 2022)</td></tr>
-          <tr><td>humus abondant</td><td class="chf-vers-goe">goethite</td><td>Brésil du Sud : plus il y a de carbone, plus la goethite domine ; dans les sols rouges anciens, une gaine jaune sans hématite entoure les racines (Schwertmann 1985)</td></tr>
-          <tr><td>fer libéré vite</td><td class="chf-vers-hem">hématite</td><td>Natal : sols rouges sur dolérite à côté de sols jaunes sur schiste (Schwertmann 1985)</td></tr>
-          <tr><td>aluminium</td><td class="chf-vers-hem">hématite (laboratoire)</td><td>moins de 1 % d'aluminium suffit à supprimer la goethite à 70 °C, 2,5 % à 25 °C ; effet non démontré dans les sols (Schwertmann 1985)</td></tr>
-          <tr><td>bon drainage, haut de versant</td><td class="chf-vers-hem">hématite</td><td>Brésil central : sur 176 m de versant et 2 m de dénivelé, le rapport goethite / (goethite + hématite) passe de 0,19 en haut à 1 en bas (Curi 1983)</td></tr>
-          <tr><td>pH</td><td class="chf-vers-discute">discuté</td><td>les deux expériences ci-dessous ne s'accordent pas</td></tr>
+          <tr><td>température plus haute</td><td class="chf-vers-hem">hématite</td><td>Brésil du Sud : la part d'hématite augmente lorsque la température moyenne annuelle passe de 14 à 20 °C (Kämpf et Schwertmann 1982) ; en laboratoire, l'hématite progresse à chaud à tous les pH (Chen et al. 2022)</td></tr>
+          <tr><td>saison sèche, peu d'eau autour des grains</td><td class="chf-vers-hem">hématite</td><td>à 45 °C, lorsque l'humidité de l'air descend de 100 à 75 %, la transformation ralentit mais donne davantage d'hématite (Torrent et al. 1982) ; une suspension plus diluée produit davantage de goethite (Chen et al. 2022)</td></tr>
+          <tr><td>humus abondant</td><td class="chf-vers-goe">goethite</td><td>Brésil du Sud : plus le carbone est abondant, plus la goethite domine ; dans les sols rouges anciens, une gaine jaune dépourvue d'hématite entoure les racines (Schwertmann 1985)</td></tr>
+          <tr><td>fer libéré vite</td><td class="chf-vers-hem">hématite</td><td>Natal : sols rouges sur dolérite voisinant avec des sols jaunes sur schiste (Schwertmann 1985)</td></tr>
+          <tr><td>aluminium</td><td class="chf-vers-hem">hématite (laboratoire)</td><td>moins de 1 % d'aluminium suffit à supprimer la goethite à 70 °C, et 2,5 % à 25 °C ; cet effet n'est pas démontré dans les sols (Schwertmann 1985)</td></tr>
+          <tr><td>bon drainage, haut de versant</td><td class="chf-vers-hem">hématite</td><td>Brésil central : le rapport goethite / (goethite + hématite) passe de 0,19 en haut de versant à 1 en bas, sur 176 m et 2 m de dénivelé (Curi 1983)</td></tr>
+          <tr><td>pH</td><td class="chf-vers-discute">discuté</td><td>les deux expériences ci-dessous ne concordent pas</td></tr>
         </tbody></table></div>
       <div class="chf-graph-cadre">${graphPH()}</div>
-      <p class="chf-legende">Schwertmann et Murad (1983) trouvent le plus d'hématite entre pH 7 et 8, le plus de goethite à pH 4 et 12, en réajustant le pH pendant trois ans. Chen et al. (2022), qui fixent seulement le pH de départ, trouvent l'inverse vers la neutralité : goethite seule à pH 2 et 11, hématite favorisée de pH 3 à 5 et de 9 à 10. Pour eux, la différence vient de là : un sol riche en calcaire, en argile ou en humus tient son pH ; un sol pauvre en humus et en cations échangeables, beaucoup moins. Les deux s'accordent sur un point : à tout pH, la chaleur et le manque d'eau favorisent l'hématite.</p>
+      <p class="chf-legende">Schwertmann et Murad (1983) observent le maximum d'hématite entre pH 7 et 8, et celui de goethite à pH 4 et 12, en réajustant le pH pendant trois ans. Chen et al. (2022), qui fixent seulement le pH de départ, obtiennent l'inverse vers la neutralité : goethite seule à pH 2 et 11, hématite favorisée de pH 3 à 5 et de 9 à 10. Selon eux, la différence tient à ceci : un sol riche en calcaire, en argile ou en humus conserve son pH, alors qu'un sol pauvre en humus et en cations échangeables le modifie beaucoup. Les deux études s'accordent sur un point : à tout pH, la chaleur et le manque d'eau favorisent l'hématite.</p>
       <div class="chf-graph-cadre">${graphTasmanie()}</div>
-      <p class="chf-legende">Sols sur basalte du nord-ouest de la Tasmanie, de la côte (0 m) aux plateaux (575 m) : plus haut, plus frais, plus humide et plus riche en humus (5,6 à 7,8 % de matière organique), le sol perd de l'hématite et passe du rouge (3,75 YR) au jaune-brun (7,5 YR). Moyennes de 11 profils (Taylor et Graley 1967, repris par Schwertmann 1985, tableau 1).</p>
+      <p class="chf-legende">Sols sur basalte du nord-ouest de la Tasmanie, de la côte (0 m) aux plateaux (575 m) : plus on monte, plus le sol est frais, humide et riche en humus (5,6 à 7,8 % de matière organique) ; il perd alors de l'hématite et passe du rouge (3,75 YR) au jaune-brun (7,5 YR). Moyennes de 11 profils (Taylor et Graley 1967, repris par Schwertmann 1985, tableau 1).</p>
     </div>
 
     <div class="card">
@@ -666,7 +666,7 @@
     <div class="card chf-sources">
       <h2>Sources</h2>
       <ol>${ORDRE_SRC.map((k, i) => `<li id="chf-src-${i + 1}">${SRC[k]}</li>`).join("")}</ol>
-      <p class="note">Sources croisées : la carte suit le schéma de Schwertmann (1985) pour la goethite et l'hématite et celui de Jolivet et al. (2006) pour le fer ferreux ; chaque passage cite ses propres mesures. Là où les sources divergent (rôle du pH, mécanisme de l'hématite, origine des oxydes magnétiques), les deux positions sont données.</p>
+      <p class="note">Sources croisées : la carte reprend le schéma de Schwertmann (1985) pour la goethite et l'hématite, et celui de Jolivet et al. (2006) pour le fer réduit ; chaque passage cite ses propres mesures. Lorsque les sources divergent (rôle du pH, mécanisme de l'hématite, origine des oxydes magnétiques), les deux positions sont données.</p>
     </div>
   </div>`;
   }
@@ -742,7 +742,7 @@
   function page() {
     const main = document.getElementById("main");
     main.innerHTML = typoHTML(html());
-    document.title = "Comment naissent les oxydes de fer — Atlas géologique";
+    document.title = "Genèse des oxydes de fer : Atlas Sol";
     monter(main);
     window.scrollTo({ top: 0 });
   }

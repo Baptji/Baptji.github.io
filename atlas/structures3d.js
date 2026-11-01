@@ -628,7 +628,7 @@
   }
   function sourceHTML(d) {
     const s = d.source || {};
-    if (s.modele) return "Modèle construit par l'atlas : aucune structure affinée (détail en bas de page).";
+    if (s.modele) return "Modèle établi par l'atlas, faute de structure affinée (détail en bas de page).";
     const au = s.auteurs || [];
     const noms = au.map((x) => x.split(",")[0].trim());
     const qui = noms.length > 2 ? noms[0] + " et al." : noms.join(" et ");
@@ -808,8 +808,8 @@
         <button type="button" class="map-fs-btn" data-grand>⤢ Agrandir</button>
       </div>
       ${o.replier ? `<div class="s3d-pied">` : ""}<div class="s3d-legende">${legendeHTML(d, avecH && v.hydrogene)}</div>
-      ${o.replier ? `<details class="s3d-details"${o._detOuvert ? " open" : ""}><summary>Maille et description</summary>` : ""}<p class="s3d-info">${d.info ? d.info : d.particule === "sphere" ? `Modèle construit : une sphère de ${d.atomes.length} atomes`
-        : d.particule === "tube" ? `Modèle construit : période le long des tubes c = ${fmt(c)} Å · ${d.atomes.length} atomes par période`
+      ${o.replier ? `<details class="s3d-details"${o._detOuvert ? " open" : ""}><summary>Maille et description</summary>` : ""}<p class="s3d-info">${d.info ? d.info : d.particule === "sphere" ? `Modèle établi par l'atlas : une sphère de ${d.atomes.length} atomes`
+        : d.particule === "tube" ? `Modèle établi par l'atlas : période le long des tubes, c = ${fmt(c)} Å, soit ${d.atomes.length} atomes par période`
         : `Maille : a = ${fmt(a)} Å, b = ${fmt(b)} Å, c = ${fmt(c)} Å${angles} · groupe d'espace ${groupeLisible(d.groupe)}
         · ${d.atomes.length} atomes par maille`}${note ? `<br>${note}` : ""}${noteEau(o) ? `<br>${noteEau(o)}` : ""}${o.source === false ? "" : `<br>${sourceHTML(d)}`}</p>${o.apres ? `<div class="s3d-apres">${o.apres}</div>` : ""}${o.replier ? "</details></div>" : ""}`;
     suivreVolet(conteneur, o);

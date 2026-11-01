@@ -46,67 +46,67 @@
 
   // ── quelle structure pour quelle argile ─────────────────────────────────
   // [fichier, note] ; note = ce qu'il faut savoir quand la structure n'est pas celle de l'espèce elle-même
-  const FIBRES = "Pas d'espace interfoliaire : des rubans de feuillets 2:1 laissent entre eux des canaux (eau zéolitique), vus ici en bout.";
+  const FIBRES = "Aucun espace interfoliaire : des rubans de feuillets 2:1 ménagent entre eux des canaux (eau zéolitique), vus ici de bout.";
   const ARGILES3D = {
     // espèces (ESPECES, pages #espece/<id>)
     kaolinite_e: ["kaolinite"], dickite: ["dickite"], nacrite: ["nacrite"],
-    halloysite: ["kaolinite", "L'halloysite n'a pas de structure affinée : ses feuillets s'enroulent en tubes. Feuillet montré : celui de la kaolinite (Bish 1993), à plat."],
-    endellite: ["kaolinite", "L'endellite est l'halloysite qui a gardé sa couche d'eau. Pas de structure affinée : feuillet montré, celui de la kaolinite (Bish 1993), à plat."],
-    odinite: ["cronstedtite", "Pas de structure affinée pour l'odinite. Structure montrée : la cronstedtite, autre argile 1:1 riche en fer."],
-    chrysotile: ["lizardite", "Feuillets enroulés en fibres : pas de maille plane. Structure montrée : la lizardite, même feuillet à plat."],
+    halloysite: ["kaolinite", "Aucune structure affinée pour l'halloysite, dont les feuillets s'enroulent en tubes. Feuillet montré : celui de la kaolinite (Bish 1993), à plat."],
+    endellite: ["kaolinite", "L'endellite est une halloysite qui a conservé sa couche d'eau. Aucune structure affinée : feuillet montré, celui de la kaolinite (Bish 1993), à plat."],
+    odinite: ["cronstedtite", "Structure non affinée pour l'odinite ; on montre la cronstedtite, autre argile 1:1 riche en fer."],
+    chrysotile: ["lizardite", "Feuillets enroulés en fibres, sans maille plane : on montre la lizardite, le même feuillet à plat."],
     antigorite: ["antigorite", "Structure modulée de Capitani et Mellini (2004), polysome m = 17 : une maille = une onde complète de 43,5 Å ; la couche de magnésium ondule et la couche tétraédrique change de côté à chaque demi-onde."],
     lizardite: ["lizardite"],
-    berthierine: ["cronstedtite", "Pas de structure affinée pour la berthiérine. Structure montrée : la cronstedtite, serpentine de fer."],
-    greenalite: ["cronstedtite", "Pas de structure affinée pour la greenalite. Structure montrée : la cronstedtite, serpentine de fer."],
+    berthierine: ["cronstedtite", "Pas de structure affinée pour la berthiérine : on montre la cronstedtite, serpentine ferrifère."],
+    greenalite: ["cronstedtite", "Pas de structure affinée pour la greenalite : on montre la cronstedtite, serpentine ferrifère."],
     amesite: ["amesite"], cronstedtite: ["cronstedtite"], nepouite: ["nepouite", "Modèle de Brindley et Wan (1975), hydrogènes non placés."],
     pyrophyllite: ["pyrophyllite"], talc_e: ["talc"],
-    willemseite: ["talc", "Pas de structure affinée récente pour la willemséite, talc de nickel. Structure montrée : le talc."],
-    minnesotaite: ["talc", "Pas de structure affinée pour la minnesotaïte, talc de fer. Structure montrée : le talc."],
-    ferripyrophyllite: ["pyrophyllite", "Pas de structure affinée pour la ferripyrophyllite, pyrophyllite de fer. Structure montrée : la pyrophyllite."],
+    willemseite: ["talc", "Structure affinée récente absente pour la willemséite, talc nickelifère : on montre le talc."],
+    minnesotaite: ["talc", "Pas de structure affinée pour la minnesotaïte, talc ferrifère : on montre le talc."],
+    ferripyrophyllite: ["pyrophyllite", "Pas de structure affinée pour la ferripyrophyllite, pyrophyllite ferrifère : on montre la pyrophyllite."],
     montmorillonite: ["montmorillonite", "Feuillet : modèle de Viani et al. (2002)."],
-    beidellite: ["montmorillonite", "Pas de structure affinée pour la beidellite. Structure montrée : la montmorillonite, smectite dioctaédrique voisine (sa charge vient des octaèdres, celle de la beidellite des tétraèdres)."],
+    beidellite: ["montmorillonite", "Pas de structure affinée pour la beidellite : on montre la montmorillonite, smectite dioctaédrique voisine (sa charge tient aux octaèdres, celle de la beidellite aux tétraèdres)."],
     nontronite: ["nontronite", "Feuillet : modèle de Manceau et al. (1998), feuillet de fer."],
-    saponite: ["hectorite", "Pas de structure affinée pour la saponite. Structure montrée : l'hectorite échangée au césium, smectite trioctaédrique voisine."],
+    saponite: ["hectorite", "Structure non affinée pour la saponite ; on montre l'hectorite échangée au césium, smectite trioctaédrique voisine."],
     hectorite: ["hectorite", "Feuillet : hectorite de Breu et al. (2003), dont le césium a été retiré."],
-    stevensite: ["hectorite", "Pas de structure affinée pour la stevensite. Structure montrée : l'hectorite échangée au césium, smectite trioctaédrique voisine."],
-    sauconite: ["hectorite", "Pas de structure affinée pour la sauconite, smectite de zinc. Structure montrée : l'hectorite échangée au césium, smectite trioctaédrique voisine."],
-    volkonskoite: ["montmorillonite", "Pas de structure affinée pour la volkonskoïte, smectite de chrome. Structure montrée : la montmorillonite."],
-    swinefordite: ["hectorite", "Pas de structure affinée pour la swinefordite, smectite de lithium. Structure montrée : l'hectorite, autre smectite au lithium."],
-    vermiculite_e: ["vermiculite", "Billes bleues : molécules d'eau (oxygène au centre, hydrogènes non localisés) ; au milieu, Mg²⁺ entouré de six molécules d'eau."],
+    stevensite: ["hectorite", "Structure non affinée pour la stevensite ; on montre l'hectorite échangée au césium, smectite trioctaédrique voisine."],
+    sauconite: ["hectorite", "Structure non affinée pour la sauconite, smectite zincifère ; on figure l'hectorite échangée au césium, smectite trioctaédrique voisine."],
+    volkonskoite: ["montmorillonite", "Pas de structure affinée pour la volkonskoïte, smectite chromifère : on montre la montmorillonite."],
+    swinefordite: ["hectorite", "Pas de structure affinée pour la swinefordite, smectite lithinifère : on montre l'hectorite, autre smectite au lithium."],
+    vermiculite_e: ["vermiculite", "Billes bleues : des molécules d'eau (oxygène au centre, hydrogènes non localisés) ; au centre de l'image, un Mg²⁺ entouré de six d'entre elles."],
     illite_e: ["illite", "Illite-1M de Gualtieri et al. (2008) : 0,65 K⁺ par demi-maille, un site sur trois reste vide (tous sont dessinés)."],
     glauconite_e: ["glauconite", "Modèle de Drits et al. (2010) : les sites octaédriques, en réalité occupés par Fe³⁺, Al et Mg, y sont notés Al."],
     celadonite: ["celadonite"],
-    sericite: ["muscovite", "La séricite est de la muscovite en paillettes microscopiques : structure de la muscovite."],
+    sericite: ["muscovite", "La séricite n'est que de la muscovite en paillettes microscopiques : même structure."],
     muscovite_e: ["muscovite"], biotite_e: ["biotite"], phlogopite: ["phlogopite"], paragonite: ["paragonite"],
     lepidolite: ["lepidolite"], margarite: ["margarite"],
-    brammallite: ["paragonite", "Pas de structure affinée : la brammallite est une illite sodique. Structure montrée : la paragonite, mica sodique."],
+    brammallite: ["paragonite", "Structure non affinée : la brammallite est une illite sodique ; on montre la paragonite, un mica sodique."],
     annite: ["annite"], zinnwaldite: ["zinnwaldite"], clintonite: ["clintonite"],
     clinochlore: ["clinochlore"], chamosite: ["chamosite"], sudoite: ["sudoite"], cookeite: ["cookeite"],
     franklinfurnaceite: ["franklinfurnaceite"],
-    pennantite: ["clinochlore", "Pas de structure affinée pour la pennantite, chlorite de manganèse. Structure montrée : le clinochlore."],
-    nimite: ["clinochlore", "Pas de structure affinée pour la nimite, chlorite de nickel. Structure montrée : le clinochlore."],
-    baileychlore: ["clinochlore", "Pas de structure affinée pour la baileychlore, chlorite de zinc. Structure montrée : le clinochlore."],
-    donbassite: ["sudoite", "Pas de structure affinée pour la donbassite, chlorite entièrement dioctaédrique. Structure montrée : la sudoïte, chlorite en partie dioctaédrique."],
+    pennantite: ["clinochlore", "Pas de structure affinée pour la pennantite, chlorite manganésifère : on montre le clinochlore."],
+    nimite: ["clinochlore", "Pas de structure affinée pour la nimite, chlorite nickelifère : on montre le clinochlore."],
+    baileychlore: ["clinochlore", "Pas de structure affinée pour la baileychlore, chlorite zincifère : on montre le clinochlore."],
+    donbassite: ["sudoite", "Structure non affinée pour la donbassite, chlorite entièrement dioctaédrique ; on montre la sudoïte, chlorite en partie dioctaédrique."],
     sepiolite_e: ["sepiolite", FIBRES], palygorskite: ["palygorskite", FIBRES],
     // fiches minéraux de la partie Minéraux (#mineral/<id>)
     kaolinite_m: ["kaolinite"], illite_m: ["illite"], smectites_m: ["montmorillonite"], chlorite_m: ["clinochlore"],
     // fiches argiles (#argile/<id>) : clé « fiche:<id> »
-    "fiche:kaolinite": ["kaolinite"], "fiche:serpentines": ["lizardite", "Structure montrée : la lizardite (Mellini 1982), serpentine à feuillets plans."],
-    "fiche:talc": ["talc", "Structure montrée : le talc (Perdikatsis et Burzlaff 1981) ; la pyrophyllite, sa version aluminium, a sa page d'espèce."],
+    "fiche:kaolinite": ["kaolinite"], "fiche:serpentines": ["lizardite", "On montre ici la lizardite (Mellini 1982), serpentine à feuillets plans."],
+    "fiche:talc": ["talc", "On montre le talc (Perdikatsis et Burzlaff 1981) ; la pyrophyllite, sa version alumineuse, possède sa propre page d'espèce."],
     "fiche:smectites": ["montmorillonite", "Feuillet : modèle de montmorillonite de Viani et al. (2002)."],
-    "fiche:vermiculite": ["vermiculite", "Billes bleues : molécules d'eau (oxygène au centre, hydrogènes non localisés) ; au milieu, Mg²⁺ entouré de six molécules d'eau."],
+    "fiche:vermiculite": ["vermiculite", "Billes bleues : des molécules d'eau (oxygène au centre, hydrogènes non localisés) ; au centre de l'image, un Mg²⁺ entouré de six d'entre elles."],
     "fiche:illite": ["illite", "Illite-1M de Gualtieri et al. (2008)."], "fiche:glauconite": ["glauconite", "Modèle de Drits et al. (2010) : les sites octaédriques, en réalité occupés par Fe³⁺, Al et Mg, y sont notés Al."],
     "fiche:chlorite": ["clinochlore", "Structure montrée : le clinochlore (Zanazzi et al. 2006), la chlorite la plus courante."],
     "fiche:sepiolite": ["sepiolite", FIBRES],
   };
   // 30/09/2026 : plus aucune argile sans 3D. Interstratifiés : empilements construits plus bas (INTERSTRAT) ; para-cristallins :
   // modèles construits par tools/modeles_argiles.py (imogolite, allophane) et kaolinite ferrique (hisingérite).
-  const TUBE = "Tube ouvert aux deux bouts ; l'eau entre dedans et entre les tubes.";
+  const TUBE = "Tube ouvert aux deux extrémités : l'eau pénètre à l'intérieur comme entre les tubes.";
   Object.assign(ARGILES3D, {
-    hisingerite: ["hisingerite", "Pas de structure affinée : modèle de l'atlas, feuillet 1:1 de la kaolinite où Fe³⁺ remplace Al. Dans la réalité, ces feuillets de 7 Å s'enroulent en sphères creuses (bouton « Structure »)."],
-    imogolite: ["imogolite", "Un tube vu en bout : une période de 8,4 Å le long de l'axe. " + TUBE],
-    allophane_e: ["allophane", "Une sphère entière (≈ 3,3 nm aux oxygènes, 3,5 nm aux hydrogènes)."],
-    "fiche:allophane": ["allophane", "Une sphère d'allophane entière (≈ 3,3 nm aux oxygènes, 3,5 nm aux hydrogènes) ; l'imogolite a sa page d'espèce."],
+    hisingerite: ["hisingerite", "Structure non affinée : le modèle de l'atlas reprend le feuillet 1:1 de la kaolinite, dans lequel Fe³⁺ occupe la place de Al. Dans la réalité, ces feuillets de 7 Å se courbent en sphères creuses (bouton « Structure »)."],
+    imogolite: ["imogolite", "Vu de bout, un tube présente une période de 8,4 Å le long de son axe." + TUBE],
+    allophane_e: ["allophane", "Sphère complète : environ 3,3 nm de diamètre aux oxygènes, 3,5 nm aux hydrogènes."],
+    "fiche:allophane": ["allophane", "L'imogolite dispose de sa propre page d'espèce ; une sphère d'allophane complète mesure ≈ 3,3 nm aux oxygènes et 3,5 nm aux hydrogènes."],
     rectorite: ["paragonite"], corrensite: ["clinochlore"], tosudite: ["sudoite"], aliettite: ["talc"],
     hydrobiotite: ["biotite"], kaolinite_smectite: ["kaolinite"], "fiche:interstratifies": ["illite"],
   });
@@ -114,14 +114,14 @@
 
   // ce qui remplit l'espace interfoliaire, pour la phrase de la fiche argile
   const CONTENU = {
-    kaolinite: "liaisons hydrogène entre les OH d'un feuillet et les O du suivant : l'espacement est fixe",
+    kaolinite: "les OH d'un feuillet forment des liaisons hydrogène avec les O du feuillet voisin : l'espacement demeure fixe",
     serpentines: "liaisons hydrogène : l'espacement est fixe",
-    talc: "rien : les feuillets sont neutres et ne tiennent que par des forces de van der Waals, d'où le glissement du talc sous le doigt",
-    smectites: "des cations (Ca²⁺, Na⁺) entourés d'eau : l'espacement varie avec l'humidité",
-    vermiculite: "Mg²⁺ entouré de deux couches d'eau ; la charge forte des feuillets bride le gonflement",
-    illite: "K⁺ non hydratés, logés dans les creux des deux surfaces : l'espacement est verrouillé",
+    talc: "entre eux, pas de cation : les feuillets sont neutres et restent unis par des forces de van der Waals, ce qui permet au talc de glisser sous le doigt",
+    smectites: "cations (Ca²⁺, Na⁺) enveloppés d'eau : l'espacement dépend de l'humidité",
+    vermiculite: "Mg²⁺ enveloppé de deux couches d'eau ; la forte charge des feuillets limite le gonflement",
+    illite: "K⁺ non hydratés, installés dans les cavités des deux surfaces : l'espacement reste bloqué",
     glauconite: "K⁺ non hydratés : l'espacement est verrouillé",
-    chlorite: "un feuillet d'hydroxyde Mg(OH)₂ soudé par liaisons hydrogène : l'espacement est fixe",
+    chlorite: "un feuillet d'hydroxyde Mg(OH)₂, relié par liaisons hydrogène : espacement immuable",
   };
   const fr = (x, n = 2) => Number(x).toLocaleString("fr-FR", { maximumFractionDigits: n });
 
@@ -351,7 +351,7 @@
 
   // ── les modèles : smectites, vermiculite, illite et glauconite (feuillets gonflants intercalés) ──
   const SMECTITES = { montmorillonite: true, hectorite: true, nontronite: true };
-  const NOTE_MODELE = " Entre les feuillets : modèle de l'atlas (épaisseurs et hauteurs publiées, positions dans le plan schématiques ; feuillets empilés droit).";
+  const NOTE_MODELE = " Entre les feuillets, on suit le modèle de l'atlas : épaisseurs et hauteurs publiées, positions schématiques dans le plan, feuillets superposés bien droits.";
   const ETATS_SMECTITE = [
     { nom: "Sèche", d: 9.7, cation: "Ca", n: 2, eau: 0,
       note: "Sèche : sans eau, les feuillets se touchent presque, d(001) ≈ 9,7 Å (Karaborni et al. 1996 ; 9,69 Å mesurés par Gournis et al. 2008 sur une montmorillonite chauffée à 300 °C)." },
@@ -360,25 +360,25 @@
     { nom: "2 couches d'eau", d: 15.6, cation: "Ca", n: 2, eau: 2,
       note: "Deux couches d'eau, à 1,2 Å de part et d'autre des cations : chaque Ca²⁺ est entouré de six molécules d'eau ; d(001) = 15,5 à 16 Å (Ferrage et al. 2005). C'est l'état d'une smectite calcique à l'air humide." },
     { nom: "Dans l'eau", d: 40, cation: "Na", n: 4, eau: "liquide",
-      note: "Plongée dans l'eau, une smectite sodique gonfle couche par couche jusqu'à ≈ 19 Å, puis s'ouvre d'un coup à 40 Å et plus : les feuillets se séparent (Norrish 1954 ; Karaborni et al. 1996). Une smectite calcique, elle, s'arrête vers 19 Å (Norrish 1954). Eau liquide : molécules placées au hasard, à la densité de l'eau ; Na⁺ entourés de six molécules d'eau. (Le passage de Ca²⁺ à Na⁺ entre ces deux états est un échange de cations, pas un effet de l'eau.)" },
+      note: "Dans l'eau, une smectite sodique se dilate couche par couche jusqu'à ≈ 19 Å, puis se dissocie brutalement à 40 Å et plus (Norrish 1954 ; Karaborni et al. 1996). Une smectite calcique plafonne, elle, vers 19 Å (Norrish 1954). L'eau liquide est disposée au hasard, à la densité de l'eau, Na⁺ étant entourés de six molécules ; le passage de Ca²⁺ à Na⁺ relève d'un échange de cations, non d'un effet de l'eau." },
   ];
   const NOMS_ETATS = ETATS_SMECTITE.map((e) => e.nom);
   // vermiculite magnésienne : sèche 9,02 Å (Walker 1956), une couche d'eau 11,51 Å (Weiss et al. 1994), deux couches 14,33 Å
   // (structure de Shirozu et Bailey 1966 : plans d'eau à ≈ 1,17 Å du Mg²⁺)
   const ETATS_VERMICULITE = [
-    { d: 9.02, cation: "Mg", n: 4, eau: 0, note: "Sèche (chauffée) : sans eau, les feuillets se touchent, d(001) = 9,02 Å, comme un talc (Walker 1956)." },
-    { d: 11.51, cation: "Mg", n: 4, eau: 1, note: "Une couche d'eau autour des Mg²⁺ : d(001) = 11,51 Å, forme obtenue vers 150 °C (Weiss, Valvoda et Chmielová 1994)." },
-    { d: 14.33, cation: "Mg", n: 4, eau: 2, plan: 1.17, remplissage: 0.62, note: "Deux couches d'eau, état naturel à l'air humide : Mg²⁺ entouré de six molécules d'eau, les plans d'eau un peu incomplets (sites occupés à 62 %), d(001) = 14,33 Å (Shirozu et Bailey 1966 ; 14,36 Å, Walker 1956)." },
+    { d: 9.02, cation: "Mg", n: 4, eau: 0, note: "Séchée par chauffage : privés d'eau, les feuillets entrent en contact, d(001) = 9,02 Å, comme dans le talc (Walker 1956)." },
+    { d: 11.51, cation: "Mg", n: 4, eau: 1, note: "Avec une seule couche d'eau entourant les Mg²⁺, d(001) = 11,51 Å ; cet état apparaît vers 150 °C (Weiss, Valvoda et Chmielová 1994)." },
+    { d: 14.33, cation: "Mg", n: 4, eau: 2, plan: 1.17, remplissage: 0.62, note: "À l'air humide, état naturel : deux couches d'eau, Mg²⁺ entouré de six molécules, plans d'eau légèrement incomplets (sites occupés à 62 %), d(001) = 14,33 Å (Shirozu et Bailey 1966 ; 14,36 Å chez Walker 1956)." },
     { d: 14.81, cation: "Mg", n: 4, eau: 2, plan: 1.24, remplissage: 1, note: "Dans l'eau, les deux plans d'eau se complètent et l'espacement passe de 14,36 à 14,81 Å (Walker 1956, repris par Weiss et al. 1994) ; pas plus : sa charge forte retient les feuillets et l'empêche de s'ouvrir comme une smectite." },
   ];
   // illite et glauconite : l'espace verrouillé par K⁺ ne bouge jamais ; leur gonflement faible vient des quelques espaces qui
   // ont perdu leur potassium (feuillets gonflants intercalés) : ceux-là se comportent comme une smectite calcique
   const GONFLE_FAIBLE = { illite: { d: 9.94, nK: 8, nom: "une illite" }, glauconite: { d: 9.99, nK: 10, nom: "une glauconite" } };
-  const NOTE_FAIBLE = (x, plus) => `${x.nom[0].toUpperCase() + x.nom.slice(1)} n'est jamais tout à fait pure : quelques espaces entre ses feuillets ont perdu leur potassium et se comportent comme ceux d'une smectite. C'est d'eux que vient son gonflement faible. ` + (plus
+  const NOTE_FAIBLE = (x, plus) => `${x.nom[0].toUpperCase() + x.nom.slice(1)} reste rarement pure : une partie de ses espaces interfoliaires ont perdu leur potassium et se conduisent en smectite, ce qui explique son gonflement modeste.` + (plus
     ? "Ici, cinq feuillets : sur les quatre espaces, trois sont verrouillés par K⁺ (≈ 10 Å) et ne bougent jamais ; un seul, sans potassium, gonfle."
-    : "Ici, trois feuillets : en bas, un espace verrouillé par K⁺ (≈ 10 Å), qui ne bouge jamais ; au-dessus, un espace sans potassium, qui gonfle.");
+    : "Trois feuillets ici : en bas, un espace verrouillé par K⁺ (≈ 10 Å), immobile ; au-dessus, un espace sans potassium, gonflant.");
   const ETATS_FAIBLE = ETATS_SMECTITE.slice(0, 3).concat([{ d: 19, cation: "Ca", n: 2, eau: "liquide",
-    note: "Dans l'eau : l'espace sans potassium, calcique, s'ouvre jusqu'à ≈ 19 Å (3 à 4 couches d'eau) et pas plus : un espace calcique ne gonfle pas indéfiniment (Norrish 1954). L'espace verrouillé par K⁺ ne s'ouvre pas." }]);
+    note: "Immergé, l'espace calcique sans potassium s'élargit jusqu'à ≈ 19 Å (3 à 4 couches d'eau), sans davantage : un espace calcique ne gonfle pas indéfiniment (Norrish 1954). L'espace verrouillé par K⁺, lui, ne s'ouvre pas." }]);
 
   // état i → liste des espaces ; note
   // halloysite : une seule couche d'eau possible (≈ 10 Å) ; séchée, elle se referme à ≈ 7,2 Å pour toujours
@@ -387,8 +387,8 @@
   const ETATS_HALLOYSITE = [
     { d: 7.2, n: 0, eau: 0, note: "Sèche : l'eau est partie et les feuillets se referment à ≈ 7,2 Å — définitivement : une halloysite séchée ne reprend plus son eau (halloysite-(7 Å) ; Joussein et al. 2005)." },
     { d: 10.0, n: 0, eau: 1, note: "Une couche d'eau entre les feuillets : ≈ 10 Å, l'halloysite fraîche (halloysite-(10 Å), ou endellite ; Joussein et al. 2005). Deux molécules d'eau par Al₂Si₂O₅(OH)₄." },
-    { d: 10.0, n: 0, eau: 1, note: "Pas de deuxième couche : l'halloysite ne loge qu'une seule couche d'eau, ≈ 10 Å." },
-    { d: 10.0, n: 0, eau: 1, note: "Dans l'eau, l'halloysite fraîche garde sa couche d'eau, ≈ 10 Å ; une halloysite déjà séchée reste, elle, à 7,2 Å." },
+    { d: 10.0, n: 0, eau: 1, note: "Une seule couche d'eau seulement : l'halloysite ne retient qu'environ 10 Å." },
+    { d: 10.0, n: 0, eau: 1, note: "Immergée, l'halloysite fraîche garde sa couche d'eau (≈ 10 Å) ; séchée, elle reste à 7,2 Å." },
   ];
 
   // « plusieurs feuillets » : trois espaces empilés (quatre pour l'illite et la glauconite, dont un seul sans potassium)
@@ -407,7 +407,7 @@
         const K = espace(P, { d: f.d, cation: "K", n: f.nK, eau: 0 }), S = espace(P, ETATS_FAIBLE[i]);
         return plus ? [K, K, S, K] : [K, S];
       },
-      note: (i, plus) => NOTE_FAIBLE(f, plus) + " " + ETATS_FAIBLE[i].note.replace(/^[^:]*: /, "Espace sans potassium — ") };
+      note: (i, plus) => NOTE_FAIBLE(f, plus) + " " + ETATS_FAIBLE[i].note.replace(/^[^:]*: /, "Espace sans potassium :") };
     return null;
   }
   // ── interstratifiés (30/09/2026 : « que toutes les argiles aient une structure 3D ») ──
@@ -435,10 +435,10 @@
   };
   const ETATS_IS = ETATS_SMECTITE.slice(0, 3).concat([{ d: 19, cation: "Ca", n: 2, eau: "liquide" }]);
   const NOTES_IS = [
-    "Sèche : les espaces de smectite se referment à ≈ 9,7 Å ; les autres ne bougent pas.",
-    "Une couche d'eau dans les espaces de smectite : ≈ 12,6 Å ; les autres ne bougent pas.",
-    "Deux couches d'eau dans les espaces de smectite, état à l'air humide : ≈ 15,6 Å ; les autres ne bougent pas.",
-    "Dans l'eau : un espace de smectite calcique s'ouvre jusqu'à ≈ 19 Å et pas plus (Norrish 1954) ; les autres ne bougent pas.",
+    "À l'état sec, les espaces de smectite se referment à ≈ 9,7 Å, tandis que les autres demeurent inchangés.",
+    "Une couche d'eau dans les espaces de smectite : ≈ 12,6 Å ; les autres demeurent inchangés.",
+    "Deux couches d'eau dans les espaces de smectite, à l'air humide : ≈ 15,6 Å ; les autres demeurent inchangés.",
+    "Dans l'eau, un espace de smectite calcique s'ouvre jusqu'à ≈ 19 Å et pas davantage (Norrish 1954) ; les autres demeurent inchangés.",
   ];
   function interstratConstruit(cle, i, plus) {
     const k = cle + "|" + i + "|" + (plus ? 1 : 0);
@@ -481,13 +481,13 @@
     clinochlore: "chlorite", chamosite: "chlorite", sudoite: "chlorite", cookeite: "chlorite", franklinfurnaceite: "chlorite",
     sepiolite: "fibre", palygorskite: "fibre", hisingerite: "11", antigorite: "11", imogolite: "tube", allophane: "sphere" };
   const SANS_EAU = {
-    "11": "Entre les feuillets, rien ne change avec l'eau : ils sont tenus entre eux par des liaisons hydrogène et l'eau n'y entre pas ; l'espacement est le même, sèche ou dans l'eau. L'eau se fixe seulement sur les faces et les bords du cristal (vue « Structure »).",
-    neutre: "Entre les feuillets, rien ne change avec l'eau : ils sont neutres, sans cation à hydrater entre eux, et l'eau n'y entre pas ; l'espacement est le même, sèche ou dans l'eau. Les faces, sans charge, repoussent même l'eau (elles sont hydrophobes) : elle ne se fixe que sur les bords du cristal (vue « Structure »).",
-    mica: "Entre les feuillets, rien ne change avec l'eau : les cations (K⁺, Na⁺ ou Ca²⁺ selon l'espèce) ne s'hydratent pas et verrouillent l'empilement ; l'espacement est le même, sèche ou dans l'eau. L'eau se fixe seulement sur les faces et les bords du cristal (vue « Structure »).",
-    chlorite: "Entre les feuillets, rien ne change avec l'eau : un feuillet d'hydroxyde occupe l'espace et les soude ; l'espacement est le même, sèche ou dans l'eau. L'eau se fixe seulement sur les faces et les bords du cristal (vue « Structure »).",
-    fibre: "Rien ne change avec l'eau : elle entre dans les canaux et en sort sans écarter les rubans.",
-    tube: "Rien ne change avec l'eau : elle entre dans le tube et entre les tubes sans les déformer.",
-    sphere: "Rien ne change avec l'eau : elle entre dans la sphère par les perforations de la paroi et en ressort sans la déformer.",
+    "11": "Entre les feuillets, rien ne varie avec l'eau : ils sont retenus par des liaisons hydrogène que l'eau ne pénètre pas, si bien que l'espacement reste le même, sec ou immergé. L'eau ne se fixe que sur les faces et les bords du cristal (vue « Structure »).",
+    neutre: "Entre les feuillets, rien ne varie avec l'eau : neutres, sans cation à hydrater entre eux, ils ne laissent pas l'eau entrer ; l'espacement reste le même, sec ou immergé. Les faces, dépourvues de charge, repoussent l'eau : seuls les bords la retiennent (vue « Structure »).",
+    mica: "Entre les feuillets, l'eau ne change rien : les cations (K⁺, Na⁺ ou Ca²⁺ selon l'espèce) ne s'hydratent pas et verrouillent l'empilement ; espacement identique, sec ou immergé. L'eau ne se fixe que sur les faces et les bords (vue « Structure »).",
+    chlorite: "Entre les feuillets, l'eau ne modifie rien : un feuillet d'hydroxyde occupe l'espace et soude l'ensemble ; l'espacement demeure le même. L'eau se fixe seulement sur faces et bords (vue « Structure »).",
+    fibre: "L'eau ne change rien : elle s'insinue dans les canaux puis en sort sans écarter les rubans.",
+    tube: "L'eau ne modifie rien : elle pénètre le tube et les intervalles entre tubes, sans les déformer.",
+    sphere: "L'eau ne change rien : elle pénètre la sphère par les perforations de sa paroi et en ressort sans la déformer.",
   };
   const SANS_EAU_CLE = {};
   const publiee = (b, c, note, plus) => Object.assign({}, b,
@@ -513,7 +513,7 @@
           const f = transition(x.PB, x.esp, y.esp);
           return (u) => deux(interstratAssemble(cle, x, f(u), ""), plus);
         },
-        note: "Bandes bleues : les espaces entre les feuillets ; " + (X.regulier ? "flèche : la période de l'alternance (un feuillet de chaque)." : "pas de flèche : sans alternance régulière, pas d'espacement basal unique.") });
+        note: "Bandes bleues : les espaces entre les feuillets ;" + (X.regulier ? "flèche : la période de l'alternance (un feuillet de chaque)." : "aucune flèche : sans alternance régulière, il n'existe pas d'espacement basal unique.") });
     }
     if (fichier === "allophane") e.echelles = [["1", "1 sphère"], ["e", "Vue d'ensemble"]];
     if (fichier === "imogolite") Object.assign(e, { fichiers: ["imogolite_faisceau"], fichierPlus: "imogolite_faisceau",
@@ -553,18 +553,17 @@
     if (!ARGILES3D[cle]) return "";
     // tout ce qui suit la vue va dans son volet « Maille et description » (02/10/2026)
     const vue = (apres = "") => `<div data-s3d="${cle}" data-s3d-source="bas"><template class="s3d-apres">${apres}<p class="page-source" data-s3d-ref="${cle}"></p></template></div>`;
-    const aide = "Faire glisser pour tourner, double-clic pour revenir à la vue de départ. « Structure » montre un petit cristal entier, atome par atome (tube, plaquette, fibre…) ; « Vue d'ensemble », la forme de la particule à l'échelle du nanomètre.";
+    const aide = "Un glissement fait tourner la vue, et un double-clic la remet à son point de départ. « Structure » offre un cristal entier, détaillé atome par atome (tube, plaquette, fibre…), tandis que « Vue d'ensemble » donne la forme de la particule au nanomètre près.";
     if (a.id === "interstratifies") return `<div class="card" id="eb-3d"><h2>L'espacement basal d(001)</h2>
-      <p class="sub">Un interstratifié empile, dans un même cristal, des feuillets de deux sortes. Ici, illite (≈ 10 Å, verrouillée par
-      K⁺) et smectite (≈ 15 Å avec deux couches d'eau) mêlées au hasard : la distance d'un feuillet au suivant n'est plus constante, et
-      le premier pic de diffraction n'est pas un vrai d(001). Aucune structure affinée n'existe : la vue est un empilement construit
-      à partir des deux structures publiées. Les boutons au-dessus de la vue font gonfler les espaces de smectite. ${aide}
+      <p class="sub">Ici, deux sortes de feuillets s'alternent au sein d'un même cristal : illite (≈ 10 Å, verrouillée par
+      K⁺) et smectite (≈ 15 Å, avec deux couches d'eau), disposées au hasard. L'écart d'un feuillet au suivant n'est donc plus constant, et
+      le premier pic de diffraction ne livre pas un vrai d(001). Aucune structure affinée n'existe : la vue est un empilement bâti
+      à partir des deux structures publiées. Les boutons au-dessus de la vue gonflent les espaces de smectite. ${aide}
       Voir les deux constituants : <button class="min-chip" data-goargile="illite">Illite</button>
       <button class="min-chip" data-goargile="smectites">Smectites</button></p>${vue()}</div>`;
     if (a.id === "allophane") return `<div class="card" id="eb-3d"><h2>Sa structure en 3D</h2>
-      <p class="sub">Pas d'espacement basal : l'allophane n'empile pas de feuillets plans. Sa paroi est un seul feuillet courbé,
-      aluminium à l'extérieur, silicium à l'intérieur, refermé en sphère creuse ; l'imogolite est le même feuillet roulé en tube.
-      Aucune structure n'a été affinée : la vue est un modèle construit. ${aide}</p>${vue()}</div>`;
+      <p class="sub">Aucun espacement basal : l'allophane ne superpose pas de feuillets plans. Sa paroi est un feuillet unique, courbé, aluminium au dehors, silicium au dedans, refermé en sphère creuse ; l'imogolite est le même feuillet enroulé en tube.
+      Aucune structure affinée : la vue est un modèle construit. ${aide}</p>${vue()}</div>`;
     const c = COUCHES[ARGILES3D[cle][0]];
     const somme = a.id === "smectites" ? `<p class="eb-somme">L'espacement varie avec l'eau : ≈ 9,7 Å sèche, 12,5 à 12,9 Å avec
       une couche d'eau, 15,5 à 16 Å avec deux, 40 Å et plus dans l'eau pour une smectite sodique. Choisir l'état au-dessus de la vue.</p>`
@@ -572,10 +571,10 @@
       Entre les feuillets : ${CONTENU[a.id] || ""}.</p>` : "";
     return `<div class="card" id="eb-3d">
       <h2>L'espacement basal d(001)</h2>
-      <p class="sub">${c ? `C'est la distance entre un feuillet et le suivant, mesurée perpendiculairement aux feuillets : l'épaisseur du
-      feuillet plus celle de l'espace qui le sépare du suivant. On la lit aux rayons X (premier pic de diffraction, d'où l'indice 001).`
-      : "Pas d'espacement basal au sens strict : la sépiolite n'empile pas des feuillets plans."}
-      Les boutons au-dessus de la vue la montrent sèche, avec une ou deux couches d'eau, ou plongée dans l'eau. ${aide}</p>
+      <p class="sub">${c ? `On nomme ainsi l'écart entre un feuillet et le suivant, mesuré perpendiculairement aux feuillets : l'épaisseur du
+      feuillet additionnée de l'espace qui le sépare du suivant. Elle se lit aux rayons X (premier pic de diffraction, d'où l'indice 001).`
+      : "Aucun espacement basal au sens strict : la sépiolite ne superpose pas de feuillets plans."}
+      Au-dessus de la vue, les boutons la montrent à sec, avec une ou deux couches d'eau, ou immergée. ${aide}</p>
       ${somme}
       ${vue(a.id === "smectites" ? `<p class="page-source">États d'hydratation : Ferrage E., Lanson B., Sakharov B. A. et Drits V. A. (2005),
       <i>American Mineralogist</i> 90, p. 1358–1374 ; Karaborni S. et al. (1996), <i>Science</i> 271, p. 1102–1104 ; Gournis D. et al.

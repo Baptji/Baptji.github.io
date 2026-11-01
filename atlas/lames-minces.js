@@ -14,7 +14,7 @@
   const D = window.LAMES_DONNEES || { photos: {}, fiches: { roche: {}, mineral: {} } };
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const LUM = {
-    LPNA: "lumière polarisée non analysée (lumière naturelle)",
+    LPNA: "LPNA désigne la lumière polarisée non analysée, soit la lumière naturelle.",
     LPA: "lumière polarisée analysée, nicols croisés",
     "réfléchie": "lumière réfléchie",
   };
@@ -56,12 +56,11 @@
         <img src="${esc(p.f)}" alt="" loading="lazy">${p.lum ? `<span class="lx-lum">${p.lum}</span>` : ""}</button>`).join("");
     const sources = [...new Set(l.map((p) => p.src))];
     return `<h2>Lames minces</h2>
-      <p class="sub">${type === "roche" ? "La roche" : "Le minéral"} vu${type === "roche" ? "e" : ""} au microscope, en tranche de 30 µm.
-        LPNA : lumière naturelle ; LPA : entre nicols croisés, les couleurs y dépendent de l'orientation des cristaux.</p>
-      <div class="lx-grille">${vig}</div>
-      <details class="lx-credits"><summary>Crédits des photos (${l.length})</summary><ol>
-        ${l.map((p) => `<li>${credit(p)}</li>`).join("")}</ol>
-        <p>${sources.includes("commons") ? "Wikimedia Commons : licences libres, auteur et licence de chaque photo ci-dessus. " : ""}${sources.includes("vm") ? "Virtual Microscope (The Open University) : CC BY-NC-SA 2.0. " : ""}Vignettes réduites par l'atlas ; la grande vue est chargée depuis la source.</p></details>`;
+<p class="sub">${type === "roche" ? "La roche" : "Le minéral"} photographié${type === "roche" ? "e" : ""} au microscope, sur une lame mince de 30 µm. LPNA : lumière naturelle ; LPA : sous nicols croisés, les teintes dépendent de l'orientation des cristaux.</p>
+<div class="lx-grille">${vig}</div>
+<details class="lx-credits"><summary>Auteurs des photos (${l.length})</summary><ol>
+${l.map((p) => `<li>${credit(p)}</li>`).join("")}</ol>
+<p>${sources.includes("commons") ? "Wikimedia Commons : photos sous licences libres, avec l'auteur et la licence de chaque image ci-dessus." : ""}${sources.includes("vm") ? "Virtual Microscope (The Open University) : CC BY-NC-SA 2.0. " : ""}Les vignettes ont été réduites par l'atlas ; la grande vue est chargée depuis la source.</p></details>`;
   }
 
   // ---------------------------------------------------------------- visionneuse

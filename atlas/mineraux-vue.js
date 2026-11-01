@@ -13,7 +13,7 @@
   "use strict";
   const fr = (x, n = 2) => Number(x).toLocaleString("fr-FR", { maximumFractionDigits: n });
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-  const court = (nom) => String(nom).split(" (")[0].split(" —")[0].trim();
+  const court = (nom) => String(nom).split(" (")[0].split(/ [—:]/)[0].trim();
 
   // ── éléments affichés : minéral, espèce d'argile (« esp: »), fiche d'argile (« arg: ») ─────────────────────
   function element(e) {
@@ -88,11 +88,11 @@
     if (!pts.length) return `<div class="argv-j"><span class="argv-j-nom">${E.nom}</span>
       <span class="argv-j-piste argv-j-vide"></span><span class="argv-j-val">non renseignée</span></div>`;
     const a = Math.min(...pts.map((e) => e[k])), b = Math.max(...pts.map((e) => e[k]));
-    const val = a === b ? fr(a, E.n) : `${fr(a, E.n)} – ${fr(b, E.n)}`;
+    const val = a === b ? fr(a, E.n) : `${fr(a, E.n)} à ${fr(b, E.n)}`;
     const cle = `minv-${++nJauge}:${k}`;
     const lignes = els.map((e, i) => `<li data-e="${i}"><b>${esc(e.nom)}</b> ${e[k] != null ? fr(e[k], E.n) : "<i>pas de mesure</i>"}</li>`).join("");
     ArgilesVue.BULLES[cle] = `<p class="argv-b-t">${E.nom} de ce groupe : <b>${val} ${E.unite}</b></p>
-      <p class="argv-b-n">Échelle commune à tous les groupes : ${fr(E.min)} à ${fr(E.max)} ${E.unite}${E.log ? ", logarithmique" : ""}.${E.bouts ? ` ${E.bouts}.` : ""}</p>
+      <p class="argv-b-n">Une échelle identique pour tous les groupes, de ${fr(E.min)} à ${fr(E.max)} ${E.unite}${E.log ? ", logarithmique" : ""}.${E.bouts ? ` ${E.bouts}.` : ""}</p>
       <ul>${lignes}</ul>`;
     return `<div class="argv-j" data-bulle="${cle}">
       <span class="argv-j-nom">${E.nom}</span>
@@ -140,7 +140,7 @@
             if (!els.length) return "";
             nEsp += els.length;
             return panneau({ nom: `${f.element} <span class="badge outline">${f.symbole}</span>`, els, coul: couleurDe(els),
-              info: `<button class="min-chip" data-gopage="oxyde/${f.id}">Onglet ${f.element} : diagramme pH–Eh →</button>`,
+              info: `<button class="min-chip" data-gopage="oxyde/${f.id}">Onglet ${f.element} : diagramme pH-Eh →</button>`,
               corps: grille(els) });
           }).join("");
           return panneaux ? `<div id="${id}" class="minv-ancre">${panneaux}</div>` : "";
@@ -165,7 +165,7 @@
       if (!groupes) return "";
       const nGr = (groupes.match(/class="card argv-grp/g) || []).length;
       const plus = (c.encarts || []).map((e) => `<h3>${e.titre}</h3>${e.html}`).join("") + (c.plus || "")
-        + (c.sources ? `<p class="page-source"><b>Sources</b> — ${c.sources.join(" ; ")}</p>` : "");
+        + (c.sources ? `<p class="page-source"><b>Sources</b> : ${c.sources.join(" ; ")}</p>` : "");
       return `<section class="argv-fam minv-cls" id="mincls-${c.n}">
         <h2><span class="num">${c.num}</span>${c.icone} ${c.classe}
           <span class="badge outline">${nGr} groupe${nGr > 1 ? "s" : ""} · ${nEsp} espèce${nEsp > 1 ? "s" : ""}</span>
@@ -212,42 +212,26 @@
     <div class="card hero">
       ${icone(vue === "tous" ? "geode" : "cristaux", 96, "hero-icone")}
       <h1>${vue === "tous" ? "Les minéraux" : "Les minéraux du sol"}</h1>
-      <p class="sub argv-intro">La <b>brique</b> des roches : une composition chimique et une structure cristalline précises
-        (le quartz, <code>SiO₂</code> ; la calcite, <code>CaCO₃</code>). Le granite, lui, est un mur : quartz + feldspath + mica.</p>
+      <p class="sub argv-intro">Brique élémentaire des roches, un minéral se définit par sa composition chimique et sa structure cristalline (quartz, <code>SiO₂</code> ; calcite, <code>CaCO₃</code>). Une roche comme le granite, en revanche, ressemble à un mur bâti de quartz, de feldspath et de mica.</p>
       ${vues}
       <div class="min-chips argv-sommaire">${sommaire}</div>
       <details class="cmp-puce"><summary>${vue === "role" ? "Comment lire ce classement" : "Comment lire la classification"}</summary>
         ${vue === "role"
-          ? `<p>Les minéraux réellement présents dans les sols de France et actifs dans leur formation, rangés par rôle :
-            ce que le sol hérite de la roche, ce qu'il fabrique. <b>Néoformé</b> : cristallisé dans le sol à partir des ions de
-            sa solution, et non hérité de la roche.</p>`
-          : `<p class="crumb">Classe de <b>Strunz</b> (I → X, selon l'anion) <span>→</span> groupe (selon la structure)
-            <span>→</span> sous-famille <span>→</span> espèce.</p>
-            <p>La classification de Strunz est la référence actuelle (IMA, Mindat). Les <b>silicates (IX)</b> forment à eux seuls
-            ~92 % de la croûte terrestre.${vue === "sol" ? " Ici, seuls les minéraux principaux des sols." : ""}</p>`}
+          ? `<p>Ces minéraux, effectivement présents dans les sols de France, participent à leur formation ; ils sont classés selon leur rôle : ce que le sol reçoit de la roche, et ce qu'il fabrique. Un minéral <b>néoformé</b> cristallise dans le sol à partir des ions de la solution, sans avoir été hérité de la roche.</p>`
+          : `<p class="crumb">Ordre de rangement : <b>classe de Strunz</b> (I à X, fixée par l'anion) <span>→</span> groupe (fixé par la structure) <span>→</span> sous-famille <span>→</span> espèce.</p>
+            <p>La référence actuelle est la classification de Strunz, retenue par l'IMA et par Mindat. Les <b>silicates (IX)</b> représentent près de 92 % de la croûte terrestre.${vue === "sol" ? "Seuls les minéraux principaux des sols figurent ici." : ""}</p>`}
       </details>
     </div>
     ${corps}
     ${vue === "role" ? "" : `<div class="card">
       <h2>Pour aller plus loin : pourquoi classer par la structure ?</h2>
-      <p>On pourrait ranger les minéraux par couleur ou par dureté, mais les minéralogistes ont choisi la <b>chimie</b> puis
-      la <b>structure atomique</b>, parce que c'est elle qui commande presque tout le reste. Dans les <b>silicates</b> — 92 %
-      du volume de la croûte terrestre — la brique de base est toujours la même : le tétraèdre <code>SiO₄</code>. Ce qui change,
-      c'est la façon dont ces tétraèdres se relient.</p>
-      <p>Isolés, ils donnent des minéraux compacts et denses (<b>nésosilicates</b> : olivine, grenat, zircon). Reliés en
-      <b>chaînes</b>, ils font les minéraux sombres des roches volcaniques (pyroxènes, amphiboles). Empilés en <b>feuillets</b>,
-      ils donnent tout ce qui se clive en lamelles : les <b>micas</b> et, en plus petit et un peu dégradé, les <b>argiles</b>.
-      Reliés en <b>charpente 3D</b>, ils forment les minéraux les plus abondants et les plus durables : le <b>quartz</b> et les
-      <b>feldspaths</b>.</p>
-      <p>Cette logique a une conséquence directe pour l'altération : plus les tétraèdres sont connectés, plus le minéral résiste
-      (c'est la « série de Goldich »). L'olivine, faite de briques isolées, se défait la première ; le quartz, charpente
-      complète, traverse les âges et finit en sable. Les autres classes (carbonates, oxydes, sulfates, sulfures…) se rangent,
-      elles, par leur <b>anion</b> — le groupement chimique qui les définit (CO₃, O, SO₄, S…).</p>
+      <p>La couleur ou la dureté auraient pu servir de critère, mais les minéralogistes privilégient la <b>chimie</b>, puis l'<b>architecture atomique</b>, qui commande presque toutes les autres propriétés. Chez les <b>silicates</b>, qui forment 92 % de la croûte, chaque minéral repose sur le même motif élémentaire, le tétraèdre <code>SiO₄</code> ; seul diffère le mode d'assemblage de ces tétraèdres.</p>
+      <p>Isolés, ils donnent des minéraux compacts et lourds (<b>nésosilicates</b> : olivine, grenat, zircon). Enchaînés en <b>chaînes</b>, ils composent les minéraux sombres des roches volcaniques (pyroxènes, amphiboles). Disposés en <b>feuillets</b>, ils fournissent tout ce qui se débite en lamelles : les <b>micas</b> et, plus petits et légèrement altérés, les <b>argiles</b>. Assemblés en <b>charpente 3D</b>, ils constituent les minéraux les plus répandus et les plus résistants : le <b>quartz</b> et les <b>feldspaths</b>.</p>
+      <p>Il en découle une conséquence directe pour l'altération : plus les tétraèdres sont liés, plus le minéral tient (<b>série de Goldich</b>). L'olivine, faite de briques isolées, cède la première ; le quartz, à la charpente complète, survit aux âges et se retrouve finalement en sable. Les autres classes (carbonates, oxydes, sulfates, sulfures…) se répartissent au contraire selon leur <b>anion</b>, c'est-à-dire le groupement chimique qui les caractérise (CO₃, O, SO₄, S…).</p>
     </div>`}
     <details class="card cmp-puce argv-sources" data-minv-credits><summary>Crédits des photos</summary>
-      <p>Photos de Wikimedia Commons (vignettes des articles de Wikipédia), sous licence libre. Sans photo : la forme du cristal,
-      calculée (même dessin que sur la fiche).</p>
-      <ul><li>Les photos affichées jusqu'ici apparaissent dans cette liste.</li></ul></details>
+      <p>Photos issues de Wikimedia Commons (vignettes des articles de Wikipédia), sous licence libre. Sans photo : la forme du cristal, calculée (même dessin que sur la fiche).</p>
+      <ul><li>Les photos affichées jusqu'ici figurent dans cette liste.</li></ul></details>
     </div>`;
   }
 
@@ -341,10 +325,10 @@
     const vus = [...document.querySelectorAll("[data-minv] .minv-photo")].map((s) => PAR_CLE[s.dataset.minvImg]).filter(Boolean);
     const ul = d.querySelector("ul");
     if (!vus.length) { ul.innerHTML = "<li>Aucune photo affichée pour l'instant.</li>"; return; }
-    ul.innerHTML = vus.map((el, i) => `<li data-i="${i}"><b>${esc(el.nom)}</b> — …</li>`).join("");
+    ul.innerHTML = vus.map((el, i) => `<li data-i="${i}"><b>${esc(el.nom)}</b> : …</li>`).join("");
     vus.forEach((el, i) => legendePhoto(CACHE[el.cle]).then((cap) => {
       const li = ul.querySelector(`li[data-i="${i}"]`);
-      if (li) li.innerHTML = `<b>${esc(el.nom)}</b> — ${cap}`;
+      if (li) li.innerHTML = `<b>${esc(el.nom)}</b> : ${cap}`;
     }));
   }, true);
 

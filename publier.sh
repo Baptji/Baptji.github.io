@@ -3,7 +3,7 @@
 # Usage : ./publier.sh "message"   (sans message : « Mise à jour de l'Atlas »)
 set -e
 cd "${0:A:h}"
-LEGER="$HOME/Programmes/atlas-geologique/dist/Atlas géologique (léger)"
+LEGER="$HOME/Programmes/atlas-geologique/dist/Atlas Sol (léger)"
 [[ -f "$LEGER/index.html" ]] || { echo "Édition légère introuvable : $LEGER"; exit 1; }
 # Une seule édition depuis le 13/10/2026 : pas de carte 1/50 000 (data/geol50/, ≈ 3 Go)
 [[ -e "$LEGER/data/geol50" ]] && { echo "data/geol50/ est dans le paquet : arrêt"; exit 1; }

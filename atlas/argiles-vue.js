@@ -14,27 +14,27 @@
 
   // deux lignes au plus : ce qui fait le groupe
   const RESUME = {
-    "0-0": "Feuillet 1:1 d'aluminium sans aucune substitution, donc neutre : rien ne s'insère entre les feuillets. Trois espèces de même formule, qui ne diffèrent que par l'empilement.",
-    "0-1": "Même feuillet que le kaolin, mais une couche d'eau peut s'insérer entre les feuillets (10 Å ; 7 Å une fois séchée, pour toujours) et les feuillets s'enroulent en tubes.",
-    "0-2": "L'équivalent magnésien du kaolin. Le feuillet de magnésium est plus large que celui de silicium : selon l'espèce, il reste plat, ondule ou s'enroule en fibres.",
-    "0-3": "Serpentines où l'aluminium ou le fer³⁺ remplace une partie du silicium, ce qui rattrape l'écart de taille entre les deux feuillets. Minerais de fer oolithiques, latérites à nickel.",
-    "1-0": "Feuillet 2:1 d'aluminium sans aucune substitution : charge nulle, rien entre les feuillets, aucun gonflement. La pyrophyllite est la référence neutre des 2:1 alumineuses.",
-    "1-1": "Smectites dont la charge naît dans le feuillet octaédrique (Mg²⁺ à la place d'Al³⁺) : faible et loin de la surface, elle laisse entrer l'eau et l'argile gonfle. La montmorillonite.",
-    "1-2": "Smectites dont la charge naît dans le feuillet tétraédrique (Al³⁺ à la place de Si⁴⁺), plus près de la surface : les cations sont mieux tenus, le gonflement un peu moins libre.",
-    "1-3": "Substitutions dans les deux feuillets : charge forte (0,6 à 0,9), feuillets tenus plus serrés. Deux couches d'eau au plus (14 Å), mais l'une des CEC les plus élevées.",
-    "1-4": "Charge forte compensée par des K⁺ sans eau, qui bloquent les feuillets à 10 Å : ni eau ni gonflement. Des illites des sols à la muscovite et au mica calcique (margarite).",
-    "2-0": "Feuillet 2:1 de magnésium sans substitution : charge nulle, les feuillets glissent les uns sur les autres. Le talc, dureté 1 de l'échelle de Mohs.",
-    "2-1": "Smectites magnésiennes dont la charge naît dans le feuillet octaédrique : du lithium à la place du magnésium (hectorite) ou des sites vides (stevensite). Fort gonflement.",
-    "2-2": "Smectites magnésiennes dont la charge naît dans le feuillet tétraédrique (Al³⁺ à la place de Si⁴⁺). La saponite est la smectite des basaltes et des serpentinites altérés.",
-    "2-3": "La vermiculite la plus courante, née d'une biotite qui a perdu son potassium. Charge forte, deux couches d'eau au plus entre les feuillets (14 Å).",
-    "2-4": "Micas sombres : charge forte bloquée par K⁺ (Ca²⁺ dans la clintonite), feuillet de Mg, Fe ou Li. Biotites (phlogopite ↔ annite) et micas au lithium, parents des vermiculites.",
-    "3-0": "Chlorite dont le feuillet 2:1 et le feuillet d'hydroxyde intercalé sont tous deux dioctaédriques (aluminium). Une seule espèce, des altérations hydrothermales acides.",
-    "3-1": "Chlorites mixtes : feuillet 2:1 dioctaédrique (Al), feuillet d'hydroxyde trioctaédrique (Mg ou Li). Métamorphisme de très bas degré, pegmatites au lithium.",
-    "3-2": "Le cas inverse : feuillet 2:1 trioctaédrique, feuillet d'hydroxyde dioctaédrique. Une seule espèce, connue presque uniquement à Franklin (New Jersey).",
-    "3-3": "Les chlorites courantes : les deux feuillets sont trioctaédriques (Mg, Fe…). Le feuillet d'hydroxyde intercalé bloque l'espacement à 14 Å ; elles verdissent schistes et ardoises.",
-    "4-0": "Deux types de feuillets alternent dans un même cristal, régulièrement (ABAB) ou au hasard : des étapes de transformation, comme la smectite qui devient illite en s'enfouissant.",
-    "5-0": "Feuillets 2:1 découpés en rubans qui s'inversent régulièrement, avec des canaux remplis d'eau entre eux : des fibres, pas des plaquettes. Lacs et sols riches en Mg et en silice.",
-    "6-0": "Pas de feuillets empilés : des sphères creuses (allophane) et des tubes (imogolite) de quelques nanomètres, premiers produits de l'altération des verres volcaniques.",
+    "0-0": "Sans aucune substitution, ce feuillet 1:1 d'aluminium est neutre : rien ne s'insère entre ses feuillets. Trois espèces partagent la même formule et ne se distinguent que par leur empilement.",
+    "0-1": "Le feuillet est celui du kaolin, mais de l'eau peut s'intercaler (10 Å ; 7 Å une fois séchée, de façon irréversible) et les feuillets se roulent en tubes.",
+    "0-2": "Il s'agit de l'homologue magnésien du kaolin. La couche de magnésium, plus large que celle de silicium, fait rester le feuillet plan, onduler ou s'enrouler en fibres selon l'espèce.",
+    "0-3": "Dans ces serpentines, du fer³⁺ ou de l'aluminium remplace une part du silicium, ce qui compense l'écart de taille entre les deux couches. Ce sont aussi des minerais de fer oolithiques et des latérites à nickel.",
+    "1-0": "Sans aucune substitution, ce feuillet 2:1 d'aluminium n'a pas de charge : rien ne se loge entre les feuillets et rien ne gonfle. La pyrophyllite sert de référence neutre parmi les 2:1 alumineux.",
+    "1-1": "Dans ces smectites, la charge provient du feuillet octaédrique (Mg²⁺ à la place d'Al³⁺) ; faible et éloignée de la surface, elle laisse pénétrer l'eau, et l'argile gonfle. C'est la montmorillonite.",
+    "1-2": "La charge de ces smectites vient du feuillet tétraédrique (Al³⁺ au lieu de Si⁴⁺), située plus près de la surface : les cations y sont mieux retenus et le gonflement reste un peu plus contraint.",
+    "1-3": "Les substitutions touchent les deux feuillets : la charge est forte (0,6 à 0,9) et les feuillets sont plus serrés. Deux couches d'eau au plus s'y logent (14 Å), malgré l'une des CEC les plus élevées.",
+    "1-4": "Une charge forte, compensée par des K⁺ anhydres, bloque les feuillets à 10 Å : aucune eau ne s'y loge, rien ne gonfle. Cette famille regroupe les illites des sols, la muscovite et le mica calcique (margarite).",
+    "2-0": "Ce feuillet 2:1 au magnésium, sans substitution, n'a pas de charge et ses feuillets glissent les uns sur les autres. Il s'agit du talc, de dureté 1 sur l'échelle de Mohs.",
+    "2-1": "Dans ces smectites magnésiennes, la charge vient du feuillet octaédrique, avec du lithium au lieu du magnésium (hectorite) ou des sites vacants (stevensite). Le gonflement y est fort.",
+    "2-2": "La charge de ces smectites magnésiennes se trouve dans le feuillet tétraédrique (Al³⁺ au lieu de Si⁴⁺). La saponite caractérise les basaltes et les serpentinites altérés.",
+    "2-3": "Cette vermiculite, la plus répandue, dérive d'une biotite dont le potassium a disparu. La charge reste élevée ; entre les feuillets, deux couches d'eau tout au plus prennent place (14 Å).",
+    "2-4": "Les micas sombres présentent une charge forte, bloquée par K⁺ (Ca²⁺ dans la clintonite), et un feuillet riche en Mg, Fe ou Li. Biotites (de la phlogopite à l'annite) et micas lithiés sont les parents des vermiculites.",
+    "3-0": "Dans cette chlorite, le feuillet 2:1 et le feuillet d'hydroxyde intercalé sont dioctaédriques, tous deux à l'aluminium. Une seule espèce appartient à ce type, formée lors d'altérations hydrothermales acides.",
+    "3-1": "Chlorites mêlées : le feuillet 2:1 est dioctaédrique (Al) et le feuillet d'hydroxyde trioctaédrique (Mg ou Li). On les rencontre dans le métamorphisme de très bas degré et les pegmatites au lithium.",
+    "3-2": "C'est le cas inverse : un feuillet 2:1 trioctaédrique et un feuillet d'hydroxyde dioctaédrique. Une seule espèce répond à cette définition, connue presque exclusivement à Franklin (New Jersey).",
+    "3-3": "Les chlorites les plus communes ont deux feuillets trioctaédriques (Mg, Fe…). Le feuillet d'hydroxyde intercalé fixe l'espacement à 14 Å ; elles colorent en vert les schistes et les ardoises.",
+    "4-0": "Des interstratifiés voient alterner deux types de feuillets dans un même cristal, régulièrement (ABAB) ou au hasard ; ils marquent une transformation en cours, comme la smectite qui devient illite en s'enfouissant.",
+    "5-0": "Des rubans de feuillets 2:1, qui basculent régulièrement, délimitent des canaux remplis d'eau : ce sont des fibres et non des plaquettes. On les trouve dans les lacs et les sols riches en Mg et en silice.",
+    "6-0": "Aucun empilement de feuillets ici : sphères creuses (allophane) et tubes (imogolite), de quelques nanomètres, constituent les premiers produits de l'altération des verres volcaniques.",
   };
   // étiquette courte d'une famille (sommaire du haut)
   const COURT = ["1:1", "2:1 dioct.", "2:1 trioct.", "2:1:1", "Interstratifiés", "Fibreuses", "Para-cristallins"];
@@ -51,7 +51,7 @@
   // (Walker 1956) ; halloysite : 7,2 Å sèche, 10 Å hydratée (Joussein et al. 2005) — mêmes valeurs que la 3D (espacement-basal.js)
   const VARIABLE = { "0-1": [7.2, 10.1], "1-1": [9.7, 19], "1-2": [9.7, 19], "2-1": [9.7, 19], "2-2": [9.7, 19], "1-3": [9.0, 14.8], "2-3": [9.0, 14.8] };
   const SANS_ESPACE = {
-    "5-0": "sans objet : des rubans et des canaux, pas d'espace entre feuillets",
+    "5-0": "sans objet : rubans et canaux, sans espace entre feuillets",
     "6-0": "sans objet : pas de feuillets empilés",
   };
   // nombres d'un texte de VAL_ESP (« 2,55–2,57 sèche ; ≈ 2,1 hydratée ») ; ce qui est entre parenthèses est ignoré
@@ -88,7 +88,7 @@
     const pos = (x) => Math.max(0, Math.min(100, (x - E.min) / (E.max - E.min) * 100));
     if (!v || v.vide) return `<div class="argv-j"><span class="argv-j-nom">${E.nom}</span>
       <span class="argv-j-piste argv-j-vide"></span><span class="argv-j-val">${v && v.vide ? `<small>${v.vide}</small>` : "non renseignée"}</span></div>`;
-    const val = v.a === v.b ? fr(v.a, E.n) : `${fr(v.a, E.n)} – ${fr(v.b, E.n)}`;
+    const val = v.a === v.b ? fr(v.a, E.n) : `${fr(v.a, E.n)} à ${fr(v.b, E.n)}`;
     const graduations = [];
     for (let x = E.min; x <= E.max + 1e-9; x += E.pas) graduations.push(`<i style="left:${pos(x)}%"></i>`);
     const points = (v.pts || []).map((p) => `<b class="argv-j-pt" data-e="${p.eid}" style="left:${pos((p.a + p.b) / 2)}%"></b>`).join("");
@@ -96,9 +96,9 @@
     // bulle : la valeur du groupe, l'échelle, et ce que l'on sait espèce par espèce
     const lignes = (v.esp || []).map((p) => `<li data-e="${p.eid}"><b>${esc(ESPECES[p.eid].nom.split(" (")[0])}</b> ${p.txt ? esc(p.txt) : "<i>pas de mesure propre</i>"}</li>`).join("");
     BULLES[`${cle}:${k}`] = `<p class="argv-b-t">${E.nom} de ce groupe : <b>${val} ${E.unite}</b></p>
-      <p class="argv-b-n">Échelle commune à tous les groupes : ${fr(E.min)} à ${fr(E.max)} ${E.unite}.${k === "cec" || k === "eau"
-        ? " Valeur donnée pour l'ensemble des espèces du groupe." : k === "d001" && v.variable ? " Dans l'eau, une smectite peut dépasser 40 Å." : ""}</p>
-      ${k === "eau" ? `<p class="argv-b-n">Pas de mesure espèce par espèce : c'est l'ordre de grandeur du groupe.</p>`
+      <p class="argv-b-n">Même échelle pour tous les groupes : de ${fr(E.min)} à ${fr(E.max)} ${E.unite}.${k === "cec" || k === "eau"
+        ? " Ce chiffre vaut pour tout le groupe." : k === "d001" && v.variable ? " Plongée dans l'eau, une smectite peut atteindre plus de 40 Å." : ""}</p>
+      ${k === "eau" ? `<p class="argv-b-n">Aucune mesure n'est donnée espèce par espèce : seul l'ordre de grandeur du groupe est indiqué.</p>`
         : lignes ? `<p class="argv-b-n">Espèce par espèce${v.pts ? " (un point par espèce mesurée)" : ""} :</p><ul>${lignes}</ul>` : ""}`;
     return `<div class="argv-j" data-bulle="${cle}:${k}">
       <span class="argv-j-nom">${E.nom}</span>
@@ -131,11 +131,12 @@
       </div>
       ${window.ArgilesComparer ? ArgilesComparer.html(g) : ""}
       <div class="argv-carac">${["d001", "cec", "eau", "dens"].map((k) => jauge(cle, k, c[k], coul)).join("")}</div>
+      ${window.ArgilesDevenir ? ArgilesDevenir.html(cle) : ""}
     </section>`;
   }
 
   function html() {
-    const sommaire = CLASSIF.map((fam, fi) => `<button class="min-chip" data-argfam="${fi}">${COURT[fi] || fam.famille.split(" — ")[0]}</button>`).join("");
+    const sommaire = CLASSIF.map((fam, fi) => `<button class="min-chip" data-argfam="${fi}">${COURT[fi] || fam.famille.split(/ [—:] /)[0]}</button>`).join("");
     const familles = CLASSIF.map((fam, fi) => {
       const nbEsp = fam.groupes.reduce((s, g) => s + g.especes.length, 0);
       return `<section class="argv-fam" id="argfam-${fi}">
@@ -148,36 +149,36 @@
     return `<div class="argv" data-argv>
     <div class="card hero">
       <h1>Les argiles</h1>
-      <p class="sub argv-intro">Ce que <b>deviennent les minéraux quand ils s'altèrent</b> : de minuscules cristaux en feuillets
-        (des <b>phyllosilicates</b>, comme les micas), qui font la terre des champs, la poterie et le retrait-gonflement des maisons.</p>
+      <p class="sub argv-intro">Voici ce que deviennent les minéraux lorsqu'ils s'altèrent : de minuscules cristaux en feuillets
+        (<b>phyllosilicates</b>, dont font partie les micas), qui forment la terre arable, la céramique et le retrait-gonflement des sols bâtis.</p>
       <div class="min-chips argv-sommaire">${sommaire}</div>
       <details class="cmp-puce"><summary>Comment lire la classification</summary>
         <p class="crumb">Classe des <b>silicates</b> <span>→</span> sous-classe des <b>phyllosilicates</b>
-          <span>→</span> familles par type d'empilement <span>→</span> groupes <span>→</span> espèces.</p>
-        <p>Chaque groupe est défini par quatre critères structuraux, ceux du tableau de référence de Wikipédia.
-        <b>Feuillet O</b> : rempli d'Al³⁺ (2 sites sur 3) = <b>dioctaédrique</b>, ou de Mg²⁺/Fe²⁺ (3 sites sur 3) = <b>trioctaédrique</b>.
-        <b>Te/Si</b> mesure les substitutions dans le feuillet <b>tétraédrique</b> (Te/Si = 4 ou 8 → aucune ; &lt; 4 ou &lt; 8 → de l'Al
-        remplace du Si). <b>Oc</b> mesure celles du feuillet <b>octaédrique</b> (Oc = 12/12 → aucune). Ces substitutions créent un
-        <b>déficit de charge</b> que compensent des cations entre les feuillets : c'est ce qui décide si l'argile <b>gonfle</b>
+          <span>→</span> familles d'après l'agencement des feuillets <span>→</span> groupes <span>→</span> espèces.</p>
+        <p>Chaque groupe est fixé par quatre critères structuraux, repris du tableau de référence de Wikipédia.
+        <b>Feuillet O</b> : occupé par Al³⁺ (2 sites sur 3) = <b>dioctaédrique</b>, ou par Mg²⁺/Fe²⁺ (3 sites sur 3) = <b>trioctaédrique</b>.
+        <b>Te/Si</b> recense les substitutions du feuillet <b>tétraédrique</b> (Te/Si = 4 ou 8 → aucune ; &lt; 4 ou &lt; 8 → de l'Al
+        prend la place du Si). <b>Oc</b> recense celles du feuillet <b>octaédrique</b> (Oc = 12/12 → aucune). Ces substitutions génèrent un
+        <b>déficit de charge</b>, comblé par des cations placés entre les feuillets : il détermine si l'argile <b>gonfle</b>
         (espacement variable) ou reste bloquée (espacement stable).</p>
       </details>
     </div>
     ${familles}
     <div class="card">
       <h2>Pour aller plus loin : les trois façons de naître, et deux sens du mot « argile »</h2>
-      <p>Une argile peut apparaître dans un sol de trois manières. Par <b>héritage</b> : elle était déjà dans la roche, l'altération
-      la libère telle quelle (l'illite des marnes). Par <b>transformation</b> : un minéral en feuillets existant se modifie pas à
-      pas — un mica perd son potassium et devient vermiculite, puis smectite. Par <b>néoformation</b> : elle cristallise à partir
-      des ions dissous dans l'eau du sol (la kaolinite des climats tropicaux, ≥ 22 °C).</p>
-      <p>Ce qui distingue les familles, c'est l'empilement des deux briques de base — le feuillet <b>T</b> (tétraèdres de silice)
-      et le feuillet <b>O</b> (octaèdres d'aluminium, magnésium ou fer) — et surtout la <b>charge électrique</b> du feuillet, qui
-      décide de ce qui se loge entre les couches : rien (talc), de l'eau qui fait gonfler (smectites), du potassium qui bloque
-      (illites, micas). Un feuillet O rempli d'Al³⁺ (2 sites sur 3) est <b>dioctaédrique</b> ; rempli de Mg²⁺/Fe²⁺ (3 sites sur 3),
-      il est <b>trioctaédrique</b> — presque chaque groupe existe dans les deux versions.</p>
-      <p>Attention enfin au mot lui-même : « argile » a <b>deux sens</b>. Un sens <b>granulométrique</b> (toute particule de moins
-      de 2 µm, quelle que soit sa nature) et un sens <b>minéralogique</b> (les phyllosilicates de cette page, même en gros
-      cristaux). Les micas vrais et les serpentines, souvent visibles à l'œil nu, sont rangés ici car ils partagent la même
-      structure en feuillets. Source : nomenclature <b>AIPEA / IMA</b> (Guggenheim et al.).</p>
+      <p>Une argile se forme dans un sol selon trois voies. Par <b>héritage</b>, elle préexistait dans la roche et l'altération
+      la met en liberté sans modification (l'illite des marnes). Par <b>transformation</b>, un minéral à feuillets se modifie
+      progressivement : un mica perd son potassium, devient vermiculite puis smectite. Par <b>néoformation</b>, elle cristallise
+      à partir des ions dissous dans l'eau du sol (la kaolinite des climats tropicaux, ≥ 22 °C).</p>
+      <p>Les familles se distinguent par l'agencement de leurs deux briques élémentaires, le feuillet <b>T</b> (tétraèdres de silice)
+      et le feuillet <b>O</b> (octaèdres d'aluminium, de magnésium ou de fer), et surtout par la <b>charge électrique</b> du feuillet,
+      qui conditionne ce qui s'intercale entre les couches : rien (talc), de l'eau provoquant un gonflement (smectites), du potassium
+      assurant un blocage (illites, micas). Un feuillet O occupé par Al³⁺ (2 sites sur 3) est <b>dioctaédrique</b> ; occupé par Mg²⁺/Fe²⁺
+      (3 sites sur 3), il est <b>trioctaédrique</b> : presque chaque groupe existe sous les deux versions.</p>
+      <p>Le mot lui-même recouvre <b>deux sens</b>. Au sens <b>granulométrique</b>, l'argile désigne toute particule de moins de 2 µm,
+      quelle que soit sa nature ; au sens <b>minéralogique</b>, ce sont les phyllosilicates de cette page, même en gros cristaux.
+      Les micas vrais et les serpentines, souvent visibles à l'œil nu, figurent ici car ils partagent cette structure en feuillets.
+      Source : nomenclature <b>AIPEA / IMA</b> (Guggenheim et al.).</p>
     </div>
     <details class="card cmp-puce argv-sources" data-argv-sources><summary>Sources des modèles 3D</summary>
       <ul><li>Chargement…</li></ul></details>

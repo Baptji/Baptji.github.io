@@ -119,12 +119,12 @@
       titre: k === "eau" ? "Le bord d'une marche du cristal" : "Le même bord, dans l'acide",
       texte: k === "eau"
         ? "Des groupes phosphate PO₄ (le phosphore au centre de quatre oxygènes) tenus par le calcium ; dans certains creux, un ion fluorure F⁻ (cerclé, au bord) à la place d'un calcium. Trois PO₄, cinq calcium, un fluor : Ca₅(PO₄)₃F."
-        : "L'acide libère des ions H⁺ (en vert) et des ions chlorure Cl⁻ (en gris), qui ne réagissent pas. Le fluorure du bord est cerclé.",
+        : "En se dissociant, l'acide libère des ions H⁺ (en vert) et des ions chlorure Cl⁻ (en gris), ces derniers restant inactifs. Le fluorure du bord est cerclé.",
     });
     const m1 = { x: M0[0] + 8, y: M0[1] - 6 }, hO = (q, an) => Object.assign(versA(q, an, 13), { t: "h" });
     e.push(suite(e[0], {
       titre: "Le fluor et un calcium partent d'abord",
-      texte: `Le fluorure du bord s'en va, et deux H⁺ prennent la place d'un calcium : la surface s'appauvrit vite en fluor et en calcium.${k === "eau" ? " Ces H⁺ viennent de l'acide carbonique, le CO₂ dissous dans l'eau du sol : chacun laisse un ion bicarbonate HCO₃⁻." : ""}`,
+      texte: `Le fluorure du bord s'éloigne, et deux H⁺ se substituent à un calcium : la surface s'appauvrit rapidement en fluor et en calcium.${k === "eau" ? " Ces protons proviennent de l'acide carbonique, c'est-à-dire du CO₂ dissous dans l'eau du sol : chacun libère un ion bicarbonate HCO₃⁻." : ""}`,
       A: { F: { x: 396, y: 128 }, halo: { x: 396, y: 128, o: 0 }, Ha: hO(t0.T0, -60), Hb: hO(t0.T1, 60), M: { x: 520, y: 92 },
         Wu: { x: 520, y: 60, a: -90 }, Wr: { x: 552, y: 92, a: 0 }, Wa: { x: 520, y: 124, a: 90 }, Wb: { x: 488, y: 92, a: 180 } },
       B: { fc: 0, mUr: 0, mDr: 0, mV: 0, mA: 0, h0: oh("T0", "Ha"), h1: oh("T1", "Hb"), wa: we("Wa"), wb: we("Wb") },
@@ -133,7 +133,7 @@
     const t3 = posT(250, 92);
     e.push(suite(e[1], {
       titre: "La couche appauvrie se défait",
-      texte: `Privé de fluor et de calcium, le bord ne tient plus : ${k === "acide" ? "les H⁺ y pénètrent" : "l'eau s'y fixe"}, les dernières liaisons Ca–O du phosphate lâchent, et il part en H₂PO₄⁻. C'est l'étape lente ; ses liaisons P–O, elles, ne cassent pas.`,
+      texte: `Privé de fluor et de calcium, le bord ne se maintient plus : ${k === "acide" ? "les H⁺ y pénètrent" : "l'eau s'y fixe"}, les dernières liaisons Ca-O du phosphate se rompent, et il s'éloigne sous forme de H₂PO₄⁻. C'est l'étape lente ; ses liaisons P-O, elles, restent intactes.`,
       A: Object.assign({}, t3, { Ha: hO(t3.T0, -45), Hb: hO(t3.T1, 45) }),
       B: { c0: 0, c1: 0, c2: 0, c3: 0, tV: 0, tA: 0 }, h: Object.assign({ cours: true }, H),
       L: { lT: { x: 250, y: 140, t: "H₂PO₄⁻", m: 1 } },
@@ -141,7 +141,7 @@
     const v = m2P(0, NS - 1);
     e.push(suite(e[2], {
       titre: "La marche recule d'un cran",
-      texte: `Le calcium voisin se retrouve au bord, et tout recommence. Ce qui part avec l'eau : du calcium, du phosphate et du fluorure ; c'est la source du phosphore des sols et des rivières.`,
+      texte: `Le calcium voisin atteint le bord, et le cycle se répète. Partent ainsi dans l'eau : calcium, phosphate et fluorure, qui alimentent le phosphore des sols et des rivières.`,
       A: { halo: { x: v[0], y: v[1], o: 1, r: 17 } }, h: H,
     }));
     return e;
@@ -173,8 +173,8 @@
     e.push({ A, B, L: {}, h: { v: hv === null ? null : 0 },
       titre: k === "eau" ? "Le bord d'une marche du cristal" : "Le même bord, dans l'acide",
       texte: k === "eau"
-        ? (d.textes.debut || `Des groupes sulfate SO₄ (le soufre au centre de quatre oxygènes) tenus par le ${nomC}, chaque ion ${ion} entre ${d.textes.voisins || "une dizaine d'"}oxygènes. Le ${nomC} du bord est cerclé ; l'eau le touche déjà.`)
-        : "L'acide libère des ions H⁺ (en vert) et des ions chlorure Cl⁻ (en gris), qui ne réagissent pas. Le même bord, le même ion cerclé.",
+        ? (d.textes.debut || `Des groupes sulfate SO₄ (soufre entouré de quatre oxygènes) sont maintenus par le ${nomC}, chaque ion ${ion} étant cerné de ${d.textes.voisins || "une dizaine d'"} oxygènes. Le ${nomC} de la bordure est cerclé ; l'eau le touche déjà.`)
+        : "En se dissociant, l'acide libère des ions H⁺ (en vert) et des ions chlorure Cl⁻ (en gris), ces derniers restant inactifs. Le même bord, avec le même ion cerclé.",
     });
     if (d.textes.reste) {   // 11/10/2026 : monazite : les H⁺ se posent sur les oxygènes du phosphate, mais les terres rares ne partent pas
       const hO = (q, an) => ({ t: "h", x: q.x + 13 * Math.cos(an * Math.PI / 180), y: q.y + 13 * Math.sin(an * Math.PI / 180) });
@@ -182,18 +182,18 @@
       const oh = (a, b) => ({ a, b, k: "oh" });
       e.push(suite(e[0], {
         titre: "Des H⁺ se posent sur les oxygènes",
-        texte: `Des H⁺ se fixent sur les oxygènes qui tiennent le ${nomC} du bord.${k === "eau" && d.textes.eauH ? " " + d.textes.eauH : ""}`,
+        texte: `Les oxygènes qui retiennent le ${nomC} du bord captent des H⁺.${k === "eau" && d.textes.eauH ? " " + d.textes.eauH : ""}`,
         A: { Ha: hO(t0.T0, -60), Hb: hO(t0.T1, 60) }, B: { h0: oh("T0", "Ha"), h1: oh("T1", "Hb") },
         L: k === "eau" ? { lB: { x: 470, y: 46, t: "HCO₃⁻", m: 1 } } : {},
       }));
       e.push(suite(e[1], {
         titre: `Le ${nomC} ne part pas`,
-        texte: `${d.textes.reste} ${o.lettres ? "" : "Aucune vitesse de départ n'a été mesurée à 25 °C."}`.trim(),
+        texte: `${d.textes.reste} ${o.lettres ? "" : "Nulle vitesse de départ n'a pu être mesurée à 25 °C."}`.trim(),
         h: Object.assign({ cours: true }, H),
       }));
       e.push(suite(e[2], {
         titre: "Les H⁺ repartent, la marche ne bouge pas",
-        texte: `Les H⁺ retournent à l'eau : le bord est le même qu'au début.${d.textes["fin_" + k] ? " " + d.textes["fin_" + k] : ""}`,
+        texte: `Les H⁺ regagnent l'eau : le bord redevient identique à celui du départ.${d.textes["fin_" + k] ? " " + d.textes["fin_" + k] : ""}`,
         A: { Ha: { t: "hp", x: 430, y: 120 }, Hb: { t: "hp", x: 470, y: 60 } }, B: { h0: 0, h1: 0 }, L: { lB: 0 }, h: H,
       }));
       return e;
@@ -201,10 +201,10 @@
     const anNom = d.textes.anionNom || "sulfate", anIon = d.textes.anionIon || "SO₄²⁻";   // vivianite : phosphate (11/10/2026)
     const t3 = posT(250, 92), tE = d.onglets.eau && d.onglets.eau.t, tA = d.onglets.acide && d.onglets.acide.t;
     const plusVite = k !== "acide" || !tE || !tA ? "" : Math.abs(tE / tA - 1) < 0.05
-      ? " Les H⁺ n'y changent rien : on n'a mesuré aucun effet du pH." : ` Les H⁺ ne font qu'aider un peu : ${nb(tE / tA, O)} fois plus vite qu'à pH 7.`;
+      ? " Les H⁺ n'y changent rien : on n'a mesuré aucun effet du pH." : ` Les H⁺ n'accélèrent que légèrement la dissolution : ${nb(tE / tA, O)} fois plus vite qu'à pH 7.`;
     e.push(suite(e[0], {
       titre: `Le ${nomC}, puis le ${anNom}, partent`,
-      texte: `L'eau entoure le ${nomC} du bord : ses liaisons ${cat}–O avec le cristal lâchent et il part en ${ion}. Le ${anNom}, qui ne tient plus que par ses voisins, part à son tour, entier : ${anIon}. Ses liaisons ${an}–O ne cassent pas.${plusVite} Le temps est celui ${d.textes.unite || "d'un groupe " + d.formule} de la surface.`,
+      texte: `L'eau cerne le ${nomC} de la bordure : ses liaisons ${cat}-O avec le cristal cèdent, et il s'échappe en ${ion}. Le ${anNom}, qui ne tient plus que par ses voisins, quitte la structure à son tour, d'un bloc : ${anIon}. Ses liaisons ${an}-O demeurent intactes.${plusVite} La durée correspond à celle ${d.textes.unite || "d'un groupe " + d.formule} de la surface.`,
       A: Object.assign({}, t3, { halo: { x: 520, y: 92, o: 0 }, M: { x: 520, y: 92 },
         Wu: { x: 520, y: 60, a: -90 }, Wr: { x: 552, y: 92, a: 0 }, Wa: { x: 520, y: 124, a: 90 }, Wb: { x: 488, y: 92, a: 180 } }),
       B: { mUr: 0, mDr: 0, mV: 0, mA: 0, c0: 0, c1: 0, c2: 0, c3: 0, tV: 0, tA: 0, wa: we("Wa"), wb: we("Wb") }, h: Object.assign({ cours: true }, H),
@@ -213,7 +213,7 @@
     const v = m2P(0, NS - 1);
     e.push(suite(e[1], {
       titre: "La marche recule d'un cran",
-      texte: d.textes.recule || `Le ${nomC} voisin se retrouve au bord, et tout recommence. Mais l'eau se sature vite en ${nomC} et en sulfate : la dissolution ralentit puis s'arrête. ${majuscule(d.la)} dure parce qu'elle est peu soluble, pas parce que ses liaisons sont lentes à lâcher.`,
+      texte: d.textes.recule || `Le ${nomC} voisin atteint la bordure, et le cycle repart. Toutefois, l'eau se sature rapidement en ${nomC} et en sulfate : la dissolution ralentit puis cesse. ${majuscule(d.la)} persiste parce que le minéral est peu soluble, et non parce que ses liaisons résistent.`,
       A: { halo: { x: v[0], y: v[1], o: 1, r: 17 } }, h: H,
     }));
     return e;
@@ -258,24 +258,24 @@
     const B = { s0: so("T0"), s1: so("T1"), s2: so("T2"), s3: so("T3"), w0: we("W0"), w1: we("W1"), w2: we("W2"), w3: we("W3") };
     e.push({ A, B, L: {}, h: { v: hv === null ? null : 0 },
       titre: "Le bord d'une marche du cristal",
-      texte: T.debut || `Le ${nomC} ne touche aucun sulfate : dans le cristal même, il est déjà entouré de six molécules d'eau (quatre dessinées). Ses eaux tiennent les sulfates voisins par leurs hydrogènes : de simples liaisons hydrogène. Le ${nomC} du bord est cerclé.`,
+      texte: T.debut || `Le ${nomC} ne touche aucun sulfate : au sein du cristal, il s'entoure déjà de six molécules d'eau (quatre dessinées). Ces eaux maintiennent les sulfates voisins par leurs hydrogènes, simples liaisons hydrogène. Le ${nomC} de la bordure est cerclé.`,
     });
     e.push(suite(e[0], {
       titre: `Le ${nomC} part avec ses eaux`,
-      texte: `L'eau du sol prend la place des sulfates auprès des hydrogènes : les liaisons hydrogène lâchent, et le ${nomC} s'en va tel quel, en ${d.hydrate}. Aucune liaison ${cat}–O ne casse.${T.lent ? " " + T.lent : ""}`,
+      texte: `L'eau du sol supplante les sulfates au contact des hydrogènes : les liaisons hydrogène se relâchent, et le ${nomC} part intact, en ${d.hydrate}. Aucune liaison ${cat}-O ne se rompt.${T.lent ? " " + T.lent : ""}`,
       A: Object.assign({ halo: { x: 520, y: 92, o: 0 } }, posM(520, 92)),
       h: Object.assign({ cours: true }, H),
       L: { lM: { x: 520, y: 148, t: d.hydrate, m: 1 } },
     }));
     e.push(suite(e[1], {
       titre: "Le sulfate part, entier",
-      texte: "Le sulfate du bord ne tient plus que par les eaux de ses autres voisins : il part à son tour, SO₄²⁻, sans qu'aucune liaison S–O ne casse.",
+      texte: "Le sulfate de la bordure ne tient plus que par les eaux de ses autres voisins : il s'éloigne à son tour, sous la forme SO₄²⁻, sans qu'aucune liaison S-O ne soit rompue.",
       A: posT(250, 92), L: { lT: { x: 250, y: 132, t: "SO₄²⁻", m: 1 } },
     }));
     const v = tP(0, NS - 2);
     e.push(suite(e[2], {
       titre: "La marche recule d'un cran",
-      texte: T.recule || `Le ${nomC} voisin se retrouve au bord, et tout recommence.`,
+      texte: T.recule || `Le ${nomC} suivant atteint la bordure, et le processus reprend.`,
       A: { halo: { x: v[0], y: v[1], o: 1, r: 17 } }, h: H,
     }));
     return e;
@@ -284,12 +284,12 @@
     const { cat, vC } = vals(d), T = d.textes, nomC = T.nomCation || cat;
     return { barres: null, temps: null, duo: [
       { titre: "S–O", sous: `liaison ${O.nature("S–O")} (électrons en partie partagés)`,
-        schema: { type: "partage", a: "S", b: "O", aria: "Soufre et oxygène partagent des électrons" },
+        schema: { type: "partage", a: "S", b: "O", aria: "Électrons mis en commun entre soufre et oxygène" },
         li: [`Ionique ${O.fraction(O.ionicite("S", "O"))} seulement (Pauling) : le groupe sulfate part entier.`] },
-      { titre: `${cat}–O de l'eau`, sous: `liaison ${O.nature(`${cat}–O`)} (électrons cédés)`,
-        schema: { type: "don", a: cat, la: `${cat}${T.charge || "²⁺"}`, ra: 20, fa: 12, b: "O", aria: `Le ${nomC} cède ses électrons à ses molécules d'eau` },
-        li: [`Ionique ${O.fraction(O.ionicite(cat, "O"))} (Pauling) ; chaque liaison vaut ${String(vC).replace(".", ",")} de liaison simple. Elle ne casse pas : le ${nomC} part avec ses eaux.`,
-          "Ce qui lâche, ce sont les liaisons hydrogène entre ces eaux et les sulfates, bien plus faibles qu'une liaison entre ions."] },
+      { titre: `${cat}-O de l'eau`, sous: `liaison ${O.nature(`${cat}–O`)} (électrons cédés)`,
+        schema: { type: "don", a: cat, la: `${cat}${T.charge || "²⁺"}`, ra: 20, fa: 12, b: "O", aria: `Le ${nomC} transfère ses électrons aux molécules d'eau` },
+        li: [`Caractère ionique ${O.fraction(O.ionicite(cat, "O"))} (Pauling) ; chaque liaison vaut ${String(vC).replace(".", ",")} de liaison simple. Elle reste intacte : le ${nomC} quitte la structure avec ses molécules d'eau.`,
+          "Les liaisons hydrogène entre ces molécules d'eau et les sulfates lâchent : elles sont bien plus faibles qu'une liaison entre ions."] },
     ] };
   }
 
@@ -308,11 +308,11 @@
     }
     const duo = [
       { titre: "P–O", sous: `liaison ${O.nature("P–O")} (électrons en partie partagés)`,
-        schema: { type: "partage", a: "P", b: "O", aria: "Phosphore et oxygène partagent des électrons" },
-        li: [`Ionique ${O.fraction(O.ionicite("P", "O"))} seulement (Pauling) : le phosphore partage ses électrons avec ses quatre oxygènes, plus d'une liaison simple chacun. Le groupe phosphate part entier.`] },
+        schema: { type: "partage", a: "P", b: "O", aria: "Électrons mis en commun entre phosphore et oxygène" },
+        li: [`Caractère ionique ${O.fraction(O.ionicite("P", "O"))} seulement (Pauling) : le phosphore met ses électrons en commun avec ses quatre oxygènes, plus d'une liaison simple pour chacun. Le groupe phosphate se détache en bloc.`] },
       { titre: "Ca–O", sous: `liaison ${O.nature("Ca–O")} (électrons cédés)`,
-        schema: { type: "don", a: "Ca", la: "Ca²⁺", ra: 18, fa: 12, b: "O", aria: "Le calcium cède ses électrons aux phosphates" },
-        li: [`Ionique ${O.fraction(O.ionicite("Ca", "O"))} (Pauling). Sa charge se répartit sur sept à neuf oxygènes : chaque liaison Ca–O vaut un quart de liaison simple ou moins. C'est elle qui lâche.`] },
+        schema: { type: "don", a: "Ca", la: "Ca²⁺", ra: 18, fa: 12, b: "O", aria: "Les phosphates reçoivent les électrons du calcium" },
+        li: [`Liaison à dominante ionique ${O.fraction(O.ionicite("Ca", "O"))} (Pauling) ; la charge s'étale sur sept à neuf oxygènes, si bien qu'une liaison Ca-O atteint au plus un quart de liaison simple. Elle se rompt la première.`] },
     ];
     return { duo, barres: null, temps: null };
   }
@@ -322,7 +322,7 @@
     decor, etapes, energie,
     legende: (d) => d && d.textes && d.textes.hydrate ? { "e:O": "oxygène du sulfate", "t:eau": "molécule d'eau (du cristal ou du sol)" } : Object.assign(d && d.textes && d.textes.sansF ? { "e:O": "oxygène du cristal", "i:Cl−": "Cl⁻, ne réagit pas" }
       : { "e:O": "oxygène du cristal", "e:F": "fluorure (F⁻)", "i:Cl−": "Cl⁻, ne réagit pas" },
-      { "t:avant": "atome juste devant le plan du dessin (en contour)", "t:arriere": "couche juste derrière le plan du dessin (plus petite, pâle)" }),
-    aria: (d) => `Coupe du bord d'un cristal d'${d.nom}, étape par étape`,
+      { "t:avant": "atome placé en avant du plan de la figure, figuré en contour", "t:arriere": "couche située derrière le plan de la figure, plus petite et plus claire" }),
+    aria: (d) => `Vue en coupe du bord d'un cristal d'${d.nom}, étape après étape`,
   });
 })();

@@ -11,58 +11,40 @@ const MIN_F = {
 
   // ─────────────────────────────── Quartz ───────────────────────────────
   quartz: {
-    forme: `Le quartz est un empilement d'hélices de tétraèdres SiO₄ vissées autour de l'axe c, toutes dans le
-      même sens. Aucune direction n'y est plus faible qu'une autre : le quartz n'a <b>pas de clivage</b> et casse
-      en écailles courbes (cassure conchoïdale). Les faces qui poussent le plus vite sont celles du prisme,
-      parallèles aux hélices, et elles gardent la trace de chaque arrêt de croissance sous forme de
-      <b>stries horizontales</b> — le signe auquel on le reconnaît sur le terrain. Le sens de l'hélice, lui,
-      se voit à l'autre bout de l'échelle : il place les petites faces <i>x</i> d'un côté ou de l'autre des arêtes
-      et fait du cristal un quartz droit ou un quartz gauche.`,
-    intro: `Le quartz cristallise dans trois situations très différentes, et il n'a pas la même allure dans les
-      trois : serré entre les autres minéraux d'un granite, il n'a aucune face ; libre dans une fissure, il donne
-      les prismes du schéma ci-dessus ; dissous puis reprécipité entre les grains d'un sable, il ne se voit plus
-      qu'au microscope.`,
+    forme: `Le quartz se compose d'hélices de tétraèdres SiO₄ enroulées autour de l'axe c, toutes orientées dans le même sens. Aucune direction ne se révèle plus fragile qu'une autre : le quartz ne présente <b>pas de clivage</b> et se brise en écailles courbes (cassure conchoïdale). Les faces qui croissent le plus vite sont celles du prisme, parallèles aux hélices, et conservent la trace de chaque pause de croissance sous forme de <b>stries horizontales</b>, indice qui permet de l'identifier sur le terrain. Le sens de l'hélice se lit, lui, à l'autre bout de l'échelle : les petites faces <i>x</i> se placent d'un côté ou de l'autre des arêtes, faisant du cristal un quartz droit ou gauche.`,
+    intro: `Le quartz se forme selon trois configurations contrastées, et son aspect varie en conséquence : coincé entre les autres minéraux d'un granite, il reste sans face ; dans une fissure libre, il adopte les prismes du schéma ci-dessus ; dissous puis reprécipité entre les grains d'un sable, il n'est plus visible qu'au microscope.`,
     scenarios: [
       { nom: "Dans un granite",
-        texte: `Dans un magma riche en silice, le quartz est le <b>dernier</b> à cristalliser. Quand vient son tour,
-          les feldspaths et les micas occupent déjà toute la place : il ne fait que remplir les vides qui restent.
-          C'est pourquoi les grains gris vitreux d'un granite n'ont aucune face propre, alors que la charpente
-          atomique, elle, est exactement la même que celle d'un beau prisme de filon.`,
+        texte: `Dans un magma riche en silice, le quartz cristallise en <b>dernier</b>. Lorsque vient son tour, les feldspaths et les micas occupent déjà tout le volume : il ne fait que combler les vides restants. C'est pourquoi les grains gris et vitreux d'un granite ne présentent aucune face propre, bien que leur réseau atomique soit identique à celui d'un beau prisme de filon.`,
         cond: { type: "pt", echelle: "croute", courbes: ["graniteEau"], fondu: ["graniteEau"],
           bande: [650, 720, 0.2],
           etiquettes: [["graniteEau", 470, 0.62, -72]],
           chemin: [
-            { T: 830, P: 0.80, n: 1, t: "La croûte épaissie par une collision fond partiellement vers 28–30 km : le liquide produit est saturé en silice." },
-            { T: 800, P: 0.22, n: 2, t: "Plus léger que son encaissant, le magma monte et s'arrête vers 7 km de profondeur." },
-            { T: 690, P: 0.20, n: 3, t: "Entre ≈ 720 et 650 °C, la silice qui reste cristallise en quartz dans les interstices : environ 100 000 ans pour un pluton de quelques kilomètres." },
+            { T: 830, P: 0.80, n: 1, t: "À une profondeur voisine de 28 à 30 km, la croûte épaissie par collision entre partiellement en fusion ; le liquide obtenu est saturé en silice." },
+            { T: 800, P: 0.22, n: 2, t: "Moins dense que son encaissant, le magma remonte et s'immobilise vers 7 km de profondeur." },
+            { T: 690, P: 0.20, n: 3, t: "Entre ≈ 720 et 650 °C, la silice résiduelle se fixe en quartz dans les interstices : un pluton de quelques kilomètres exige environ 100 000 ans." },
           ],
-          note: "Le solidus tracé est celui d'un granite saturé en eau : sec, le même magma ne fondrait qu'au-delà de 950 °C. Chemin schématique." },
+          note: "La courbe du solidus correspond à un granite saturé en eau : à sec, le même magma ne fondrait qu'au-delà de 950 °C. Chemin schématique." },
         src: ["tuttle", "profondeur", "diffusion"] },
 
       { nom: "Dans un filon",
-        texte: `Une eau chaude qui circule dans les fractures d'un massif dissout la silice des roches
-          traversées. En remontant, elle se refroidit — et la solubilité du quartz s'effondre. Tout ce que l'eau
-          ne peut plus porter cristallise sur les parois de la fissure, où rien ne gêne la croissance :
-          c'est là, et seulement là, que le quartz prend la forme dessinée plus haut.`,
+        texte: `Dans un massif, l'eau chaude qui s'infiltre par les fractures dissout la silice des roches qu'elle traverse. Lors de la remontée, le refroidissement fait chuter brusquement la solubilité du quartz : ce que l'eau ne peut plus transporter se dépose sur les parois de la fissure, là où la croissance n'est pas gênée. C'est uniquement dans ces conditions que le quartz prend la forme représentée plus haut.`,
         cond: { type: "silice", tmax: 300, xlab: "Température de l'eau (°C)",
           chemin: [
-            { T: 300, C: 663, n: 1, t: "À 300 °C, l'eau d'une fracture est à l'équilibre avec le quartz de la roche : elle porte ≈ 660 mg de silice par litre." },
-            { T: 200, C: 663, n: 2, t: "Elle remonte et se refroidit sans rien perdre : à 200 °C, elle en porte deux fois et demie trop." },
-            { T: 150, C: 137, n: 3, t: "L'excès cristallise sur les parois — ≈ 520 mg de quartz par litre d'eau passée. Un filon d'un mètre demande le passage de beaucoup d'eau, pendant des dizaines de milliers d'années." },
+            { T: 300, C: 663, n: 1, t: "Une eau de fracture portée à 300 °C contient ≈ 660 mg de silice par litre, en équilibre avec le quartz de la roche." },
+            { T: 200, C: 663, n: 2, t: "Elle remonte en se refroidissant sans rien perdre : à 200 °C, elle en transporte deux fois et demie de trop." },
+            { T: 150, C: 137, n: 3, t: "L'excédent cristallise sur les parois, à raison de ≈ 520 mg de quartz par litre d'eau écoulée. Pour former un filon d'un mètre, il faut faire passer une grande quantité d'eau pendant des dizaines de milliers d'années." },
           ],
-          note: "Les deux courbes sont les solubilités à l'équilibre. Au-dessus d'une courbe, l'eau est sursaturée et le minéral correspondant précipite ; au-dessous, il se dissout." },
+          note: "Les deux courbes indiquent les solubilités d'équilibre : l'eau se trouve sursaturée au-dessus d'une courbe, et le minéral associé précipite ; en dessous, il se dissout." },
         src: ["rimstidt", "fournier", "siliceChaud"] },
 
       { nom: "En ciment d'un grès",
-        texte: `Un sable de quartz enfoui se tasse, puis chauffe. Au-delà de 70 à 80 °C, la silice dissoute dans
-          l'eau des pores se redépose <b>sur les grains eux-mêmes</b>, dans le prolongement exact de leur réseau :
-          chaque grain s'entoure d'une auréole qui vient souder ses voisins. Le sable devient grès. Au microscope,
-          une fine ligne de poussière marque encore la limite du grain d'origine.`,
+        texte: `Enfoui, un sable de quartz se tasse et se réchauffe. Au-delà de 70 à 80 °C, la silice dissoute dans l'eau des pores se redépose <b>directement sur les grains</b>, en prolongeant leur réseau : chaque grain se couvre d'une auréole qui soude ses voisins et transforme le sable en grès. Au microscope, une mince ligne de poussière trahit encore les contours du grain initial.`,
         cond: { type: "enfouissement", tmax: 120, zmax: 4, seuils: ["quartz"],
           chemin: [
-            { age: 120, z: 0, n: 1, t: "Le sable se dépose sur une plate-forme marine." },
-            { age: 70, z: 2.4, n: 2, t: "Enfoui sous 2 à 3 km de sédiments, il atteint 70–80 °C." },
-            { age: 20, z: 3.2, n: 3, t: "La cimentation par le quartz se fait dans cette fenêtre de température : elle dure des millions d'années et ferme la porosité." },
+            { age: 120, z: 0, n: 1, t: "Le sable se met en place sur une plate-forme marine." },
+            { age: 70, z: 2.4, n: 2, t: "Enfoui sous 2 à 3 km de sédiments, il parvient à 70 à 80 °C." },
+            { age: 20, z: 3.2, n: 3, t: "La cimentation par le quartz s'opère dans cette plage de température : elle se prolonge pendant des millions d'années et colmate la porosité." },
           ] },
         src: ["walderhaug", "gradient"] },
     ],
@@ -70,130 +52,91 @@ const MIN_F = {
 
   // ─────────────────────────────── Calcite ───────────────────────────────
   calcite: {
-    forme: `La calcite empile des plans de calcium et des plans de groupes CO₃ triangulaires, tous couchés à plat
-      et perpendiculaires à l'axe c. D'un plan à l'autre, la liaison est nettement plus faible qu'à l'intérieur des
-      triangles : la calcite se fend selon trois familles de plans obliques, et <b>tout éclat de calcite est un
-      rhomboèdre</b>, quelle que soit la forme extérieure du cristal de départ. Affichez les clivages sur le
-      scalénoèdre : les traces le traversent en biais, sans aucun rapport avec ses faces. Cet empilement de
-      triangles explique aussi la <b>double réfraction</b> du spath d'Islande : la lumière ne traverse pas la pile
-      à la même vitesse selon qu'elle vibre dans le plan des triangles ou perpendiculairement.`,
-    intro: `La calcite est le minéral le plus fabriqué et le plus détruit de la surface terrestre : les organismes
-      la bâtissent, l'eau chargée de CO₂ la dissout, et elle reprécipite dès que ce CO₂ s'échappe.`,
+    forme: `Les plans de calcium et les groupes CO₃ triangulaires s'empilent à plat, perpendiculairement à l'axe c. La liaison entre deux plans est nettement plus faible qu'au sein des triangles : la calcite se clive selon trois familles de plans obliques, et <b>tout éclat de calcite est un rhomboèdre</b>, quelle que soit la forme du cristal d'origine. Sur un scalénoèdre affichant ses clivages, les traces coupent la forme en biais, indépendamment de ses faces. Ce même empilement de triangles rend compte de la <b>double réfraction</b> du spath d'Islande : la lumière se propage à une vitesse différente selon qu'elle vibre dans le plan des triangles ou perpendiculairement.`,
+    intro: `À la surface du globe, la calcite est à la fois l'un des minéraux les plus fabriqués et les plus dissous : les organismes la construisent, l'eau chargée de CO₂ la dissout, puis elle se reprécipite dès que le CO₂ s'échappe.`,
     scenarios: [
       { nom: "Dans une mer chaude",
-        texte: `Dans les premiers mètres d'une mer chaude, coraux, algues calcaires, foraminifères et coquillages
-          bâtissent leur squelette en calcite ou en aragonite. Leurs débris couvrent le fond d'une boue qui contient
-          plus de 90 % de carbonate : c'est le futur calcaire. Mais la calcite n'est stable que dans l'eau de
-          surface — plus bas que 4 à 5 kilomètres, l'eau froide et sous pression la redissout, et il n'en arrive
-          plus rien au fond des océans.`,
+        texte: `Dans les premiers mètres d'une mer chaude, coraux, algues calcaires, foraminifères et coquilles bâtissent leur squelette en calcite ou en aragonite. Leurs débris forment un fond boueux carbonaté à plus de 90 % : voilà le futur calcaire. La calcite reste toutefois stable seulement dans les eaux superficielles ; au-delà de 4 à 5 kilomètres, l'eau froide et sous forte pression la redissout, et plus aucun carbonate ne parvient au plancher océanique.`,
         cond: { type: "carbonates", depots: [[10, 200, "plate-forme carbonatée"]],
           chemin: [
-            { x: 92, z: 15, n: 1, t: "Zone éclairée : les organismes fixent le carbonate de l'eau de mer." },
-            { x: 92, z: 90, n: 2, t: "Les débris tombent et s'accumulent : une boue à plus de 90 % de carbonate." },
-            { x: 55, z: 4300, n: 3, t: "Plus profond, l'eau devient corrosive pour la calcite ; vers 4,5 à 5,5 km, la profondeur de compensation, il n'en reste plus." },
+            { x: 92, z: 15, n: 1, t: "Zone éclairée : les organismes captent le carbonate contenu dans l'eau de mer." },
+            { x: 92, z: 90, n: 2, t: "Les débris sédimentent et s'accumulent : il en résulte une boue carbonatée à plus de 90 %." },
+            { x: 55, z: 4300, n: 3, t: "En profondeur, l'eau agresse la calcite ; vers 4,5 à 5,5 km, à la profondeur de compensation, plus rien ne subsiste." },
           ] },
         src: ["ccd", "photique"] },
 
       { nom: "Dans une grotte",
         texte: `La pluie ne dissout presque pas le calcaire. C'est en traversant le sol qu'elle devient agressive :
           l'air d'un sol contient dix à cent fois plus de CO₂ que l'atmosphère, et ce CO₂ dissous acidifie l'eau.
-          Elle creuse alors le karst. Arrivée dans la grotte, où l'air est redevenu normal, elle dégaze — et rend
+          Elle creuse alors le karst. Arrivée dans la grotte, où l'air est redevenu normal, elle dégaze et rend
           le calcium qu'elle ne peut plus porter. Une stalactite est ce dégazage, goutte après goutte.`,
         cond: { type: "calcite",
           chemin: [
-            { pco2: 0.032, Ca: 8, n: 1, t: "L'eau de pluie traverse le sol et s'y charge de CO₂ (≈ 0,03 atmosphère au lieu de 0,0004)." },
-            { pco2: 0.032, Ca: 127, n: 2, t: "Sous ce CO₂, elle peut dissoudre ≈ 127 mg de calcium par litre : elle élargit les fissures et ouvre le karst." },
-            { pco2: 0.0004, Ca: 127, n: 3, t: "Dans la grotte, l'air n'a plus que le CO₂ de l'atmosphère : l'eau dégaze et se retrouve très sursaturée." },
-            { pco2: 0.0004, Ca: 27, n: 4, t: "Elle rend l'excès sous forme de calcite : ≈ 100 mg par litre égoutté. À 100 litres par an, une stalactite grossit de quelques centièmes de millimètre." },
+            { pco2: 0.032, Ca: 8, n: 1, t: "Dans le sol, l'eau de pluie se charge de CO₂ (≈ 0,03 atmosphère, contre 0,0004 dans l'air)." },
+            { pco2: 0.032, Ca: 127, n: 2, t: "Dans ces conditions de CO₂, elle dissout ≈ 127 mg de calcium par litre et agrandit fissures et conduits karstiques." },
+            { pco2: 0.0004, Ca: 127, n: 3, t: "Dans la grotte, l'air ne contient plus que le CO₂ atmosphérique : l'eau dégaze et se retrouve fortement sursaturée." },
+            { pco2: 0.0004, Ca: 27, n: 4, t: "Elle relâche l'excédent sous forme de calcite : ≈ 100 mg par litre d'eau égouttée. Pour 100 litres annuels, une stalactite gagne quelques centièmes de millimètre." },
           ],
-          note: "Calcium à l'équilibre avec la calcite, calculé pour une eau pure à 10 °C (grotte) et 25 °C." },
+          note: "Calcium en équilibre avec la calcite, calcul effectué pour de l'eau pure à 10 °C (grotte) et à 25 °C." },
         src: ["plummer"] },
     ],
   },
 
   // ─────────────────────────────── Orthose ───────────────────────────────
   orthose: {
-    forme: `La charpente des feldspaths est faite de chaînes de tétraèdres (Si,Al)O₄ parallèles à l'axe a, reliées
-      latéralement ; le potassium loge dans les grandes cavités qu'elles laissent. Deux directions de liaisons
-      faibles traversent cet édifice, {001} et {010}, et elles se coupent <b>exactement à angle droit</b> : ce sont
-      les deux clivages, et ce 90° a donné son nom au minéral (du grec <i>orthós</i>, « droit »). Le plagioclase,
-      bâti pareil mais triclinique, les coupe à 94° — c'est la façon la plus simple de séparer les deux au
-      microscope. Le cristal est allongé selon a et souvent aplati sur {010}, la face qui porte les macles.`,
-    intro: `L'orthose est un minéral de refroidissement lent : il lui faut du temps pour que le potassium, le
-      silicium et l'aluminium se mettent en ordre. C'est pour cela qu'on le trouve dans les granites et non dans
-      les laves, où la même formule donne la sanidine, désordonnée.`,
+    forme: `La charpente des feldspaths se compose de chaînes de tétraèdres (Si,Al)O₄ parallèles à l'axe a, reliées latéralement ; le potassium occupe les grandes cavités qu'elles délimitent. Deux directions de liaisons faibles traversent cet édifice, {001} et {010}, qui se recoupent <b>exactement à angle droit</b> : ce sont les deux clivages, et cet angle de 90° a donné son nom au minéral (du grec <i>orthós</i>, « droit »). Le plagioclase, de structure identique mais tricline, les recoupe à 94° : c'est le moyen le plus simple de les distinguer au microscope. Le cristal est allongé selon a et souvent aplati sur {010}, face qui porte les macles.`,
+    intro: `L'orthose se forme par refroidissement lent : le potassium, le silicium et l'aluminium disposent du temps nécessaire pour s'ordonner. Il se rencontre donc dans les granites, et non dans les laves, où la même composition donne la sanidine désordonnée.`,
     scenarios: [
       { nom: "Dans un granite",
-        texte: `Le feldspath potassique cristallise <b>avant</b> le quartz, entre ≈ 730 et 660 °C. À ce moment le
-          magma est encore largement liquide : le cristal a de la place et développe ses faces. C'est ce qui donne
-          les gros cristaux roses bien dessinés, parfois longs de plusieurs centimètres, qui ponctuent les granites
-          porphyroïdes — et qui portent si souvent la macle de Carlsbad.`,
+        texte: `Le feldspath potassique précède le quartz : il cristallise <b>avant</b> entre ≈ 730 et 660 °C. Le magma reste alors largement fluide, laissant au cristal la place de développer ses faces. Ainsi naissent les gros cristaux roses, bien dessinés et parfois longs de plusieurs centimètres, qui parsèment les granites porphyroïdes, souvent avec la macle de Carlsbad.`,
         cond: { type: "pt", echelle: "croute", courbes: ["graniteEau"], fondu: ["graniteEau"],
           bande: [660, 730, 0.2],
           etiquettes: [["graniteEau", 470, 0.62, -72]],
           chemin: [
-            { T: 830, P: 0.80, n: 1, t: "Fusion partielle de la croûte profonde : le liquide emporte le potassium, l'aluminium et la silice." },
-            { T: 800, P: 0.22, n: 2, t: "Le magma monte et s'installe vers 7 km." },
-            { T: 700, P: 0.20, n: 3, t: "Entre 730 et 660 °C, le feldspath potassique cristallise dans un magma encore liquide : il grandit librement." },
+            { T: 830, P: 0.80, n: 1, t: "Dans la croûte profonde, une fusion partielle transporte vers le liquide potassium, aluminium et silice." },
+            { T: 800, P: 0.22, n: 2, t: "Le magma remonte et se met en place vers 7 km." },
+            { T: 700, P: 0.20, n: 3, t: "Entre 730 et 660 °C, le feldspath potassique cristallise au sein d'un magma encore liquide, où il croît librement." },
           ],
-          note: "Intervalle de cristallisation pour un magma granitique hydraté à ≈ 0,2 GPa. Chemin schématique." },
+          note: "Plage de cristallisation d'un magma granitique hydraté, à ≈ 0,2 GPa. Chemin schématique." },
         src: ["tuttle", "profondeur"] },
 
       { nom: "À l'air libre : arène ou kaolinite",
-        texte: `Sorti du granite, le même cristal se fait attaquer par l'eau chargée de CO₂ : l'hydrolyse emporte le
-          potassium et une partie de la silice, et ce qui reste se réorganise en argile. Mais la vitesse dépend
-          entièrement du climat. Sous nos latitudes, l'attaque est assez lente pour que des grains frais survivent
-          au transport et se retrouvent dans un sable ou une arkose. Sous un climat tropical humide, il ne reste
-          rapidement plus que de la kaolinite.`,
+        texte: `Une fois extrait du granite, ce même cristal subit l'attaque de l'eau chargée de CO₂ : l'hydrolyse évacue le potassium et une part de la silice, tandis que le reste s'organise en argile. Pourtant, la rapidité du processus dépend uniquement du climat. Sous nos latitudes, l'attaque demeure assez modérée pour que des grains encore frais survivent au transport et s'accumulent dans un sable ou une arkose. Dans un climat tropical humide, il ne reste en peu de temps que de la kaolinite.`,
         cond: { type: "climat",
           domaines: [[-5, 13, 0, 0.75], [20, 30, 0.9, 2.5]],
           etiquettes: [["le feldspath survit : arkose", 4, 0.38], ["hydrolyse complète : kaolinite", 25, 2.2]],
           villes: ["Brest", "Paris", "Marseille"],
           chemin: [
-            { T: 11.5, ai: 0.9, n: 1, t: "Dans un granite breton, l'hydrolyse ronge les feldspaths sans les effacer : le granite se défait en arène, où le feldspath reste reconnaissable." },
-            { T: 26, ai: 1.8, n: 2, t: "Transporté sous un climat tropical humide, le même grain est entièrement hydrolysé : il ne reste que de la kaolinite et la silice part en solution." },
+            { T: 11.5, ai: 0.9, n: 1, t: "Dans un granite breton, l'hydrolyse ronge les feldspaths sans les faire disparaître : la roche se défait en arène, où le feldspath demeure reconnaissable." },
+            { T: 26, ai: 1.8, n: 2, t: "Charrié sous un climat tropical humide, le même grain subit une hydrolyse complète : seule la kaolinite subsiste, tandis que la silice rejoint la solution." },
           ],
-          note: "Échelle climatique commune de l'atlas : température moyenne annuelle et pluie divisée par l'évapotranspiration potentielle. Les points sont les normales 1991–2020." },
+          note: "Échelle climatique commune à l'atlas : température moyenne annuelle et rapport entre la pluie et l'évapotranspiration potentielle. Les points représentent les normales 1991 à 2020." },
         src: ["h5", "safran"] },
     ],
   },
 
   // ─────────────────────────────── Gypse ───────────────────────────────
   gypse_m: {
-    forme: `Le gypse est bâti en sandwichs : deux plans de tétraèdres SO₄ encadrant les calciums, puis un
-      <b>double plan de molécules d'eau</b>. D'un sandwich à l'autre, il n'y a que des liaisons hydrogène, de loin
-      les plus faibles de l'édifice — affichez-les dans la structure 3D ci-dessous. D'où le clivage {010} parfait,
-      qui détache des lamelles souples et transparentes (le « miroir d'âne »), et une dureté de 2 : l'ongle raye le
-      gypse. C'est aussi cette eau qui part vers 150 °C et fait le plâtre, et qui revient quand on le gâche.`,
-    intro: `Le gypse ne se forme que là où l'eau s'évapore plus vite qu'elle n'arrive : lagunes coupées de la mer,
-      sebkhas, croûtes de marnes. C'est un minéral fragile, qui se dissout dès qu'il pleut — d'où sa rareté à
-      l'affleurement en France, et les carrières souterraines de Montmartre.`,
+    forme: `Le gypse est constitué de feuillets alternés : deux plans de tétraèdres SO₄ encadrent les ions calcium, puis vient un <b>double plan de molécules d'eau</b>. D'un feuillet au suivant, seules des liaisons hydrogène assurent la cohésion, ce sont les plus faibles de l'édifice ; on peut les observer dans la structure 3D ci-dessous. Il en résulte un clivage {010} parfait, qui sépare des lamelles souples et transparentes (le « miroir d'âne »), et une dureté de 2 : l'ongle suffit à le rayer. Cette eau quitte le cristal vers 150 °C, ce qui permet de fabriquer le plâtre, et elle se fixe de nouveau lorsqu'on gâche celui-ci.`,
+    intro: `Le gypse ne précipite que là où l'eau s'évapore plus vite qu'elle n'est apportée : lagunes isolées de la mer, sebkhas, croûtes de marnes. Minéral fragile, il se dissout dès les premières pluies ; il affleure donc rarement en France, et on l'exploite en carrières souterraines, à Montmartre par exemple.`,
     scenarios: [
       { nom: "Dans une lagune qui s'évapore",
-        texte: `Une lagune peu profonde qui ne communique plus avec la mer que par un seuil se concentre à chaque
-          saison sèche. Les sels ne précipitent pas tous ensemble : chacun attend que sa propre limite de
-          solubilité soit franchie. Les carbonates partent les premiers, le gypse à 3,8 fois la concentration de
-          l'eau de mer, le sel gemme à 10,6 fois. Un banc de gypse de plusieurs mètres n'est donc pas le résidu
-          d'une évaporation unique, mais la somme de milliers de remplissages.`,
+        texte: `Une lagune peu profonde, qui ne communique plus avec la mer que par un seuil, se concentre à chaque saison sèche. Les sels ne précipitent pas simultanément : chacun ne cristallise qu'une fois sa propre limite de solubilité atteinte. Les carbonates apparaissent les premiers, puis le gypse lorsque l'eau atteint 3,8 fois la concentration de l'eau de mer, et le sel gemme à 10,6 fois. Un banc de gypse de plusieurs mètres ne résulte donc pas d'une évaporation unique, mais de l'empilement de milliers de cycles de remplissage.`,
         cond: { type: "evaporation", couche: "gypse",
           chemin: [
-            { an: 0, n: 1, t: "La lagune se ferme : l'eau de mer commence à se concentrer." },
-            { an: 3.7, n: 2, t: "À 3,8 fois la concentration de départ (≈ 74 % de l'eau évaporée), le sulfate de calcium sature : le gypse se dépose." },
-            { an: 4.55, n: 3, t: "Au-delà de 10,6 fois, c'est l'halite qui prend le relais et le gypse ne se forme plus. Repère de temps : ≈ 2 m d'eau évaporés par an sur une tranche de 10 m." },
+            { an: 0, n: 1, t: "Le bassin se ferme, et l'eau marine y gagne peu à peu en concentration." },
+            { an: 3.7, n: 2, t: "À 3,8 fois la concentration initiale (≈ 74 % de l'eau évaporée), le sulfate de calcium atteint la saturation et le gypse se dépose." },
+            { an: 4.55, n: 3, t: "Passé le seuil de 10,6 fois, l'halite cristallise à son tour et interrompt la formation du gypse. Pour fixer les idées, il faut environ 2 m d'eau évaporée chaque année sur une tranche de 10 m." },
           ] },
         src: ["mccaffrey", "warren", "sofianos"] },
 
       { nom: "Enfoui, il devient anhydrite",
-        texte: `Le gypse ne supporte pas d'être enterré : au-delà de 40 à 60 °C, soit à peine 1 à 1,5 kilomètre de
-          profondeur, il perd ses deux molécules d'eau et devient de l'<b>anhydrite</b> (CaSO₄). L'opération se fait
-          dans l'autre sens à la remontée : l'anhydrite reprend son eau et regonfle d'environ 60 % de son volume,
-          ce qui disloque la roche encaissante et fait les cargneules. C'est aussi ce que redoutent les tunneliers
-          des Alpes.`,
+        texte: `Le gypse ne supporte pas l'enfouissement : au-delà de 40 à 60 °C, soit seulement 1 à 1,5 kilomètre de profondeur, il perd ses deux molécules d'eau et se transforme en <b>anhydrite</b> (CaSO₄). Le processus s'inverse lors de la remontée : l'anhydrite reprend son eau et gonfle d'environ 60 % de son volume, ce qui disloque la roche encaissante et produit les cargneules. C'est également ce que redoutent les tunneliers des Alpes.`,
         cond: { type: "enfouissement", tmax: 230, zmax: 3, seuils: ["gypse"], labDroite: true,
           chemin: [
-            { age: 225, z: 0, n: 1, t: "Le gypse du Keuper se dépose dans des lagunes, il y a ≈ 225 millions d'années." },
-            { age: 120, z: 2.0, n: 2, t: "Enfoui sous 1,5 à 2 km, il dépasse 60 °C : il se déshydrate en anhydrite." },
-            { age: 0, z: 0.1, n: 3, t: "Ramené près de la surface par l'érosion, il se réhydrate en gypse en gonflant de ≈ 60 % (volumes molaires : 46 cm³/mol pour l'anhydrite, 75 pour le gypse)." },
+            { age: 225, z: 0, n: 1, t: "C'est dans des lagunes que se sont déposés les gypses du Keuper, il y a ≈ 225 millions d'années." },
+            { age: 120, z: 2.0, n: 2, t: "Lorsqu'il est enfoui sous 1,5 à 2 km, le gypse dépasse 60 °C et perd son eau pour devenir de l'anhydrite." },
+            { age: 0, z: 0.1, n: 3, t: "Une fois remonté près de la surface, il se réhydrate en gypse et son volume croît d'environ 60 % (volumes molaires : 46 cm³/mol pour l'anhydrite, 75 pour le gypse)." },
           ] },
         src: ["hardie", "gradient"] },
     ],

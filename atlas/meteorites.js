@@ -9,7 +9,7 @@
 //    (roche météoritique, pierreuse, différenciée, non différenciée, chondrite, achondrite, sidérolithe) sont les nœuds
 //    de l'arbre (roches-arbre.js).
 //  - `CHUTES_FRANCE` : météorites tombées ou trouvées en France métropolitaine, d'après le catalogue de la Meteoritical
-//    Society (export « Meteorite Landings » de la NASA, arrêté vers 2013) + la chute de Saint-Pierre-le-Viger (2023).
+//    Society (export « Meteorite Landings » de la NASA, arrêté vers 2013) + les chutes de Saint-Pierre-le-Viger et de Ménétréol-sur-Sauldre (2023) ; confrontation B.12 le 16/10/2026 à la Meteoritical Bulletin (liste « France », 94 lignes) : voir CHANTIERS.md.
 //    Champ `f` = fiche de l'atlas qui correspond à la classe (null = pierre non classée).
 //  - Composition (`mineraux`) : proportions en volume d'une météorite type de la fiche (« exemple suivi »), arrondies.
 //    Le fer-nickel pauvre en nickel (kamacite) est compté dans `fer_natif` : l'IMA ne fait pas de la kamacite une espèce.
@@ -23,9 +23,10 @@ const CHUTES_FRANCE = [
   ["Nicorps", 1750, true, "pierre non classée", null, 49.033, -1.433, null],
   ["Luponnas", 1753, true, "H3-5", 14000, 46.217, 5.0, "chondrite_ordinaire"],
   ["Lucé", 1768, true, "L6", 3500, 47.85, 0.483, "chondrite_ordinaire"],
-  ["Aire-sur-la-Lys", 1769, true, "inconnue", null, 50.667, 2.333, null],
+  ["Aire-sur-la-Lys", 1769, true, "inconnue", 6800, 50.609, 2.486, null],
   ["Barbotan", 1790, true, "H5", 6400, 43.95, -0.05, "chondrite_ordinaire"],
   ["Salles", 1798, true, "L5", 9000, 46.05, 4.633, "chondrite_ordinaire"],
+  ["Saint-Ouen-en-Champagne", 1799, true, "H5", 4600, 47.964, -0.161, "chondrite_ordinaire"],
   ["L'Aigle", 1803, true, "L6", 37000, 48.767, 0.633, "chondrite_ordinaire"],
   ["Apt", 1803, true, "L6", 3200, 43.867, 5.383, "chondrite_ordinaire"],
   ["Asco", 1805, true, "H6", 41, 42.45, 9.033, "chondrite_ordinaire"],
@@ -37,8 +38,9 @@ const CHUTES_FRANCE = [
   ["Chassigny", 1815, true, "martienne (chassignite)", 4000, 47.717, 5.367, "achondrite_martienne"],
   ["Jonzac", 1819, true, "eucrite", 5000, 45.433, -0.45, "achondrite_asteroidale"],
   ["Juvinas", 1821, true, "eucrite", 91000, 44.717, 4.3, "achondrite_asteroidale"],
-  ["Angers", 1822, true, "L6", null, 47.467, -0.55, "chondrite_ordinaire"],
+  ["Angers", 1822, true, "L6", 1007, 47.467, -0.55, "chondrite_ordinaire"],
   ["Épinal", 1822, true, "H5", 277, 48.183, 6.467, "chondrite_ordinaire"],
+  ["Clohars", 1822, true, "L4", 48.6, 47.89, -4.08, "chondrite_ordinaire"],
   ["Galapian", 1826, true, "H6", 133, 44.3, 0.4, "chondrite_ordinaire"],
   ["La Caille", 1828, false, "fer non groupé", 626000, 43.733, 6.783, "meteorite_fer"],
   ["Vouillé", 1831, true, "L6", 20000, 46.633, 0.167, "chondrite_ordinaire"],
@@ -54,10 +56,9 @@ const CHUTES_FRANCE = [
   ["Le Teilleul", 1845, true, "howardite", 780, 48.533, -0.867, "achondrite_asteroidale"],
   ["Marmande", 1848, true, "L5", 3000, 44.5, 0.15, "chondrite_ordinaire"],
   ["Quinçay", 1851, true, "L6", 65, 46.6, 0.25, "chondrite_ordinaire"],
-  ["Les Ormes", 1857, true, "L6", 125, 48.35, 3.25, "chondrite_ordinaire"],
+  ["Les Ormes", 1857, true, "L6", 125, 47.85, 3.27, "chondrite_ordinaire"],
   ["Ausson", 1858, true, "L5", 50000, 43.083, 0.583, "chondrite_ordinaire"],
-  ["Beuste", 1859, true, "L5", 2000, 43.217, -0.233, "chondrite_ordinaire"],
-  ["Sologne", 1860, true, "H5", 54, 47.367, 1.733, "chondrite_ordinaire"],
+  ["Beuste", 1856, true, "L5", 1820, 43.217, -0.233, "chondrite_ordinaire"],
   ["Orgueil", 1864, true, "CI1", 14000, 43.883, 1.383, "chondrite_carbonee"],
   ["Saint-Mesmin", 1866, true, "LL6", 8300, 48.45, 3.933, "chondrite_ordinaire"],
   ["Ornans", 1868, true, "CO3.4", 6000, 47.117, 6.15, "chondrite_carbonee"],
@@ -68,10 +69,10 @@ const CHUTES_FRANCE = [
   ["Kerilis", 1874, true, "H5", 5000, 48.4, -3.3, "chondrite_ordinaire"],
   ["Mornans", 1875, true, "H5", 1300, 44.6, 5.133, "chondrite_ordinaire"],
   ["La Bécasse", 1879, true, "L6", 2800, 47.083, 1.75, "chondrite_ordinaire"],
-  ["Saint-Caprais-de-Quinsac", 1883, true, "L6", 360, 44.75, 0.05, "chondrite_ordinaire"],
+  ["Saint-Caprais-de-Quinsac", 1883, true, "L6", 360, 44.75, -0.43, "chondrite_ordinaire"],
   ["Saint-Germain-du-Pinel", 1890, true, "H6", 4000, 48.017, -1.15, "chondrite_ordinaire"],
   ["Villedieu", 1890, false, "H4", 14000, 47.917, 4.35, "chondrite_ordinaire"],
-  ["Lançon", 1897, true, "H6", 7000, 43.75, 5.117, "chondrite_ordinaire"],
+  ["Lançon", 1897, true, "H6", 7000, 43.59, 5.13, "chondrite_ordinaire"],
   ["Kermichel", 1911, false, "L6", 3000, 47.65, -2.767, "chondrite_ordinaire"],
   ["Saint-Sauveur", 1914, true, "EH5", 14000, 43.733, 1.383, "chondrite_enstatite"],
   ["Montferré", 1923, true, "H5", 149000, 43.391, 1.963, "chondrite_ordinaire"],
@@ -82,20 +83,25 @@ const CHUTES_FRANCE = [
   ["Saint-Séverin", 1966, true, "LL6", 271000, 45.3, 0.233, "chondrite_ordinaire"],
   ["Saint-Aubin", 1968, false, "fer IIIAB", 472000, 48.483, 3.583, "meteorite_fer"],
   ["Bouvante", 1978, false, "eucrite", 8300, 44.922, 5.268, "achondrite_asteroidale"],
-  ["Chitenay", 1978, true, "L6", 4000, 47.471, 0.977, "chondrite_ordinaire"],
+  ["Chitenay", 1978, true, "L6", 4000, 47.485, 1.355, "chondrite_ordinaire"],
   ["Henvic", 1991, false, "L5", 19, 48.65, -3.917, "chondrite_ordinaire"],
-  ["Mont-Dieu", 1994, false, "fer non groupé", 360000, 49.55, 4.867, "meteorite_fer"],
+  ["Mont-Dieu", 1994, false, "fer IIE", 360000, 49.55, 4.867, "meteorite_fer"],
   ["Bacqueville", 1999, false, "H6", 395, 49.322, 1.366, "chondrite_ordinaire"],
   ["Contis-Plage", 2000, false, "H5", 44, 44.083, -1.317, "chondrite_ordinaire"],
   ["Alby-sur-Chéran", 2002, true, "eucrite", 252, 45.821, 6.015, "achondrite_asteroidale"],
   ["Plancy-l'Abbaye", 2003, false, "H4", 180, 48.567, 4.033, "chondrite_ordinaire"],
-  ["Saint-Pierre-le-Viger", 2023, true, "L5-6", null, 49.83, 0.86, "chondrite_ordinaire"],
+  ["Langres", 2004, false, "L4", 340, 47.861, 5.314, "chondrite_ordinaire"],
+  ["Draveil", 2011, true, "H5", 7500, 48.687, 2.428, "chondrite_ordinaire"],
+  ["Le Muy", 2013, false, "H5", 760, 43.478, 6.602, "chondrite_ordinaire"],
+  ["Abbans-Dessous", 2015, false, "LL6", 3.12, 47.132, 5.876, "chondrite_ordinaire"],
+  ["Saint-Pierre-le-Viger", 2023, true, "L5-6", 1200, 49.821, 0.826, "chondrite_ordinaire"],
+  ["Ménétréol-sur-Sauldre", 2023, true, "H5", 714, 47.433, 2.3, "chondrite_ordinaire"],
 ];
 
 // régions (pastilles de la carte) d'une fiche : ses chutes en France ; `etranger` = site de référence hors de France
 function chutesDe(id) {
   return CHUTES_FRANCE.filter((c) => c[7] === id).map(([nom, an, chute, cl, g, lat, lng]) =>
-    ({ nom: `${nom} — ${chute ? "chute" : "trouvée"} en ${an}${g ? `, ${g >= 1000 ? (Math.round(g / 100) / 10).toLocaleString("fr-FR") + " kg" : g + " g"}` : ""} (${cl})`, lat, lng }));
+    ({ nom: `${nom} : ${chute ? "chute" : "trouvée"} en ${an}${g ? `, ${g >= 1000 ? (Math.round(g / 100) / 10).toLocaleString("fr-FR") + " kg" : g + " g"}` : ""} (${cl})`, lat, lng }));
 }
 
 ROCHES.push(
@@ -103,15 +109,15 @@ ROCHES.push(
   {
     id: "chondrite_ordinaire", nom: "Chondrite ordinaire", categorie: "meteoritique", sousType: "météorite pierreuse primitive",
     swatch: "#8a8172", densite: 3350,
-    description: "La météorite la plus courante : environ huit chutes sur dix. Une roche grise, constellée de petites billes de 0,2 à 2 mm, les chondres, gouttes de silicates fondues et refigées dans le disque de gaz et de poussières qui entourait le jeune Soleil, il y a 4 567 millions d'années. Elle n'a jamais fondu depuis : c'est un échantillon de la matière dont sont faites les planètes. Celle de L'Aigle, en 1803, a convaincu l'Académie des sciences que des pierres tombent du ciel.",
-    mineralogie: "Olivine et pyroxène pauvre en calcium (enstatite) dominent, en chondres et en grains fins entre eux ; un peu de plagioclase ; des grains de fer-nickel (kamacite et taénite, 2 à 19 % selon le groupe) et de sulfure de fer (troïlite) ; chromite et phosphates accessoires. Croûte de fusion noire de moins d'un millimètre.",
+    description: "Il s'agit de la météorite la plus fréquente, qui représente près de huit chutes sur dix. Roche grise parsemée de petites billes de 0,2 à 2 mm, nommées chondres : des gouttes de silicates fondues puis refroidies dans le disque de gaz et de poussières qui entourait le jeune Soleil, il y a 4 567 millions d'années. N'ayant jamais refondu depuis, elle représente un échantillon de la matière ayant servi à bâtir les planètes. La chute de L'Aigle, en 1803, a persuadé l'Académie des sciences que des pierres tombent du ciel.",
+    mineralogie: "Dominent l'olivine et le pyroxène pauvre en calcium (enstatite), présents en chondres et en grains fins ; on trouve aussi un peu de plagioclase, des grains de fer-nickel (kamacite et taénite, 1 à 19 % selon le groupe) et du sulfure de fer (troïlite), ainsi que de la chromite et des phosphates en proportion accessoire. Une croûte de fusion noire, de moins d'un millimètre, la recouvre.",
     mineraux: [["olivine", 44], ["enstatite", 24], ["plagioclases", 10], ["troilite", 6], ["fer_natif", 6], ["diopside", 5], ["taenite", 2], ["chromite", 1], ["merrillite", 1]],
     varietes: [
-      { nom: "chondrite H", note: "« High iron » : la plus riche en fer métal (15 à 19 %). Un corps parent probable : l'astéroïde (6) Hébé. Montferré (Ariège, 1923, 149 kg), Kernouvé (Morbihan, 1869, 80 kg)." },
-      { nom: "chondrite L", note: "« Low iron » : 4 à 10 % de fer métal, olivine plus riche en fer. L'Aigle (Orne, 1803), Chantonnay (Vendée, 1812), Saint-Pierre-le-Viger (Seine-Maritime, 2023)." },
-      { nom: "chondrite LL", note: "« Low iron, low metal » : 1 à 3 % de fer métal seulement. Ensisheim (1492, 127 kg) et Saint-Séverin (Charente, 1966, 271 kg), la plus grosse chute observée en France." },
-      { nom: "chondrite de type 3 (non équilibrée)", note: "Presque pas chauffée sur son astéroïde : chondres nets, matrice fine et sombre, minéraux de compositions variées (type 3,0 à 3,9). Luponnas (Ain, 1753) est classée H3-5." },
-      { nom: "chondrite de type 6 (équilibrée)", note: "Chauffée vers 750–950 °C au cœur de l'astéroïde, sans fondre : les chondres s'estompent, la matrice a recristallisé et du plagioclase est apparu. L'Aigle (L6), Ensisheim (LL6)." },
+      { nom: "chondrite H", note: "« High iron » : teneur maximale en fer métallique (15 à 19 %). Son corps parent serait probablement l'astéroïde (6) Hébé. Exemples : Montferré (Aude, 1923, 149 kg) et Kernouvé (Morbihan, 1869, 80 kg)." },
+      { nom: "chondrite L", note: "« Low iron » : 4 à 10 % de fer métallique, avec une olivine plus ferreuse. On cite L'Aigle (Orne, 1803), Chantonnay (Vendée, 1812) et Saint-Pierre-le-Viger (Seine-Maritime, 2023)." },
+      { nom: "chondrite LL", note: "« Low iron, low metal » : fer métallique limité à 1 à 3 %. Ensisheim (1492, 127 kg) et Saint-Séverin (Charente, 1966, 271 kg), la chute observée la plus volumineuse en France." },
+      { nom: "chondrite de type 3 (non équilibrée)", note: "Chauffée à peine sur son astéroïde, elle conserve des chondres nets et une matrice fine et sombre, aux minéraux de compositions diverses (type 3,0 à 3,9). Luponnas (Ain, 1753) est classée H3 à 5." },
+      { nom: "chondrite de type 6 (équilibrée)", note: "Portée vers 750 à 950 °C au cœur de l'astéroïde, sans fondre : les chondres s'estompent, la matrice recristallise et du plagioclase se forme. Exemples : L'Aigle (L6), Ensisheim (LL6)." },
     ],
     regions: chutesDe("chondrite_ordinaire"),
     ages: [
@@ -120,24 +126,31 @@ ROCHES.push(
     ],
     alteration: {
       facilite: 4,
-      mecanisme: "Sur Terre, le fer métal et la troïlite rouillent les premiers : des auréoles brunes (goethite, akaganéite, riche en chlore) gagnent la pierre, puis l'olivine et le pyroxène s'argilisent. Les météoriticiens notent ce degré de W0 (intacte) à W6 (silicates remplacés par des argiles et des oxydes).",
-      climat: "Une chondrite tombée en climat humide rouille en quelques années et ne survit que quelques siècles à quelques milliers d'années. Dans les déserts chauds, elle tient en général moins de 50 000 ans ; dans la glace de l'Antarctique, jusqu'à plusieurs centaines de milliers d'années (Bland et al. 1996).",
+      mecanisme: "Au contact de l'air terrestre, le fer métallique et la troïlite rouillent d'abord : des auréoles brunes (goethite, akaganéite chargée de chlore) envahissent la pierre, avant que l'olivine et le pyroxène ne s'argilisent. Les météoriticiens qualifient ce stade de W0 (intacte) à W6 (silicates remplacés par argiles et oxydes).",
+      // D.8.3 : pas de vitesse en mm (une météorite rouille dans sa masse) ; durées de survie mesurées
+      climat: "Une grande partie de l'altération a lieu durant les premières centaines d'années, puis la rouille colmate les pores et ralentit le processus (Bland et al. 1998). Dans les hautes plaines semi-arides du Nouveau-Mexique, la moitié des chondrites ordinaires tombées avait disparu après 3 500 ans (Zolensky et al. 1990). Dans le désert d'Atacama, le plus aride du globe, les 54 météorites pierreuses d'El Médano séjournent sur Terre depuis 710 000 ans en moyenne (Drouard et al. 2019) ; quant à la chondrite Lewis Cliff 86360, retenue dans la glace antarctique, elle s'y trouve depuis 2,35 millions d'années (Welten et al. 1997).",
+      sources: [
+        "Bland P. A., Sexton A. S., Jull A. J. T. et al. (1998), « Climate and rock weathering: a study of terrestrial age dated ordinary chondritic meteorites from hot desert regions », Geochimica et Cosmochimica Acta 62 (18) : 3169–3184",
+        "Zolensky M. E., Wells G. L. et Rendell H. M. (1990), « The accumulation rate of meteorite falls at the Earth's surface: the view from Roosevelt County, New Mexico », Meteoritics 25 (demi-vie de 3,5 ± 1,9 millier d'années)",
+        "Drouard A., Gattacceca J., Hutzler A. et al. (2019), « The meteorite flux of the past 2 m.y. recorded in the Atacama Desert », Geology 47 (7) : 673–676 (chlore 36)",
+        "Welten K. C., Alderliesten C., van der Borg K. et al. (1997), « Lewis Cliff 86360: an Antarctic L-chondrite with a terrestrial age of 2.35 million years », Meteoritics & Planetary Science 32 : 775–780"
+      ],
     },
-    usages: "Objets de musée et de recherche : la datation des chondres et des inclusions réfractaires donne l'âge du Système solaire. La pierre d'Ensisheim est exposée depuis cinq siècles au musée de la Régence.",
+    usages: "Elles intéressent musées et chercheurs : la datation des chondres et des inclusions réfractaires fixe l'âge du Système solaire. La pierre d'Ensisheim en témoigne : gardée dans la ville depuis plus de cinq siècles, longtemps suspendue dans l'église, elle est aujourd'hui exposée au musée de la Régence.",
     wikipedia: "https://fr.wikipedia.org/wiki/Chondrite_ordinaire",
   },
   {
     id: "chondrite_carbonee", nom: "Chondrite carbonée", categorie: "meteoritique", sousType: "météorite pierreuse primitive",
     swatch: "#2a2724", densite: 1600,
-    description: "Une pierre noire et friable, qui tache les doigts : jusqu'à 3 % de carbone, sous forme de matière organique, et jusqu'à 20 % d'eau, prise dans des argiles. Les plus primitives, comme celle d'Orgueil (Tarn-et-Garonne, 1864), ont la composition chimique du Soleil, moins les gaz. On y a trouvé des acides aminés venus de l'espace et des grains de poussière plus vieux que le Soleil.",
-    mineralogie: "Type CI (Orgueil) : une matrice noire de phyllosilicates (serpentine et saponite, formées par l'eau sur l'astéroïde), des amas de magnétite en framboises, des sulfures de fer et de nickel, des grains de carbonates et de la matière organique. Pas de chondres. Les autres groupes (CM, CO, CV…) gardent des chondres et des inclusions réfractaires blanches.",
+    description: "Pierre noire et friable qui tache les doigts : elle contient jusqu'à 3 à 5 % de carbone, surtout organique (environ 3,5 % dans celle d'Orgueil), et jusqu'à 20 % d'eau retenue par des argiles. Les plus primitives, dont celle d'Orgueil (Tarn-et-Garonne, 1864), reproduisent la composition chimique du Soleil, à l'exception des gaz. On y a identifié des acides aminés d'origine spatiale et des grains plus anciens que le Soleil.",
+    mineralogie: "Type CI (Orgueil) : matrice noire de phyllosilicates (serpentine et saponite, produites par l'eau dans l'astéroïde), magnétite en framboises, sulfures de fer-nickel, carbonates et matière organique, mais aucun chondre. Les autres groupes (CM, CO, CV…) gardent des chondres et des inclusions réfractaires blanches.",
     mineraux: [["serpentine", 57], ["smectites_m", 22], ["magnetite", 10], ["pyrrhotite", 5], ["matorg", 3], ["dolomite", 3]],
     varietes: [
-      { nom: "CI (type Ivuna)", note: "Sans chondres, la plus riche en eau (jusqu'à 20 %) ; jamais chauffée au-delà de 50 à 150 °C. Cinq chutes connues dans le monde, dont deux en France : Alais (Gard, 1806, la première chondrite carbonée reconnue) et Orgueil (1864, 14 kg, la plus grosse)." },
-      { nom: "CM (type Mighei)", note: "Chondres et inclusions réfractaires dans une matrice argileuse : altérée par l'eau, mais moins que les CI. Murchison (Australie, 1969) a livré plus de 70 acides aminés." },
-      { nom: "CO (type Ornans)", note: "Petits chondres (≈ 0,15 mm) serrés dans une matrice qui fait environ 30 % de la roche, peu d'eau. Le groupe porte le nom d'Ornans (Doubs, 1868) ; Lancé (Loir-et-Cher, 1872, 52 kg) en fait partie." },
-      { nom: "CV (type Vigarano)", note: "Gros chondres (≈ 1 mm) et grandes inclusions blanches riches en calcium et en aluminium, les plus vieux solides datés : 4 567,3 millions d'années. Allende (Mexique, 1969, plus de 2 tonnes)." },
-      { nom: "CR (type Renazzo)", note: "Chondres entourés de fer métal, matrice altérée par l'eau. Renazzo (Italie, 1824)." },
+      { nom: "CI (type Ivuna)", note: "Dépourvue de chondres, elle est la plus riche en eau (jusqu'à 20 %) et n'a jamais dépassé 50 à 150 °C. Parmi les cinq chutes recensées dans le monde, deux ont eu lieu en France : Alais (Gard, 1806, première chondrite carbonée reconnue) et Orgueil (1864, 14 kg, la plus lourde)." },
+      { nom: "CM (type Mighei)", note: "Ici, chondres et inclusions réfractaires se trouvent noyés dans une matrice argileuse, dont l'altération par l'eau reste moindre que celle des CI. La météorite de Murchison (Australie, 1969) a fourni plus de 70 acides aminés." },
+      { nom: "CO (type Ornans)", note: "Petits chondres (≈ 0,15 mm) rassemblés dans une matrice représentant environ 30 % de la roche, pauvre en eau. Le groupe doit son nom à Ornans (Doubs, 1868), et Lancé (Loir-et-Cher, 1872, 52 kg) y figure." },
+      { nom: "CV (type Vigarano)", note: "Les solides les plus anciens datés, 4 567,3 millions d'années, sont de gros chondres (≈ 1 mm) accompagnés de vastes inclusions blanches, riches en calcium et en aluminium. Allende (Mexique, 1969, plus de 2 tonnes)." },
+      { nom: "CR (type Renazzo)", note: "Chondres bordés de fer métallique, dans une matrice altérée par l'eau. Renazzo (Italie, 1824)." },
     ],
     regions: chutesDe("chondrite_carbonee"),
     ages: [
@@ -146,67 +159,67 @@ ROCHES.push(
     ],
     alteration: {
       facilite: 5,
-      mecanisme: "Friable et poreuse (≈ 35 % de vides), elle absorbe l'humidité de l'air : ses sulfures s'oxydent et des sulfates blancs (gypse, epsomite) cristallisent à la surface et dans les fissures. Les veines blanches d'Orgueil se sont formées ainsi, dans les tiroirs des musées, après sa chute (Gounelle et Zolensky 2001).",
-      climat: "C'est la météorite la plus fragile : une CI laissée dehors se délite en quelques années. On n'en connaît que par des chutes observées et ramassées aussitôt, ou par la glace de l'Antarctique.",
+      mecanisme: "Poreuse et friable (≈ 35 % de vides), elle absorbe l'humidité atmosphérique : ses sulfures s'oxydent, et des sulfates blancs (gypse, epsomite) se déposent en surface comme dans les fissures. C'est ainsi que se sont formées les veines blanches d'Orgueil, dans les tiroirs des musées après la chute (Gounelle et Zolensky 2001).",
+      climat: "Il s'agit de la météorite la plus fragile : même dans les tiroirs de musée, elle se dégrade (veines blanches d'Orgueil). Aucune durée de survie n'a été mesurée, les CI n'étant connues que par des chutes observées puis ramassées sur-le-champ, ou par des échantillons prélevés dans la glace de l'Antarctique.",
     },
-    usages: "Échantillons de référence de la composition du Système solaire (abondances « CI ») ; étude de l'eau et de la matière organique d'origine extraterrestre.",
+    usages: "Ces échantillons constituent la référence des abondances « CI » du Système solaire et permettent d'étudier l'eau et la matière organique d'origine extraterrestre.",
     wikipedia: "https://fr.wikipedia.org/wiki/Chondrite_carbon%C3%A9e",
   },
   {
     id: "chondrite_enstatite", nom: "Chondrite à enstatite", categorie: "meteoritique", sousType: "météorite pierreuse primitive",
     swatch: "#6f6d68", densite: 3600,
-    description: "La roche la plus pauvre en oxygène que l'on connaisse : presque tout son fer est en métal ou en sulfure, aucun dans les silicates. Elle s'est formée près du Soleil, dans la région de Mercure ou de la Terre ; ses atomes d'oxygène ont la même signature que ceux de la Terre et de la Lune. On la croyait sèche, mais elle contient assez d'hydrogène pour avoir apporté à la Terre au moins trois fois l'eau de ses océans (Piani et al. 2020, Nancy).",
-    mineralogie: "Chondres et grains d'enstatite presque pure (MgSiO₃, sans fer), beaucoup de fer-nickel (kamacite chargée de silicium) et de troïlite ; des minéraux qui ne naissent que sans oxygène : oldhamite (sulfure de calcium), niningerite (sulfure de magnésium), daubréelite, schreibersite. Un peu de plagioclase et de silice.",
+    description: "C'est la roche la plus pauvre en oxygène connue : le fer y est presque entièrement à l'état de métal ou de sulfure, aucun n'entrant dans les silicates. Formée près du Soleil, dans les régions de Mercure ou de la Terre, elle présente des atomes d'oxygène de même signature que ceux de la Terre et de la Lune. Bien qu'on la crût sèche, elle contient suffisamment d'hydrogène pour avoir pu fournir à la Terre au moins trois fois l'eau de ses océans (Piani et al. 2020, Nancy).",
+    mineralogie: "On y trouve des chondres et des grains d'enstatite presque pure (MgSiO₃, sans fer), beaucoup de fer-nickel (kamacite chargée de silicium) et de troïlite, ainsi que des minéraux qui ne naissent qu'en l'absence d'oxygène : oldhamite (sulfure de calcium), niningerite (sulfure de magnésium), daubréelite et schreibersite. Le plagioclase et la silice y sont en faible quantité.",
     mineraux: [["enstatite", 61], ["fer_natif", 19], ["troilite", 9], ["plagioclases", 6], ["schreibersite", 1.5], ["cristobalite", 1.5], ["oldhamite", 1], ["daubreelite", 1]],
     varietes: [
-      { nom: "EH (« high iron »)", note: "Petits chondres (≈ 0,2 mm), plus de 10 % de métal, qui contient environ 3 % de silicium. Saint-Sauveur (Haute-Garonne, 1914, 14 kg) est une EH5." },
-      { nom: "EL (« low iron »)", note: "Chondres plus gros (plus de 0,5 mm), moins de métal (≈ 1 % de silicium dedans). L'astéroïde (21) Lutétia, survolé par la sonde Rosetta en 2010, pourrait être de ce type." },
+      { nom: "EH (« high iron »)", note: "Petits chondres (≈ 0,2 mm), plus de 10 % de métal, dont environ 3 % de silicium. Saint-Sauveur (Haute-Garonne, 1914, 14 kg) appartient au type EH5." },
+      { nom: "EL (« low iron »)", note: "Chondres plus volumineux (au-delà de 0,5 mm), autant de métal que les EH mais moins de sulfures ; métal plus pauvre en silicium (≈ 1 %). « H » et « L » désignent le fer total. Pourrait appartenir à ce type l'astéroïde (21) Lutétia, approché par la sonde Rosetta en 2010." },
     ],
     regions: chutesDe("chondrite_enstatite"),
     ages: [{ de: 4567, a: 4562, label: "Chondres et accrétion de l'astéroïde : dans les premiers millions d'années du Système solaire" }],
     alteration: {
       facilite: 5,
-      mecanisme: "Son métal riche en silicium, ses sulfures de calcium et de magnésium sont instables à l'air humide : l'oldhamite se dissout et sent l'œuf pourri (sulfure d'hydrogène), le métal rouille. Elle se ternit en quelques jours après la chute.",
-      climat: "Elle survit mal hors des déserts froids : à peine 2 % des chondrites qui tombent, et une part encore plus faible des trouvailles.",
+      mecanisme: "Son métal, riche en silicium, et ses sulfures de calcium et de magnésium s'altèrent à l'air humide : l'oldhamite se dissout en exhalant du sulfure d'hydrogène (odeur d'œuf pourri), et le métal rouille. Elle ternit en quelques jours après sa chute.",
+      climat: "Sa conservation est médiocre hors des déserts froids : à peine 2 % des chondrites tombées, et une proportion plus faible encore des trouvailles.",
     },
-    usages: "Recherche : c'est la météorite dont la composition isotopique ressemble le plus à celle de la Terre, ce qui en fait une candidate pour les matériaux qui ont bâti notre planète.",
+    usages: "Objet de recherche : sa composition isotopique est la plus proche de celle de la Terre, ce qui en fait une candidate aux matériaux ayant bâti notre planète.",
     wikipedia: "https://fr.wikipedia.org/wiki/Chondrite_%C3%A0_enstatite",
   },
   {
     id: "achondrite_primitive", nom: "Achondrite primitive", categorie: "meteoritique", sousType: "météorite pierreuse, fusion partielle",
     swatch: "#7d735e", densite: 3500,
-    description: "Une chondrite qui a commencé à fondre. Chauffée au-delà de 1 000 °C sur son astéroïde, elle a perdu une partie de son métal et de ses premiers liquides, mais garde la composition d'ensemble d'une chondrite et parfois des fantômes de chondres. Elle fait le lien entre les météorites restées intactes et celles des astéroïdes entièrement fondus. Aucune n'est connue en France : la référence est la pierre d'Acapulco (Mexique), ramassée encore tiède en 1976.",
-    mineralogie: "Grains d'olivine et de pyroxènes (enstatite, diopside) de taille égale, à jonctions triples à 120° (roche recristallisée, pas cristallisée d'un magma), plagioclase, 10 à 25 % de fer-nickel et de troïlite. Les lodranites, plus chauffées, ont des grains plus gros et moins de plagioclase.",
+    description: "Chondrite ayant commencé à fondre : chauffée au-delà de 1 000 °C sur son astéroïde, elle a perdu une part de son métal et de ses premiers liquides, sans perdre la composition générale d'une chondrite, en gardant parfois des fantômes de chondres. Elle relie ainsi les météorites demeurées intactes à celles d'astéroïdes entièrement fondus. Aucune n'est connue en France ; la référence reste la pierre d'Acapulco (Mexique), ramassée un quart d'heure après sa chute, en 1976 : elle était déjà froide.",
+    mineralogie: "Olivine et pyroxènes (enstatite, diopside) de taille homogène, aux jonctions triples à 120° (roche recristallisée, et non solidifiée depuis un magma), plagioclase, 10 à 25 % de fer-nickel et de troïlite. Les lodranites, plus chauffées, présentent des grains plus gros et moins de plagioclase.",
     mineraux: [["enstatite", 37], ["olivine", 28], ["fer_natif", 12], ["plagioclases", 11], ["troilite", 5], ["diopside", 5], ["chromite", 1], ["merrillite", 1]],
     varietes: [
-      { nom: "acapulcoïte", note: "Grain fin (≈ 0,2 mm), un peu de liquide parti : Acapulco (Mexique, chute du 11 août 1976, 1,9 kg). Une centaine de pierres connues." },
-      { nom: "lodranite", note: "Grain grossier (0,5 à 1 mm) : le résidu après le départ du liquide de fer-sulfure (vers 980 °C) et d'une partie du liquide silicaté. Lodran (Pakistan, 1868). Même astéroïde que les acapulcoïtes, mais plus profond." },
-      { nom: "winonaïte", note: "Proche des chondrites à enstatite, liée aux fers du groupe IAB qui contiennent des inclusions de même nature. Winona (Arizona), trouvée en 1928 dans une sépulture amérindienne." },
-      { nom: "uréilite", note: "Olivine et pigeonite avec du graphite et de petits diamants entre les grains ; rangée tantôt parmi les achondrites primitives, tantôt à part. Novo-Urei (Russie, 1886)." },
+      { nom: "acapulcoïte", note: "Grain fin (≈ 0,2 mm), avec un peu de liquide évacué : Acapulco (Mexique, chute du 11 août 1976, 1,9 kg). On en connaît une centaine." },
+      { nom: "lodranite", note: "Grain grossier (0,5 à 1 mm) : il s'agit du reliquat laissé après l'évacuation du liquide fer-sulfure (vers 980 °C) et d'une part du liquide silicaté. Lodran (Pakistan, 1868). Elle provient du même astéroïde que les acapulcoïtes, mais d'un niveau plus profond." },
+      { nom: "winonaïte", note: "De composition intermédiaire entre chondrites à enstatite et chondrites H (plus réduite qu'une chondrite ordinaire), elle est associée par ses isotopes de l'oxygène aux fers IAB, lesquels contiennent des inclusions de même nature. Winona (Arizona), découverte en 1928 dans une sépulture amérindienne." },
+      { nom: "uréilite", note: "Olivine et pigeonite, entre les grains desquelles se glissent graphite et petits diamants. Classée tantôt parmi les achondrites primitives, tantôt isolée. Novo-Urei (Russie, 1886)." },
     ],
-    regions: [{ nom: "Acapulco (Mexique) — chute du 11 août 1976, 1,9 kg (acapulcoïte de référence)", lat: 16.883, lng: -99.9, etranger: true }],
+    regions: [{ nom: "Acapulco (Mexique) : chute du 11 août 1976, 1,9 kg (acapulcoïte de référence)", lat: 16.883, lng: -99.9, etranger: true }],
     ages: [{ de: 4563.1, a: 4562.6, label: "Refroidissement sous ≈ 1 000 °C : 4 563,1 à 4 562,6 Ma (hafnium-tungstène, astéroïde des acapulcoïtes)" }],
     alteration: {
       facilite: 4,
-      mecanisme: "Comme une chondrite riche en métal : le fer-nickel et la troïlite rouillent d'abord, les silicates s'argilisent ensuite.",
-      climat: "Presque toutes ont été trouvées dans les déserts chauds et en Antarctique, où l'altération est lente.",
+      mecanisme: "À l'image d'une chondrite riche en métal : le fer-nickel et la troïlite rouillent en premier, puis les silicates s'argilisent.",
+      climat: "Quasiment toutes ont été découvertes dans les déserts chauds et en Antarctique, où l'altération avance lentement.",
     },
-    usages: "Recherche sur les premiers pas de la fusion des astéroïdes : comment le métal et les liquides se séparent des silicates.",
+    usages: "Objet d'étude pour les premières étapes de la fusion des astéroïdes : la manière dont le métal et les liquides se séparent des silicates.",
     wikipedia: "https://fr.wikipedia.org/wiki/Classification_des_m%C3%A9t%C3%A9orites",
   },
   // ───────────────────────────── achondrites ─────────────────────────────
   {
     id: "achondrite_asteroidale", nom: "Achondrite astéroïdale", categorie: "meteoritique", sousType: "météorite pierreuse différenciée",
     swatch: "#9c968a", densite: 3100,
-    description: "Un basalte venu d'un astéroïde. Ces roches se sont formées comme celles des volcans terrestres, dans la croûte d'astéroïdes assez gros pour avoir fondu dans les premiers millions d'années du Système solaire. La plupart, les eucrites, diogénites et howardites, viennent de (4) Vesta, le deuxième plus gros astéroïde, cartographié par la sonde Dawn en 2011-2012. La France en a vu tomber plusieurs : Juvinas (Ardèche, 1821, 91 kg), Jonzac, Le Teilleul, Alby-sur-Chéran, et Aubres, qui a donné son nom aux aubrites.",
-    mineralogie: "Eucrite (Juvinas) : pigeonite (pyroxène pauvre en calcium, avec de fines lamelles d'augite) et plagioclase très calcique (anorthite) à parts presque égales, un peu de silice (tridymite), d'ilménite, de chromite, de troïlite et de fer métal. Texture de basalte (lattes de plagioclase) ou de cumulat, souvent bréchifiée par les chocs.",
+    description: "Basalte provenant d'un astéroïde. Ces roches ont pris naissance comme celles des volcans terrestres, dans la croûte d'astéroïdes assez volumineux pour fondre dès les premiers millions d'années du Système solaire. La majorité (eucrites, diogénites et howardites) vient de (4) Vesta, deuxième astéroïde en taille, cartographié par la sonde Dawn entre 2011 et 2012. La France en a reçu plusieurs : Juvinas (Ardèche, 1821, 91 kg), Jonzac, Le Teilleul, Alby-sur-Chéran, ainsi qu'Aubres, qui a donné son nom aux aubrites.",
+    mineralogie: "Eucrite (Juvinas) : la pigeonite (pauvre en calcium, traversée de fines lamelles d'augite) et l'anorthite (plagioclase très calcique) se partagent presque à égalité la roche, auxquelles s'ajoutent un peu de silice (tridymite), d'ilménite, de chromite, de troïlite et de fer métallique. Sa texture rappelle celle d'un basalte (lattes de plagioclase) ou d'un cumulat, souvent brisée par les chocs.",
     mineraux: [["pigeonite", 47], ["plagioclases", 40], ["tridymite", 5], ["augite", 3], ["ilmenite", 1.5], ["chromite", 1.5], ["troilite", 1.5], ["fer_natif", 0.5]],
     varietes: [
       { nom: "eucrite", note: "Le basalte de la croûte de Vesta : pigeonite et plagioclase. Juvinas (1821), Jonzac (Charente-Maritime, 1819), Bouvante (Drôme, trouvée en 1978), Alby-sur-Chéran (Haute-Savoie, 2002)." },
-      { nom: "diogénite", note: "Presque uniquement de l'orthopyroxène en gros grains : un cumulat des profondeurs de la croûte de Vesta, excavé par le cratère Rheasilvia. Tatahouine (Tunisie, 1931)." },
-      { nom: "howardite", note: "Brèche de fragments d'eucrite et de diogénite soudés : un ancien sol (régolithe) de Vesta. Le Teilleul (Manche, 1845, 780 g)." },
-      { nom: "aubrite", note: "Presque uniquement de l'enstatite blanche, pauvre en fer, et des sulfures rares : la cousine fondue des chondrites à enstatite, d'un autre astéroïde. Le nom vient d'Aubres (Drôme), où une pierre de 800 g est tombée le 14 septembre 1836." },
-      { nom: "angrite", note: "Basalte très riche en calcium, l'un des plus anciens connus (≈ 4 564 Ma) : Angra dos Reis (Brésil, 1869)." },
+      { nom: "diogénite", note: "Composée presque exclusivement d'orthopyroxène en gros grains, c'est un cumulat des profondeurs de la croûte de Vesta, mis au jour par le cratère Rheasilvia. Tatahouine (Tunisie, 1931)." },
+      { nom: "howardite", note: "Brèche d'éclats d'eucrite et de diogénite soudés : il s'agit d'un ancien sol (régolithe) de Vesta. Le Teilleul (Manche, 1845, 780 g)." },
+      { nom: "aubrite", note: "Composée presque exclusivement d'enstatite blanche, pauvre en fer, avec quelques sulfures rares : elle constitue la cousine fondue des chondrites à enstatite, issue d'un autre astéroïde. Son nom vient d'Aubres (Drôme), où une pierre de 800 g est tombée le 14 septembre 1836." },
+      { nom: "angrite", note: "Angra dos Reis (Brésil, 1869) : basalte très riche en calcium, parmi les plus vieux connus (≈ 4 564 Ma)." },
     ],
     regions: chutesDe("achondrite_asteroidale"),
     ages: [
@@ -215,24 +228,24 @@ ROCHES.push(
     ],
     alteration: {
       facilite: 3,
-      mecanisme: "Peu de métal, donc peu de rouille : elle s'altère comme un basalte terrestre, le plagioclase et le pyroxène passant lentement aux argiles.",
-      climat: "Plus résistante que les chondrites riches en métal ; sa croûte de fusion, brillante, reste longtemps visible.",
+      mecanisme: "Peu de métal, donc peu de rouille : elle s'altère à la manière d'un basalte terrestre, le plagioclase et le pyroxène se transformant lentement en argiles.",
+      climat: "Résistant davantage que les chondrites riches en métal, elle garde longtemps sa croûte de fusion, brillante.",
     },
-    usages: "Seuls échantillons d'un astéroïde que l'on sait relier à un corps précis observé par une sonde : Vesta.",
+    usages: "Ce sont les seuls échantillons d'astéroïde reliables à un corps précis observé par une sonde : Vesta.",
     wikipedia: "https://fr.wikipedia.org/wiki/M%C3%A9t%C3%A9orite_HED",
   },
   {
     id: "achondrite_martienne", nom: "Achondrite martienne", categorie: "meteoritique", sousType: "météorite pierreuse différenciée",
     swatch: "#7c8a4a", densite: 3500,
-    description: "Une roche de Mars, arrachée à la planète par l'impact d'un astéroïde et tombée sur Terre. On le sait parce que les bulles de gaz piégées dans certaines contiennent l'atmosphère martienne, mesurée par les sondes Viking en 1976. Moins de trois cents sont connues. Celle de Chassigny (Haute-Marne), tombée le 3 octobre 1815, est l'une des rares chutes observées et a donné le « C » du groupe SNC.",
-    mineralogie: "Chassignite (Chassigny) : un cumulat d'olivine, c'est-à-dire des cristaux d'olivine accumulés au fond d'une chambre magmatique, avec un peu d'augite, de pyroxène pauvre en calcium, de feldspath et de chromite entre eux. Les shergottites, les plus nombreuses, sont des basaltes à pyroxènes et plagioclase changé en verre par le choc (maskelynite).",
+    description: "Roche martienne, expulsée de la planète par l'impact d'un astéroïde puis tombée sur Terre. Les bulles de gaz emprisonnées dans certaines contiennent l'atmosphère de Mars, mesurée par les sondes Viking en 1976. Plus de quatre cents sont recensées (en comptant à part les fragments d'une même chute) ; celle de Chassigny (Haute-Marne), tombée le 3 octobre 1815, compte parmi les rares chutes observées et a donné son « C » au groupe SNC.",
+    mineralogie: "Chassignite (Chassigny) : cumulat d'olivine, autrement dit des cristaux d'olivine accumulés au fond d'une chambre magmatique, accompagnés de peu d'augite, de pyroxène pauvre en calcium, de feldspath et de chromite. Les shergottites, majoritaires, sont des basaltes à pyroxènes dont le plagioclase s'est transformé en verre sous le choc (maskelynite).",
     mineraux: [["olivine", 91], ["augite", 3], ["enstatite", 2], ["plagioclases", 2], ["chromite", 1.5], ["apatite", 0.5]],
     varietes: [
       { nom: "shergottite", note: "Basalte ou roche à olivine et pyroxènes, plagioclase vitrifié par le choc ; les trois quarts des météorites martiennes. Âges de cristallisation surtout entre 150 et 575 millions d'années. Shergotty (Inde, 1865)." },
-      { nom: "nakhlite", note: "Roche à augite et olivine, cristallisée vers 1 300 à 1 400 millions d'années dans d'épaisses coulées ; des argiles et carbonates formés par l'eau martienne il y a ≈ 620 millions d'années. Nakhla (Égypte, 1911)." },
-      { nom: "chassignite", note: "Cumulat d'olivine (dunite) cristallisé vers 1 340 millions d'années. Chassigny (Haute-Marne, 1815, 4 kg) en est le modèle ; une seule autre est connue (NWA 2737, Sahara, 2000)." },
-      { nom: "orthopyroxénite (ALH 84001)", note: "Presque uniquement de l'orthopyroxène, cristallisée il y a 4,1 milliards d'années ; ses carbonates ont fait débattre en 1996 de traces de vie martienne, aujourd'hui expliquées sans vie." },
-      { nom: "brèche régolithique (NWA 7034)", note: "« Black Beauty » : fragments d'un ancien sol martien soudés, dix fois plus riches en eau que les autres météorites martiennes ; certains morceaux ont 4,4 milliards d'années." },
+      { nom: "nakhlite", note: "Roche à augite et olivine, qui a cristallisé vers 1 300 à 1 400 millions d'années au sein d'épaisses coulées. Elle abrite aussi des argiles et des carbonates issus de l'eau martienne, il y a ≈ 620 millions d'années. Nakhla (Égypte, 1911)." },
+      { nom: "chassignite", note: "Cumulat d'olivine (dunite) cristallisé vers 1 340 millions d'années. Chassigny (Haute-Marne, 1815, 4 kg) en constitue le modèle ; on en connaît deux autres, NWA 2737 (Sahara, trouvée en 2000) et NWA 8694 (Sahara, achetée en 2014, la plus riche en fer)." },
+      { nom: "orthopyroxénite (ALH 84001)", note: "Composée presque exclusivement d'orthopyroxène, elle a cristallisé il y a 4,1 milliards d'années ; ses carbonates ont suscité en 1996 un débat sur de possibles traces de vie martienne, aujourd'hui expliquées sans intervention du vivant." },
+      { nom: "brèche régolithique (NWA 7034)", note: "« Black Beauty » : des fragments d'ancien sol martien soudés entre eux, contenant dix fois plus d'eau que les autres météorites martiennes ; quelques morceaux ont 4,4 milliards d'années." },
     ],
     regions: chutesDe("achondrite_martienne"),
     ages: [
@@ -241,57 +254,61 @@ ROCHES.push(
     ],
     alteration: {
       facilite: 3,
-      mecanisme: "Une roche à olivine : elle s'altère sur Terre comme une péridotite, l'olivine passant aux argiles et aux oxydes de fer. Certaines portaient déjà des argiles et des carbonates formés par l'eau sur Mars, qu'il faut distinguer de l'altération terrestre.",
-      climat: "Presque toutes sont des trouvailles du Sahara, d'Oman et de l'Antarctique, où l'altération est lente.",
+      mecanisme: "Roche à olivine : sur Terre, elle s'altère comme une péridotite, l'olivine se transformant en argiles et en oxydes de fer. Certaines contenaient déjà, avant leur arrivée, des argiles et des carbonates formés par l'eau sur Mars, qu'il faut distinguer de l'altération terrestre.",
+      climat: "Presque toutes ont été découvertes au Sahara, à Oman et en Antarctique, où l'altération est lente.",
     },
-    usages: "Seuls échantillons de Mars disponibles sur Terre, en attendant le retour d'échantillons prélevés par le rover Perseverance.",
+    usages: "Il s'agit des seuls échantillons martiens disponibles sur Terre, dans l'attente du retour d'échantillons recueillis par le rover Perseverance.",
     wikipedia: "https://fr.wikipedia.org/wiki/M%C3%A9t%C3%A9orite_martienne",
   },
   {
     id: "achondrite_lunaire", nom: "Achondrite lunaire", categorie: "meteoritique", sousType: "météorite pierreuse différenciée",
     swatch: "#b9b5ab", densite: 2800,
-    description: "Un fragment de la Lune, éjecté par la chute d'un astéroïde sur sa surface. La première a été reconnue en 1982, ramassée sur la glace des Allan Hills, en Antarctique : une brèche claire semblable aux roches des hauts plateaux rapportées par Apollo. Environ une sur mille des météorites trouvées vient de la Lune ; aucune n'est connue en France. Tombées au hasard, elles échantillonnent aussi la face cachée, que les missions Apollo n'ont pas visitée.",
-    mineralogie: "Brèche du régolithe des hauts plateaux (ALH 81005) : fragments d'anorthosite (plagioclase très calcique), de basalte et de verre d'impact, soudés par d'autres impacts ; un peu de pyroxène, d'olivine, d'ilménite et de fer métal venu des micrométéorites. Les basaltes des mers lunaires sont plus sombres, riches en pyroxène et en ilménite.",
+    description: "Morceau de la Lune, éjecté lors de la chute d'un astéroïde à sa surface. La première fut identifiée en 1982, sur la glace des Allan Hills (Antarctique) : une brèche claire, comparable aux roches des hauts plateaux rapportées par Apollo. Moins d'une météorite trouvée sur cent provient de la Lune (de 1 à 3 % des homologations annuelles, beaucoup étant des morceaux d'une même chute) ; aucune n'est connue en France. Tombées au hasard, elles font aussi connaître la face cachée, que les missions Apollo n'ont pas explorée.",
+    mineralogie: "Brèche du régolithe des hauts plateaux (ALH 81005) : fragments d'anorthosite (plagioclase très calcique), de basalte et de verre d'impact, cimentés par d'autres chocs ; on y trouve également un peu de pyroxène, d'olivine, d'ilménite et de fer métallique apporté par les micrométéorites. Les basaltes des mers, plus sombres, contiennent davantage de pyroxène et d'ilménite.",
     mineraux: [["anorthite", 70], ["verre", 10], ["pigeonite", 8], ["augite", 5], ["olivine", 5], ["ilmenite", 1], ["fer_natif", 1]],
     varietes: [
-      { nom: "brèche régolithique des hauts plateaux", note: "Fragments clairs d'anorthosite et billes de verre dans une matrice fine : l'ancien sol lunaire, tassé et soudé par les chocs. ALH 81005 (Antarctique, 1982, 31 g)." },
-      { nom: "basalte des mers", note: "Roche sombre à pyroxène, plagioclase et ilménite, issue des grandes coulées qui ont rempli les bassins entre 3,9 et 3,1 milliards d'années." },
-      { nom: "brèche mixte", note: "Mélange de fragments des hauts plateaux et des mers : elle vient d'une zone de contact entre les deux." },
+      { nom: "brèche régolithique des hauts plateaux", note: "Fragments clairs d'anorthosite et billes de verre au sein d'une matrice fine : il s'agit de l'ancien sol lunaire, comprimé et soudé par les chocs. ALH 81005 (Antarctique, 1982, 31 g)." },
+      { nom: "basalte des mers", note: "Roche sombre où l'on retrouve pyroxène, plagioclase et ilménite, issue de vastes coulées ayant comblé les bassins, surtout entre 3,9 et 3,1 milliards d'années ; les plus jeunes datées ont environ 2 milliards d'années (Chang'e 5)." },
+      { nom: "brèche mixte", note: "Assemblage de fragments provenant des hauts plateaux et des mers, né d'une zone de contact entre ces deux milieux." },
     ],
-    regions: [{ nom: "Allan Hills (Antarctique) — ALH 81005, trouvée le 18 janvier 1982, 31 g (première météorite lunaire reconnue)", lat: -76.75, lng: 159.67, etranger: true }],
+    regions: [{ nom: "Allan Hills (Antarctique) : ALH 81005, trouvée le 18 janvier 1982, 31 g (première météorite lunaire reconnue)", lat: -76.75, lng: 159.67, etranger: true }],
     ages: [
       { de: 4460, a: 4360, label: "Croûte d'anorthosite des hauts plateaux, cristallisée dans l'océan de magma lunaire : ≈ 4,46 à 4,36 milliards d'années" },
       { de: 20, a: 0, label: "Éjection de la Lune : toutes les météorites lunaires connues sont parties il y a moins de 20 millions d'années, la plupart il y a moins de 100 000 ans" },
     ],
     alteration: {
       facilite: 2,
-      mecanisme: "Faite surtout de plagioclase, avec très peu de métal : elle s'altère lentement, d'abord par son verre et son olivine.",
-      climat: "Toutes ont été trouvées dans les déserts (Sahara, Oman) et en Antarctique.",
+      mecanisme: "Surtout composée de plagioclase et presque dépourvue de métal, elle s'altère lentement, par son verre et son olivine en premier lieu.",
+      climat: "Elles ont toutes été découvertes dans les déserts (Sahara, Oman) et en Antarctique.",
     },
-    usages: "Les seules roches lunaires qu'un particulier puisse posséder : celles d'Apollo et des sondes Luna restent propriété des États.",
+    usages: "Ce sont presque les seules roches lunaires qu'un particulier puisse détenir : celles des missions Apollo et des sondes Luna appartiennent aux États, hormis trois grains de Luna 16 vendus aux enchères en 1993 puis en 2018.",
     wikipedia: "https://fr.wikipedia.org/wiki/M%C3%A9t%C3%A9orite_lunaire",
   },
   // ───────────────────────────── fers et sidérolithes ─────────────────────────────
   {
     id: "meteorite_fer", nom: "Météorite de fer", categorie: "meteoritique", sousType: "météorite métallique différenciée",
     swatch: "#6b6a6a", densite: 7900,
-    description: "Un morceau du noyau d'un astéroïde : un alliage de fer et de nickel qui s'est séparé des silicates quand l'astéroïde a fondu, puis a refroidi de quelques dizaines à quelques centaines de degrés par million d'années. Sciée, polie et attaquée à l'acide, elle montre un réseau de lamelles entrecroisées, les figures de Widmanstätten, qu'aucune forge ne sait reproduire. La plus grosse de France, La Caille (Alpes-Maritimes, 626 kg), est au Muséum de Paris depuis 1828.",
-    mineralogie: "Deux alliages de fer et de nickel : la kamacite (5 à 7 % de nickel), en larges lamelles, et la taénite (plus de 25 % de nickel), en fines bordures ; entre eux, la plessite, mélange des deux. Nodules de troïlite, aiguilles et plaques de schreibersite (phosphure), parfois du graphite et de la cohénite (carbure).",
+    description: "Fragment du noyau d'un astéroïde, alliage de fer et de nickel séparé des silicates lors de la fusion de son corps parent, puis refroidi de quelques dizaines à quelques centaines de degrés par million d'années. Sciée, polie puis attaquée à l'acide, elle laisse voir un entrelacs de lamelles, les figures de Widmanstätten, qu'aucune forge ne reproduit. La plus lourde de France, La Caille (Alpes-Maritimes, 626 kg), appartient au Muséum de Paris depuis 1828.",
+    mineralogie: "Deux alliages fer-nickel coexistent : la kamacite (5 à 7 % de nickel) forme de larges lamelles, tandis que la taénite (plus de 25 % de nickel) occupe de minces bordures ; la plessite, mélange des deux, remplit l'espace intermédiaire. On y repère aussi des nodules de troïlite, des aiguilles et plaques de schreibersite (phosphure), voire du graphite et de la cohénite (carbure).",
     mineraux: [["fer_natif", 81], ["taenite", 13], ["troilite", 3], ["schreibersite", 2], ["chromite", 0.5], ["cohenite", 0.5]],
     varietes: [
       { nom: "octaédrite", note: "La plus courante (6 à 13 % de nickel) : lamelles de kamacite rangées selon les faces d'un octaèdre, de moins de 0,2 mm (octaédrite très fine) à plus de 3,3 mm (très grossière). Saint-Aubin (Aube, trouvée en 1968, 472 kg en plusieurs masses), du groupe IIIAB." },
-      { nom: "hexaédrite", note: "Moins de 6 % de nickel : un seul cristal de kamacite, sans figures de Widmanstätten, mais rayé de fines lignes de Neumann, des macles nées des chocs. Groupe IIAB." },
-      { nom: "ataxite", note: "Plus de 16 % de nickel : un mélange trop fin pour être vu à l'œil. La plus grosse météorite connue, Hoba (Namibie, ≈ 60 tonnes), en est une." },
+      { nom: "hexaédrite", note: "Avec moins de 6 % de nickel, elle se réduit à un cristal unique de kamacite, dépourvu de figures de Widmanstätten, mais strié de fines lignes de Neumann, des macles provoquées par les chocs. Groupe IIAB." },
+      { nom: "ataxite", note: "Plus de 16 % de nickel : une texture trop fine pour être distinguée à l'œil nu. Hoba (Namibie, ≈ 60 tonnes), la plus grosse météorite connue, relève de ce type." },
     ],
     regions: chutesDe("meteorite_fer"),
     ages: [
       { de: 4566, a: 4565, label: "Séparation du noyau : 1 à 1,5 million d'années après les premiers solides (hafnium-tungstène, Kruijer et al. 2014)" },
-      { de: 4560, a: 4400, label: "Refroidissement du noyau entre 700 et 450 °C, figures de Widmanstätten : quelques millions à quelques dizaines de millions d'années" },
+      { de: 4560, a: 4530, label: "Refroidissement du noyau entre 700 et 450 °C, figures de Widmanstätten : quelques millions à quelques dizaines de millions d'années" },
     ],
     alteration: {
       facilite: 2,
-      mecanisme: "Le fer rouille, surtout là où le chlore du sol ou de la mer pénètre : il se forme de l'akaganéite, un oxyhydroxyde de fer chargé de chlore qui gonfle et fait éclater le métal par plaques. Les musées doivent conserver certaines pièces au sec.",
-      climat: "Le métal résiste longtemps : des fers ont été retrouvés après des centaines de milliers d'années dans les déserts. Ils sont surreprésentés dans les collections (5,7 % des chutes, mais près de 90 % de la masse des météorites connues).",
+      mecanisme: "La rouille progresse surtout là où le chlore venu du sol ou de la mer s'infiltre : elle engendre l'akaganéite, oxyhydroxyde de fer chloré, qui gonfle et détache le métal par plaques. Les musées conservent certaines pièces au sec.",
+      // D.8.3 : pas de vitesse en mm (le métal rouille dans sa masse) ; durée de survie mesurée
+      climat: "Le métal persiste longtemps : le fer de Tamarugal, dans le désert d'Atacama, pourrait se trouver sur Terre depuis 2,7 millions d'années (Chang et Wänke 1969, datation contestée). Dans les collections, les fers sont surreprésentés : 5,7 % des chutes, mais près de 90 % de la masse des météorites connues.",
+      sources: [
+        "Chang C. et Wänke H. (1969), « Beryllium-10 in iron meteorites, their cosmic-ray exposure and terrestrial ages », dans Millman P. M. (dir.), Meteorite Research, Reidel, p. 397–406"
+      ],
     },
     usages: "Premier fer travaillé par l'homme, avant la métallurgie : perles égyptiennes de 3 200 av. J.-C., poignard de Toutânkhamon, outils des Inuits taillés dans la météorite du cap York.",
     wikipedia: "https://fr.wikipedia.org/wiki/M%C3%A9t%C3%A9orite_de_fer",
@@ -299,48 +316,48 @@ ROCHES.push(
   {
     id: "pallasite", nom: "Pallasite", categorie: "meteoritique", sousType: "sidérolithe (météorite mixte)",
     swatch: "#a68c3a", densite: 4800,
-    description: "Des cristaux d'olivine jaune-vert, gros comme des noisettes, enchâssés dans une éponge de fer-nickel : sciée en tranche fine, la lumière passe à travers comme dans un vitrail. On l'a longtemps crue née à la limite entre le noyau et le manteau d'un astéroïde ; on pense aujourd'hui qu'une collision a injecté le métal d'un noyau dans le manteau d'olivine. Une seule chute observée en Europe occidentale récente ; aucune en France. Le nom vient du naturaliste Peter Pallas, qui décrivit en 1772 la masse de Krasnoïarsk (Sibérie).",
+    description: "Cristaux d'olivine jaune-vert, de la taille de noisettes, noyés dans une éponge de fer-nickel ; en tranche fine, la roche laisse passer la lumière comme un vitrail. D'abord supposée née à la frontière entre noyau et manteau d'un astéroïde, elle s'expliquerait plutôt, selon beaucoup d'auteurs, par l'injection du métal d'un noyau dans le manteau d'olivine lors d'une collision. Quatre chutes seulement ont été observées dans le monde (Mineo en Sicile, 1826 ; Zaisho au Japon, 1898 ; Marjalahti en Carélie, 1902 ; Omolon en Sibérie, 1981), aucune en France. Le nom rend hommage au naturaliste Peter Pallas, qui décrivit en 1772 la masse de Krasnoïarsk (Sibérie).",
     mineralogie: "Olivine (forstérite, 55 à 65 % du volume) en cristaux arrondis ou anguleux de 0,5 à 2 cm, dans du fer-nickel (kamacite et taénite, figures de Widmanstätten dans les plages larges) ; troïlite, schreibersite, chromite et phosphates (merrillite, stanfieldite) accessoires.",
     mineraux: [["olivine", 60], ["fer_natif", 30], ["taenite", 5], ["troilite", 2], ["schreibersite", 1.5], ["merrillite", 1], ["chromite", 0.5]],
     varietes: [
-      { nom: "pallasite du groupe principal", note: "Presque toutes les pallasites : un même groupe de corps parents, au métal proche des fers IIIAB. Krasnoïarsk (Sibérie, ≈ 700 kg, décrite par Pallas), Brenham (Kansas), Esquel (Argentine), Marburg (Allemagne, trouvée en 1906, 3 kg)." },
-      { nom: "groupe d'Eagle Station", note: "Cinq pierres, olivine plus riche en fer et en calcium, oxygène d'une autre signature : un autre astéroïde." },
-      { nom: "pallasite à pyroxène", note: "Environ 5 % d'orthopyroxène avec l'olivine : Vermillion (Kansas) et Yamato 8451 (Antarctique)." },
+      { nom: "pallasite du groupe principal", note: "La majorité des pallasites appartiennent à un même groupe de corps parents, dont le métal est voisin des fers IIIAB. Exemples : Krasnoïarsk (Sibérie, ≈ 700 kg, décrite par Pallas), Brenham (Kansas), Esquel (Argentine), Marburg (Allemagne, découverte en 1906, 3 kg)." },
+      { nom: "groupe d'Eagle Station", note: "Cinq pierres dont l'olivine est plus riche en fer et en calcium, et dont l'oxygène présente une autre signature : elles proviennent d'un autre astéroïde." },
+      { nom: "pallasite à pyroxène", note: "Avec l'olivine, environ 5 % d'orthopyroxène : Vermillion (Kansas) et Yamato 8451 (Antarctique)." },
     ],
-    regions: [{ nom: "Marburg (Allemagne) — trouvée en 1906, 3 kg : la pallasite la plus proche de la France", lat: 50.817, lng: 8.767, etranger: true }],
+    regions: [{ nom: "Marburg (Allemagne), trouvée en 1906, 3 kg : la pallasite la plus proche de la France", lat: 50.817, lng: 8.767, etranger: true }],
     ages: [
       { de: 4565, a: 4560, label: "Mélange du métal et de l'olivine dans l'astéroïde : dans les premiers millions d'années" },
       { de: 4560, a: 4400, label: "Refroidissement lent (≈ 2,5 à 18 °C par million d'années entre 700 et 400 °C, Yang et al. 2010)" },
     ],
     alteration: {
       facilite: 3,
-      mecanisme: "Le métal rouille et l'olivine se fissure : les tranches de pallasite se conservent dans l'huile ou sous vernis, sinon l'olivine se détache de son métal.",
-      climat: "Comme les fers, le métal résiste longtemps dans les déserts ; les plus grosses masses (Brenham, Fukang, Huckitta) dépassent la tonne.",
+      mecanisme: "Le métal s'oxyde et l'olivine se fendille : mieux vaut conserver les tranches de pallasite dans l'huile ou sous vernis, faute de quoi l'olivine se détache de son support métallique.",
+      climat: "Les masses métalliques, comme les fers, durent longtemps dans les déserts ; Brenham, Fukang et Huckitta dépassent chacune la tonne.",
     },
-    usages: "Pièces de collection recherchées pour leurs tranches translucides ; l'olivine gemme des pallasites est l'une des rares pierres précieuses d'origine extraterrestre.",
+    usages: "Recherchées par les collectionneurs pour leurs tranches translucides, les pallasites offrent une olivine gemme, l'une des rares pierres précieuses venues de l'espace.",
     wikipedia: "https://fr.wikipedia.org/wiki/Pallasite",
   },
   {
     id: "mesosiderite", nom: "Mésosidérite", categorie: "meteoritique", sousType: "sidérolithe (météorite mixte)",
     swatch: "#7a7468", densite: 4800,
-    description: "Une brèche faite à parts égales de fer-nickel et de fragments de basalte et de cumulats de croûte d'astéroïde. Une collision a mélangé le métal fondu d'un noyau et la croûte froide d'un autre corps ; le mélange a ensuite refroidi plus lentement que toute autre météorite, moins d'un degré par million d'années. Aucune en France ; la plus proche est tombée à Barea (Espagne) en 1842. Au Chili, les fragments de Vaca Muerta, brillants de métal, ont d'abord été pris pour un filon d'argent.",
-    mineralogie: "Fer-nickel (kamacite et taénite) en grains et en nodules, et fragments de silicates de la même nature que les eucrites et les diogénites : pyroxènes (pigeonite, orthopyroxène), plagioclase calcique, un peu d'olivine et de tridymite ; troïlite, schreibersite et phosphates (merrillite).",
+    description: "Brèche où le fer-nickel et les fragments de basalte et de cumulats prélevés dans la croûte d'un astéroïde se répartissent à parts égales. Une collision a injecté le métal fondu d'un noyau dans la croûte froide d'un autre corps ; ce mélange s'est ensuite refroidi plus lentement que n'importe quelle autre météorite, à moins d'un degré par million d'années. Aucune chute en France ; la plus proche a eu lieu à Barea (Espagne) en 1842. Au Chili, les fragments de Vaca Muerta, luisants de métal, furent d'abord pris pour un filon d'argent.",
+    mineralogie: "Grains et nodules de fer-nickel (kamacite et taénite), accompagnés de fragments silicatés de même nature que les eucrites et les diogénites : pyroxènes (pigeonite, orthopyroxène), plagioclase calcique, un peu d'olivine et de tridymite ; troïlite, schreibersite et phosphates (merrillite).",
     mineraux: [["fer_natif", 40], ["enstatite", 15], ["pigeonite", 12], ["plagioclases", 15], ["taenite", 8], ["troilite", 3], ["tridymite", 2.5], ["olivine", 2], ["schreibersite", 1], ["merrillite", 1], ["chromite", 0.5]],
     varietes: [
-      { nom: "mésosidérite de classe A", note: "Les fragments de silicates sont surtout des basaltes et gabbros (pyroxène et plagioclase), comme les eucrites." },
-      { nom: "mésosidérite de classe B", note: "Les fragments sont surtout de l'orthopyroxène, comme les diogénites : une croûte plus profonde. Vaca Muerta (Chili, 3,8 tonnes en de nombreux fragments)." },
+      { nom: "mésosidérite de classe A", note: "Les fragments de silicates sont principalement des basaltes et des gabbros (pyroxène et plagioclase), à l'image des eucrites. Vaca Muerta (Chili, 3,8 tonnes en de nombreux fragments) en fait partie." },
+      { nom: "mésosidérite de classe B", note: "Les fragments sont principalement de l'orthopyroxène, à l'image des diogénites : ils proviennent d'une croûte plus profonde. Bondoc (Philippines, 889 kg, trouvée en 1956)." },
     ],
-    regions: [{ nom: "Barea (Espagne) — chute de 1842, 3,2 kg : la mésosidérite la plus proche de la France", lat: 42.383, lng: -2.5, etranger: true }],
+    regions: [{ nom: "Barea (Espagne), chute de 1842, 3,2 kg : la mésosidérite la plus proche de la France", lat: 42.383, lng: -2.5, etranger: true }],
     ages: [
       { de: 4525, a: 4520, label: "Collision et mélange du métal et de la croûte : ≈ 4 525 Ma (Haba et al. 2019)" },
       { de: 4500, a: 3900, label: "Refroidissement extrêmement lent, moins d'un degré par million d'années vers 400 °C" },
     ],
     alteration: {
       facilite: 3,
-      mecanisme: "Le métal rouille et gonfle entre les fragments de silicates, qui finissent par se détacher.",
-      climat: "Rares (environ 200 connues, dont 7 chutes) ; beaucoup viennent des déserts et de l'Antarctique.",
+      mecanisme: "Entre les fragments silicatés, le métal se gonfle en rouillant, jusqu'à les désolidariser.",
+      climat: "Rares, avec environ 200 spécimens connus dont 7 chutes ; beaucoup proviennent des déserts et de l'Antarctique.",
     },
-    usages: "Recherche sur les collisions entre astéroïdes différenciés au début du Système solaire.",
+    usages: "Sujet de recherche : les collisions entre astéroïdes différenciés, survenues aux débuts du Système solaire.",
     wikipedia: "https://fr.wikipedia.org/wiki/M%C3%A9sosid%C3%A9rite",
   },
 );
@@ -360,9 +377,7 @@ window.CartesChutes = (function () {
     return `<h2>Où sont-elles tombées en France ?</h2>
       <p class="sub">${miennes.length
         ? `<b>${miennes.length} météorite${miennes.length > 1 ? "s" : ""} de ce type en France</b> (${chutes} chute${chutes > 1 ? "s" : ""} observée${chutes > 1 ? "s" : ""}, ${miennes.length - chutes} trouvaille${miennes.length - chutes > 1 ? "s" : ""}), en couleur ; la taille du disque croît avec la masse recueillie.`
-        : `<b>Aucune météorite de ce type n'est connue en France.</b>${ref ? ` Le losange marque la référence la plus proche ou la plus connue : ${ref.nom.split(" — ")[0]}.` : ""}`}
-        En gris, les ${CHUTES_FRANCE.length - miennes.length} autres météorites de France. Le lieu d'une chute ne dépend pas du sous-sol :
-        il n'y a pas de fond géologique sur cette carte. Cliquer sur un point pour sa date, sa classe et sa masse.</p>`;
+        : `<b>Aucune météorite de ce type n'a été recensée en France.</b>${ref ? ` Le losange marque la référence la plus proche ou la plus connue : ${ref.nom.split(/ [—:] /)[0]}.` : ""}`} En gris, les ${CHUTES_FRANCE.length - miennes.length} autres météorites de France. La localisation d'une chute ne dépend pas du sous-sol : cette carte ne comporte aucun fond géologique. Un clic sur un point affiche sa date, sa classe et sa masse.</p>`;
   }
   function rendre(div, rock, couleur) {
     const carte = L.map(div, { scrollWheelZoom: false, preferCanvas: true });
