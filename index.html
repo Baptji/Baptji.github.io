@@ -335,9 +335,9 @@ footer a { color: inherit; text-underline-offset: 3px; }
   apps.forEach(function (app) {
     liste.appendChild(app);
     var v = V[app.dataset.app]; if (!v) return;
-    var jour = new Date(v.date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+    var jour = new Date(v.date).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
     var maj = app.querySelector(".maj"), le = document.createElement("span");
-    le.className = "long"; le.textContent = "mise à jour le ";   // retiré sur téléphone, pour tenir sur une ligne
+    le.className = "long"; le.textContent = "mise à jour en ";   // retiré sur téléphone, pour tenir sur une ligne
     maj.append("Version " + v.version + " · ", le, jour);
   });
   var calme = matchMedia("(prefers-reduced-motion: reduce)").matches;
