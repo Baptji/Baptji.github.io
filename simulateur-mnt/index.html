@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulateur MNT</title>
+<meta name="description" content="Écoulements, dépressions et TWI d'un MNT, en 3D, dans le navigateur : MNT LiDAR HD de l'IGN ou votre propre fichier, qui reste sur votre ordinateur.">
+<link rel="icon" href="icone.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="style.css?v=20261105233926">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+    "geotiff": "https://cdn.jsdelivr.net/npm/geotiff@2.1.3/+esm"
+  }
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="noyau.js?v=20261105233926"></script>
+<script type="module" src="app.js?v=20261105233926"></script>
+</head>
+<body>
+<header class="barre">
+  <div class="titre"><img src="icone.png" alt="" width="22" height="22"> Simulateur MNT</div>
+  <div class="segments ecrans"><button id="b-carte" class="actif">Carte</button><button id="b-terrain">Terrain 3D</button></div>
+  <button id="b-ensemble" class="outil" disabled title="Vue d'ensemble (0)">⤢ Vue d'ensemble</button>
+  <button id="b-dessus" class="outil" disabled title="Vue de dessus">▣ Vue de dessus</button>
+  <button id="b-image" class="outil" disabled title="Enregistrer la vue 3D en PNG">◉ Image</button>
+  <span class="ressort"></span>
+  <a class="outil lien" href="notice.html" target="_blank" rel="noopener">Notice</a>
+  <label class="outil principal" title="GeoTIFF (.tif) ou grille ASCII (.asc), en Lambert-93 de préférence">
+    Ouvrir un MNT…<input id="fichier" type="file" accept=".tif,.tiff,.asc" hidden>
+  </label>
+  <input id="fichier-emprise" type="file" accept=".shp,.prj,.dbf,.shx" multiple hidden>
+</header>
+
+<main>
+  <section id="centre">
+    <div id="carte" class="carte"></div>
+    <canvas id="vue3d"></canvas>
+    <canvas id="outil-main" class="outil-main"></canvas>
+    <div id="accueil" class="accueil">
+      <div class="depot">
+        <div class="symbole">⛰</div>
+        <h1>Déposez un MNT ici</h1>
+        <p>GeoTIFF (.tif) ou grille ASCII (.asc) en Lambert-93, par exemple un MNT de MNT Fusion ou du LiDAR HD de l'IGN.
+          <strong>Le fichier reste sur votre ordinateur</strong> : rien n'est envoyé, le calcul se fait dans cette page.</p>
+        <p class="limite" id="texte-limite"></p>
+        <div class="boutons">
+          <label class="outil principal">Choisir un fichier…<input id="fichier2" type="file" accept=".tif,.tiff,.asc" hidden></label>
+          <button id="b-exemple" class="outil">Essayer avec un exemple</button>
+        </div>
+      </div>
+    </div>
+    <div id="legende" class="flottant haut-gauche" hidden></div>
+    <div id="lecture" class="flottant bas-gauche" hidden></div>
+    <div id="bulle" class="bulle" hidden></div>
+    <div id="aide" class="aide" hidden>Glisser : déplacer · clic droit ou ⇧ + glisser : tourner · molette : zoomer · double-clic : s'approcher · 0 : vue d'ensemble</div>
+    <div id="voile" class="voile" hidden>
+      <div class="carte-progres"><progress id="progres" max="1" value="0"></progress><div id="etape"></div>
+        <button id="b-arreter" class="outil petit">Arrêter</button></div>
+    </div>
+    <div id="dialogue" class="voile" hidden><div class="carte-dialogue" id="dialogue-contenu"></div></div>
+  </section>
+  <aside id="panneau"></aside>
+</main>
+<div id="zone-depot" class="zone-depot" hidden>Déposer le MNT (.tif, .asc) ou l'emprise (.shp)</div>
+</body>
+</html>

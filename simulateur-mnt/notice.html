@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notice du simulateur</title>
+<link rel="icon" href="icone.png">
+<style>
+  :root { --fond: #f6f6f4; --texte: #1d1f1e; --second: #5c6361; --trait: #d6dad6; --accent: #0a6cdf; --encadre: #eef2f7; }
+  @media (prefers-color-scheme: dark) { :root { --fond: #1b1d1c; --texte: #e8ebe9; --second: #a3aaa7; --trait: #343a38; --accent: #5aa2f8; --encadre: #222a33; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--fond); color: var(--texte); font: 15px/1.55 -apple-system, "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 26px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 28px 0 8px; padding-top: 14px; border-top: 1px solid var(--trait); }
+  p, li { color: var(--texte); }
+  .chapeau { color: var(--second); margin-top: 4px; }
+  .encadre { background: var(--encadre); border-radius: 10px; padding: 12px 14px; margin: 14px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  td, th { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--trait); vertical-align: top; }
+  th { color: var(--second); font-weight: 600; }
+  code { font: 13px ui-monospace, Menlo, Consolas, monospace; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+<h1>Simulateur MNT — notice</h1>
+<p class="chapeau">Écoulements, dépressions et indice d'humidité (TWI) d'un modèle numérique de terrain, en 3D, dans le navigateur.
+Rien à installer : le calcul se fait dans la page. Un MNT ouvert depuis votre ordinateur <strong>n'est jamais envoyé</strong>.</p>
+
+<h2>1. Choisir la zone ou ouvrir un MNT</h2>
+<ul>
+  <li><strong>Carte</strong> : chercher le site (commune, adresse, <code>680626 6871245</code> en Lambert-93, <code>48,94 2,73</code> en degrés),
+    puis « Tracer » et glisser sur la carte (ou Maj + glisser à tout moment), ou « Importer une emprise » (.shp en Lambert-93 ou en degrés, avec son .prj).</li>
+  <li><strong>MNT de la zone</strong> : LiDAR HD (pas de 0,5 m : valeurs natives de l'IGN ; 1 et 2 m : moyenne pondérée) ou RGE ALTI (flux WMS),
+    marge autour de la zone, puis « Charger et simuler » : la page demande les altitudes à la Géoplateforme de l'IGN et passe en 3D.</li>
+  <li><strong>Fichier</strong> : « Ouvrir un MNT… », ou le déposer sur la page.</li>
+</ul>
+<table>
+  <tr><th>Formats</th><td>GeoTIFF (<code>.tif</code>, une bande, flottant ou entier, toutes compressions courantes) ou grille ASCII ESRI (<code>.asc</code>).
+    Par exemple un MNT exporté de QGIS, de MNT Fusion ou du LiDAR HD de l'IGN.</td></tr>
+  <tr><th>Système</th><td>Lambert-93 (EPSG:2154) attendu : c'est lui qui permet d'ajouter la photo aérienne de l'IGN.
+    Un autre système projeté en mètres fonctionne, sans photo.</td></tr>
+  <tr><th>Cellules</th><td>Carrées. Les valeurs « sans donnée » (NoData, ou ≤ −9999) sont traitées comme l'extérieur du MNT : l'eau s'y perd.</td></tr>
+  <tr><th>Taille</th><td>La page annonce sa limite à l'ouverture : environ 6 millions de cellules sur un ordinateur de 4 Go,
+    12 millions sur 8 Go, 20 millions au-delà (soit 300 ha au pas de 0,5 m ou 1 200 ha au pas de 1 m pour 12 millions).
+    Au-delà, elle propose de ramener le MNT à un pas plus grand (moyenne des cellules) ou de n'en garder que le centre.
+    Compter environ 6 secondes de calcul pour 10 millions de cellules sur un ordinateur récent.</td></tr>
+</table>
+
+<h2>2. Lire le terrain</h2>
+<ul>
+  <li><strong>Souris</strong> : glisser pour déplacer, clic droit (ou Maj + glisser) pour tourner, molette pour zoomer,
+    double-clic pour s'approcher, touche 0 pour la vue d'ensemble.</li>
+  <li><strong>Affichage, onglet Terrain</strong> : fond photo aérienne (opacité réglable), altitudes ou TWI, et après remodelage les écarts ; exagération du relief.</li>
+  <li><strong>Onglet Hydrologie</strong> : écoulements (par débit, avec un seuil d'affichage, ou par ordre de Strahler) et dépressions
+    (hauteur d'eau, avec une profondeur minimale). Cliquer une dépression l'entoure ; la liste du panneau donne les plus grandes.</li>
+  <li><strong>Onglet Étude</strong> : calques drapés sur le terrain, chacun avec son opacité, pour consultation seulement (rien n'est exporté) :
+    géologie (carte harmonisée à 1/50 000 du BRGM, en image pour l'instant), pédologie (unités du Référentiel régional pédologique,
+    étiquetées par sol dominant, numéro d'UCS ou liste des sols, composition lue dans la fiche de chaque UCS), courbes de niveau
+    (tous les 1 m sur le MNT lissé, maîtresses cotées tous les 5 m) et vues anciennes (cartes de Cassini et d'État-Major, Scan 50 des années 1950,
+    photographies aériennes de l'IGN de 1950 à aujourd'hui, doublons écartés ; curseur « Époque »).</li>
+  <li><strong>Lecture au curseur</strong> : altitude, pente, surface drainée, débit, TWI, ordre de Strahler, sol de l'UCS si la pédologie est affichée, ou la fiche de la
+    dépression survolée (volume, bassin versant, durée de pluie pour la remplir).</li>
+</ul>
+
+<h2>3. Remodeler et comparer</h2>
+<p>Le MNT ouvert n'est jamais modifié : les opérations s'appliquent à une copie, dans l'ordre, et tout est recalculé.</p>
+<ul>
+  <li><strong>± X m</strong> : monter ou descendre le terrain, partout ou dans une zone dessinée en cliquant ses sommets sur le terrain.</li>
+  <li><strong>Altitude</strong> : mettre le terrain à une altitude fixe (plateforme), partout ou dans la zone.</li>
+  <li><strong>Égaliser</strong> : autour d'un point cliqué, un disque mis à l'altitude choisie, puis un raccord progressif
+    (en cosinus) jusqu'au terrain existant.</li>
+  <li><strong>Camion</strong> et <strong>aspirateur</strong> : prenez l'outil, puis maintenez le clic sur le terrain pour verser
+    ou aspirer de la terre (30 touches par seconde : plus on reste au même endroit, plus le tas monte ou le trou se creuse).
+    Forme rond, carré, rectangle ou hexagone, taille et orientation, débit, et répartition de « au centre » à « sur les bords ».
+    ⇧ + glisser déplace la vue, Échap repose l'outil ; le calcul reprend un peu plus d'une seconde après le dernier passage.</li>
+  <li><strong>Annuler / Rétablir</strong> (Ctrl+Z, Ctrl+Maj+Z) et <strong>Origine</strong> pour revenir au MNT ouvert.</li>
+</ul>
+<p>La comparaison donne le remblai et le déblai (m³), l'exutoire principal, le nombre et le volume des dépressions,
+le TWI moyen et les surfaces devenues plus humides ou plus sèches ; le fond « Écarts » les montre sur le terrain.</p>
+
+<h2>4. Pluie de projet</h2>
+<p>Intensité directe (mm/h) ou coefficients de <strong>Montana</strong> (i = a × t<sup>−b</sup>, a en mm/min, t en min, avec la
+station et la période de retour) ; durée de pluie, d'où la hauteur de pluie ; C par défaut. « Dessiner une surface » : cliquer
+ses sommets sur le terrain, puis « Terminer » avec un type. Chaque surface a son C, ou son <strong>CN</strong> (SCS, Ia = 0,2 S),
+dont on tire C = ruissellement / pluie pour la hauteur de pluie de projet. Le débit devient i × Σ (C × aire drainée).
+Les préréglages de pluie, et la pluie et les surfaces de chaque MNT, sont gardés dans ce navigateur.</p>
+
+<h2>5. Exporter</h2>
+<p>« Couches pour un SIG » télécharge une archive <code>.zip</code> : MNT (et MNT d'origine et écart d'altitude après remodelage),
+surface drainée, débit, TWI, pente, hauteur d'eau, numéros des dépressions et ordre de Strahler en GeoTIFF Lambert-93
+(NoData −99999), le tableau des dépressions en CSV (séparateur « ; », virgule décimale, coordonnées du centre, du point bas
+et de l'exutoire) et une note des hypothèses. La vue 3D s'enregistre en PNG.</p>
+
+<h2>6. Hypothèses et limites</h2>
+<div class="encadre">
+  <p><strong>Débit</strong> : méthode rationnelle, Q = C × i × A, avec l'intensité de pluie i (mm/h) et le coefficient de
+  ruissellement C réglés dans le panneau (50 mm/h, 60 min et C = 0,3 par défaut, valeurs provisoires) ; avec des surfaces
+  dessinées, Q = i × Σ (C × aire drainée). C'est un <strong>débit de pointe
+  théorique de ruissellement</strong>, sans laminage, sans infiltration détaillée ni courbe de remous :
+  une aide à la lecture du terrain, <strong>pas un dimensionnement réglementaire</strong>.</p>
+</div>
+<ul>
+  <li><strong>Méthodes</strong> : celles de SAGA GIS. Remplissage de Wang &amp; Liu (pente minimale 0,1°) pour faire sortir l'eau
+    des cuvettes ; remplissage à plat (Priority-Flood) pour les volumes des dépressions ; directions D8 ; accumulation MFD
+    (Freeman 1991, convergence 1,1) ou D8 ; pente de Zevenbergen &amp; Thorne ; TWI = ln(aire spécifique / tan β) ;
+    ordre de Strahler sur les directions D8. L'option « Comblement : Sink Removal (BTA) » remplace Wang &amp; Liu par le
+    comblement du Basic Terrain Analysis de SAGA (chaque cuvette relevée jusqu'à son exutoire, plus 0,001 m par cellule).</li>
+  <li><strong>Dépressions</strong> : volume d'eau retenu avant débordement, sur un terrain imperméable. Une dépression réelle peut
+    se vider par un fossé ou une buse absents du MNT : vérifier sur place les ouvrages qui ne se voient pas en altitude.</li>
+  <li><strong>Bords</strong> : l'eau qui atteint le bord du MNT en sort. Prendre une marge autour du site pour que les bassins
+    versants soient complets.</li>
+  <li><strong>Exactitude du calcul</strong> : le même calcul existe en Python (étalon), dans l'application Mac et dans cette page ;
+    les trois redonnent les mêmes valeurs sur 12 MNT de test (<a href="test/">autotest du noyau dans ce navigateur</a>).</li>
+</ul>
+
+<h2>7. Sources</h2>
+<p>Fonds de carte, photos aériennes actuelles et anciennes, altitudes LiDAR HD et RGE ALTI, géocodage : Géoplateforme de l'IGN,
+Licence ouverte Etalab 2.0 (seule l'emprise est demandée, jamais un MNT ouvert depuis votre ordinateur). Sols : carte des sols à 1/250 000
+(INRAE, Gis Sol) et fiches des UCS du Géoportail. Géologie : BRGM, carte géologique harmonisée à 1/50 000. Bibliothèques : three.js (vue 3D),
+geotiff.js (lecture), Leaflet (carte) et pdf.js (fiches des sols), chargées depuis cdn.jsdelivr.net.</p>
+<p><a href="index.html">← Revenir au simulateur</a></p>
+</main>
+</body>
+</html>

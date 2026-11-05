@@ -2,7 +2,7 @@
 window.VERSIONS = {
  "atlas": {
   "version": 5,
-  "date": "2026-11-01T19:10:11+01:00"
+  "date": "2026-11-01T19:10:12+01:00"
  },
  "acoustique": {
   "version": 19,
@@ -23,5 +23,9 @@ window.VERSIONS = {
  "profils-sol": {
   "version": 4,
   "date": "2026-10-30T10:07:12+01:00"
+ },
+ "simulateur-mnt": {
+  "version": 1,
+  "date": "2026-11-05T23:40:33+01:00"
  }
 };
