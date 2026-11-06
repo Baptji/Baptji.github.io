@@ -1,6 +1,6 @@
 /* Carte IGN, zone du site et téléchargement du MNT (portage de Carte.swift et IGN.swift de l'app Mac).
  * Fonds WMTS et altitudes brutes (WMS float32) de la Géoplateforme, qui autorise les pages web. */
-import { versL93, versGeo, enMetropole, rect } from "./geo.js?v=20261107004736";
+import { versL93, versGeo, enMetropole, rect } from "./geo.js?v=20261107005241";   // rect : rectangle tracé
 
 const BASE = "https://data.geopf.fr";
 const FONDS = {
@@ -200,9 +200,10 @@ export function boiteDe(anneaux) {
 }
 
 export class Carte {
-  /** surSite(anneau | null) : un polygone vient d'être fermé ou modifié (anneau Lambert-93) ;
+  /** surZone(rectangle | null) : un rectangle vient d'être tracé (Lambert-93) ;
+   *  surSite(anneau) : un polygone vient d'être fermé ou modifié (anneau Lambert-93) ;
    *  surTrace(nombre) : un sommet de plus ou de moins pendant le tracé, ou fin du tracé (−1). */
-  constructor(div, { surSite, surTrace }) {
+  constructor(div, { surZone, surSite, surTrace }) {
     const L = window.L;
     this.L = L;
     this.map = L.map(div, { zoomControl: true, attributionControl: true, zoomSnap: 0.25, boxZoom: false }).setView([46.6, 2.4], 6);
@@ -214,16 +215,39 @@ export class Carte {
         { maxNativeZoom: f.zmax, maxZoom: 21, attribution: "© IGN, Géoplateforme", crossOrigin: true });
     }
     this.fond("plan");
+    this.surZone = surZone;
     this.surSite = surSite;
     this.surTrace = surTrace;
-    this.modeTrace = false;
+    this.modeTrace = false;      // false, "rectangle" ou "polygone"
     this.points = [];            // sommets posés pendant le tracé (lat, lon)
     this.formeMNT = null; this.formeSite = null; this.sommets = []; this.formeTrace = null; this.elastique = null;
-    const m = this.map;
-    m.on("click", (e) => { if (this.modeTrace) this.poser(e.latlng); });
-    m.on("mousemove", (e) => { if (this.modeTrace && this.points.length) this.elastique.setLatLngs([this.points[this.points.length - 1], e.latlng]); });
+    const m = this.map, debut = { p: null };
+    // Rectangle : glisser en mode rectangle, ou ⇧ + glisser à tout moment (sauf pendant le tracé d'un polygone).
+    m.on("mousedown", (e) => {
+      if (this.modeTrace === "polygone" || !(this.modeTrace === "rectangle" || e.originalEvent.shiftKey) || e.originalEvent.button !== 0) return;
+      m.dragging.disable();
+      debut.p = versL93(e.latlng.lat, e.latlng.lng);
+    });
+    m.on("mousemove", (e) => {
+      if (debut.p) {
+        const q = versL93(e.latlng.lat, e.latlng.lng);
+        this.dessinerZone(rect(debut.p[0], debut.p[1], q[0], q[1]));
+        return;
+      }
+      if (this.modeTrace === "polygone" && this.points.length) this.elastique.setLatLngs([this.points[this.points.length - 1], e.latlng]);
+    });
+    m.on("mouseup", (e) => {
+      if (!debut.p) return;
+      const q = versL93(e.latlng.lat, e.latlng.lng), r = rect(debut.p[0], debut.p[1], q[0], q[1]);
+      debut.p = null;
+      m.dragging.enable();
+      this.trace(false);
+      this.surZone(r.xmax - r.xmin >= 5 && r.ymax - r.ymin >= 5 ? r : null);
+    });
+    // Polygone : un clic par sommet.
+    m.on("click", (e) => { if (this.modeTrace === "polygone") this.poser(e.latlng); });
     m.on("dblclick", (e) => {
-      if (!this.modeTrace) return;
+      if (this.modeTrace !== "polygone") return;
       // Les deux clics du double-clic ont posé deux fois le même sommet : on n'en garde qu'un.
       const p = this.points, n = p.length;
       if (n >= 2 && m.latLngToContainerPoint(p[n - 1]).distanceTo(m.latLngToContainerPoint(p[n - 2])) < 6) p.pop();
@@ -232,6 +256,7 @@ export class Carte {
     document.addEventListener("keydown", (e) => {
       if (!this.modeTrace || e.target.closest?.("input, textarea")) return;
       if (e.key === "Escape") this.trace(false);
+      else if (this.modeTrace !== "polygone") return;
       else if (e.key === "Enter") this.fermer();
       else if (e.key === "Backspace") { e.preventDefault(); this.retirer(); }
     });
@@ -243,22 +268,25 @@ export class Carte {
   }
 
   // Tracé du site, sommet par sommet ------------------------------------------
-  trace(actif) {
-    if (actif === this.modeTrace) return;
-    this.modeTrace = actif;
-    this.map.getContainer().classList.toggle("trace", actif);
-    if (actif) {
-      this.map.doubleClickZoom.disable();
-      this.points = [];
-      this.formeTrace = this.L.polyline([], { color: OR, weight: 2.5, dashArray: "7 5", interactive: false }).addTo(this.map);
-      this.elastique = this.L.polyline([], { color: OR, weight: 1.5, dashArray: "3 5", opacity: 0.9, interactive: false }).addTo(this.map);
-    } else {
+  /** mode : "rectangle", "polygone", ou false pour arrêter. */
+  trace(mode) {
+    mode = mode || false;
+    if (mode === this.modeTrace) return;
+    if (this.modeTrace === "polygone") {
       this.map.doubleClickZoom.enable();
       this.formeTrace?.remove(); this.elastique?.remove(); this.formeTrace = this.elastique = null;
       this.points = [];
       if (!this.formeSite) this.effacerSommets();
     }
-    this.surTrace?.(actif ? 0 : -1);
+    this.modeTrace = mode;
+    this.map.getContainer().classList.toggle("trace", !!mode);
+    if (mode === "polygone") {
+      this.map.doubleClickZoom.disable();
+      this.points = [];
+      this.formeTrace = this.L.polyline([], { color: OR, weight: 2.5, dashArray: "7 5", interactive: false }).addTo(this.map);
+      this.elastique = this.L.polyline([], { color: OR, weight: 1.5, dashArray: "3 5", opacity: 0.9, interactive: false }).addTo(this.map);
+    }
+    this.surTrace?.(mode ? 0 : -1);
   }
 
   poser(latlng) {
@@ -270,7 +298,7 @@ export class Carte {
   }
 
   retirer() {
-    if (!this.modeTrace || !this.points.length) return;
+    if (this.modeTrace !== "polygone" || !this.points.length) return;
     this.points.pop();
     this.formeTrace.setLatLngs(this.points);
     this.elastique.setLatLngs([]);
@@ -280,7 +308,7 @@ export class Carte {
 
   /** Ferme le polygone tracé (au moins trois sommets). */
   fermer() {
-    if (!this.modeTrace || this.points.length < 3) return;
+    if (this.modeTrace !== "polygone" || this.points.length < 3) return;
     const anneau = this.points.map(p => versL93(p.lat, p.lng));
     this.trace(false);
     this.surSite(anneau);
@@ -313,9 +341,19 @@ export class Carte {
     this.formeSite?.remove(); this.formeSite = null;
     this.effacerSommets();
     if (!anneaux) return;
+    this.styleSite = { fillColor: OR, fillOpacity: 0.1 };
     this.formeSite = this.L.polygon(anneaux.map(a => a.map(([x, y]) => versGeo(x, y))),
-      { color: OR, weight: 2.5, dashArray: "7 5", fillColor: OR, fillOpacity: 0.1, interactive: false }).addTo(this.map);
+      { color: OR, weight: 2.5, dashArray: "7 5", ...this.styleSite, interactive: false }).addTo(this.map);
     if (trace && anneaux.length === 1) this.dessinerSommets(anneaux[0].map(([x, y]) => this.L.latLng(...versGeo(x, y))), true);
+  }
+
+  /** Le rectangle tracé (comme avant : orange, sans sommets). */
+  dessinerZone(r) {
+    this.formeSite?.remove(); this.formeSite = null;
+    this.effacerSommets();
+    if (!r) return;
+    this.styleSite = { fillColor: "#ff9800", fillOpacity: 0.12 };
+    this.formeSite = this.L.polygon(auxCoins(r), { color: "#ff9800", weight: 2, ...this.styleSite, interactive: false }).addTo(this.map);
   }
 
   /** Pendant le téléchargement : un reflet doré balaie le site et ses tirets défilent. */
@@ -323,7 +361,7 @@ export class Carte {
     const f = this.formeSite, el = f?.getElement?.();
     if (!el) return;
     el.classList.toggle("site-charge", actif);
-    if (!actif) { f.setStyle({ fillColor: OR, fillOpacity: 0.1 }); el.removeAttribute("filter"); return; }
+    if (!actif) { f.setStyle(this.styleSite); el.removeAttribute("filter"); return; }
     const svg = el.ownerSVGElement, NS = "http://www.w3.org/2000/svg";
     if (svg && !svg.querySelector("#reflet-site")) {
       const defs = svg.querySelector("defs") || svg.insertBefore(document.createElementNS(NS, "defs"), svg.firstChild);

@@ -2,14 +2,14 @@
  * vue 3D et couches, remodelage et comparaison, export. Même logique que l'app Mac. */
 import * as THREE from "three";
 import { fromArrayBuffer } from "geotiff";
-import { Vue3D } from "./vue3d.js?v=20261107004736";
-import * as Couches from "./couches.js?v=20261107004736";
-import { geotiff, csvDepressions, zip, telecharger } from "./export.js?v=20261107004736";
-import * as Outils from "./outils.js?v=20261107004736";
-import { Carte, rechercher, plan as planMNT, telechargerMNT, infosZone, boiteDe, SOURCES, PAS, MARGE } from "./carte.js?v=20261107004736";
-import { Evenement } from "./evenement.js?v=20261107004736";
-import * as Etude from "./etude.js?v=20261107004736";
-import { deGrille, agrandi, lireEmprise } from "./geo.js?v=20261107004736";
+import { Vue3D } from "./vue3d.js?v=20261107005241";
+import * as Couches from "./couches.js?v=20261107005241";
+import { geotiff, csvDepressions, zip, telecharger } from "./export.js?v=20261107005241";
+import * as Outils from "./outils.js?v=20261107005241";
+import { Carte, rechercher, plan as planMNT, telechargerMNT, infosZone, boiteDe, SOURCES, PAS, MARGE } from "./carte.js?v=20261107005241";
+import { Evenement } from "./evenement.js?v=20261107005241";
+import * as Etude from "./etude.js?v=20261107005241";
+import { deGrille, agrandi, lireEmprise } from "./geo.js?v=20261107005241";
 
 const $ = id => document.getElementById(id);
 
@@ -94,7 +94,7 @@ const LIMITE = memoire <= 2 ? 3e6 : memoire <= 4 ? 6e6 : memoire <= 8 ? 12e6 : 2
 
 const vue = new Vue3D($("vue3d"));
 const evt = new Evenement(vue, { surImage: imageEvenement });
-const travailleur = new Worker("calcul.js?v=20261107004736");
+const travailleur = new Worker("calcul.js?v=20261107005241");
 let idCalcul = 0, idRuissellement = 0, enCalcul = false, minuterieRecalcul = 0;
 
 // ---------------------------------------------------------------------------
@@ -1350,7 +1350,7 @@ $("panneau").addEventListener("click", (e) => {
   else if (a === "exporter") exporterTout();
   else if (a === "csv") telecharger(new Blob([csvDepressions(E.grille, E.resultat.depressions, E)], { type: "text/csv" }), nomFichier() + "_depressions.csv");
   else if (a === "image") exporterImage();
-  else if (a === "tracer") { carte.trace(!carte.modeTrace); afficher(); }
+  else if (a === "tracer") { carte.trace(carte.modeTrace === b.dataset.mode ? false : b.dataset.mode); afficher(); }
   else if (a === "trace-retirer") carte.retirer();
   else if (a === "trace-fermer") carte.fermer();
   else if (a === "arreter-zone") { telechargement?.abort(); }
@@ -1551,7 +1551,7 @@ function afficherLecture() {
 function afficherBulle() {
   const b = $("bulle");
   if (E.ecran === "carte") {
-    b.hidden = !carte.modeTrace;
+    b.hidden = carte.modeTrace !== "polygone";
     b.textContent = carte.points.length >= 3 ? "Double-clic, Entrée ou clic sur le sommet 1 pour fermer · ⌫ : retirer le dernier · Échap : abandonner"
       : "Cliquez les sommets du site · glisser : déplacer la carte · Échap : abandonner";
     return;
@@ -1705,6 +1705,13 @@ window.addEventListener("drop", (e) => {
 // ---------------------------------------------------------------------------
 let telechargement = null;
 const carte = new Carte($("carte"), {
+  // Rectangle tracé (comme avant) : la zone, et 20 m autour, affichés en orange.
+  surZone: (r) => {
+    if (r) { E.zoneSite = r; E.emprise = null; chargerInfosZone(); }
+    if (E.emprise) carte.dessinerSite(E.emprise.anneaux, !!E.emprise.trace);
+    else carte.dessinerZone(E.zoneSite ? etendue() : null);
+    afficher();
+  },
   // Polygone fermé, ou sommet déplacé : c'est le site, le MNT couvrira sa boîte et 20 m autour.
   surSite: (anneau) => {
     E.emprise = { nom: null, anneaux: [anneau], boite: boiteDe([anneau]), trace: true };
@@ -1756,21 +1763,24 @@ function blocRecherche() {
 function blocZone() {
   const z = E.zoneSite, e = etendue(), p = planActuel(), pb = probleme(p);
   const h = [];
-  if (carte.modeTrace) {
+  const tracer = (mode, texte) => `<button class="outil ${carte.modeTrace === mode ? "actif" : ""}" data-action="tracer" data-mode="${mode}">${texte}</button>`;
+  if (carte.modeTrace === "polygone") {
     const n = carte.points.length;
     h.push(`<div class="petit-texte">${n ? `${n} sommet${n > 1 ? "s" : ""} posé${n > 1 ? "s" : ""}` : "Cliquez les sommets du site sur la carte"}</div>
       <div class="ligne"><button class="outil petit" data-action="trace-retirer" ${n ? "" : "disabled"}>Retirer le dernier</button>
-      <button class="outil petit" data-action="tracer">Abandonner</button>
+      <button class="outil petit" data-action="tracer" data-mode="polygone">Abandonner</button>
       <button class="outil petit principal" data-action="trace-fermer" ${n >= 3 ? "" : "disabled"}>Fermer</button></div>`);
   } else if (!z) {
-    h.push(`<div class="ligne"><button class="outil" data-action="tracer">⬠ Tracer le site</button>
-      <button class="outil" data-action="importer-emprise">Importer une emprise…</button></div>
-      <div class="tres-petit">Emprise : fichier .shp en Lambert-93 ou en degrés, avec son .prj si possible.</div>`);
+    h.push(`<div class="ligne">${tracer("rectangle", "▭ Rectangle")}${tracer("polygone", "⬠ Polygone")}</div>
+      <div class="ligne"><button class="outil" data-action="importer-emprise">Importer une emprise…</button></div>
+      <div class="tres-petit">Rectangle : glissez sur la carte (ou ⇧ + glisser à tout moment). Polygone : cliquez les sommets.
+      Emprise : fichier .shp en Lambert-93 ou en degrés, avec son .prj si possible.</div>`);
   } else {
     const aire = E.emprise ? E.emprise.anneaux.reduce((s, an) => s + Math.abs(an.reduce((q, p, k) => { const r = an[(k + 1) % an.length]; return q + p[0] * r[1] - r[0] * p[1]; }, 0)) / 2, 0) : 0;
-    h.push(`<div class="petit-texte">${aire ? `Site ${surface(aire)} · ` : ""}MNT ${metres(e.xmax - e.xmin)} × ${metres(e.ymax - e.ymin)}</div>
-      <div class="ligne"><button class="outil petit" data-action="recentrer">Recentrer</button><button class="outil petit" data-action="tracer">Retracer</button>
-      <button class="outil petit" data-action="effacer-zone-site">Effacer</button></div>`);
+    h.push(`<div class="petit-texte">${aire ? `Site ${surface(aire)} · MNT ${metres(e.xmax - e.xmin)} × ${metres(e.ymax - e.ymin)}`
+        : `${metres(e.xmax - e.xmin)} × ${metres(e.ymax - e.ymin)} · ${surface((e.xmax - e.xmin) * (e.ymax - e.ymin))}`}</div>
+      <div class="ligne">${tracer("rectangle", "▭ Rectangle")}${tracer("polygone", "⬠ Polygone")}</div>
+      <div class="ligne"><button class="outil petit" data-action="recentrer">Recentrer</button><button class="outil petit" data-action="effacer-zone-site">Effacer la zone</button></div>`);
   }
   const bouton = k => `<button data-segment="source" data-valeur="${k}" class="${E.source === k ? "actif" : ""}">${libelleSource(k)}</button>`;
   h.push(`<hr><div class="segments sources">${bouton("lidarHD")}<span class="point-aide" tabindex="0" aria-label="Comment sont calculés les deux MNT">?<span
@@ -1781,8 +1791,8 @@ function blocZone() {
     + (E.chargementZone
       ? `<div class="progres-zone" id="progres-zone"><div class="piste"><span style="width:${Math.round(Math.max(0.02, E.chargementZone.fraction) * 100)}%"></span></div>
           <div class="ligne"><span class="texte">${echapper(E.chargementZone.etape)}</span><span class="ressort"></span><button class="outil petit" data-action="arreter-zone">Arrêter</button></div></div>`
-      : `<button class="outil principal large" data-action="charger-zone" ${!p || pb || E.travail || carte.modeTrace ? "disabled" : ""}>Charger et simuler</button>`));
-  if (!z && !carte.modeTrace) {
+      : `<button class="outil principal large" data-action="charger-zone" ${!p || pb || E.travail || carte.modeTrace === "polygone" ? "disabled" : ""}>Charger et simuler</button>`));
+  if (!z && carte.modeTrace !== "polygone") {
     h.push(`<hr><div class="ligne"><label class="outil">Ouvrir un MNT…<input type="file" data-fichier="mnt" accept=".tif,.tiff,.asc" hidden></label>
       <button class="outil" data-action="exemple">Essayer un exemple</button></div>
       <div class="tres-petit">GeoTIFF ou grille .asc : le fichier reste sur cet ordinateur.</div>`);
