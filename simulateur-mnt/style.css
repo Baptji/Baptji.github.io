@@ -14,12 +14,14 @@
   --rouge: #c62828;
   --verre: rgba(250, 250, 252, 0.88);
   --choisi: rgba(255, 152, 0, 0.18);
+  --onglet: #fff;
 }
 @media (prefers-color-scheme: dark) {
   :root {
     --fond: #1c1c1e; --fond-vue: #232528; --barre: #2a2a2d; --panneau: #222224; --bloc: rgba(255, 255, 255, 0.06);
     --texte: #ececef; --second: #a0a0a8; --tiers: #75757c; --trait: rgba(255, 255, 255, 0.14);
     --accent: #3a8ef6; --orange: #f0a04b; --rouge: #ff6b6b; --verre: rgba(40, 40, 44, 0.88); --choisi: rgba(255, 170, 60, 0.22);
+    --onglet: #3a3a3e;
   }
 }
 * { box-sizing: border-box; }
@@ -131,13 +133,6 @@ canvas.coupe { width: 100%; height: 34px; display: block; }
 .carte-dialogue h3 { margin: 0 0 4px; font-size: 14px; }
 .carte-dialogue p { margin: 0; font-size: 12px; color: var(--second); }
 .carte-dialogue .choix { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
-.accueil { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; }
-.depot { max-width: 520px; text-align: center; border: 2px dashed var(--trait); border-radius: 16px; padding: 28px 24px; background: var(--verre); }
-.depot .symbole { font-size: 40px; opacity: 0.5; }
-.depot h1 { font-size: 18px; margin: 6px 0 8px; }
-.depot p { color: var(--second); font-size: 12.5px; margin: 6px 0; }
-.depot .limite { font-size: 11.5px; }
-.depot .boutons { display: flex; gap: 8px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
 .zone-depot { position: fixed; inset: 10px; border: 3px dashed var(--accent); border-radius: 12px; background: rgba(10, 108, 223, 0.08);
   display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; pointer-events: none; z-index: 10; }
 .pied { font-size: 9.5px; color: var(--tiers); }
@@ -167,8 +162,37 @@ select.menu-pluie { flex: none; width: 104px; }
 .carte { position: absolute; inset: 0; z-index: 0; background: var(--fond-vue); }
 .carte.trace, .carte.trace .leaflet-interactive { cursor: crosshair; }
 .leaflet-container { font: inherit; }
-.ecrans { margin-right: 6px; }
-.ecrans button { padding: 3px 12px; white-space: nowrap; }
+/* Onglets de la barre du haut (BarreOnglets de l'app Mac) */
+.onglets { display: flex; align-items: center; gap: 2px; padding: 2px; border-radius: 8px; background: var(--bloc);
+  min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.onglets::-webkit-scrollbar { display: none; }
+.onglet { font: inherit; font-size: 12px; color: var(--second); background: transparent; border: 0; border-radius: 6px;
+  padding: 3px 10px; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; flex: none; user-select: none; }
+.onglet:hover { color: var(--texte); }
+.onglet.actif { background: var(--onglet); color: var(--texte); font-weight: 600; box-shadow: 0 0.5px 1.5px rgba(0, 0, 0, 0.18); }
+.onglet.terrain { padding-right: 3px; }
+.onglet .nom { max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+.onglet .fermer { font: inherit; font-size: 13px; line-height: 1; width: 16px; height: 16px; padding: 0; border: 0; border-radius: 50%;
+  background: transparent; color: var(--second); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.onglet .fermer:hover { background: var(--trait); color: var(--texte); }
+.onglet input.renommer { font: inherit; font-weight: 600; width: 120px; padding: 0 3px; border: 1px solid var(--accent); border-radius: 4px;
+  background: var(--fond); color: var(--texte); }
+.onglets .separation { width: 1px; height: 14px; background: var(--trait); margin: 0 3px; flex: none; }
+/* Sources du MNT : LiDAR ? RGE ALTI */
+.segments.sources { position: relative; overflow: visible; }
+.sources button:first-child { border-radius: 5px 0 0 5px; }
+.sources button:last-child { border-radius: 0 5px 5px 0; }
+.point-aide { flex: none; width: 24px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600;
+  color: var(--second); border-left: 1px solid var(--trait); border-right: 1px solid var(--trait); cursor: help; outline: none; }
+.point-aide:hover, .point-aide:focus { color: var(--accent); }
+.infobulle { display: none; position: absolute; left: -6px; right: -6px; top: calc(100% + 8px); z-index: 5; cursor: default;
+  background: var(--panneau); border: 1px solid var(--trait); border-radius: 10px; padding: 9px 11px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  font-size: 10.5px; font-weight: normal; line-height: 1.42; color: var(--texte); text-align: left; }
+.infobulle::before { content: ""; position: absolute; left: 0; right: 0; top: -10px; height: 10px; }
+.point-aide:hover .infobulle, .point-aide:focus .infobulle { display: block; }
+.infobulle p { margin: 0; }
+.infobulle p + p { margin-top: 6px; }
+.infobulle .ici { color: var(--second); margin-top: 3px; }
 .champ-texte { flex: 1; min-width: 0; font: inherit; font-size: 11.5px; padding: 3px 6px; border-radius: 5px;
   border: 1px solid var(--trait); background: var(--fond); color: var(--texte); }
 .champ-texte.court { flex: 0 1 150px; }

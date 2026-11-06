@@ -1,14 +1,14 @@
-/* Simulateur MNT dans le navigateur (B.2 à B.4) : chargement du MNT, calcul dans un Web Worker,
+/* Simulateur 3D dans le navigateur (B.2 à B.4) : chargement du MNT, calcul dans un Web Worker,
  * vue 3D et couches, remodelage et comparaison, export. Même logique que l'app Mac. */
 import * as THREE from "three";
 import { fromArrayBuffer } from "geotiff";
-import { Vue3D } from "./vue3d.js?v=20261105233926";
-import * as Couches from "./couches.js?v=20261105233926";
-import { geotiff, csvDepressions, zip, telecharger } from "./export.js?v=20261105233926";
-import * as Outils from "./outils.js?v=20261105233926";
-import { Carte, rechercher, plan as planMNT, telechargerMNT, SOURCES, PAS, MARGES } from "./carte.js?v=20261105233926";
-import * as Etude from "./etude.js?v=20261105233926";
-import { deGrille, agrandi, lireEmprise } from "./geo.js?v=20261105233926";
+import { Vue3D } from "./vue3d.js?v=20261106235519";
+import * as Couches from "./couches.js?v=20261106235519";
+import { geotiff, csvDepressions, zip, telecharger } from "./export.js?v=20261106235519";
+import * as Outils from "./outils.js?v=20261106235519";
+import { Carte, rechercher, plan as planMNT, telechargerMNT, infosZone, SOURCES, PAS, MARGE } from "./carte.js?v=20261106235519";
+import * as Etude from "./etude.js?v=20261106235519";
+import { deGrille, agrandi, lireEmprise } from "./geo.js?v=20261106235519";
 
 const $ = id => document.getElementById(id);
 
@@ -45,7 +45,7 @@ const echapper = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&
 // Réglages gardés par le navigateur (commodité : la page marche sans)
 // ---------------------------------------------------------------------------
 const GARDES = ["intensite", "coefficient", "seuilDebit", "profondeurMini", "reseau", "ordreMini", "partage", "comblement", "penteMin", "pinceau", "debitPinceau",
-  "modePluie", "montanaA", "montanaB", "duree", "station", "montrerSurfaces", "marge", "source", "pasMNT", "ongletAffichage", "modeSols", "fondCarte"];
+  "modePluie", "montanaA", "montanaB", "duree", "station", "montrerSurfaces", "source", "pasMNT", "ongletAffichage", "modeSols", "fondCarte"];
 function lireReglages() { try { return JSON.parse(localStorage.getItem("simulateur-reglages") || "{}"); } catch { return {}; } }
 function garderReglages() {
   try { localStorage.setItem("simulateur-reglages", JSON.stringify(Object.fromEntries(GARDES.map(k => [k, E[k]])))); } catch { /* navigation privée */ }
@@ -69,7 +69,7 @@ const E = Object.assign({
   ecart: "altitude", bornesEcart: [-1, 1], bornesTWI: [0, 1], legende: {},
   travail: null, erreur: null, lecture: null,
   // Carte : zone du site, emprise importée, téléchargement du MNT
-  ecran: "carte", zoneSite: null, emprise: null, nomSite: "", marge: 0, source: "lidarHD", pasMNT: 0.5, fondCarte: "plan",
+  ecran: "carte", zoneSite: null, emprise: null, infosZone: null, source: "lidarHD", pasMNT: 0.5, fondCarte: "plan",
   recherche: "", lieux: [], erreurCarte: null,
   // Affichage en onglets et calques de l'étude (vus sur le terrain, jamais exportés)
   ongletAffichage: "terrain", calques: [], etatCalques: {}, opaciteCalques: {}, modeSols: "dominant", vueAncienne: 0,
@@ -77,7 +77,7 @@ const E = Object.assign({
 if (!["terrain", "hydrologie", "etude"].includes(E.ongletAffichage)) E.ongletAffichage = "terrain";
 if (!SOURCES[E.source]) E.source = "lidarHD";
 if (!PAS.includes(E.pasMNT)) E.pasMNT = 0.5;
-if (!MARGES.includes(E.marge)) E.marge = 0;
+if (E.fondCarte !== "photo") E.fondCarte = "plan";
 if (E.comblement !== "sink_removal") E.comblement = "wang_liu";   // réglage gardé inconnu ou périmé
 
 const FONDS = [["photo", "Photo", 0], ["altitudes", "Altitudes", 1], ["twi", "TWI", 2], ["ecarts", "Écarts", 2]];
@@ -92,7 +92,7 @@ const memoire = navigator.deviceMemory || 8;
 const LIMITE = memoire <= 2 ? 3e6 : memoire <= 4 ? 6e6 : memoire <= 8 ? 12e6 : 20e6;
 
 const vue = new Vue3D($("vue3d"));
-const travailleur = new Worker("calcul.js?v=20261105233926");
+const travailleur = new Worker("calcul.js?v=20261106235519");
 let idCalcul = 0, idRuissellement = 0, enCalcul = false, minuterieRecalcul = 0;
 
 // ---------------------------------------------------------------------------
@@ -210,12 +210,15 @@ function proposerReduction(g, nom, detail, cle) {
     ${nombre(LIMITE / 1e6)} millions (${memoire} Go de mémoire annoncés). Au-delà, l'onglet risque de s'arrêter.</p>`, choix);
 }
 
+/** Chaque MNT ouvert ou téléchargé a son onglet ; le terrain affiché jusque-là garde le sien. */
 function installer(g, nom, detail, remarques, cle = null) {
   finirPassage();
+  quitterTerrain();
+  Object.assign(E, etatTerrainVide(), { calques: E.calques.slice() });
+  const o = { id: ++compteurOnglets, titre: nom, etat: null, photo: null, vue: null, donnees: {}, aRecalculer: false };
+  onglets.push(o);
+  ongletActif = o;
   E.origine = g; E.grille = g; E.nom = nom; E.detail = detail; E.remarques = remarques.slice();
-  E.resultat = E.reference = E.comparaison = E.bilan = null;
-  E.operations = []; E.historique = []; E.refaire = []; E.zone = []; E.point = null; E.saisie = "aucune";
-  E.depressionChoisie = null; E.lecture = null; E.erreur = null;
   E.cleProjet = cle;
   chargerProjet();
   let s = 0, n = 0, vides = 0;
@@ -249,23 +252,194 @@ function chercherPhoto(g) {
     + `&CRS=EPSG:2154&BBOX=${bbox}&WIDTH=${w}&HEIGHT=${h}&FORMAT=image/jpeg`;
   E.etatPhoto = "Photo aérienne : téléchargement…";
   const origine = E.origine;
+  // L'onglet du MNT : on a pu en changer, ou le fermer, pendant le téléchargement.
+  const onglet = () => onglets.find(o => (o === ongletActif ? E.origine : o.etat?.origine) === origine);
   new THREE.TextureLoader().loadAsync(url).then(t => {
-    if (E.origine !== origine) return t.dispose();
+    const o = onglet();
+    if (!o) return t.dispose();
     t.colorSpace = THREE.NoColorSpace;
     t.minFilter = THREE.LinearMipmapLinearFilter;
+    if (o !== ongletActif) {
+      o.photo = t; o.etat.etatPhoto = null;
+      if (o.etat.fond === "altitudes") o.etat.fond = "photo";
+      return;
+    }
     vue.photo(t);
     E.etatPhoto = null;
     if (E.fond === "altitudes") E.fond = "photo";
     appliquerFond();
     afficher();
   }).catch(() => {
-    E.etatPhoto = "Photo aérienne indisponible (réseau ou serveur de l'IGN). Le terrain est coloré par altitude.";
+    const o = onglet(), texte = "Photo aérienne indisponible (réseau ou serveur de l'IGN). Le terrain est coloré par altitude.";
+    if (!o) return;
+    if (o !== ongletActif) { o.etat.etatPhoto = texte; if (o.etat.fond === "photo") o.etat.fond = "altitudes"; return; }
+    E.etatPhoto = texte;
     if (E.fond === "photo") E.fond = "altitudes";
     appliquerFond();
     afficher();
   });
   afficher();
 }
+
+// ---------------------------------------------------------------------------
+// Onglets (BarreOnglets de l'app Mac) : Carte, Photo aérienne, puis un onglet par terrain.
+// L'état du terrain affiché vit dans E ; celui des autres est rangé dans leur onglet.
+// ---------------------------------------------------------------------------
+const etatTerrainVide = () => ({ nom: "", detail: "", remarques: [], origine: null, grille: null, resultat: null, reference: null,
+  comparaison: null, bilan: null, etatPhoto: null, surfaces: [], zoneSurface: [], accC: null, sigAccC: null, idResultat: 0, cleProjet: null,
+  operations: [], historique: [], refaire: [], zone: [], point: null, saisie: "aucune", altitudeFixe: 0, altitudeEgal: 0,
+  depressionChoisie: null, lecture: null, erreur: null, etatCalques: {}, vueAncienne: 0, legende: {}, bornesEcart: [-1, 1], bornesTWI: [0, 1] });
+const CLES_TERRAIN = [...Object.keys(etatTerrainVide()), "fond", "calques", "modePluie", "intensite", "montanaA", "montanaB", "duree", "station", "coefficient"];
+const onglets = [];
+let ongletActif = null, compteurOnglets = 0;
+/** Dernier calcul terminé par le Worker : c'est sur lui seul qu'il sait refaire le ruissellement pondéré. */
+let dernierCalcul = 0, ruissellementEnVol = false;
+
+function nomTerrainLibre() {
+  let n = 1;
+  while (onglets.some(o => o.titre === "Terrain " + n)) n++;
+  return "Terrain " + n;
+}
+
+/** Range le terrain affiché dans son onglet ; un calcul en cours sera relancé au retour. */
+function quitterTerrain() {
+  const o = ongletActif;
+  if (!o) return;
+  finirPassage();
+  if (enCalcul || minuterieRecalcul) {
+    clearTimeout(minuterieRecalcul); minuterieRecalcul = 0;
+    if (enCalcul) { travailleur.postMessage({ type: "annuler" }); idCalcul++; enCalcul = false; }
+    o.aRecalculer = true;
+    if (!telechargement) travail(null);
+  }
+  if (ruissellementEnVol) { idRuissellement++; ruissellementEnVol = false; E.sigAccC = null; }
+  for (const c of Object.keys(controleurs)) { controleurs[c].abort(); delete controleurs[c]; }
+  for (const c of Object.keys(E.etatCalques)) if (E.etatCalques[c].chargement !== undefined) delete E.etatCalques[c];
+  o.etat = Object.fromEntries(CLES_TERRAIN.map(k => [k, E[k]]));
+  o.donnees = { ...donneesCalques };
+  o.photo = vue.detacherPhoto();
+  o.vue = vue.etatVue();
+  ongletActif = null;
+}
+
+function entrerTerrain(o) {
+  ongletActif = o;
+  Object.assign(E, o.etat);
+  o.etat = null;
+  for (const c of Object.keys(donneesCalques)) delete donneesCalques[c];
+  Object.assign(donneesCalques, o.donnees);
+  o.donnees = {};
+  E.lecture = null;
+  vue.charger(E.grille);
+  if (o.photo) vue.photo(o.photo);
+  o.photo = null;
+  vue.retablirVue(o.vue);
+  vue.regler({ fond: indiceFond() });
+  carte.dessinerMNT(enLambert93(E.grille) ? deGrille(E.grille) : null);
+  modeOutil();
+  if (o.aRecalculer || !E.resultat) { o.aRecalculer = false; calculer(); }
+  else { couchesAJour(); colorationAJour(); ruissellementAJour(); }
+  calquesAJour();
+  for (const c of E.calques) if (!E.etatCalques[c]?.pret) chargerCalque(c);
+}
+
+function choisirOnglet(o) {
+  if (o !== ongletActif) { quitterTerrain(); entrerTerrain(o); }
+  montrerEcran("terrain");
+}
+
+function fermerOnglet(o) {
+  const k = onglets.indexOf(o);
+  if (k < 0) return;
+  const actif = o === ongletActif;
+  if (actif) quitterTerrain();
+  o.photo?.dispose();
+  o.photo = o.etat = o.donnees = null;
+  onglets.splice(k, 1);
+  if (!actif) { barreOnglets(); return; }
+  const suivant = onglets[k] || onglets[k - 1];
+  if (suivant && E.ecran === "terrain") { entrerTerrain(suivant); montrerEcran("terrain"); return; }
+  Object.assign(E, etatTerrainVide());
+  reinitialiserCalques();
+  vue.vider();
+  carte.dessinerMNT(null);
+  montrerEcran("carte");
+}
+
+function renommerOnglet(o, titre) {
+  titre = titre.trim();
+  if (!titre) return;
+  o.titre = titre;
+  if (o === ongletActif) E.nom = titre; else if (o.etat) o.etat.nom = titre;
+}
+
+/** La barre est mise à jour sur place (sans tout refaire) : le double-clic qui renomme survit au premier clic qui choisit. */
+function barreOnglets() {
+  const nav = $("onglets"), surCarte = E.ecran === "carte";
+  const anciens = new Map([...nav.children].map(el => [el.dataset.cle, el]));
+  const voulus = [
+    ...[["plan", "Carte"], ["photo", "Photo aérienne"]].map(([v, titre]) => ({ cle: "carte-" + v, actif: surCarte && E.fondCarte === v,
+      creer: () => Object.assign(document.createElement("button"), { className: "onglet", textContent: titre }), donnees: { carte: v } })),
+    ...(onglets.length ? [{ cle: "separation", creer: () => Object.assign(document.createElement("span"), { className: "separation" }) }] : []),
+    ...onglets.map(o => ({ cle: "terrain-" + o.id, actif: !surCarte && o === ongletActif, onglet: o, donnees: { onglet: o.id },
+      creer: () => {
+        const el = document.createElement("div");
+        el.className = "onglet terrain";
+        el.title = "Double-clic pour renommer";
+        el.innerHTML = `<span class="nom"></span><button class="fermer" data-fermer="${o.id}" title="Fermer l'onglet">×</button>`;
+        return el;
+      } })),
+  ];
+  voulus.forEach((v, k) => {
+    let el = anciens.get(v.cle);
+    anciens.delete(v.cle);
+    if (!el) { el = v.creer(); el.dataset.cle = v.cle; Object.assign(el.dataset, v.donnees || {}); }
+    if (v.actif !== undefined) el.classList.toggle("actif", v.actif);
+    if (v.onglet) {
+      const nom = el.querySelector(".nom");
+      if (nom && nom.textContent !== v.onglet.titre) nom.textContent = v.onglet.titre;
+      el.querySelector(".fermer").setAttribute("aria-label", "Fermer " + v.onglet.titre);
+    }
+    if (nav.children[k] !== el) nav.insertBefore(el, nav.children[k] || null);
+  });
+  for (const el of anciens.values()) el.remove();
+}
+
+const ongletDe = el => onglets.find(o => o.id === +el.dataset.onglet || o.id === +el.dataset.fermer);
+$("onglets").addEventListener("click", (e) => {
+  const f = e.target.closest("[data-fermer]");
+  if (f) { e.stopPropagation(); fermerOnglet(ongletDe(f)); return; }
+  const c = e.target.closest("[data-carte]");
+  if (c) { E.fondCarte = c.dataset.carte; carte.fond(E.fondCarte); garderReglages(); montrerEcran("carte"); return; }
+  const t = e.target.closest("[data-onglet]");
+  if (t && !e.target.closest("input")) choisirOnglet(ongletDe(t));
+});
+// Clic du milieu : fermer, comme dans un navigateur.
+$("onglets").addEventListener("auxclick", (e) => {
+  const t = e.target.closest("[data-onglet]");
+  if (t && e.button === 1) { e.preventDefault(); fermerOnglet(ongletDe(t)); }
+});
+$("onglets").addEventListener("dblclick", (e) => {
+  const t = e.target.closest("[data-onglet]"), o = t && ongletDe(t);
+  if (!o || e.target.closest(".fermer")) return;
+  const nom = t.querySelector(".nom"), champ = document.createElement("input");
+  champ.value = o.titre;
+  champ.className = "renommer";
+  nom.replaceWith(champ);
+  champ.focus(); champ.select();
+  let fini = false;
+  const finir = (garder) => {
+    if (fini) return;
+    fini = true;
+    if (garder) renommerOnglet(o, champ.value);
+    nom.textContent = o.titre;
+    champ.replaceWith(nom);
+    barreOnglets();
+    if (o === ongletActif) afficher();
+  };
+  champ.addEventListener("keydown", (k) => { if (k.key === "Enter") finir(true); else if (k.key === "Escape") finir(false); k.stopPropagation(); });
+  champ.addEventListener("blur", () => finir(true));
+});
 
 // ---------------------------------------------------------------------------
 // Calcul dans le Web Worker
@@ -287,6 +461,7 @@ travailleur.onmessage = (e) => {
   const m = e.data;
   if (m.type === "ruissellement") {
     if (m.id !== E.idResultat || m.idR !== idRuissellement || !E.resultat) return;
+    ruissellementEnVol = false;
     E.accC = m.accC;
     couchesAJour();
     afficher();
@@ -302,7 +477,7 @@ travailleur.onmessage = (e) => {
   const g = m.z ? { ...o, z: m.z } : o;
   if (g !== E.grille) { E.grille = g; vue.remplacerAltitudes(g); if (E.calques.includes("courbes")) chargerCalque("courbes"); }
   E.resultat = m.resultat;
-  E.idResultat = m.id; E.accC = null;
+  E.idResultat = m.id; E.accC = null; dernierCalcul = m.id;
   E.lecture = null; E.depressionChoisie = null;
   if (!E.operations.length) { E.reference = { acc: m.resultat.acc, twi: m.resultat.twi, depressions: m.resultat.depressions, exutoire: m.resultat.exutoire }; E.comparaison = null; }
   else E.comparaison = comparer(E.reference, o, m.resultat, g, m.bilan);
@@ -373,7 +548,10 @@ function ruissellementAJour() {
   const surfaces = E.surfaces.map(s => s.genre === "cn" ? { zone: s.anneaux, cn: s.valeur } : { zone: s.anneaux, c: s.valeur });
   const sig = JSON.stringify([E.idResultat, Math.fround(E.coefficient), surfaces.map(s => [s.zone, Math.fround("c" in s ? s.c : Noyau.coefficientCN(s.cn, p))])]);
   if (sig === E.sigAccC) return;
+  // Le Worker a calculé un autre onglet depuis : il lui faut d'abord refaire celui-ci.
+  if (E.idResultat !== dernierCalcul) { calculer(); return; }
   E.sigAccC = sig;
+  ruissellementEnVol = true;
   travailleur.postMessage({ type: "ruisseler", id: E.idResultat, idR: ++idRuissellement, defaut: E.coefficient, surfaces, pluieMm: p });
 }
 
@@ -759,9 +937,8 @@ const TEXTES = {
 function afficher() {
   const p = [];
   const g = E.grille, r = E.resultat;
-  $("accueil").hidden = E.ecran !== "terrain" || !!g;
   if (E.ecran === "carte") {
-    p.push(blocRecherche(), blocZone(), blocTelechargement());
+    p.push(blocRecherche(), blocZone());
   } else if (!g) {
     p.push(bloc("MNT", `<p class="petit-texte">Ouvrez ou déposez un MNT (GeoTIFF ou .asc). Le fichier reste sur cet ordinateur.</p>
       <p class="petit-texte">Jusqu'à environ ${nombre(LIMITE / 1e6)} millions de cellules sur ce navigateur (${memoire} Go de mémoire annoncés),
@@ -1023,7 +1200,6 @@ $("panneau").addEventListener("click", (e) => {
   if (b.dataset.segment) {
     const cle = b.dataset.segment, v = b.dataset.valeur;
     if (cle === "source") { E.source = v; garderReglages(); afficher(); return; }
-    if (cle === "fondCarte") { E.fondCarte = v; carte.fond(v); garderReglages(); afficher(); return; }
     if (cle === "modeSols") { E.modeSols = v; garderReglages(); calquesAJour(); afficher(); return; }
     if (cle === "ongletAffichage") { E.ongletAffichage = v; garderReglages(); afficher(); return; }
     E[cle] = v;
@@ -1055,7 +1231,7 @@ $("panneau").addEventListener("click", (e) => {
   else if (a === "image") exporterImage();
   else if (a === "tracer") { carte.trace(!carte.modeTrace); afficher(); }
   else if (a === "importer-emprise") $("fichier-emprise").click();
-  else if (a === "effacer-zone-site") { E.zoneSite = null; E.emprise = null; carte.dessinerZone(null); carte.dessinerEmprise(null); afficher(); }
+  else if (a === "effacer-zone-site") { controleInfos?.abort(); E.zoneSite = null; E.emprise = null; E.infosZone = null; carte.dessinerZone(null); carte.dessinerEmprise(null); afficher(); }
   else if (a === "recentrer") { const z = etendue(); if (z) carte.cadrer(z); }
   else if (a === "charger-zone") telechargerZone();
   else if (a === "chercher") chercher();
@@ -1122,7 +1298,6 @@ $("panneau").addEventListener("change", (e) => {
     afficher();
     return;
   }
-  if (t.dataset.texte === "nomSite") { E.nomSite = t.value.trim(); return; }
   if (t.dataset.texte === "recherche") { E.recherche = t.value; return; }
   if (t.dataset.case) { E[t.dataset.case] = t.checked; if (t.dataset.case === "montrerSurfaces") garderReglages(); couchesAJour(); afficher(); return; }
   if (t.dataset.texte === "station") { E.station = t.value.trim(); pluieModifiee(); return; }
@@ -1171,7 +1346,6 @@ $("panneau").addEventListener("change", (e) => {
     } else if (cle === "profondeurMini") { E.profondeurMini = parseFloat(v); garderReglages(); couchesAJour(); }
     else if (cle === "ecart") { E.ecart = v; colorationAJour(); }
     else if (cle === "pasMNT") { E.pasMNT = parseFloat(v); garderReglages(); }
-    else if (cle === "marge") { E.marge = parseFloat(v); garderReglages(); carte.dessinerZone(E.zoneSite ? etendue() : null); }
     else if (cle === "portee") { E.portee = v; E.saisie = "aucune"; couchesAJour(); }
     afficher();
   }
@@ -1358,10 +1532,8 @@ window.addEventListener("keydown", (e) => {
 // ---------------------------------------------------------------------------
 // Barre du haut, dépôt de fichier, exemple
 // ---------------------------------------------------------------------------
-for (const id of ["fichier", "fichier2"]) $(id).addEventListener("change", (e) => { const f = e.target.files[0]; if (f) ouvrir(f); e.target.value = ""; });
-$("b-ensemble").onclick = () => vue.recadrer();
+$("fichier").addEventListener("change", (e) => { const f = e.target.files[0]; if (f) ouvrir(f); e.target.value = ""; });
 $("b-dessus").onclick = () => vue.vueDessus();
-$("b-image").onclick = () => exporterImage();
 $("b-arreter").onclick = () => {
   if (telechargement) { telechargement.abort(); telechargement = null; travail(null); afficher(); return; }
   travailleur.postMessage({ type: "annuler" }); idCalcul++; travail(null);
@@ -1376,7 +1548,6 @@ async function ouvrirExemple() {
     ouvrir(f);
   } catch (e) { travail(null); alerte("Exemple indisponible : " + e.message); }
 }
-$("b-exemple").onclick = ouvrirExemple;
 let profondeurDepot = 0;
 window.addEventListener("dragenter", (e) => { e.preventDefault(); profondeurDepot++; $("zone-depot").hidden = false; });
 window.addEventListener("dragleave", () => { if (--profondeurDepot <= 0) { profondeurDepot = 0; $("zone-depot").hidden = true; } });
@@ -1393,7 +1564,7 @@ window.addEventListener("drop", (e) => {
 let telechargement = null;
 const carte = new Carte($("carte"), {
   surZone: (r) => {
-    if (r) { E.zoneSite = r; E.emprise = null; carte.dessinerEmprise(null); }
+    if (r) { E.zoneSite = r; E.emprise = null; carte.dessinerEmprise(null); chargerInfosZone(); }
     carte.dessinerZone(E.zoneSite ? etendue() : null);
     afficher();
   },
@@ -1406,18 +1577,15 @@ function montrerEcran(ecran) {
   $("vue3d").hidden = $("outil-main").hidden = ecran !== "terrain";
   $("aide").hidden = ecran !== "terrain" || !E.grille;
   $("lecture").hidden = true;
-  $("b-carte").classList.toggle("actif", ecran === "carte");
-  $("b-terrain").classList.toggle("actif", ecran === "terrain");
-  ["b-ensemble", "b-dessus", "b-image"].forEach(id => $(id).disabled = ecran !== "terrain" || !E.grille);
+  $("b-dessus").hidden = ecran !== "terrain" || !E.grille;
+  barreOnglets();
   if (ecran === "carte") { carte.trace(false); setTimeout(() => carte.redimensionner(), 0); }
   else vue.redimensionner();
   afficher();
 }
-$("b-carte").onclick = () => montrerEcran("carte");
-$("b-terrain").onclick = () => montrerEcran("terrain");
 
 /** Étendue téléchargée : la zone tracée (ou la boîte de l'emprise) agrandie de la marge. */
-const etendue = () => E.zoneSite ? agrandi(E.zoneSite, E.marge) : null;
+const etendue = () => E.zoneSite ? agrandi(E.zoneSite, MARGE) : null;
 const planActuel = () => { const z = etendue(); return z ? planMNT(z, E.source, E.pasMNT) : null; };
 function probleme(p) {
   if (!p) return null;
@@ -1433,40 +1601,82 @@ function blocRecherche() {
       placeholder="Commune, adresse, X Y en Lambert-93, lat lon"><button class="outil petit" data-action="chercher">Chercher</button></div>`
     + (E.erreurCarte ? `<div class="erreur">${echapper(E.erreurCarte)}</div>` : "")
     + (E.lieux.length ? `<div class="liste-dep">${E.lieux.map((l, k) => `<button data-lieu="${k}"><div class="l1"><b>${echapper(l.titre)}</b></div>
-        <div class="l2">${echapper(l.detail)}</div></button>`).join("")}</div>` : "")
-    + segments("fondCarte", [["plan", "Plan IGN"], ["photo", "Photo aérienne"]], E.fondCarte));
+        <div class="l2">${echapper(l.detail)}</div></button>`).join("")}</div>` : ""));
 }
 
+/** Zone du site et MNT à télécharger, en un seul bloc. */
 function blocZone() {
-  const z = E.zoneSite;
+  const z = E.zoneSite, e = etendue(), p = planActuel(), pb = probleme(p);
+  const h = [];
   if (!z) {
-    return bloc("Zone du site", `<div class="ligne"><button class="outil ${carte.modeTrace ? "actif" : ""}" data-action="tracer">▭ Tracer</button>
+    h.push(`<div class="ligne"><button class="outil ${carte.modeTrace ? "actif" : ""}" data-action="tracer">▭ Tracer</button>
       <button class="outil" data-action="importer-emprise">Importer une emprise…</button></div>
       <div class="tres-petit">Tracer : glissez sur la carte (ou ⇧ + glisser à tout moment). Emprise : fichier .shp en Lambert-93 ou en degrés,
-      avec son .prj si possible.</div>
-      <hr><div class="ligne"><label class="outil">Ouvrir un MNT…<input type="file" data-fichier="mnt" accept=".tif,.tiff,.asc" hidden></label>
+      avec son .prj si possible.</div>`);
+  } else {
+    h.push(`<div class="petit-texte">${metres(e.xmax - e.xmin)} × ${metres(e.ymax - e.ymin)} · ${surface((e.xmax - e.xmin) * (e.ymax - e.ymin))}</div>
+      <div class="ligne"><button class="outil petit" data-action="recentrer">Recentrer</button><button class="outil petit" data-action="effacer-zone-site">Effacer la zone</button></div>`);
+  }
+  const bouton = k => `<button data-segment="source" data-valeur="${k}" class="${E.source === k ? "actif" : ""}">${libelleSource(k)}</button>`;
+  h.push(`<hr><div class="segments sources">${bouton("lidarHD")}<span class="point-aide" tabindex="0" aria-label="Comment sont calculés les deux MNT">?<span
+      class="infobulle" role="tooltip">${infobulleSources()}</span></span>${bouton("rgeAlti")}</div>
+    <div class="ligne"><span class="etiq">Résolution</span>${choix("pasMNT", PAS.map(v => [v, metres(v)]), E.pasMNT)}</div>`
+    + (p ? `<div class="petit-texte">${nombre(p.colonnes)} × ${nombre(p.lignes)} cellules · ≈ ${nombre(p.octets / 1e6, p.octets < 1e7 ? 1 : 0)} Mo</div>` : "")
+    + (pb ? `<div class="alerte">⚠ ${echapper(pb)}</div>` : "")
+    + `<button class="outil principal large" data-action="charger-zone" ${!p || pb || E.travail ? "disabled" : ""}>Charger et simuler</button>`);
+  if (!z) {
+    h.push(`<hr><div class="ligne"><label class="outil">Ouvrir un MNT…<input type="file" data-fichier="mnt" accept=".tif,.tiff,.asc" hidden></label>
       <button class="outil" data-action="exemple">Essayer un exemple</button></div>
       <div class="tres-petit">GeoTIFF ou grille .asc : le fichier reste sur cet ordinateur.</div>`);
   }
-  const e = etendue();
-  return bloc("Zone du site", `<div class="ligne"><span class="etiq">Nom du site</span>
-      <input type="text" class="champ-texte court" data-texte="nomSite" value="${echapper(E.nomSite)}" placeholder="ex. 311_Fresnes"></div>
-    <div class="petit-texte">${E.emprise ? `Emprise : ${echapper(E.emprise.nom)} (${E.emprise.systeme})` : "Rectangle tracé sur la carte"}</div>
-    <div class="mono">X ${nombre(z.xmin)} → ${nombre(z.xmax)}<br>Y ${nombre(z.ymin)} → ${nombre(z.ymax)}</div>
-    <div class="petit-texte">${metres(e.xmax - e.xmin)} × ${metres(e.ymax - e.ymin)} · ${surface((e.xmax - e.xmin) * (e.ymax - e.ymin))}</div>
-    <div class="ligne"><span class="etiq">Marge autour</span>${choix("marge", MARGES.map(m => [m, m ? metres(m) : "aucune"]), E.marge)}</div>
-    <div class="ligne"><button class="outil petit" data-action="recentrer">Recentrer</button><button class="outil petit" data-action="effacer-zone-site">Effacer la zone</button></div>`);
+  return bloc("Zone du site", h.join(""));
 }
 
-function blocTelechargement() {
-  const p = planActuel(), pb = probleme(p);
-  return bloc("MNT de la zone", segments("source", Object.entries(SOURCES).map(([k, s]) => [k, s.titre]), E.source)
-    + `<div class="tres-petit">${SOURCES[E.source].explication}</div>`
-    + `<div class="ligne"><span class="etiq">Pas du MNT</span>${choix("pasMNT", PAS.map(v => [v, metres(v)]), E.pasMNT)}</div>`
-    + (p ? `<div class="petit-texte">${nombre(p.colonnes)} × ${nombre(p.lignes)} cellules · ≈ ${nombre(p.octets / 1e6, p.octets < 1e7 ? 1 : 0)} Mo</div>` : "")
-    + (pb ? `<div class="alerte">⚠ ${echapper(pb)}</div>` : "")
-    + `<button class="outil principal large" data-action="charger-zone" ${!p || pb || E.travail ? "disabled" : ""}>Charger et simuler</button>`
-    + (!p ? `<div class="tres-petit">Tracez d'abord la zone sur la carte.</div>` : ""));
+/** « LiDAR 2023 », « RGE ALTI 2021 » : l'année des données sur la zone tracée, quand l'IGN l'a donnée. */
+function libelleSource(k) {
+  const i = E.infosZone;
+  if (k === "lidarHD") return !i?.lidar ? "LiDAR" : i.lidar.couvert ? "LiDAR " + i.lidar.annee : "LiDAR : non couvert";
+  return i?.rge ? "RGE ALTI " + i.rge.annee : "RGE ALTI";
+}
+
+const MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+const dateLongue = s => { const [a, m, j] = s.split("-").map(Number); return `${j === 1 ? "1er" : j} ${MOIS[m - 1]} ${a}`; };
+const minuscule = s => /^[A-ZÉ]{2}/.test(s) ? s : s.charAt(0).toLowerCase() + s.slice(1);
+
+/** Le « ? » entre les deux sources : comment chaque MNT est obtenu, puis ce qu'il en est sur la zone. */
+function infobulleSources() {
+  const i = E.infosZone, l = i?.lidar, r = i?.rge, s = i?.sources;
+  let iciL = "", iciR = "";
+  if (l) iciL = l.couvert ? (l.debut === l.fin ? `Ici : vol du ${dateLongue(l.debut)}.` : `Ici : vols du ${dateLongue(l.debut)} au ${dateLongue(l.fin)}.`)
+    : "Ici : MNT LiDAR HD pas encore publié.";
+  const partsR = [];
+  if (s?.length) partsR.push(s.map(x => `${minuscule(x.origine)} (${x.resolution}, ${String(x.precision).replace(/Emq/g, "EMQ").replace(/(\d)\.(\d)/g, "$1,$2")})`).join(" ; "));
+  if (r) partsR.push(`édition du ${dateLongue(r.date)}`);
+  if (partsR.length) iciR = "Ici : " + partsR.join(" ; ") + ".";
+  return `<p><b>LiDAR HD</b> — Laser aéroporté, au moins 10 impulsions/m², plusieurs échos par impulsion : une part traverse
+    les trouées du feuillage, le sol est donc mesuré sous les arbres (moins densément sous couvert fermé). Nuage classé ; MNT interpolé
+    à 0,5 m sur les seuls points sol, eau et virtuels : bâti, végétation et tabliers de ponts exclus. Laser proche infrarouge,
+    absorbé par l'eau : surface du plan d'eau, pas le fond. Année : celle du vol.</p>${iciL ? `<p class="ici">${iciL}</p>` : ""}
+    <p><b>RGE ALTI</b> — Sources hétérogènes rééchantillonnées à 1 m. Laser aéroporté en zones inondables, sur le littoral et les grands
+    massifs forestiers (EMQ < 30 cm). Ailleurs, corrélation stéréoscopique de photographies aériennes d'hiver (EMQ < 70 cm) : surface
+    vue, sursol retiré ; sous les grands boisements, sol invisible, altitudes anciennes (BD ALTI). Radar en montagne (5 m, EMQ de 1 à 7 m).
+    Eau : surface, sauf les petits fonds littoraux levés au laser topo-bathymétrique. Année : édition départementale.</p>${iciR ? `<p class="ici">${echapper(iciR)}</p>` : ""}`;
+}
+
+/** Années et sources de la zone, demandées à l'IGN à chaque nouvelle zone. */
+let controleInfos = null;
+function chargerInfosZone() {
+  controleInfos?.abort();
+  E.infosZone = null;
+  const z = etendue();
+  if (!z) return;
+  const ctl = new AbortController();
+  controleInfos = ctl;
+  infosZone(z, ctl.signal).then(i => {
+    if (ctl.signal.aborted) return;
+    E.infosZone = i;
+    if (E.ecran === "carte") afficher();
+  }).catch(() => { /* hors ligne : les sources restent sans année */ });
 }
 
 async function chercher() {
@@ -1495,9 +1705,10 @@ async function telechargerZone() {
     let vides = 0;
     for (const v of g.z) if (Number.isNaN(v)) vides++;
     if (vides === g.z.length) { alerte(`Aucune altitude ${SOURCES[E.source].titre} sur cette zone : essayez le RGE ALTI.`); return; }
-    const nom = E.nomSite || (E.emprise ? E.emprise.nom : "Zone");
+    const nom = E.emprise ? E.emprise.nom : nomTerrainLibre();
     const cle = ["zone", E.source, E.pasMNT, z.xmin, z.ymin, z.xmax, z.ymax].map(v => typeof v === "number" ? v.toFixed(1) : v).join("|");
-    installer(g, nom, `${SOURCES[E.source].titre}, pas de ${metres(E.pasMNT)} (téléchargé à l'IGN)`, [], cle);
+    const an = E.source === "lidarHD" ? E.infosZone?.lidar?.annee : E.infosZone?.rge?.annee;
+    installer(g, nom, `${SOURCES[E.source].titre}${an ? " " + an : ""}, résolution ${metres(E.pasMNT)} (téléchargé à l'IGN)`, [], cle);
   } catch (err) {
     telechargement = null;
     travail(null);
@@ -1512,7 +1723,7 @@ async function importerEmprise(fichiers) {
     const em = lireEmprise(await shp.arrayBuffer(), prj ? await prj.text() : "");
     em.nom = shp.name.replace(/\.shp$/i, "");
     E.emprise = em; E.zoneSite = em.boite;
-    if (!E.nomSite) E.nomSite = em.nom;
+    chargerInfosZone();
     montrerEcran("carte");
     carte.dessinerEmprise(em.anneaux);
     carte.dessinerZone(etendue());
@@ -1612,10 +1823,9 @@ function legendeCalques() {
   return t;
 }
 
-$("texte-limite").textContent = `Jusqu'à environ ${nombre(LIMITE / 1e6)} millions de cellules sur ce navigateur (${surface(LIMITE)} au pas de 1 m) ; au-delà, la page propose de réduire ou de découper.`;
 montrerEcran("carte");
 
 // Accès pour les essais automatiques (test/essai.html) : l'état et quelques actions.
-window.simulateur = { E, M, carte, montrerEcran, telechargerZone, chargerCalque, donneesCalques, ouvrir, installer, changerOperations, annulerRemodelage, retablirRemodelage, exporterTout, vue, choisirOutil,
+window.simulateur = { E, M, carte, montrerEcran, onglets, choisirOnglet, fermerOnglet, renommerOnglet, chargerInfosZone, telechargerZone, chargerCalque, donneesCalques, ouvrir, installer, changerOperations, annulerRemodelage, retablirRemodelage, exporterTout, vue, choisirOutil,
   pluieModifiee, commencerSurface, terminerSurface, appliquerPluie, debit, coefficientEn, descriptionPluie, note, TYPES_SURFACES,
   attendre: () => new Promise(res => { const v = () => (E.travail ? setTimeout(v, 50) : res()); v(); }) };

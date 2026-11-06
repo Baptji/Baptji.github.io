@@ -25,17 +25,21 @@
 </head>
 <body>
 <main>
-<h1>Simulateur MNT — notice</h1>
+<h1>Simulateur 3D — notice</h1>
 <p class="chapeau">Écoulements, dépressions et indice d'humidité (TWI) d'un modèle numérique de terrain, en 3D, dans le navigateur.
 Rien à installer : le calcul se fait dans la page. Un MNT ouvert depuis votre ordinateur <strong>n'est jamais envoyé</strong>.</p>
 
 <h2>1. Choisir la zone ou ouvrir un MNT</h2>
 <ul>
-  <li><strong>Carte</strong> : chercher le site (commune, adresse, <code>680626 6871245</code> en Lambert-93, <code>48,94 2,73</code> en degrés),
+  <li><strong>Carte</strong> ou <strong>Photo aérienne</strong> (onglets du haut) : chercher le site (commune, adresse, <code>680626 6871245</code> en Lambert-93, <code>48,94 2,73</code> en degrés),
     puis « Tracer » et glisser sur la carte (ou Maj + glisser à tout moment), ou « Importer une emprise » (.shp en Lambert-93 ou en degrés, avec son .prj).</li>
-  <li><strong>MNT de la zone</strong> : LiDAR HD (pas de 0,5 m : valeurs natives de l'IGN ; 1 et 2 m : moyenne pondérée) ou RGE ALTI (flux WMS),
-    marge autour de la zone, puis « Charger et simuler » : la page demande les altitudes à la Géoplateforme de l'IGN et passe en 3D.</li>
-  <li><strong>Fichier</strong> : « Ouvrir un MNT… », ou le déposer sur la page.</li>
+  <li><strong>MNT de la zone</strong> : LiDAR HD (résolution de 0,5 m : valeurs natives de l'IGN ; 1 et 2 m : moyenne pondérée) ou RGE ALTI,
+    avec l'année des données sur la zone (vol LiDAR, édition départementale du RGE ALTI) ; le « ? » entre les deux explique comment
+    chacun est obtenu. Une marge de 20 m est toujours prise autour de la zone. « Charger et simuler » demande les altitudes à la
+    Géoplateforme de l'IGN et ouvre le terrain en 3D dans un nouvel onglet.</li>
+  <li><strong>Fichier</strong> : « Ouvrir un MNT… », ou le déposer sur la page ; il s'ouvre lui aussi dans un nouvel onglet.</li>
+  <li><strong>Onglets</strong> : un par terrain (Terrain 1, Terrain 2…), chacun avec ses calculs, son remodelage et sa pluie ;
+    double-clic pour renommer, croix ou clic du milieu pour fermer.</li>
 </ul>
 <table>
   <tr><th>Formats</th><td>GeoTIFF (<code>.tif</code>, une bande, flottant ou entier, toutes compressions courantes) ou grille ASCII ESRI (<code>.asc</code>).

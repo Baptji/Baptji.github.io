@@ -1,6 +1,6 @@
 /* Carte IGN, zone du site et téléchargement du MNT (portage de Carte.swift et IGN.swift de l'app Mac).
  * Fonds WMTS et altitudes brutes (WMS float32) de la Géoplateforme, qui autorise les pages web. */
-import { versL93, versGeo, enMetropole, rect } from "./geo.js?v=20261105233926";
+import { versL93, versGeo, enMetropole, rect } from "./geo.js?v=20261106235519";
 
 const BASE = "https://data.geopf.fr";
 const FONDS = {
@@ -9,13 +9,72 @@ const FONDS = {
 };
 
 export const SOURCES = {
-  lidarHD: { titre: "LiDAR HD", couche: "IGNF_LIDAR-HD_MNT_ELEVATION.ELEVATIONGRIDCOVERAGE.LAMB93", pasNatif: 0.5,
-    explication: "MNT dérivé du LiDAR HD : à 0,5 m, les valeurs natives de l'IGN sans lissage ; aux pas de 1 et 2 m, moyenne des pixels natifs. Les zones sans LiDAR restent vides." },
-  rgeAlti: { titre: "RGE ALTI (flux WMS)", couche: "ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES", pasNatif: 1,
-    explication: "Flux WMS du RGE ALTI 1 m. Édition plus ancienne que les dalles départementales : pour celles-ci, ouvrez le GeoTIFF de MNT Fusion." },
+  lidarHD: { titre: "LiDAR HD", couche: "IGNF_LIDAR-HD_MNT_ELEVATION.ELEVATIONGRIDCOVERAGE.LAMB93", pasNatif: 0.5 },
+  rgeAlti: { titre: "RGE ALTI", couche: "ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES", pasNatif: 1 },
 };
 export const PAS = [0.5, 1, 2, 5];
-export const MARGES = [0, 20, 50, 100, 200, 500];
+/** Marge prise autour de la zone tracée : l'eau qui vient de l'amont proche entre dans le calcul. */
+export const MARGE = 20;
+
+// ---------------------------------------------------------------------------
+// Ce que l'IGN dit de la zone : dates des vols LiDAR HD, sources et édition du RGE ALTI
+// ---------------------------------------------------------------------------
+const departements = new Map();
+
+/** Département du point (Lambert-93), par le géocodage inverse : « 62 », « 2A », « 971 ». */
+async function departement(x, y, signal) {
+  const [lat, lon] = versGeo(x, y);
+  for (const index of ["address", "parcel"]) {
+    const r = await fetch(`${BASE}/geocodage/reverse?lon=${lon.toFixed(6)}&lat=${lat.toFixed(6)}&limit=1&index=${index}`, { signal });
+    if (!r.ok) continue;
+    const p = (await r.json()).features?.[0]?.properties;
+    const code = p?.departmentcode || p?.citycode || p?.id;
+    if (code) return code.startsWith("97") ? code.slice(0, 3) : code.slice(0, 2);
+  }
+  return null;
+}
+
+/** Date de la dernière édition à 1 m du RGE ALTI du département (service de téléchargement de l'IGN). */
+async function editionRGE(x, y, signal) {
+  const d = await departement(x, y, signal);
+  if (!d) return null;
+  if (!departements.has(d)) {
+    const zone = "D" + d.padStart(3, "0");
+    const r = await fetch(`${BASE}/telechargement/resource/RGEALTI?zone=${zone}&limit=50`, { signal });
+    if (!r.ok) throw new Error("service de téléchargement indisponible");
+    const dates = [...(await r.text()).matchAll(new RegExp(`RGEALTI_[\\w-]+_1M_[\\w-]+_${zone}_(\\d{4}-\\d\\d-\\d\\d)`, "g"))].map(m => m[1]).sort();
+    departements.set(d, dates.length ? dates[dates.length - 1] : null);
+  }
+  const date = departements.get(d);
+  return date ? { date, annee: date.slice(0, 4) } : null;
+}
+
+/** Années et sources des deux MNT sur la zone. Chaque partie vaut undefined si l'IGN n'a pas répondu.
+ *  lidar : { couvert, debut, fin, annee } (dates des vols) ; rge : { date, annee } ; sources : [{ origine, resolution, precision }]. */
+export async function infosZone(z, signal) {
+  const bbox = `${z.xmin.toFixed(1)},${z.ymin.toFixed(1)},${z.xmax.toFixed(1)},${z.ymax.toFixed(1)},urn:ogc:def:crs:EPSG::2154`;
+  const wfs = async (couche, champs) => {
+    const r = await fetch(`${BASE}/wfs/ows?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=${couche}&OUTPUTFORMAT=application/json`
+      + `&COUNT=1000&PROPERTYNAME=${champs}&BBOX=${bbox}`, { signal });
+    if (!r.ok) throw new Error("WFS " + r.status);
+    return (await r.json()).features.map(f => f.properties);
+  };
+  const [lidar, sources, rge] = await Promise.allSettled([
+    wfs("IGNF_LIDAR-HD_METADONNEE:metadata", "date_debut_acquisition,date_fin_acquisition").then(l => {
+      const dates = l.flatMap(p => [p.date_debut_acquisition, p.date_fin_acquisition]).filter(Boolean).map(s => s.slice(0, 10)).sort();
+      if (!dates.length) return { couvert: false };
+      const a = dates[0].slice(0, 4), b = dates[dates.length - 1].slice(0, 4);
+      return { couvert: true, debut: dates[0], fin: dates[dates.length - 1], annee: a === b ? a : `${a}–${b}` };
+    }),
+    wfs("ELEVATIONGRIDCOVERAGE.HIGHRES.QUALITY:source_fra", "origine,resolution,precision").then(l => {
+      const vues = new Map();
+      for (const p of l) if (p.origine) vues.set(p.origine, p);
+      return [...vues.values()];
+    }),
+    editionRGE((z.xmin + z.xmax) / 2, (z.ymin + z.ymax) / 2, signal),
+  ]);
+  return { lidar: lidar.value, sources: sources.value, rge: rge.value };
+}
 
 // Le WMS de la Géoplateforme annonce une requête par seconde.
 let prochaine = 0;

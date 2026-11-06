@@ -331,6 +331,35 @@ export class Vue3D {
   }
   get aUnePhoto() { return !!this.texPhoto; }
 
+  // Onglets : le terrain qu'on quitte garde sa photo et son point de vue, le suivant les reprend.
+  /** Rend la photo sans la libérer (elle repartira avec son onglet). */
+  detacherPhoto() { const t = this.texPhoto || null; this.texPhoto = null; this.majUniformes(); return t; }
+  etatVue() {
+    return { position: this.camera.position.clone(), cible: this.controls.target.clone(), near: this.camera.near, far: this.camera.far,
+             hmin: this.hmin, hmax: this.hmax, exageration: this.reglages.exageration };
+  }
+  /** Après charger() : mêmes bornes d'altitude et même point de vue qu'au départ de l'onglet. */
+  retablirVue(e) {
+    if (!e) return;
+    this.hmin = e.hmin; this.hmax = e.hmax;
+    const f = this.reglages.exageration / Math.max(0.01, e.exageration);
+    this.controls.target.copy(e.cible); this.controls.target.y *= f;
+    this.camera.position.copy(e.position); this.camera.position.y *= f;
+    this.camera.near = e.near; this.camera.far = e.far;
+    this.camera.updateProjectionMatrix();
+    this.controls.update();
+    this.majUniformes();
+  }
+  /** Plus aucun terrain : maillage et textures libérés. */
+  vider() {
+    for (const o of [this.terrain, this.socle]) if (o) { this.scene.remove(o); o.geometry.dispose(); o.material.dispose(); }
+    this.terrain = this.socle = null;
+    this.photo(null); this.coloration(null); this.couches(null); this.calque(null);
+    this.texHauteurs?.dispose(); this.texHauteurs = null; this.uniformes.hauteurs.value = null;
+    this.grille = null;
+    this.dessiner();
+  }
+
   majUniformes() {
     const g = this.grille;
     if (!g) return;
