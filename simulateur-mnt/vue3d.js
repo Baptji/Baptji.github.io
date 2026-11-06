@@ -105,6 +105,59 @@ const PIXEL_TERRAIN = COMMUN + /* glsl */`
     sortie = vec4(col, 1.0);
   }`;
 
+// Pluie animée : la nappe d'eau, posée sur le terrain, plus foncée là où elle est profonde.
+// Sa hauteur vient d'une grille plus grossière que le MNT (echelleEau : coordonnées du MNT → de la grille de l'eau).
+const SOMMET_EAU = COMMUN + /* glsl */`
+  uniform sampler2D eau; uniform vec2 echelleEau;
+  out vec2 vUv;
+  void main() {
+    vec2 t = position.xz;
+    float z = texture(hauteurs, t).r, h = texture(eau, t * echelleEau).r;
+    if (z < -1e29) { z = b.x; h = 0.0; }
+    // Sommet sec : sous le terrain, le bord de la nappe s'y cache.
+    float y = h > 0.002 ? (z + h - b.z) * b.w : (z - b.z) * b.w - 0.3 * max(1.0, b.w);
+    vUv = t;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4((t.x - 0.5) * a.x, y, (t.y - 0.5) * a.y, 1.0);
+  }`;
+
+const PIXEL_EAU = COMMUN + /* glsl */`
+  uniform sampler2D eau; uniform vec2 echelleEau; uniform vec4 c; uniform vec4 soleil;
+  in vec2 vUv; out vec4 sortie;
+  void main() {
+    float h = texture(eau, vUv * echelleEau).r;
+    if (h < 0.004) discard;
+    float z0 = alt(vUv, b.x), pas = c.x, exa = b.w;
+    float hg = alt(vUv - vec2(a.z, 0.0), z0), hd = alt(vUv + vec2(a.z, 0.0), z0);
+    float hn = alt(vUv - vec2(0.0, a.w), z0), hs = alt(vUv + vec2(0.0, a.w), z0);
+    vec3 n = normalize(vec3(-(hd - hg) / (2.0 * pas) * exa, 1.0, -(hs - hn) / (2.0 * pas) * exa));
+    float l = max(dot(n, normalize(soleil.xyz)), 0.0);
+    float p = sqrt(clamp(h / 0.4, 0.0, 1.0));   // de quelques millimètres à 40 cm
+    vec3 col = mix(vec3(0.50, 0.78, 0.98), vec3(0.06, 0.26, 0.60), p) * (0.78 + 0.3 * l);
+    // Une lame de quelques millimètres reste discrète ; à partir de 4 cm, c'est de l'eau.
+    sortie = vec4(col, mix(0.16, 0.9, smoothstep(0.004, 0.04, h)));
+  }`;
+
+// Traits qui suivent l'eau : chaque segment devient un ruban de largeur constante à l'écran (en px),
+// caché par le relief comme le reste de la scène.
+const SOMMET_TRAIT = /* glsl */`
+  attribute vec3 debut; attribute vec3 fin; attribute vec2 bout; attribute float alpha;
+  uniform vec2 demiEcran; uniform float demiLargeur;
+  varying float vA;
+  void main() {
+    vec4 P = projectionMatrix * modelViewMatrix * vec4(debut, 1.0);
+    vec4 Q = projectionMatrix * modelViewMatrix * vec4(fin, 1.0);
+    vec2 d = Q.xy / Q.w * demiEcran - P.xy / P.w * demiEcran;
+    float l = length(d);
+    d = l > 1e-6 ? d / l : vec2(1.0, 0.0);
+    vec4 R = bout.x < 0.5 ? P : Q;
+    R.xy += vec2(-d.y, d.x) * bout.y * demiLargeur / demiEcran * R.w;
+    vA = alpha;
+    gl_Position = R;
+  }`;
+const PIXEL_TRAIT = /* glsl */`
+  varying float vA;
+  void main() { if (vA < 0.01) discard; gl_FragColor = vec4(1.0, 1.0, 1.0, vA); }`;
+
 const SOMMET_SOCLE = COMMUN + /* glsl */`
   uniform float baseSocle;
   out vec3 vMonde; out float vH;
@@ -196,6 +249,7 @@ export class Vue3D {
     this.texHauteurs = t;
     this.uniformes.hauteurs.value = t;
     this.photo(null); this.coloration(null); this.couches(null); this.calque(null);
+    this.eau(null); this.traits(null); this.jauges([]);
     for (const o of [this.terrain, this.socle]) if (o) { this.scene.remove(o); o.geometry.dispose(); }
     // Maillage : sommets au centre des cellules (u = (c + 0,5) / C), comme dans l'app Mac.
     const pas = Math.max(1, Math.ceil(Math.max(g.lignes, g.colonnes) / 1000));
@@ -350,11 +404,194 @@ export class Vue3D {
     this.controls.update();
     this.majUniformes();
   }
+  // Pluie animée -----------------------------------------------------------
+  /** Nappe d'eau : e = { w, h, hauteur (m, w × h), echelle: [sx, sy] }, ou null pour l'enlever. */
+  eau(e) {
+    if (!e) {
+      if (this.nappe) { this.scene.remove(this.nappe); this.nappe.material.dispose(); this.nappe = null; }
+      this.texEau?.dispose(); this.texEau = null;
+      this.dessiner();
+      return;
+    }
+    if (!this.terrain) return;
+    if (!this.texEau || this.texEau.image.width !== e.w || this.texEau.image.height !== e.h) {
+      this.texEau?.dispose();
+      const t = new THREE.DataTexture(new Float32Array(e.w * e.h), e.w, e.h, THREE.RedFormat, THREE.FloatType);
+      t.minFilter = t.magFilter = this.renderer.extensions.has("OES_texture_float_linear") ? THREE.LinearFilter : THREE.NearestFilter;
+      this.texEau = t;
+    }
+    if (!this.nappe) {
+      const u = this.uniformes;
+      this.uEau = { eau: { value: this.texEau }, echelleEau: { value: new THREE.Vector2(1, 1) } };
+      const mat = new THREE.ShaderMaterial({ glslVersion: THREE.GLSL3,
+        uniforms: { hauteurs: u.hauteurs, a: u.a, b: u.b, c: u.c, soleil: u.soleil, ...this.uEau },
+        vertexShader: SOMMET_EAU, fragmentShader: PIXEL_EAU, transparent: true, depthWrite: false,
+        polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4, side: THREE.DoubleSide });
+      this.nappe = new THREE.Mesh(this.terrain.geometry, mat);
+      this.nappe.frustumCulled = false;
+      this.nappe.renderOrder = 2;
+      this.scene.add(this.nappe);
+    }
+    this.uEau.eau.value = this.texEau;
+    this.uEau.echelleEau.value.set(e.echelle[0], e.echelle[1]);
+    this.texEau.image.data.set(e.hauteur);
+    this.texEau.needsUpdate = true;
+    this.dessiner();
+  }
+
+  /** Rubans des traits blancs : nb segments, 4 sommets chacun. Rend les tableaux à remplir
+   *  (debut, fin : xyz ; alpha : par sommet, 0–1 au début puis 2–3 à la fin du segment). */
+  creerTraits(nb) {
+    this.traits(null);
+    const v = nb * 4, debut = new Float32Array(v * 3), fin = new Float32Array(v * 3), alpha = new Float32Array(v), bout = new Float32Array(v * 2);
+    const index = new Uint32Array(nb * 6);
+    for (let s = 0; s < nb; s++) {
+      const o = s * 4;
+      bout.set([0, -1, 0, 1, 1, -1, 1, 1], o * 2);
+      index.set([o, o + 2, o + 1, o + 1, o + 2, o + 3], s * 6);
+    }
+    const geo = new THREE.BufferGeometry(), dyn = a => a.setUsage(THREE.DynamicDrawUsage);
+    geo.setAttribute("debut", dyn(new THREE.BufferAttribute(debut, 3)));
+    geo.setAttribute("position", geo.getAttribute("debut"));
+    geo.setAttribute("fin", dyn(new THREE.BufferAttribute(fin, 3)));
+    geo.setAttribute("alpha", dyn(new THREE.BufferAttribute(alpha, 1)));
+    geo.setAttribute("bout", new THREE.BufferAttribute(bout, 2));
+    geo.setIndex(new THREE.BufferAttribute(index, 1));
+    this.uTraits = { demiEcran: { value: new THREE.Vector2(1, 1) }, demiLargeur: { value: 0.8 } };
+    this.lignes = new THREE.Mesh(geo, new THREE.ShaderMaterial({ uniforms: this.uTraits, vertexShader: SOMMET_TRAIT, fragmentShader: PIXEL_TRAIT,
+      transparent: true, depthWrite: false, side: THREE.DoubleSide }));
+    this.lignes.frustumCulled = false;
+    this.lignes.renderOrder = 3;
+    this.scene.add(this.lignes);
+    return { debut, fin, alpha };
+  }
+
+  /** Les tableaux des traits ont été remplis : à envoyer. null : plus de traits. */
+  traits(maj) {
+    if (!maj) {
+      if (this.lignes) { this.scene.remove(this.lignes); this.lignes.geometry.dispose(); this.lignes.material.dispose(); this.lignes = null; }
+      this.dessiner();
+      return;
+    }
+    if (!this.lignes) return;
+    const g = this.lignes.geometry, taille = new THREE.Vector2();
+    this.renderer.getDrawingBufferSize(taille);
+    this.uTraits.demiEcran.value.set(taille.x / 2, taille.y / 2);
+    this.uTraits.demiLargeur.value = 0.8 * this.renderer.getPixelRatio();
+    for (const k of ["debut", "fin", "alpha"]) g.attributes[k].needsUpdate = true;
+    this.dessiner();
+  }
+
+  // Jauges -----------------------------------------------------------------
+  /** Poteaux gradués posés sur le terrain : [{ cle, cellule, echelle (m d'eau sur toute la hauteur), profondeur, maxi }].
+   *  Bandes claires et foncées de 10 cm, chapeau et socle rouges ; le bleu monte avec l'eau, le trait rouge marque
+   *  le plus haut niveau de l'événement. La jauge est agrandie pour rester lisible : ses graduations ne sont pas
+   *  à l'échelle du relief. */
+  jauges(liste) {
+    const g = this.grille;
+    if (!this.groupeJauges) {
+      this.groupeJauges = new THREE.Group();
+      this.scene.add(this.groupeJauges);
+      this.scene.add(new THREE.AmbientLight(0xffffff, 1.7));
+      const soleil = new THREE.DirectionalLight(0xffffff, 2.2);
+      soleil.position.set(-0.5, 0.707, -0.5);
+      this.scene.add(soleil);
+      this.jaugesVues = new Map();
+    }
+    const vues = new Set();
+    for (const j of g ? liste || [] : []) {
+      vues.add(j.cle);
+      let o = this.jaugesVues.get(j.cle);
+      if (!o || o.echelle !== j.echelle || o.taille !== Math.max(g.colonnes, g.lignes) * g.pas) {
+        if (o) this.retirerJauge(o);
+        o = this.creerJauge(j.echelle);
+        this.jaugesVues.set(j.cle, o);
+      }
+      const z = g.z[j.cellule], c = j.cellule % g.colonnes, l = Math.floor(j.cellule / g.colonnes);
+      const [x, y, zz] = this.versMonde(c + 0.5, l + 0.5, Number.isNaN(z) ? this.hmin : z);
+      o.groupe.position.set(x, y, zz);
+      const h = o.hauteur, eau = Math.max(0, Math.min(1, j.profondeur / j.echelle)), maxi = Math.max(0, Math.min(1, j.maxi / j.echelle));
+      o.eau.visible = eau > 0.002;
+      o.eau.scale.y = Math.max(1e-3, eau * h);
+      o.eau.position.y = eau * h / 2;
+      o.maxi.visible = maxi > 0.002;
+      o.maxi.position.y = maxi * h;
+      o.sommet = new THREE.Vector3(x, y + h + o.largeur * 1.2, zz);
+    }
+    for (const [cle, o] of this.jaugesVues) if (!vues.has(cle)) { this.retirerJauge(o); this.jaugesVues.delete(cle); }
+    this.dessiner();
+  }
+
+  creerJauge(echelle) {
+    const g = this.grille, taille = Math.max(g.colonnes, g.lignes) * g.pas;
+    const l = taille * 0.011, h = taille * 0.075, groupe = new THREE.Group();
+    // Graduations : une bande par 10 cm, un trait et la valeur tous les 50 cm.
+    const n = Math.max(1, Math.round(echelle / 0.1)), cv = document.createElement("canvas");
+    cv.width = 64; cv.height = 512;
+    const x = cv.getContext("2d"), bande = cv.height / n;
+    for (let k = 0; k < n; k++) {
+      x.fillStyle = k % 2 ? "#8f6136" : "#e3c08a";
+      x.fillRect(0, cv.height - (k + 1) * bande, cv.width, bande + 0.5);
+      x.fillStyle = "rgba(0, 0, 0, 0.18)";
+      x.fillRect(0, cv.height - (k + 1) * bande, cv.width, 1.5);
+    }
+    x.font = "bold 15px -apple-system, system-ui, sans-serif"; x.textAlign = "center"; x.textBaseline = "middle";
+    for (let k = 5; k < n; k += 5) {
+      const y = cv.height - k * bande;
+      x.fillStyle = "#3b2414"; x.fillRect(0, y - 1.5, cv.width, 3);
+      x.fillStyle = "#fff8ec"; x.strokeStyle = "#3b2414"; x.lineWidth = 3;
+      const texte = (k / 10).toFixed(1).replace(".", ",");
+      x.strokeText(texte, cv.width / 2, y - 12); x.fillText(texte, cv.width / 2, y - 12);
+    }
+    const tex = new THREE.CanvasTexture(cv);
+    tex.colorSpace = THREE.NoColorSpace;
+    const bois = new THREE.MeshLambertMaterial({ map: tex }), bout = new THREE.MeshLambertMaterial({ color: 0xb98a55 });
+    const rouge = new THREE.MeshLambertMaterial({ color: 0xc0392b });
+    const poteau = new THREE.Mesh(new THREE.BoxGeometry(l, h, l), [bois, bois, bout, bout, bois, bois]);
+    poteau.position.y = h / 2;
+    const socle = new THREE.Mesh(new THREE.BoxGeometry(l * 1.9, l * 0.18, l * 1.9), rouge);
+    socle.position.y = l * 0.09;
+    const chapeau = new THREE.Mesh(new THREE.ConeGeometry(l * 0.85, l * 1.1, 4), rouge);
+    chapeau.rotation.y = Math.PI / 4;
+    chapeau.position.y = h + l * 0.55;
+    const eau = new THREE.Mesh(new THREE.BoxGeometry(l * 1.14, 1, l * 1.14),
+      new THREE.MeshLambertMaterial({ color: 0x3f93e8, transparent: true, opacity: 0.62, depthWrite: false }));
+    const maxi = new THREE.Mesh(new THREE.BoxGeometry(l * 1.42, h * 0.014, l * 1.42), new THREE.MeshLambertMaterial({ color: 0xe53935 }));
+    groupe.add(poteau, socle, chapeau, eau, maxi);
+    for (const m of groupe.children) m.renderOrder = 4;
+    this.groupeJauges.add(groupe);
+    return { groupe, eau, maxi, hauteur: h, largeur: l, echelle, taille, tex };
+  }
+
+  retirerJauge(o) {
+    this.groupeJauges.remove(o.groupe);
+    o.groupe.traverse(m => { if (m.isMesh) { m.geometry.dispose(); (Array.isArray(m.material) ? m.material : [m.material]).forEach(x => x.dispose()); } });
+    o.tex.dispose();
+  }
+
+  /** Position à l'écran (px dans le canvas) du haut de chaque jauge, pour les étiquettes. */
+  positionsJauges() {
+    const r = this.canvas.getBoundingClientRect(), out = new Map();
+    for (const [cle, o] of this.jaugesVues || []) {
+      if (!o.sommet) continue;
+      const p = o.sommet.clone().project(this.camera);
+      if (p.z > 1) continue;
+      out.set(cle, [(p.x + 1) / 2 * r.width, (1 - p.y) / 2 * r.height]);
+    }
+    return out;
+  }
+
+  /** Point de la scène pour une position continue du MNT (colonne, ligne depuis le coin nord-ouest) et une altitude. */
+  versMonde(colonne, ligne, z) {
+    const g = this.grille, hc = (this.hmin + this.hmax) / 2;
+    return [colonne * g.pas - g.colonnes * g.pas / 2, (z - hc) * this.reglages.exageration, ligne * g.pas - g.lignes * g.pas / 2];
+  }
+
   /** Plus aucun terrain : maillage et textures libérés. */
   vider() {
     for (const o of [this.terrain, this.socle]) if (o) { this.scene.remove(o); o.geometry.dispose(); o.material.dispose(); }
     this.terrain = this.socle = null;
-    this.photo(null); this.coloration(null); this.couches(null); this.calque(null);
+    this.photo(null); this.coloration(null); this.couches(null); this.calque(null); this.eau(null); this.traits(null); this.jauges([]);
     this.texHauteurs?.dispose(); this.texHauteurs = null; this.uniformes.hauteurs.value = null;
     this.grille = null;
     this.dessiner();

@@ -209,3 +209,29 @@ select.menu-pluie { flex: none; width: 104px; }
 .trait { width: 16px; border-top: 1.2px solid var(--texte); flex: none; }
 .trait.epais { border-top-width: 2.4px; }
 #legende { max-height: calc(100% - 20px); overflow: hidden; }
+/* Site tracé sur la carte : sommets numérotés, tirets qui défilent pendant le téléchargement */
+.sommet-site { display: flex; align-items: center; justify-content: center; background: rgba(28, 28, 30, 0.88); border: 1.5px solid #ffc400;
+  border-radius: 3px; color: #ffc400; font: 600 10px/1 ui-monospace, "SF Mono", Menlo, monospace; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45); }
+.sommet-site.fermeture { animation: fermeture 1.1s ease-in-out infinite; cursor: pointer; }
+@keyframes fermeture { 50% { box-shadow: 0 0 0 5px rgba(255, 196, 0, 0.35); } }
+.leaflet-marker-draggable.sommet-site { cursor: grab; }
+path.site-charge { stroke-dasharray: 10 7; animation: fourmis 0.8s linear infinite; }
+@keyframes fourmis { to { stroke-dashoffset: -17; } }
+@media (prefers-reduced-motion: reduce) { path.site-charge, .sommet-site.fermeture { animation: none; } }
+.carte.trace { cursor: crosshair; }
+.progres-zone { display: flex; flex-direction: column; gap: 5px; }
+.progres-zone .piste { height: 6px; border-radius: 3px; background: var(--trait); overflow: hidden; }
+.progres-zone .piste span { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #ffb300, #ffd84d); transition: width 0.3s; }
+.progres-zone .texte { font-size: 10.5px; color: var(--second); }
+/* Événement de pluie et jauges */
+.haut-droite { top: 10px; right: 10px; display: flex; flex-direction: column; gap: 2px; font-size: 10.5px; font-variant-numeric: tabular-nums; }
+.haut-droite b { color: var(--accent); font-weight: 600; }
+.outil.pluie { flex: 1; }
+.etiquettes-jauges { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.etiquette-jauge { position: absolute; left: 0; top: 0; display: flex; gap: 6px; align-items: baseline; white-space: nowrap;
+  background: rgba(28, 28, 30, 0.86); color: #f4ecdf; border: 1px solid rgba(255, 196, 0, 0.55); border-radius: 6px; padding: 3px 7px;
+  font-size: 10.5px; font-variant-numeric: tabular-nums; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35); margin-top: -6px; }
+.etiquette-jauge b { color: #ffc400; }
+.etiquette-jauge .maxi { color: #ff8a80; }
+.etiquette-jauge .debit { color: #9fd1ff; }
+.ligne.jauge .nom-jauge { font-weight: 600; color: #c08a00; min-width: 22px; }

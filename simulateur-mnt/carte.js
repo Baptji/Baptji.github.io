@@ -1,6 +1,6 @@
 /* Carte IGN, zone du site et téléchargement du MNT (portage de Carte.swift et IGN.swift de l'app Mac).
  * Fonds WMTS et altitudes brutes (WMS float32) de la Géoplateforme, qui autorise les pages web. */
-import { versL93, versGeo, enMetropole, rect } from "./geo.js?v=20261106235519";
+import { versL93, versGeo, enMetropole, rect } from "./geo.js?v=20261107004736";
 
 const BASE = "https://data.geopf.fr";
 const FONDS = {
@@ -188,12 +188,21 @@ export async function telechargerMNT(zone, source, pas, progression, signal) {
 }
 
 // ---------------------------------------------------------------------------
-// La carte (Leaflet) : fonds IGN, rectangle tracé en Lambert-93, emprise importée, MNT chargé
+// La carte (Leaflet) : fonds IGN, site tracé en polygone (ou emprise importée), MNT chargé
 // ---------------------------------------------------------------------------
 const auxCoins = r => [[r.xmin, r.ymin], [r.xmax, r.ymin], [r.xmax, r.ymax], [r.xmin, r.ymax]].map(([x, y]) => versGeo(x, y));
+const OR = "#ffc400";
+/** Boîte englobante d'anneaux Lambert-93. */
+export function boiteDe(anneaux) {
+  let xmin = Infinity, ymin = Infinity, xmax = -Infinity, ymax = -Infinity;
+  for (const a of anneaux) for (const [x, y] of a) { xmin = Math.min(xmin, x); xmax = Math.max(xmax, x); ymin = Math.min(ymin, y); ymax = Math.max(ymax, y); }
+  return { xmin, ymin, xmax, ymax };
+}
 
 export class Carte {
-  constructor(div, { surZone }) {
+  /** surSite(anneau | null) : un polygone vient d'être fermé ou modifié (anneau Lambert-93) ;
+   *  surTrace(nombre) : un sommet de plus ou de moins pendant le tracé, ou fin du tracé (−1). */
+  constructor(div, { surSite, surTrace }) {
     const L = window.L;
     this.L = L;
     this.map = L.map(div, { zoomControl: true, attributionControl: true, zoomSnap: 0.25, boxZoom: false }).setView([46.6, 2.4], 6);
@@ -205,31 +214,27 @@ export class Carte {
         { maxNativeZoom: f.zmax, maxZoom: 21, attribution: "© IGN, Géoplateforme", crossOrigin: true });
     }
     this.fond("plan");
-    this.surZone = surZone;
+    this.surSite = surSite;
+    this.surTrace = surTrace;
     this.modeTrace = false;
-    this.formeZone = null; this.formeMNT = null; this.formeEmprise = null;
-    const m = this.map, debut = { p: null };
-    m.on("mousedown", (e) => {
-      if (!(this.modeTrace || e.originalEvent.shiftKey) || e.originalEvent.button !== 0) return;
-      m.dragging.disable();
-      debut.p = versL93(e.latlng.lat, e.latlng.lng);
+    this.points = [];            // sommets posés pendant le tracé (lat, lon)
+    this.formeMNT = null; this.formeSite = null; this.sommets = []; this.formeTrace = null; this.elastique = null;
+    const m = this.map;
+    m.on("click", (e) => { if (this.modeTrace) this.poser(e.latlng); });
+    m.on("mousemove", (e) => { if (this.modeTrace && this.points.length) this.elastique.setLatLngs([this.points[this.points.length - 1], e.latlng]); });
+    m.on("dblclick", (e) => {
+      if (!this.modeTrace) return;
+      // Les deux clics du double-clic ont posé deux fois le même sommet : on n'en garde qu'un.
+      const p = this.points, n = p.length;
+      if (n >= 2 && m.latLngToContainerPoint(p[n - 1]).distanceTo(m.latLngToContainerPoint(p[n - 2])) < 6) p.pop();
+      this.fermer();
     });
-    m.on("mousemove", (e) => {
-      if (!debut.p) return;
-      const q = versL93(e.latlng.lat, e.latlng.lng);
-      this.dessinerZone(rect(debut.p[0], debut.p[1], q[0], q[1]));
+    document.addEventListener("keydown", (e) => {
+      if (!this.modeTrace || e.target.closest?.("input, textarea")) return;
+      if (e.key === "Escape") this.trace(false);
+      else if (e.key === "Enter") this.fermer();
+      else if (e.key === "Backspace") { e.preventDefault(); this.retirer(); }
     });
-    const fin = (e) => {
-      if (!debut.p) return;
-      const q = versL93(e.latlng.lat, e.latlng.lng), r = rect(debut.p[0], debut.p[1], q[0], q[1]);
-      debut.p = null;
-      m.dragging.enable();
-      this.trace(false);
-      if (r.xmax - r.xmin >= 5 && r.ymax - r.ymin >= 5) this.surZone(r);
-      else this.surZone(null);
-    };
-    m.on("mouseup", fin);
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && this.modeTrace) this.trace(false); });
   }
 
   fond(nom) {
@@ -237,20 +242,108 @@ export class Carte {
     this.nomFond = nom;
   }
 
+  // Tracé du site, sommet par sommet ------------------------------------------
   trace(actif) {
+    if (actif === this.modeTrace) return;
     this.modeTrace = actif;
     this.map.getContainer().classList.toggle("trace", actif);
+    if (actif) {
+      this.map.doubleClickZoom.disable();
+      this.points = [];
+      this.formeTrace = this.L.polyline([], { color: OR, weight: 2.5, dashArray: "7 5", interactive: false }).addTo(this.map);
+      this.elastique = this.L.polyline([], { color: OR, weight: 1.5, dashArray: "3 5", opacity: 0.9, interactive: false }).addTo(this.map);
+    } else {
+      this.map.doubleClickZoom.enable();
+      this.formeTrace?.remove(); this.elastique?.remove(); this.formeTrace = this.elastique = null;
+      this.points = [];
+      if (!this.formeSite) this.effacerSommets();
+    }
+    this.surTrace?.(actif ? 0 : -1);
   }
 
-  dessinerZone(r) {
-    this.formeZone?.remove(); this.formeZone = null;
-    if (r) this.formeZone = this.L.polygon(auxCoins(r), { color: "#ff9800", weight: 2, fillOpacity: 0.12, interactive: false }).addTo(this.map);
+  poser(latlng) {
+    this.points.push(latlng);
+    this.formeTrace.setLatLngs(this.points);
+    this.elastique.setLatLngs([]);
+    this.dessinerSommets(this.points, false);
+    this.surTrace?.(this.points.length);
   }
 
-  dessinerEmprise(anneaux) {
-    this.formeEmprise?.remove(); this.formeEmprise = null;
-    if (anneaux) this.formeEmprise = this.L.polygon(anneaux.map(a => a.map(([x, y]) => versGeo(x, y))),
-      { color: "#d81b60", weight: 2, dashArray: "6 4", fillOpacity: 0.05, interactive: false }).addTo(this.map);
+  retirer() {
+    if (!this.modeTrace || !this.points.length) return;
+    this.points.pop();
+    this.formeTrace.setLatLngs(this.points);
+    this.elastique.setLatLngs([]);
+    this.dessinerSommets(this.points, false);
+    this.surTrace?.(this.points.length);
+  }
+
+  /** Ferme le polygone tracé (au moins trois sommets). */
+  fermer() {
+    if (!this.modeTrace || this.points.length < 3) return;
+    const anneau = this.points.map(p => versL93(p.lat, p.lng));
+    this.trace(false);
+    this.surSite(anneau);
+  }
+
+  /** Petits carrés numérotés aux sommets : on clique le premier pour fermer, on tire les autres une fois fermé. */
+  dessinerSommets(latlngs, deplacables) {
+    this.effacerSommets();
+    if (latlngs.length > 60) return;
+    latlngs.forEach((p, k) => {
+      const icone = this.L.divIcon({ className: "sommet-site" + (k === 0 && this.modeTrace && latlngs.length >= 3 ? " fermeture" : ""),
+        html: `<span>${k + 1}</span>`, iconSize: [18, 18], iconAnchor: [9, 9] });
+      const s = this.L.marker(p, { icon: icone, draggable: deplacables, keyboard: false, title: k === 0 && this.modeTrace ? "Fermer le polygone" : "" }).addTo(this.map);
+      if (this.modeTrace && k === 0) s.on("click", () => this.fermer());
+      if (deplacables) {
+        s.on("drag", () => {
+          const l = this.formeSite.getLatLngs()[0];
+          l[k] = s.getLatLng();
+          this.formeSite.setLatLngs(l);
+        });
+        s.on("dragend", () => this.surSite(this.formeSite.getLatLngs()[0].map(q => versL93(q.lat, q.lng))));
+      }
+      this.sommets.push(s);
+    });
+  }
+  effacerSommets() { for (const s of this.sommets) s.remove(); this.sommets = []; }
+
+  /** Le site : anneaux Lambert-93 (polygone tracé, ou emprise importée), sommets numérotés si tracé. */
+  dessinerSite(anneaux, trace = false) {
+    this.formeSite?.remove(); this.formeSite = null;
+    this.effacerSommets();
+    if (!anneaux) return;
+    this.formeSite = this.L.polygon(anneaux.map(a => a.map(([x, y]) => versGeo(x, y))),
+      { color: OR, weight: 2.5, dashArray: "7 5", fillColor: OR, fillOpacity: 0.1, interactive: false }).addTo(this.map);
+    if (trace && anneaux.length === 1) this.dessinerSommets(anneaux[0].map(([x, y]) => this.L.latLng(...versGeo(x, y))), true);
+  }
+
+  /** Pendant le téléchargement : un reflet doré balaie le site et ses tirets défilent. */
+  chargement(actif) {
+    const f = this.formeSite, el = f?.getElement?.();
+    if (!el) return;
+    el.classList.toggle("site-charge", actif);
+    if (!actif) { f.setStyle({ fillColor: OR, fillOpacity: 0.1 }); el.removeAttribute("filter"); return; }
+    const svg = el.ownerSVGElement, NS = "http://www.w3.org/2000/svg";
+    if (svg && !svg.querySelector("#reflet-site")) {
+      const defs = svg.querySelector("defs") || svg.insertBefore(document.createElementNS(NS, "defs"), svg.firstChild);
+      // Bande claire en biais qui traverse le polygone de gauche à droite, en boucle.
+      defs.insertAdjacentHTML("beforeend", `
+        <linearGradient id="reflet-site" gradientUnits="objectBoundingBox" x1="-1.2" y1="0.2" x2="-0.2" y2="0">
+          <stop offset="0" stop-color="${OR}" stop-opacity="0.08"/>
+          <stop offset="0.42" stop-color="${OR}" stop-opacity="0.16"/>
+          <stop offset="0.5" stop-color="#fff4c2" stop-opacity="0.6"/>
+          <stop offset="0.58" stop-color="${OR}" stop-opacity="0.16"/>
+          <stop offset="1" stop-color="${OR}" stop-opacity="0.08"/>
+          <animate attributeName="x1" values="-1.2;1" dur="1.6s" repeatCount="indefinite"/>
+          <animate attributeName="x2" values="-0.2;2" dur="1.6s" repeatCount="indefinite"/>
+        </linearGradient>
+        <filter id="lueur-site" x="-15%" y="-15%" width="130%" height="130%">
+          <feDropShadow dx="0" dy="0" stdDeviation="3.5" flood-color="${OR}" flood-opacity="0.7"/>
+        </filter>`);
+    }
+    f.setStyle({ fillColor: "url(#reflet-site)", fillOpacity: 1 });
+    el.setAttribute("filter", "url(#lueur-site)");
   }
 
   dessinerMNT(r) {

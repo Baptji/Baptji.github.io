@@ -153,7 +153,7 @@ export function superposition(r, g, s) {
 
 /** La zone dessinée, les contours des surfaces de ruissellement et les cercles de l'égalisation. */
 export function tracer(t, img, g) {
-  if (!t || (!t.zone.length && !t.centre && !(t.anneaux && t.anneaux.length))) return;
+  if (!t || (!t.zone.length && !t.centre && !(t.anneaux && t.anneaux.length) && !(t.site && t.site.length))) return;
   // Assez épais pour rester visible quand tout le MNT est à l'écran.
   const e = Math.max(epaisseurTrait(g) * 0.9, Math.max(g.lignes, g.colonnes) / 500);
   const cel = p => [(g.y0 - p[1]) / g.pas - 0.5, (p[0] - g.x0) / g.pas - 0.5];
@@ -163,6 +163,20 @@ export function tracer(t, img, g) {
     for (let k = 0; k <= n; k++) { const f = k / n; peindre(img, Math.round(la + (lb - la) * f), Math.round(ca + (cb - ca) * f), e, coul); }
   };
   const jaune = [255, 196, 0], blanc = [255, 255, 255];
+  // Le site tracé sur la carte : en tirets, comme sur la carte.
+  const tiret = Math.max(4, Math.max(g.lignes, g.colonnes) / 90);
+  for (const a of t.site || []) {
+    let parcouru = 0;
+    a.forEach((p, k) => {
+      const [la, ca] = cel(a[k === 0 ? a.length - 1 : k - 1]), [lb, cb] = cel(p);
+      const long = Math.hypot(lb - la, cb - ca), n = Math.max(1, Math.ceil(long * 2));
+      for (let j = 0; j <= n; j++) {
+        const f = j / n;
+        if ((parcouru + f * long) % (tiret * 1.7) < tiret) peindre(img, Math.round(la + (lb - la) * f), Math.round(ca + (cb - ca) * f), e * 0.8, jaune);
+      }
+      parcouru += long;
+    });
+  }
   for (const a of t.anneaux || []) a.forEach((p, k) => segment(a[k === 0 ? a.length - 1 : k - 1], p, jaune));
   t.zone.forEach((p, k) => {
     if (k > 0) segment(t.zone[k - 1], p, jaune);

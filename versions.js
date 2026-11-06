@@ -25,7 +25,7 @@ window.VERSIONS = {
   "date": "2026-10-30T10:07:12+01:00"
  },
  "simulateur-mnt": {
-  "version": 2,
-  "date": "2026-11-06T23:55:19+01:00"
+  "version": 3,
+  "date": "2026-11-07T00:47:37+01:00"
  }
 };
