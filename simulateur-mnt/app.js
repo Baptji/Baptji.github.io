@@ -2,14 +2,14 @@
  * vue 3D et couches, remodelage et comparaison, export. Même logique que l'app Mac. */
 import * as THREE from "three";
 import { fromArrayBuffer } from "geotiff";
-import { Vue3D } from "./vue3d.js?v=20261107005241";
-import * as Couches from "./couches.js?v=20261107005241";
-import { geotiff, csvDepressions, zip, telecharger } from "./export.js?v=20261107005241";
-import * as Outils from "./outils.js?v=20261107005241";
-import { Carte, rechercher, plan as planMNT, telechargerMNT, infosZone, boiteDe, SOURCES, PAS, MARGE } from "./carte.js?v=20261107005241";
-import { Evenement } from "./evenement.js?v=20261107005241";
-import * as Etude from "./etude.js?v=20261107005241";
-import { deGrille, agrandi, lireEmprise } from "./geo.js?v=20261107005241";
+import { Vue3D } from "./vue3d.js?v=20261107005805";
+import * as Couches from "./couches.js?v=20261107005805";
+import { geotiff, csvDepressions, zip, telecharger } from "./export.js?v=20261107005805";
+import * as Outils from "./outils.js?v=20261107005805";
+import { Carte, rechercher, plan as planMNT, telechargerMNT, infosZone, boiteDe, SOURCES, PAS, MARGE } from "./carte.js?v=20261107005805";
+import { Evenement } from "./evenement.js?v=20261107005805";
+import * as Etude from "./etude.js?v=20261107005805";
+import { deGrille, agrandi, lireEmprise } from "./geo.js?v=20261107005805";
 
 const $ = id => document.getElementById(id);
 
@@ -94,7 +94,7 @@ const LIMITE = memoire <= 2 ? 3e6 : memoire <= 4 ? 6e6 : memoire <= 8 ? 12e6 : 2
 
 const vue = new Vue3D($("vue3d"));
 const evt = new Evenement(vue, { surImage: imageEvenement });
-const travailleur = new Worker("calcul.js?v=20261107005241");
+const travailleur = new Worker("calcul.js?v=20261107005805");
 let idCalcul = 0, idRuissellement = 0, enCalcul = false, minuterieRecalcul = 0;
 
 // ---------------------------------------------------------------------------
@@ -1354,7 +1354,6 @@ $("panneau").addEventListener("click", (e) => {
   else if (a === "trace-retirer") carte.retirer();
   else if (a === "trace-fermer") carte.fermer();
   else if (a === "arreter-zone") { telechargement?.abort(); }
-  else if (a === "importer-emprise") $("fichier-emprise").click();
   else if (a === "effacer-zone-site") { controleInfos?.abort(); E.zoneSite = null; E.emprise = null; E.infosZone = null; carte.trace(false); carte.dessinerSite(null); afficher(); }
   else if (a === "recentrer") { const z = etendue(); if (z) carte.cadrer(z); }
   else if (a === "charger-zone") telechargerZone();
@@ -1364,6 +1363,11 @@ $("panneau").addEventListener("click", (e) => {
 
 $("panneau").addEventListener("input", (e) => {
   const t = e.target;
+  if (t.dataset.texte === "recherche") {
+    E.recherche = t.value;
+    if (!t.value.trim() && (E.lieux.length || E.erreurCarte)) { E.lieux = []; E.erreurCarte = null; afficher(); }
+    return;
+  }
   if (t.dataset.pinceau) {
     const cle = t.dataset.pinceau;
     let v = parseFloat(t.value);
@@ -1708,8 +1712,7 @@ const carte = new Carte($("carte"), {
   // Rectangle tracé (comme avant) : la zone, et 20 m autour, affichés en orange.
   surZone: (r) => {
     if (r) { E.zoneSite = r; E.emprise = null; chargerInfosZone(); }
-    if (E.emprise) carte.dessinerSite(E.emprise.anneaux, !!E.emprise.trace);
-    else carte.dessinerZone(E.zoneSite ? etendue() : null);
+    dessinerZoneActuelle();
     afficher();
   },
   // Polygone fermé, ou sommet déplacé : c'est le site, le MNT couvrira sa boîte et 20 m autour.
@@ -1720,9 +1723,18 @@ const carte = new Carte($("carte"), {
     chargerInfosZone();
     afficher();
   },
-  surTrace: () => { if (E.ecran === "carte") afficher(); },
+  surTrace: (n) => {
+    if (n < 0) dessinerZoneActuelle();
+    if (E.ecran === "carte") afficher();
+  },
 });
 carte.fond(E.fondCarte === "photo" ? "photo" : "plan");
+
+/** Le site retenu sur la carte : polygone (tracé ou importé) ou rectangle et sa marge. */
+function dessinerZoneActuelle() {
+  if (E.emprise) carte.dessinerSite(E.emprise.anneaux, !!E.emprise.trace);
+  else carte.dessinerZone(E.zoneSite ? etendue() : null);
+}
 
 function montrerEcran(ecran) {
   E.ecran = ecran;
@@ -1771,10 +1783,7 @@ function blocZone() {
       <button class="outil petit" data-action="tracer" data-mode="polygone">Abandonner</button>
       <button class="outil petit principal" data-action="trace-fermer" ${n >= 3 ? "" : "disabled"}>Fermer</button></div>`);
   } else if (!z) {
-    h.push(`<div class="ligne">${tracer("rectangle", "▭ Rectangle")}${tracer("polygone", "⬠ Polygone")}</div>
-      <div class="ligne"><button class="outil" data-action="importer-emprise">Importer une emprise…</button></div>
-      <div class="tres-petit">Rectangle : glissez sur la carte (ou ⇧ + glisser à tout moment). Polygone : cliquez les sommets.
-      Emprise : fichier .shp en Lambert-93 ou en degrés, avec son .prj si possible.</div>`);
+    h.push(`<div class="ligne">${tracer("rectangle", "▭ Rectangle")}${tracer("polygone", "⬠ Polygone")}</div>`);
   } else {
     const aire = E.emprise ? E.emprise.anneaux.reduce((s, an) => s + Math.abs(an.reduce((q, p, k) => { const r = an[(k + 1) % an.length]; return q + p[0] * r[1] - r[0] * p[1]; }, 0)) / 2, 0) : 0;
     h.push(`<div class="petit-texte">${aire ? `Site ${surface(aire)} · MNT ${metres(e.xmax - e.xmin)} × ${metres(e.ymax - e.ymin)}`

@@ -1,6 +1,6 @@
 /* Carte IGN, zone du site et téléchargement du MNT (portage de Carte.swift et IGN.swift de l'app Mac).
  * Fonds WMTS et altitudes brutes (WMS float32) de la Géoplateforme, qui autorise les pages web. */
-import { versL93, versGeo, enMetropole, rect } from "./geo.js?v=20261107005241";   // rect : rectangle tracé
+import { versL93, versGeo, enMetropole, rect } from "./geo.js?v=20261107005805";   // rect : rectangle tracé
 
 const BASE = "https://data.geopf.fr";
 const FONDS = {
@@ -281,6 +281,9 @@ export class Carte {
     this.modeTrace = mode;
     this.map.getContainer().classList.toggle("trace", !!mode);
     if (mode === "polygone") {
+      // L'ancienne zone s'efface pendant le tracé ; elle revient si on abandonne (surTrace(−1)).
+      this.formeSite?.remove(); this.formeSite = null;
+      this.effacerSommets();
       this.map.doubleClickZoom.disable();
       this.points = [];
       this.formeTrace = this.L.polyline([], { color: OR, weight: 2.5, dashArray: "7 5", interactive: false }).addTo(this.map);

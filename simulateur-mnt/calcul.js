@@ -9,7 +9,7 @@
  * Pluie de projet (A.2) : { type: "ruisseler", id, idR, defaut, surfaces, pluieMm } sur le dernier calcul
  *   (id) → { type: "ruissellement", id, idR, accC } (aire drainée pondérée par C, en cellules)
  */
-importScripts("noyau.js?v=20261107005241");
+importScripts("noyau.js?v=20261107005805");
 
 let courant = 0;
 /** Le dernier calcul terminé : de quoi refaire l'accumulation pondérée sans tout recalculer. */
