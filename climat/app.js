@@ -69,6 +69,7 @@ const aucuneEnregistree = document.getElementById("aucune-enregistree");
 
 let currentCell = null;
 let selectedPolygon = null;
+let carteTemp = null;           // la carte des températures 2025 : { donnees, jour, ech, encre } tant qu'elle est allumée
 let lignes = null;             // les jours bruts, gardés pour changer d'onglet sans refaire la requête
 let sourceLignes = "safran";   // d'où viennent ces jours : quelques unités en dépendent
 let altitude = null;           // { moyenne, min, max } une fois le modèle de terrain interrogé
@@ -133,32 +134,44 @@ function coinsUK(cell) {
 const POLYGONES = new Map();   // « source:id » → polygone, pour rouvrir une maille enregistrée
 const cleMaille = (cell) => `${cell.source}:${cell.id}`;
 
+const POLYGONES_SAFRAN = [];   // dans l'ordre de grid.js : c'est l'ordre des fichiers de data/france/
+
+/** Le style d'une maille selon son état : sélectionnée, survolée, et coloriée ou non par
+ *  la carte des températures. Seul endroit où ce style se décide. */
+function styleMaille(poly, survol = false) {
+  const choisie = poly === selectedPolygon;
+  const t = temperatureDeMaille(poly.cellData);
+  if (t !== null) {
+    const fond = carteTemp.ech.css(t);
+    return {
+      fillColor: fond, fillOpacity: 0.9,
+      // le contour de la couleur du fond : pas de quadrillage entre deux mailles voisines
+      color: choisie ? "#D9534F" : survol ? carteTemp.encre : fond,
+      weight: choisie ? 1.8 : survol ? 1.4 : 1, opacity: 1,
+    };
+  }
+  if (choisie) return { color: "#D9534F", weight: 1.6, opacity: 0.5, fillColor: "#4A90D9", fillOpacity: 0.4 };
+  return { color: "#4A90D9", weight: 0.4, opacity: 0.5, fillColor: "#4A90D9", fillOpacity: survol ? 0.3 : 0.08 };
+}
+
 function buildGridLayer(cells, coins, source) {
   const layer = L.layerGroup();
 
-  for (const cell of cells) {
+  cells.forEach((cell, index) => {
     cell.source = source;
-    const poly = L.polygon(coins(cell), {
-      renderer: canvasRenderer,
-      color: "#4A90D9",
-      weight: 0.4,
-      opacity: 0.5,
-      fillColor: "#4A90D9",
-      fillOpacity: 0.08,
-    });
+    cell.index = index;
+    const poly = L.polygon(coins(cell), { renderer: canvasRenderer, ...styleMaille({ cellData: cell }) });
     poly.cellData = cell;
     POLYGONES.set(cleMaille(cell), poly);
+    if (source === "safran") POLYGONES_SAFRAN.push(poly);
 
     poly.on("click", () => selectCell(poly));
-    poly.on("mouseover", () => {
-      if (poly !== selectedPolygon) poly.setStyle({ fillOpacity: 0.3 });
-    });
-    poly.on("mouseout", () => {
-      if (poly !== selectedPolygon) poly.setStyle({ fillOpacity: 0.08 });
-    });
+    poly.on("mouseover", (e) => { poly.setStyle(styleMaille(poly, true)); survolTemperature(poly, e); });
+    poly.on("mousemove", (e) => survolTemperature(poly, e));
+    poly.on("mouseout", () => { poly.setStyle(styleMaille(poly)); survolTemperature(null); });
 
     layer.addLayer(poly);
-  }
+  });
   return layer;
 }
 
@@ -170,6 +183,107 @@ document.getElementById("btn-france").addEventListener("click",
   () => map.fitBounds(BORNES_FRANCE, { padding: [2, 2] }));
 document.getElementById("btn-uk").addEventListener("click",
   () => map.fitBounds(BORNES_UK, { padding: [2, 2] }));
+
+// ---------- carte des températures, toute la France ----------
+// Le bouton au thermomètre colorie les 9 892 mailles SAFRAN selon la température moyenne
+// d'un jour de 2025 (fichier data/france/, ≈ 2,6 Mo, chargé au premier clic). Le curseur
+// choisit le jour, la lecture fait défiler l'année. Les mailles du Royaume-Uni restent
+// comme avant : le fichier ne couvre que la France.
+const ANNEE_FRANCE = 2025;
+const btnFranceTemp = document.getElementById("btn-france-temp");
+const franceBarre = document.getElementById("france-barre");
+const frJour = document.getElementById("fr-jour");
+const frDate = document.getElementById("fr-date");
+const frSurvol = document.getElementById("fr-survol");
+const frLecture = document.getElementById("fr-lecture");
+const frLegende = document.getElementById("fr-legende");
+const fr3d = document.getElementById("fr-3d");
+const carteEl = document.getElementById("carte");
+
+let franceJour = 0;       // gardé quand on éteint, pour rallumer au même jour
+let lectureMinuteur = null;
+
+function temperatureDeMaille(cell) {
+  if (!carteTemp || cell.source !== "safran") return null;
+  return carteTemp.donnees.valeur(carteTemp.jour, cell.index);
+}
+
+function recolorier() {
+  for (const poly of POLYGONES_SAFRAN) poly.setStyle(styleMaille(poly));
+}
+
+function afficherJour(j) {
+  franceJour = j;
+  frJour.value = j;
+  if (!carteTemp) return;
+  carteTemp.jour = j;
+  frDate.textContent = France.fmtDate(carteTemp.donnees.date(j));
+  fr3d.href = `3d.html?jour=${j}`;
+  recolorier();
+  if (carteTemp.survolee) survolTemperature(carteTemp.survolee);
+}
+
+function survolTemperature(poly, e) {
+  if (!carteTemp) return;
+  carteTemp.survolee = poly;
+  const t = poly ? temperatureDeMaille(poly.cellData) : null;
+  frSurvol.textContent = t === null ? "" : `${poly.cellData.id} : ${nf(t, 1)} °C`;
+}
+
+async function allumerCarteTemp() {
+  btnFranceTemp.disabled = true;
+  try {
+    const donnees = await France.charger(ANNEE_FRANCE);
+    const encre = getComputedStyle(document.documentElement).getPropertyValue("--encre").trim() || "#000";
+    carteTemp = { donnees, jour: franceJour, ech: France.echelle(), encre, survolee: null };
+    frJour.max = donnees.jours - 1;
+    France.legende(frLegende, carteTemp.ech);
+    franceBarre.hidden = false;
+    carteEl.classList.add("avec-temperatures");
+    btnFranceTemp.setAttribute("aria-pressed", "true");
+    map.invalidateSize({ animate: false });
+    map.fitBounds(BORNES_FRANCE, { padding: [2, 2], animate: false });
+    afficherJour(franceJour);
+  } catch (err) {
+    btnFranceTemp.title = `Températures indisponibles : ${err.message}`;
+  } finally {
+    btnFranceTemp.disabled = false;
+  }
+}
+
+function eteindreCarteTemp() {
+  arreterLecture();
+  carteTemp = null;
+  franceBarre.hidden = true;
+  carteEl.classList.remove("avec-temperatures");
+  btnFranceTemp.setAttribute("aria-pressed", "false");
+  map.invalidateSize({ animate: false });
+  recolorier();
+}
+
+function arreterLecture() {
+  clearTimeout(lectureMinuteur);
+  lectureMinuteur = null;
+  frLecture.classList.remove("en-lecture");
+  frLecture.title = frLecture.ariaLabel = "Lecture";
+}
+
+// environ huit jours par seconde : l'année défile en 45 s. Le pas suivant n'est demandé
+// qu'une fois l'image dessinée, pour ne jamais prendre de retard sur une machine lente.
+function lire() {
+  if (!carteTemp) return arreterLecture();
+  afficherJour((carteTemp.jour + 1) % carteTemp.donnees.jours);
+  requestAnimationFrame(() => { if (lectureMinuteur) lectureMinuteur = setTimeout(lire, 120); });
+}
+
+btnFranceTemp.addEventListener("click", () => (carteTemp ? eteindreCarteTemp() : allumerCarteTemp()));
+frJour.addEventListener("input", () => afficherJour(+frJour.value));
+frLecture.addEventListener("click", () => {
+  if (lectureMinuteur) return arreterLecture();
+  frLecture.classList.add("en-lecture");
+  frLecture.title = frLecture.ariaLabel = "Pause";
+  lectureMinuteur = setTimeout(lire, 0);
+});
 
 // ---------- largeur de la barre latérale ----------
 // Deux largeurs pour la barre latérale, donc pour la carte qui la coiffe. Le bouton « − » rétrécit, le bouton
@@ -216,11 +330,11 @@ appliquerCran();
 
 // ---------- sélection d'une maille ----------
 function selectCell(poly) {
-  if (selectedPolygon) {
-    selectedPolygon.setStyle({ color: "#4A90D9", weight: 0.4, fillOpacity: 0.08 });
-  }
+  const avant = selectedPolygon;
   selectedPolygon = poly;
-  poly.setStyle({ color: "#D9534F", weight: 1.6, fillOpacity: 0.4 });
+  if (avant) avant.setStyle(styleMaille(avant));
+  poly.setStyle(styleMaille(poly));
+  poly.bringToFront();   // sinon le contour rouge passe sous les mailles voisines
 
   currentCell = poly.cellData;
   attenteEl.hidden = true;

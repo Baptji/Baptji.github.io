@@ -327,6 +327,57 @@ html, body {
 .panneau-outils button:disabled { opacity: 0.3; cursor: default; }
 
 #map { flex: 1 1 auto; min-height: 0; }
+
+/* la carte des températures 2025 : le panneau grandit (la France entière doit se lire),
+   et la barre du jour se range sous la carte */
+#carte.avec-temperatures { height: min(560px, 70vh); }
+.panneau-outils button.bascule-carte[aria-pressed="true"] {
+  background: var(--serie-temp); border-color: transparent; color: #fff;
+}
+#france-barre {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 12px 10px;
+  border-top: 1px solid var(--filet);
+  font-size: 0.8rem;
+}
+#france-barre[hidden] { display: none; }
+.fr-ligne { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.fr-ligne #fr-jour { flex: 1 1 auto; min-width: 0; accent-color: var(--serie-temp); }
+#fr-lecture, #fr-3d {
+  flex: 0 0 auto;
+  height: 26px;
+  min-width: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  background: transparent;
+  color: var(--encre-2);
+  border: 1px solid var(--filet);
+  border-radius: 7px;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+#fr-lecture:hover, #fr-3d:hover { background: var(--survol); color: var(--encre); }
+#fr-lecture .fr-pause, #fr-lecture.en-lecture .fr-play { display: none; }
+#fr-lecture.en-lecture .fr-pause { display: block; }
+#fr-date { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+#fr-survol { margin-left: auto; font-variant-numeric: tabular-nums; white-space: nowrap;
+             overflow: hidden; text-overflow: ellipsis; }
+
+/* légende : le dégradé, et les degrés dessous */
+.fr-legende .fr-degrade { height: 10px; border-radius: 3px; }
+.fr-legende .fr-graduations { position: relative; height: 14px; margin-right: 22px;
+                              font-size: 0.68rem; color: var(--encre-3); font-variant-numeric: tabular-nums; }
+.fr-legende .fr-graduations span { position: absolute; top: 1px; transform: translateX(-50%); }
+.fr-legende .fr-graduations .fr-unite { left: auto; right: -22px; transform: none; }
+.fr-legende .fr-degrade { margin-right: 22px; }
 .leaflet-container { background: var(--plan); font: inherit; }
 .leaflet-control-attribution {
   font-size: 9px;

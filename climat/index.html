@@ -22,6 +22,14 @@
                   aria-label="Cadrer sur la France">FR</button>
           <button id="btn-uk" class="pays" type="button" title="Cadrer sur le Royaume-Uni (ERA5)"
                   aria-label="Cadrer sur le Royaume-Uni">UK</button>
+          <!-- la France entière, jour par jour en 2025 : toutes les mailles coloriées -->
+          <button id="btn-france-temp" type="button" class="bascule-carte" aria-pressed="false"
+                  title="Températures 2025, toute la France" aria-label="Températures 2025, toute la France">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/><line x1="12" y1="9" x2="12" y2="16"/>
+            </svg>
+          </button>
           <button id="btn-retrecir" type="button" title="Rétrécir la barre latérale" aria-label="Rétrécir la barre latérale">
             <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -39,6 +47,22 @@
         </div>
       </div>
       <div id="map"></div>
+      <!-- sous la carte, quand les températures 2025 sont affichées -->
+      <div id="france-barre" hidden>
+        <div class="fr-ligne">
+          <button id="fr-lecture" type="button" title="Lecture" aria-label="Lecture">
+            <svg class="fr-play" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="currentColor"/></svg>
+            <svg class="fr-pause" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M6 4h4v16H6zM14 4h4v16h-4z" fill="currentColor"/></svg>
+          </button>
+          <input id="fr-jour" type="range" min="0" max="364" value="0" step="1" aria-label="Jour de l'année">
+          <a id="fr-3d" href="3d.html" title="Voir la France en 3D">3D</a>
+        </div>
+        <div class="fr-ligne">
+          <span id="fr-date" aria-live="polite"></span>
+          <span id="fr-survol" class="muted"></span>
+        </div>
+        <div id="fr-legende" class="fr-legende"></div>
+      </div>
     </section>
 
     <!-- le sommaire : la présentation de la maille, puis une entrée par variable -->
@@ -200,6 +224,7 @@
 <script src="projection.js"></script>
 <script src="data/grid.js"></script>
 <script src="data/grid-uk.js"></script>
+<script src="france.js"></script>
 <script src="graphiques.js"></script>
 <script src="app.js"></script>
 </body>

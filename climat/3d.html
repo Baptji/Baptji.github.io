@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Climat en 3D</title>
+<link rel="stylesheet" href="style.css" />
+<style>
+  html, body { overflow: hidden; }
+  #scene { position: fixed; inset: 0; }
+  #scene canvas { display: block; }
+
+  #panneau3d {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    width: 320px;
+    max-width: calc(100vw - 32px);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--filet);
+    border-radius: 10px;
+    font-size: 0.82rem;
+  }
+  #panneau3d h1 { margin: 0; font-size: 0.98rem; letter-spacing: -0.01em; }
+  #panneau3d .muted { margin: 0; font-size: 0.76rem; }
+  .ligne3d { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .ligne3d input[type="range"] { flex: 1 1 auto; min-width: 0; accent-color: var(--serie-temp); }
+  .ligne3d label { white-space: nowrap; color: var(--encre-2); }
+  #date3d { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .bouton3d {
+    flex: 0 0 auto;
+    height: 26px;
+    min-width: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8px;
+    background: transparent;
+    color: var(--encre-2);
+    border: 1px solid var(--filet);
+    border-radius: 7px;
+    font: inherit;
+    font-size: 0.76rem;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .bouton3d:hover { background: var(--survol); color: var(--encre); }
+  .bouton3d[aria-pressed="true"] { background: var(--serie-temp); border-color: transparent; color: #fff; }
+  #lecture3d .fr-pause, #lecture3d.en-lecture .fr-play { display: none; }
+  #lecture3d.en-lecture .fr-pause { display: block; }
+  .choix3d { display: flex; gap: 4px; }
+  #valeur-exag { min-width: 2.6em; text-align: right; font-variant-numeric: tabular-nums; color: var(--encre-2); }
+
+  .fr-legende .fr-degrade { height: 10px; border-radius: 3px; margin-right: 22px; }
+  .fr-legende .fr-graduations { position: relative; height: 14px; margin-right: 22px;
+                                font-size: 0.68rem; color: var(--encre-3); font-variant-numeric: tabular-nums; }
+  .fr-legende .fr-graduations span { position: absolute; top: 1px; transform: translateX(-50%); }
+  .fr-legende .fr-graduations .fr-unite { left: auto; right: -22px; transform: none; }
+
+  #bulle3d {
+    position: fixed;
+    pointer-events: none;
+    padding: 6px 9px;
+    background: var(--surface);
+    border: 1px solid var(--filet);
+    border-radius: 7px;
+    font-size: 0.78rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  }
+  #bulle3d[hidden] { display: none; }
+  #bulle3d b { font-weight: 600; }
+
+  #attente3d { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+               color: var(--encre-3); pointer-events: none; }
+  #attente3d[hidden] { display: none; }
+
+  /* sur téléphone : le panneau en bas, toute la largeur, la France au-dessus */
+  @media (max-width: 600px) {
+    #panneau3d { top: auto; bottom: 16px; left: 16px; right: 16px; width: auto; max-width: none; }
+  }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<div id="scene"></div>
+<p id="attente3d">Chargement des 9 892 mailles…</p>
+
+<section id="panneau3d" aria-label="Réglages de la vue 3D">
+  <div class="ligne3d">
+    <h1>La France en 3D</h1>
+    <a class="bouton3d" id="retour3d" href="./" style="margin-left:auto">← Carte</a>
+  </div>
+  <p class="muted">Température moyenne de chaque jour de 2025, maille par maille (SAFRAN, 8 km).</p>
+
+  <div class="ligne3d">
+    <button id="lecture3d" class="bouton3d" type="button" title="Lecture" aria-label="Lecture">
+      <svg class="fr-play" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="currentColor"/></svg>
+      <svg class="fr-pause" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M6 4h4v16H6zM14 4h4v16h-4z" fill="currentColor"/></svg>
+    </button>
+    <input id="jour3d" type="range" min="0" max="364" value="0" step="1" aria-label="Jour de l'année">
+  </div>
+  <div class="ligne3d"><span id="date3d"></span></div>
+  <div id="legende3d" class="fr-legende"></div>
+
+  <div class="ligne3d">
+    <label>Hauteur</label>
+    <div class="choix3d" role="group" aria-label="Ce que donne la hauteur des colonnes">
+      <button class="bouton3d" type="button" data-hauteur="relief" aria-pressed="true">Relief</button>
+      <button class="bouton3d" type="button" data-hauteur="temperature" aria-pressed="false">Température</button>
+    </div>
+  </div>
+  <div class="ligne3d">
+    <label for="exag3d">Exagération</label>
+    <input id="exag3d" type="range" min="1" max="60" value="20" step="1">
+    <span id="valeur-exag">× 20</span>
+  </div>
+</section>
+
+<div id="bulle3d" hidden></div>
+
+<script src="data/grid.js"></script>
+<script src="data/altitudes.js" onerror="window.SAFRAN_ALTITUDES = null"></script>
+<script src="france.js"></script>
+<script type="module" src="3d.js"></script>
+</body>
+</html>

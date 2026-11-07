@@ -1,0 +1,17 @@
+{
+ "variable": "T_Q",
+ "libelle": "Température moyenne du jour",
+ "unite": "°C",
+ "annee": 2025,
+ "debut": "2025-01-01",
+ "jours": 365,
+ "mailles": 9892,
+ "echelle": 0.1,
+ "type": "int16le",
+ "ordre": "jour par jour ; dans chaque jour, les mailles dans l'ordre de data/grid.js",
+ "codage": "1er jour en valeurs, puis écart à la veille de la même maille ; gzip",
+ "min": -19.6,
+ "max": 34.1,
+ "source": "SAFRAN-ISBA (Météo-France), via l'API EDR de GeoSAS",
+ "telecharge": "2026-11-07"
+}
