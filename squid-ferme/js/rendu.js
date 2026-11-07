@@ -1,79 +1,258 @@
 'use strict';
-/* Rendu du champ, image par image. Coordonnées en pixels d'art (48 par case), affichés à k pixels d'écran.
-   Couches : fond en cache (herbe, routes, ferme, terre des champs), plantes et arbres rangée par rangée (le vent les
-   fait onduler), machines au semis et à la récolte, vie (vie.js), ciel (ombres des nuages, brume, pluie, neige,
-   orage), puis repères de jeu (champs mûrs, survol, sélection, ondes de clic, trouvailles).
-   Lit au moment de l'appel les globales de jeu.js : S, F, planDe, voisin, cle. */
+/* Rendu 3D du plateau (three.js r128), qui remplace le dessin en pixels. Même interface pour jeu.js, mecaniques.js et
+   animations.js : preparer, dimensionner, centre(case) → point de la fenêtre, sous(évènement) → case, animerChamp
+   (machine qui passe rang par rang, demi-tour en demi-ellipse sur la fournière), graines, onde, dessiner.
+   Les cultures sont instanciées par blocs de 4 × 4 cases : un bloc hors de l'écran n'est pas dessiné, un bloc proche
+   de la caméra prend les épis détaillés. Une case n'est reconstruite que si son état visible change.
+   Gestes : glisser fait tourner, molette ou pincement zoome vers le point visé, clic droit, Maj ou deux doigts
+   déplacent la vue ; Option (Alt) + glisser sème case par case. Le léger balancement de la caméra s'arrête dès
+   qu'on la touche, sans à-coup. */
 
 const Rendu = {
-  cv: null, g: null, k: 1, dpr: 1, echelle: 0.5, lisse: false,
-  fond: document.createElement('canvas'), gf: null, cleFond: '', solCles: [], dernierSol: 0,
-  sprites: new Map(), voisins: [], jourVoisins: -1,
-  revel: new Map(), parts: [], ondes: [], eclats: [], murs: [], unitesMures: new Set(), dernierMur: 0,
-  survol: null, selection: null, pointeur: null, ventForce: 0.5, ventDir: 0, pl: null, reduit: matchMedia('(prefers-reduced-motion: reduce)').matches,
+  cv: null, vue: null, gl: null, scene: null, camera: null, monde: null, D: null, pl: null, k: 1, dpr: 1,
+  reduit: matchMedia('(prefers-reduced-motion: reduce)').matches,
+  revel: new Map(), parts: [], ondes: [], murs: [], unitesMures: new Set(), dernierMur: 0,
+  survol: null, selection: null, pointeur: null, ventForce: 0.5, ventDir: 0,
+  quandClic: null, quandSurvol: null, quandPeint: null, quandSort: null,
+  cel: [], pools: new Map(), chunks: [], passages: [], jourVu: -1, cleStruct: '', derniereMaj: 0, ombreSale: true,
+  CH: 4,
 
   init(cv) {
-    this.cv = cv; this.g = cv.getContext('2d'); this.gf = this.fond.getContext('2d');
-  },
-  preparer() {
-    const pl = this.pl = planDe(F());
-    this.fond.width = pl.w * T; this.fond.height = pl.h * T;
-    this.cleFond = ''; this.revel.clear(); this.parts = []; this.jourVoisins = -1;
-    Vie.init(pl, F());
-    this.dimensionner();
-  },
-  dimensionner() {
-    const pl = this.pl, champ = this.cv.closest('.champ'), dpr = this.dpr = devicePixelRatio || 1;
-    const largeur = champ.clientWidth - 30, hauteur = innerWidth > 900 ? champ.clientHeight - 128 : Infinity;
-    const W = pl.w * T, H = pl.h * T, maxi = Math.min(largeur * dpr / W, hauteur * dpr / H);
-    let k = Math.min(Math.floor(maxi), 2 * dpr);
-    if (k < 1) k = maxi;                                // écran trop petit : réduction lissée
-    this.k = k; this.echelle = k / dpr; this.lisse = k % 1 !== 0;
-    this.cv.style.width = W * this.echelle + 'px'; this.cv.style.height = H * this.echelle + 'px';
-    this.cv.width = Math.round(W * k); this.cv.height = Math.round(H * k);
-  },
-  // Centre d'une case en pixels CSS de la fenêtre, et case sous le pointeur
-  centre(tx, ty) {
-    const r = this.cv.getBoundingClientRect();
-    return { x: r.left + (tx + 0.5) * T * this.echelle, y: r.top + (ty + 0.5) * T * this.echelle };
-  },
-  sous(e) {
-    const r = this.cv.getBoundingClientRect(), px = (e.clientX - r.left) / this.echelle, py = (e.clientY - r.top) / this.echelle;
-    return { tx: Math.floor(px / T), ty: Math.floor(py / T), px, py };
+    this.cv = cv; this.vue = cv.closest('.defile');
+    try {
+      this.gl = new T3.WebGLRenderer({ canvas: cv, antialias: true, alpha: true, powerPreference: 'high-performance' });
+    } catch (e) { this.vue.classList.add('sans-3d'); this.vue.dataset.message = 'Ce navigateur ne sait pas afficher la 3D (WebGL).'; return; }
+    const r = this.gl;
+    this.dpr = devicePixelRatio || 1; this.qualite = Math.min(1.5, this.dpr);
+    r.setPixelRatio(this.qualite);
+    r.shadowMap.enabled = true; r.shadowMap.type = T3.PCFSoftShadowMap; r.shadowMap.autoUpdate = false;
+    r.localClippingEnabled = true; r.outputEncoding = T3.sRGBEncoding; r.toneMapping = T3.ACESFilmicToneMapping; r.toneMappingExposure = 1.0;
+    this.scene = new T3.Scene();
+    this.camera = new T3.PerspectiveCamera(30, 1.6, 0.3, 400);
+    this.ray = new T3.Raycaster(); this.plan = new T3.Plane(new T3.Vector3(0, 1, 0), -0.1); this.v2 = new T3.Vector2();
+    this.frustum = new T3.Frustum(); this.m4 = new T3.Matrix4();
+    Ciel.init(this.scene, this.vue, 24);
+    this.gestes();
+    this.calques();
   },
 
-  // ---------- Vignettes en cache ----------
-  sprite(cle, w, h, dessin) {
-    let s = this.sprites.get(cle);
-    if (!s && this.sprites.size > 5000) this.sprites.clear();
-    if (!s) { s = document.createElement('canvas'); s.width = w; s.height = h; dessin(s.getContext('2d')); this.sprites.set(cle, s); }
-    return s;
-  },
-  spritePlante(c, p, v, s, pourri) {
-    const pas = p >= 1 ? 13 : Math.min(12, Math.floor(p * 13));
-    const pp = p >= 1 ? 1 : p < 0.06 ? Math.round(p * 200) / 200 : pas / 13 + 0.02;
-    return this.sprite(`p${c.id}|${p < 0.06 ? 'l' + Math.round(p * 200) : pas}|${v}|${s}|${pourri ? 1 : 0}`, T, T + MARGE, g => dessinerPlante(g, 0, MARGE, c, pp, v, s, pourri));
-  },
-  spriteSol(o, echelle, v) {
-    const cle = `s${echelle[0]}|${Math.round(o.mo * 4)}|${Math.round(o.sec * 4)}|${o.residus ? 1 : 0}${o.couvert ? 1 : 0}${o.goutte ? 1 : 0}${o.fum ? 1 : 0}|${Math.ceil(o.chaume * 3)}|${v}`;
-    return [cle, this.sprite(cle, T, T, g => terre(g, 0, 0, v * 17 + 3, 41, { ...o, mo: Math.round(o.mo * 4) / 4, sec: Math.round(o.sec * 4) / 4, chaume: Math.ceil(o.chaume * 3) / 3 }, echelle))];
-  },
-  spriteArbre(type, x, y, pal, palId, s) {
-    const v = (hasard(x, y, 11) * 4) | 0;
-    return this.sprite(`a${type}|${v}|${palId}|${s}|${type === 'a' ? this.orientationHaie(x, y) : ''}`, T + 24, T + MARGE + 8, g => {
-      if (type === 'f') bosquet(g, 12, MARGE, v, 7, pal, s);
-      else haie(g, 12, MARGE, x, y, pal, s, this.pl);
+  // ---------- Monde du lieu ----------
+  preparer() {
+    if (!this.gl) return;
+    const f = F(), pl = this.pl = planDe(f), mode = MODES[f.mode], W = pl.w, H = pl.h;
+    if (this.monde) { this.scene.remove(this.monde); this.monde.traverse(o => { if (o.geometry && !o.userData.partage) o.geometry.dispose(); }); }
+    for (const p of this.pools.values()) { this.scene.remove(p.im); p.im.dispose?.(); }
+    this.viderTransports();
+    for (const p of this.passages) { this.scene.remove(p.o); if (p.benne) this.scene.remove(p.benne.g, p.benne.r); }
+    if (this.cloture) { this.scene.remove(this.cloture); this.cloture = null; } this.clePature = ''; this.coupes = new Map();
+    this.pools.clear(); this.passages = []; this.revel.clear(); this.parts = []; this.ondes.forEach(o => this.scene.remove(o.m)); this.ondes = [];
+    this.echelle = mode.echelle; this.planches = mode.echelle === 'planches';
+    this.D = Decor.construire(this.scene, pl, mode.echelle); this.monde = this.D.groupe;
+    this.cel = Array.from({ length: W * H }, () => ({ cle: '', desc: null }));
+    const NX = Math.ceil(W / this.CH), NZ = Math.ceil(H / this.CH);
+    this.chunks = [];
+    for (let cz = 0; cz < NZ; cz++) for (let cx = 0; cx < NX; cx++) {
+      const x0 = cx * this.CH, z0 = cz * this.CH, x1 = Math.min(W, x0 + this.CH), z1 = Math.min(H, z0 + this.CH), cases = [];
+      for (let y = z0; y < z1; y++) for (let x = x0; x < x1; x++) cases.push(y * W + x);
+      this.chunks.push({ cases, boite: new T3.Box3(new T3.Vector3(x0 - W / 2, 0, z0 - H / 2), new T3.Vector3(x1 - W / 2, 1.1, z1 - H / 2)), vu: true, proche: false });
+    }
+    this.chunkDe = i => { const x = i % W, y = (i / W) | 0; return ((y / this.CH) | 0) * NX + ((x / this.CH) | 0); };
+    Vie.init(this.scene, this.D, pl, f);
+    this.sansOmbre(Vie.groupe); [...Vie.poules, ...Vie.pigeons, ...Vie.fumees].forEach(e => this.sansOmbre(e.o));
+    this.cleLimite = ''; this.cleMurs = ''; this.uniteSurvol = null; this.cleSel = ''; this.cleIrr = ''; if (this.enrouleur) { this.scene.remove(this.enrouleur); this.enrouleur = null; }
+    this.jourVu = -1; this.cleStruct = ''; this.ombreSale = true;
+    // caméra : sur la ferme et ses champs, à mi-distance
+    const own = Object.keys(f.cases).map(k => k.split(',').map(Number));
+    const cx = own.length ? own.reduce((s, c) => s + c[0], 0) / own.length : (pl.ferme ? pl.ferme[0] + 2 : W / 2), cz = own.length ? own.reduce((s, c) => s + c[1], 0) / own.length : (pl.ferme ? pl.ferme[1] + 2 : H / 2);
+    this.cam.dist0 = 1.62 * Math.max(W, H * 1.3); this.cam.base.set(0, -0.3, 0.6);
+    this.cam.zoom = 0.5; this.cam.cible.set(cx + 0.5 - W / 2, 0, cz + 0.5 - H / 2); this.cam.az = 0; this.cam.el = 0; this.cam.dernier = -99;
+    this.dimensionner();
+    // crochets pour le calque de relecture (commentaires) : il s'y branche sans toucher au rendu
+    const anc = window.SF3D || {};
+    window.SF3D = Object.assign(anc, {
+      scene: this.scene, camera: this.camera, renderer: this.gl, canvas: this.cv, conteneur: this.vue, modeCommentaire: !!anc.modeCommentaire,
+      nommer: h => this.nommer(h), pointDe: c => this.pointDe(c), objetSous: (x, y) => this.objetSous(x, y), regarder: (p, z) => this.regarder(p, z),
     });
   },
-  orientationHaie(x, y) { const pl = this.pl; return (voisinType(pl, x, y - 1, 'a') || voisinType(pl, x, y + 1, 'a')) ? 'v' : 'h'; },
+  // ---------- Relecture : nommer ce qu'on vise, retrouver un point, y amener la caméra ----------
+  objetSous(cx, cy) {
+    if (!this.pl) return null;
+    const visible = o => { for (; o; o = o.parent) if (!o.visible) return false; return true; };
+    this.rayon(cx, cy);
+    return this.ray.intersectObjects(this.scene.children, true).find(h => h.object.isMesh && !(h.object.material && h.object.material.transparent) && visible(h.object)) || null;
+  },
+  nommer(hit) {
+    if (!hit) return null;
+    for (let o = hit.object; o; o = o.parent) {
+      const n = o.userData && o.userData.nom; if (n) return typeof n === 'string' ? { cle: n, libelle: n } : { cle: n.cle, libelle: n.libelle };
+      if (o.userData && o.userData.ferme) return this.nomFerme(hit, o);
+    }
+    const ud = hit.object.userData, id = hit.instanceId;
+    if (ud.arbres && id != null) return ud.arbres[id].t === 'haie' ? { cle: 'arbre:haie-' + (id + 1), libelle: 'Arbre de haut jet de la haie' } : { cle: 'arbre:bois-' + (id + 1), libelle: 'Arbre du bois' };
+    if (ud.buissons && id != null) return { cle: 'haie:' + (id + 1), libelle: 'Haie' };
+    return this.nomCase(hit.point);
+  },
+  // ailes de la ferme dans son repère (64 unités = 4 cases, porche au sud)
+  AILES: { logis: [32, 8, 'Logis'], etables: [7, 32, 'Étables'], grange: [57, 32, 'Grange'], remises: [14, 57, 'Remises (aile du porche)'], 'pigeonnier-porche': [32, 57, 'Pigeonnier-porche'],
+    fumiere: [32, 33, 'Fumière'], charrette: [46, 44, 'Charrette de petites bottes'], cour: [24, 24, 'Cour pavée'] },
+  nomFerme(hit, fg) {
+    const p = fg.worldToLocal(hit.point.clone()), u = (p.x + 2) * 16, v = (p.z + 2) * 16;
+    const aile = u >= 25 && u <= 39 && v >= 48 ? 'pigeonnier-porche' : v < 14 ? 'logis' : v > 50 ? 'remises' : u < 14 ? 'etables' : u > 50 ? 'grange'
+      : Math.abs(u - 32) < 8 && Math.abs(v - 33) < 5 ? 'fumiere' : Math.abs(u - 46) < 5 && Math.abs(v - 44) < 4 ? 'charrette' : 'cour';
+    const role = this.D.ferme.roles.get(hit.object.material), slug = t => t.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z]+/gi, '-').toLowerCase();
+    return { cle: 'batiment:' + aile + (role ? '/' + slug(role) : ''), libelle: this.AILES[aile][2] + (role ? ' · ' + role : '') };
+  },
+  nomCase(pt) {
+    const pl = this.pl, W = pl.w, H = pl.h, tx = Math.floor(pt.x + W / 2), ty = Math.floor(pt.z + H / 2);
+    if (tx < 0 || ty < 0 || tx >= W || ty >= H) return { cle: 'socle', libelle: 'Socle de la maquette' };
+    const t = pl.types[ty][tx], u = pl.unite[ty * W + tx], ici = `${tx}-${ty}`, maj = s => s.replace(/^./, c => c.toUpperCase());
+    if (t === 'c' && u >= 0) {
+      const f = F(), N = u + 1, lot = this.planches ? 'planche' : 'champ';
+      let c = null, etat = 'terre nue';
+      if (f.parcelles[u]) { const cs = f.cases[tx + ',' + ty]; if (cs?.cult) c = CULTURE[cs.cult]; else if (cs?.chaume != null && S.jour - cs.chaume < 45) etat = 'chaume'; }
+      else {
+        const v = this.voisinDe(f, u, S.jour);
+        if (v.type === 'prairie') return { cle: `culture:prairie@${lot}-${N}`, libelle: `Prairie, ${lot} ${N}` };
+        if (v.type !== 'culture') return { cle: `${lot}:${N}`, libelle: `Friche, ${lot} ${N}` };
+        if (v.p !== null) c = v.c; else etat = v.chaume ? 'chaume' : 'terre labourée';
+      }
+      return c ? { cle: `culture:${c.id}@${lot}-${N}`, libelle: `${c.nom}, ${lot} ${N}` } : { cle: `${lot}:${N}`, libelle: `${maj(etat)}, ${lot} ${N}` };
+    }
+    const L = { h: 'Herbe', r: 'Bord de route', p: 'Bord de chemin', f: 'Sous-bois', a: 'Haie', b: 'Maison', m: 'Ferme', e: 'Mare' }[t] || 'Sol';
+    return { cle: `case:${ici}`, libelle: `${L} · case ${ici}` };
+  },
+  pointDe(cle) {
+    if (!cle || !this.pl) return null;
+    const V = T3.Vector3, W = this.pl.w, H = this.pl.h, centre = (x, y) => new V(x + 0.5 - W / 2, 0.25, y + 0.5 - H / 2);
+    const m = /(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)\s*$/.exec(cle); if (m) return new V(+m[1], +m[2], +m[3]);
+    const u = /^(?:culture:[^@]*@(?:champ|planche)-|champ:|planche:)(\d+)$/.exec(cle);
+    if (u) { const cs = [...this.casesUnite(+u[1] - 1)]; if (!cs.length) return null; const x = cs.reduce((a, i) => a + i % W, 0) / cs.length, y = cs.reduce((a, i) => a + ((i / W) | 0), 0) / cs.length; return centre(x, y); }
+    const c = /^(?:case:|eau:|batiment:maison-)(\d+)-(\d+)$/.exec(cle); if (c) return centre(+c[1], +c[2]);
+    if (cle.startsWith('batiment:') && this.D.ferme) { const a = this.AILES[cle.slice(9).split('/')[0]]; if (a) return this.D.ferme.groupe.localToWorld(new V(a[0] / 16 - 2, 0.3, a[1] / 16 - 2)); }
+    const n = /^(route|chemin):(\d+)$/.exec(cle); if (n) { const ch = (n[1] === 'route' ? this.D.routes : this.D.chemins)[+n[2] - 1]; if (ch) { const p = ch.pts[(ch.pts.length / 2) | 0]; return new V(p[0], 0.1, p[1]); } }
+    const ar = /^arbre:(?:bois|haie)-(\d+)$/.exec(cle); if (ar) { const a = this.D.arbres[+ar[1] - 1]; if (a) return new V(a.x, 0.6, a.z); }
+    const hb = /^haie:(\d+)$/.exec(cle); if (hb) { const b = this.D.buissonsPos[+hb[1] - 1]; if (b) return new V(b.x, 0.15, b.z); }
+    if (cle === 'socle') return new V(0, 0, H / 2);
+    let o = null; this.scene.traverse(x => { if (!o && x.userData && x.userData.nom && x.userData.nom.cle === cle) o = x; });
+    return o ? o.getWorldPosition(new V()).add(new V(0, 0.25, 0)) : null;
+  },
+  regarder(p, z = 0.45) {
+    if (!p || !this.pl) return;
+    this.figer(); this.cam.cible.set(p.x, 0, p.z); this.cam.zoom = Math.max(0.09, Math.min(1.2, z)); this.borner(); this.placer(this.cam.tt);
+  },
+  // un geste de caméra il y a moins d'une seconde ; rien qui bouge vite
+  bouge() { return performance.now() / 1000 - this.cam.dernier < 1.2 && this.cam.dernier < 1e8; },
+  calme() { return !this.passages.length && !this.parts.length; },
+  sansOmbre(o) { o.traverse(c => { if (c.isMesh) c.castShadow = false; }); },
+
+  dimensionner() {
+    if (!this.gl) return;
+    const w = this.vue.clientWidth, h = this.vue.clientHeight; if (!w || !h) return;
+    this.gl.setSize(w, h, false); this.cv.style.width = '100%'; this.cv.style.height = '100%';
+    this.camera.aspect = w / h; this.camera.fov = w / h < 1.2 ? 38 : 30; this.camera.updateProjectionMatrix();
+  },
+
+  // ---------- Repères écran ↔ cases ----------
+  versMonde(tx, ty, y = 0.25) { return new T3.Vector3(tx + 0.5 - this.pl.w / 2, y, ty + 0.5 - this.pl.h / 2); },
+  centre(tx, ty) {
+    const r = this.cv.getBoundingClientRect();
+    if (!this.gl || !this.pl) return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    const v = this.versMonde(tx, ty).project(this.camera);
+    return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height };
+  },
+  rayon(cx, cy) {
+    const r = this.cv.getBoundingClientRect();
+    this.v2.set((cx - r.left) / r.width * 2 - 1, -((cy - r.top) / r.height) * 2 + 1);
+    this.ray.setFromCamera(this.v2, this.camera); return this.ray.ray;
+  },
+  solSous(cx, cy, h = 0) { const p = new T3.Plane(new T3.Vector3(0, 1, 0), -h); return this.rayon(cx, cy).intersectPlane(p, new T3.Vector3()); },
+  sous(e) {
+    if (!this.pl) return { tx: -1, ty: -1, px: 0, py: 0 };
+    const p = this.rayon(e.clientX, e.clientY).intersectPlane(this.plan, new T3.Vector3());
+    if (!p) return { tx: -1, ty: -1, px: 0, py: 0 };
+    return { tx: Math.floor(p.x + this.pl.w / 2), ty: Math.floor(p.z + this.pl.h / 2), px: p.x, py: p.z };
+  },
+  animalSous(e) { if (!this.pl) return null; return Vie.animalSous(this.rayon(e.clientX, e.clientY)); },
+
+  // ---------- Caméra et gestes ----------
+  cam: { dist0: 50, R: 30, zoom: 0.42, cible: new T3.Vector3(), base: new T3.Vector3(), az: 0, el: 0, dernier: -99, AZ: -0.25, EL: 0.9, tt: 0 },
+  balancement(t) {
+    const c = this.cam, cl = (v, a, b) => Math.max(a, Math.min(b, v));
+    if (this.reduit) return 0;
+    return Math.sin(t * 0.12) * 0.2 * cl((t - c.dernier - 4) / 3, 0, 1) * cl((c.zoom - 0.9) * 10, 0, 1);
+  },
+  figer() { const c = this.cam; c.tt = performance.now() / 1000; c.az += this.balancement(c.tt); c.dernier = c.tt; },   // le balancement en cours devient la position, sans saut
+  placer(t) {
+    const c = this.cam, a = c.AZ + c.az + this.balancement(t), e = Math.min(1.35, Math.max(0.5, c.EL + c.el));
+    const etroit = this.camera.aspect < 1.2, R = c.dist0 * c.zoom * (etroit ? 1.25 : 1);
+    this.camera.position.set(c.cible.x + Math.sin(a) * Math.cos(e) * R, c.cible.y + Math.sin(e) * R, c.cible.z + Math.cos(a) * Math.cos(e) * R);
+    this.camera.lookAt(c.cible); c.R = R;
+  },
+  borner() {
+    const c = this.cam, W = this.pl.w, H = this.pl.h, cl = (v, a, b) => Math.max(a, Math.min(b, v));
+    c.cible.x = cl(c.cible.x, -W / 2, W / 2); c.cible.z = cl(c.cible.z, -H / 2, H / 2);
+    if (c.zoom > 0.97) c.cible.lerp(c.base, cl((c.zoom - 0.97) * 6, 0, 1));
+  },
+  zoomer(f, cx, cy) {
+    const c = this.cam; this.figer();
+    const nz = Math.max(0.09, Math.min(1.2, c.zoom * f)), P = this.solSous(cx, cy);
+    if (P) { const k = 1 - nz / c.zoom; c.cible.x += (P.x - c.cible.x) * k; c.cible.z += (P.z - c.cible.z) * k; }
+    c.zoom = nz; this.borner(); c.dernier = performance.now() / 1000; this.placer(c.tt);
+  },
+  deplacer(cx, cy) {
+    if (!this.prise) return; const P = this.solSous(cx, cy); if (!P) return;
+    this.cam.cible.x += this.prise.x - P.x; this.cam.cible.z += this.prise.z - P.z; this.borner(); this.placer(this.cam.tt);
+  },
+  gestes() {
+    const cv = this.cv, pts = new Map(); let glisse = null, pince = null;
+    cv.addEventListener('wheel', e => { if (!this.pl) return; e.preventDefault(); this.zoomer(Math.exp(e.deltaY * (e.ctrlKey ? 0.012 : 0.0018)), e.clientX, e.clientY); }, { passive: false });
+    cv.addEventListener('contextmenu', e => e.preventDefault());
+    cv.addEventListener('pointerdown', e => {
+      if (!this.pl) return;
+      this.figer(); try { cv.setPointerCapture(e.pointerId); } catch (er) { /* pointeur synthétique */ } pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pts.size === 2) { const [a, b] = [...pts.values()], m = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; glisse = null; pince = { d: Math.hypot(a.x - b.x, a.y - b.y) }; this.prise = this.solSous(m.x, m.y); return; }
+      const pan = e.button === 2 || e.button === 1 || e.shiftKey, peint = e.altKey && e.button === 0 && !(window.SF3D && SF3D.modeCommentaire);
+      glisse = { x: e.clientX, y: e.clientY, az: this.cam.az, el: this.cam.el, bouge: false, pan, peint, curseur: cv.style.cursor };
+      this.prise = pan ? this.solSous(e.clientX, e.clientY) : null;
+      if (peint && this.quandPeint) this.quandPeint(this.sous(e), e, true);
+    });
+    cv.addEventListener('pointermove', e => {
+      if (!this.pl) return;
+      if (pts.has(e.pointerId)) pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pince && pts.size === 2) {
+        const [a, b] = [...pts.values()], d = Math.hypot(a.x - b.x, a.y - b.y), m = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+        if (d > 10) this.zoomer(pince.d / d, m.x, m.y); pince.d = d; this.deplacer(m.x, m.y); return;
+      }
+      if (!glisse) { if (e.pointerType === 'mouse' && this.quandSurvol) this.quandSurvol(this.sous(e), e); this.pointeurMonde(e); return; }
+      const dx = e.clientX - glisse.x, dy = e.clientY - glisse.y;
+      if (Math.abs(dx) + Math.abs(dy) > 5 && !glisse.bouge) { glisse.bouge = true; if (!glisse.peint) cv.style.cursor = glisse.pan ? 'move' : 'grabbing'; }
+      if (glisse.peint) { if (this.quandPeint) this.quandPeint(this.sous(e), e, false); return; }
+      if (!glisse.bouge) return;
+      if (glisse.pan) this.deplacer(e.clientX, e.clientY);
+      else { this.cam.az = glisse.az - dx * 0.006; this.cam.el = Math.max(-0.45, Math.min(0.35, glisse.el + dy * 0.004)); }
+      this.cam.dernier = performance.now() / 1000;
+    });
+    const fin = e => {
+      pts.delete(e.pointerId); if (pts.size < 2) pince = null;
+      const relecture = window.SF3D && SF3D.modeCommentaire;   // en relecture, le calque de commentaires prend le clic
+      if (glisse && !glisse.bouge && !glisse.pan && !glisse.peint && !relecture && this.quandClic && (e.button === 0 || e.pointerType !== 'mouse')) this.quandClic(this.sous(e), e);
+      if (glisse?.bouge) { cv.style.cursor = glisse.curseur; if (this.quandSurvol && e.pointerType === 'mouse') this.quandSurvol(this.sous(e), e); }
+      glisse = null; this.prise = null;
+    };
+    cv.addEventListener('pointerup', fin);
+    cv.addEventListener('pointercancel', e => { pts.delete(e.pointerId); pince = null; glisse = null; this.prise = null; });
+    cv.addEventListener('pointerleave', () => { if (!glisse && this.quandSort) this.quandSort(); this.pointeur = null; this.pointeurM = null; });
+  },
+  pointeurMonde(e) { const p = this.solSous(e.clientX, e.clientY); this.pointeurM = p ? { x: p.x, z: p.z } : null; },
 
   // ---------- Champs voisins : culture de la PAC et stade d'après le calendrier ----------
+  voisins: [], jourVoisins: -1,
   voisinDe(f, u, j) {
     if (this.jourVoisins !== j) { this.voisins = []; this.jourVoisins = j; }
     let v = this.voisins[u];
     if (v) return v;
     const vo = voisin(f, u, j);
-    v = { type: vo.type, c: vo.c || null, p: null, chaume: 0 };
+    v = { type: vo.type, c: vo.c || null, code: vo.code, p: null, chaume: 0 };
     if (vo.type === 'culture') {
       const d = dateDe(j);
       for (const an of [d.an, d.an - 1]) {
@@ -93,437 +272,645 @@ const Rendu = {
     return (this.voisins[u] = v);
   },
 
-  // ---------- Fond : reconstruit chaque semaine ; terre des champs possédés mise à jour par case ----------
-  optionsSol(f, mode, c) {
-    const ru = ruMax(f, c);
-    return {
-      mo: c.mo, sec: clamp01((0.4 - c.r / ru) / 0.3),
-      residus: !mode.labour && (!c.cult || c.p < 0.4) && !mode.couvert, couvert: mode.couvert && !c.cult,
-      goutte: mode.irrigation === 'goutte' && f.irrigation, fum: c.fum > 0,
-      chaume: !c.cult && c.chaume != null ? clamp01(1 - (S.jour - c.chaume) / 45) : 0,
-    };
-  },
-  solCase(f, mode, x, y) {
-    const c = f.cases[x + ',' + y]; if (!c) return;
-    const [cle, s] = this.spriteSol(this.optionsSol(f, mode, c), mode.echelle, (hasard(x, y, 5) * 3) | 0);
-    const i = y * this.pl.w + x;
-    if (this.solCles[i] === cle) return;
-    this.solCles[i] = cle;
-    this.gf.drawImage(s, x * T, y * T);
-  },
-  majFond(f, t) {
-    const pl = this.pl, mode = MODES[f.mode], d = dateDe(S.jour);
-    const cle = `${S.active}|${f.mode}|${d.an}|${Math.floor(d.doy / 7)}|${Math.round(f.sec * 4)}|${Object.keys(f.parcelles).length}`;
-    if (cle !== this.cleFond) {
-      this.cleFond = cle;
-      const g = this.gf, s = couleursSaison(d.doy, f.sec);
-      this.solCles = new Array(pl.w * pl.h).fill('');
-      for (let y = 0; y < pl.h; y++) for (let x = 0; x < pl.w; x++) {
-        const ty = pl.types[y][x], X = x * T, Y = y * T;
-        if (ty === 'c') {
-          const u = pl.unite[y * pl.w + x];
-          if (f.parcelles[u]) { this.solCase(f, mode, x, y); continue; }
-          const v = this.voisinDe(f, u, S.jour);
-          if (v.type === 'culture') terre(g, X, Y, x, y, { mo: 2.2, sec: f.sec * 0.6, chaume: v.p === null ? v.chaume : 0 }, 'champs');
-          else herbe(g, X, Y, x, y, s, true);
-        } else if (ty === 'r' || ty === 'p') route(g, X, Y, x, y, pl, ty, s);
-        else if (ty === 'e') eau(g, X, Y, x, y);
-        else if (ty === 'b') toit(g, X, Y, x, y, pl);
-        else herbe(g, X, Y, x, y, s, false);
-      }
-      if (pl.ferme && mode.echelle === 'champs') fermeCarree(g, pl.ferme[0] * T, pl.ferme[1] * T, s);
-      this.dernierSol = t;
-    } else if (t - this.dernierSol > 300) {
-      this.dernierSol = t;
-      for (const k in f.cases) { const [x, y] = k.split(',').map(Number); this.solCase(f, mode, x, y); }
+  // ---------- État visible de chaque case ----------
+  etatCase(i, f, mode, ctx) {
+    const pl = this.pl, W = pl.w, x = i % W, y = (i / W) | 0, u = pl.unite[i];
+    if (pl.types[y][x] !== 'c' || u < 0) return null;
+    const base = { mois: ctx.mois, doy: ctx.doy, neige: ctx.neige, givre: ctx.givre, planches: this.planches };
+    const rv = this.revel.get(i), voile = rv && performance.now() < rv.jusque ? rv : null;
+    if (f.parcelles[u]) {
+      const cs = f.cases[x + ',' + y]; if (!cs) return null;
+      let c = cs.cult ? CULTURE[cs.cult] : null, p = cs.p, mur = cs.mur;
+      if (voile) { if (voile.avant) { c = voile.avant.c; p = voile.avant.p; mur = voile.avant.pourri ? 13 : 0; } else c = null; }
+      const chaume = !c && cs.chaume != null ? clamp01(1 - (S.jour - cs.chaume) / 45) : 0;
+      const sec = clamp01((0.4 - cs.r / ruMax(f, cs)) / 0.3) * (ctx.mois >= 4 && ctx.mois <= 10 ? 1 : 0.3);
+      return Object.assign(base, { propre: true, c, p, mur, chaume, paille: cs.fam === 'poacée', labour: mode.labour && !c && !chaume, couvert: mode.couvert && !c && !chaume,
+        residus: !mode.labour && !mode.couvert && (!c || p < 0.4), fum: cs.fum > 0, goutte: mode.irrigation === 'goutte' && f.irrigation, mo: cs.mo, sec,
+        arbres: mode.arbres && y % 2 === 0 ? ageArbres(f, S.jour) : null });
     }
+    const v = this.voisinDe(f, u, S.jour);
+    if (v.type === 'culture') return Object.assign(base, { c: v.p !== null ? v.c : null, p: v.p ?? 0, mur: 0, chaume: v.p === null ? v.chaume : 0, paille: v.c.famille === 'poacée' && v.c.forme !== 'mais', labour: v.p === null && !v.chaume, mo: 2.2, sec: f.sec * 0.6 });
+    if (v.type === 'prairie') return Object.assign(base, { prairie: ['PPH', 'SPH', 'SPL'].includes(v.code) ? 'ppn' : 'fauche', sec: f.sec * 0.6 });
+    return Object.assign(base, { friche: true, sec: f.sec * 0.6 });
+  },
+  cleEtat(e) {
+    const q = (v, n) => Math.round((v || 0) * n);
+    return `${e.c ? e.c.id : ''}|${q(e.p, 48)}|${e.mur > 12 ? 1 : 0}|${q(e.chaume, 30)}|${e.paille ? 1 : 0}${e.labour ? 1 : 0}${e.couvert ? 1 : 0}${e.residus ? 1 : 0}${e.fum ? 1 : 0}${e.goutte ? 1 : 0}${e.propre ? 1 : 0}|${q(e.mo, 4)}|${q(e.sec, 8)}|${q(e.neige, 10)}${e.givre ? 'g' : ''}|${e.mois}|${e.prairie || ''}${e.friche ? 1 : 0}|${e.prairie || e.friche || e.arbres != null ? Math.floor(e.doy / 3) : ''}|${e.arbres != null ? Math.round(e.arbres * 2) : ''}`;
+  },
+  // Met à jour les cases dont l'état visible a changé (toutes si force)
+  majCases(f, ctx, force, seules) {
+    const mode = MODES[f.mode], ids = seules || this.cel.keys();
+    const pature = force ? [] : null, nus = force ? [] : null, W = this.pl.w, H = this.pl.h;
+    for (const i of ids) {
+      const e = this.etatCase(i, f, mode, ctx), c = this.cel[i];
+      if (force && e) { const pt = [i % W - W / 2, ((i / W) | 0) - H / 2]; if (e.prairie === 'ppn') pature.push(pt); else if (!e.prairie && !e.friche && (!e.c || e.p < 0.12)) nus.push(pt); }
+      if (!e) continue;
+      const cle = this.cleEtat(e);
+      if (cle === c.cle && !force) continue;
+      if (cle === c.cle) continue;
+      const desc = Plantes.decrire(e);
+      if (this.planches && e.propre) {
+        for (const pt of desc.parts) pt.y = (pt.y || 0) + 0.035;
+        desc.parts.unshift({ g: 'planche', d: 'planche', s: [1, 1, 1], col: desc.sol.clone() });
+        desc.solCase = K3.col(couleursSaison(ctx.doy, f.sec).h).clone().multiplyScalar(0.8);
+      }
+      const ch = this.chunkDe(i);
+      for (const pt of c.desc?.parts || []) this.salir(pt.g, ch);
+      for (const pt of desc.parts) this.salir(pt.g, ch);
+      c.cle = cle; c.desc = desc;
+      const sol = (desc.solCase || desc.sol).clone(); if (ctx.givre) sol.lerp(K3.col('#e6eef2'), 0.3);
+      this.D.colorer(i, sol); this.solSale = true;
+    }
+    if (force) { Vie.jour(f, S.jour, f.meteo || {}, pature, nus); this.cloturer(pature); }
+  },
+  // Clôture de pâture : piquets de bois tous les 0,3 case, deux rangs de barbelé, une barrière du côté de la route ou du chemin
+  cloturer(pature) {
+    const pl = this.pl, W = pl.w, H = pl.h, cle = pature.map(c => c.join(',')).join(';');
+    if (cle === this.clePature) return;
+    this.clePature = cle; if (this.cloture) { this.scene.remove(this.cloture); this.cloture = null; }
+    if (!pature.length) return;
+    const ens = new Set(pature.map(([x, z]) => Math.round(z + H / 2) * W + Math.round(x + W / 2))), dans = (x, y) => x >= 0 && y >= 0 && x < W && y < H && ens.has(y * W + x);
+    const ins = 0.06, segs = [];
+    for (const i of ens) {
+      const x = i % W, y = (i / W) | 0;
+      for (const [nx, ny] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) {
+        if (dans(x + nx, y + ny)) continue;
+        const tx = -ny, ty = nx, cx = x + 0.5 + nx * (0.5 - ins), cy = y + 0.5 + ny * (0.5 - ins);
+        // bouts : rentrés aux coins saillants, prolongés aux coins rentrants
+        const bout = sg => { const ax = x + sg * tx, ay = y + sg * ty; return !dans(ax, ay) ? 0.5 - ins : dans(ax + nx, ay + ny) ? 0.5 + ins : 0.5; };
+        const a = bout(-1), b = bout(1);
+        segs.push({ x0: cx - tx * a, y0: cy - ty * a, x1: cx + tx * b, y1: cy + ty * b, i });
+      }
+    }
+    // une barrière par morceau de pâture, sur le côté le plus proche d'une route ou d'un chemin
+    const voies = []; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if ('rp'.includes(pl.types[y][x])) voies.push([x + 0.5, y + 0.5]);
+    const loin = sg => { const mx = (sg.x0 + sg.x1) / 2, my = (sg.y0 + sg.y1) / 2; return voies.length ? Math.min(...voies.map(([vx, vy]) => Math.hypot(vx - mx, vy - my))) : 0; };
+    const vu = new Set(), portes = new Set();
+    for (const i of ens) {
+      if (vu.has(i)) continue;
+      const m = new Set([i]), file = [i]; vu.add(i);
+      while (file.length) { const j = file.pop(), x = j % W, y = (j / W) | 0; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const k = (y + dy) * W + x + dx; if (dans(x + dx, y + dy) && !vu.has(k)) { vu.add(k); m.add(k); file.push(k); } } }
+      const cand = segs.filter(sg => m.has(sg.i)).sort((a, b) => loin(a) - loin(b))[0]; if (cand) portes.add(cand);
+    }
+    const piquets = new Map(), fils = [], K = K3, G = K.G, g = new T3.Group();
+    for (const sg of segs) {
+      const L = Math.hypot(sg.x1 - sg.x0, sg.y1 - sg.y0), n = Math.max(1, Math.round(L / 0.3)), porte = portes.has(sg) ? 0.5 : null;
+      const pt = f => [sg.x0 + (sg.x1 - sg.x0) * f, sg.y0 + (sg.y1 - sg.y0) * f];
+      for (let k = 0; k <= n; k++) { const f = k / n; if (porte != null && Math.abs(f - porte) * L < 0.2) continue; const [x, y] = pt(f); piquets.set(x.toFixed(3) + ',' + y.toFixed(3), [x, y]); }
+      const tron = (fa, fb) => { const [ax, ay] = pt(fa), [bx, by] = pt(fb); [0.07, 0.12].forEach(h => fils.push({ x: (ax + bx) / 2, y: (ay + by) / 2, h, L: Math.hypot(bx - ax, by - ay), ry: Math.atan2(-(by - ay), bx - ax) })); };
+      if (porte != null) {
+        const e = 0.2 / L; tron(0, porte - e); tron(porte + e, 1);
+        const [gx, gy] = pt(porte), bar = [];
+        for (let k = 0; k < 4; k++) bar.push(K.piece(G.boite(0.4, 0.012, 0.012), '#9a7a52', [0, 0.04 + k * 0.035, 0]));
+        bar.push(K.piece(G.boite(0.4, 0.012, 0.012), '#9a7a52', [0, 0.1, 0], [0, 0, 0.32]));
+        [-0.2, 0.2].forEach(x => bar.push(K.piece(G.boite(0.02, 0.16, 0.02), '#7a5a3a', [x, 0.08, 0])));
+        const m = K.mesh(g, K.fusion(bar), K.matV(), [gx - W / 2, 0, gy - H / 2], [0, Math.atan2(-(sg.y1 - sg.y0), sg.x1 - sg.x0), 0]);
+        m.userData.nom = { cle: 'cloture:barriere', libelle: 'Barrière de la pâture' };
+      } else tron(0, 1);
+    }
+    const pq = [...piquets.values()], ip = K.inst(g, G.cyl(0.012, 0.014, 0.15, 5), K.mat('#7a5a3a'), pq.length);
+    pq.forEach(([x, y], i) => K.poser(ip, i, [x - W / 2, 0.075, y - H / 2], [0, i, 0]));
+    const ifl = K.inst(g, G.boite(1, 0.005, 0.005), K.mat('#6f6f6f', { metalness: 0.4, roughness: 0.5 }), fils.length, false);
+    fils.forEach((f, i) => K.poser(ifl, i, [f.x - W / 2, f.h, f.y - H / 2], [0, f.ry, 0], [f.L, 1, 1]));
+    ip.userData.nom = ifl.userData.nom = { cle: 'cloture:pature', libelle: 'Clôture de la pâture' };
+    this.scene.add(g); this.cloture = g; this.ombreSale = true;
+  },
+  salir(g, ch) {
+    const k = g + '|' + ch; let p = this.pools.get(k);
+    if (!p) { p = { g, ch, im: null, cap: 0, n: 0, sale: true }; this.pools.set(k, p); }
+    p.sale = true;
+  },
+  _mats: new Map(),
+  matPlante(souple) { let m = this._mats.get(souple); if (!m) { m = K3.matV({ side: T3.DoubleSide, roughness: 0.85 }, this.reduit ? 0 : souple); this._mats.set(souple, m); } return m; },
+  // Réécrit les instances d'un modèle dans un bloc
+  reconstruire(p) {
+    const W = this.pl.w, H = this.pl.h, cases = this.chunks[p.ch].cases, DISPO = Plantes.DISPO;
+    let n = 0;
+    for (const i of cases) for (const pt of this.cel[i].desc?.parts || []) if (pt.g === p.g) { const d = DISPO[pt.d]; n += d.n * d.m; }
+    if (n > p.cap) {
+      if (p.im) { this.scene.remove(p.im); p.im.dispose(); }
+      p.cap = Math.ceil(n * 1.4) + 8;
+      const im = new T3.InstancedMesh(Plantes.geo(p.g), this.matPlante(Plantes.SOUPLE[p.g] || 0), p.cap);
+      im.instanceColor = new T3.InstancedBufferAttribute(new Float32Array(p.cap * 3), 3);
+      im.castShadow = Plantes.OMBRE.has(p.g); im.receiveShadow = true; im.frustumCulled = false; im.userData.partage = true; im.userData.pool = true;
+      this.scene.add(im); p.im = im;
+    }
+    if (!p.im) { p.sale = false; return; }
+    const M = p.im.instanceMatrix.array, C = p.im.instanceColor.array, base = this.planches ? 0.001 : 0.004;
+    let o = 0;
+    for (const i of cases) {
+      const desc = this.cel[i].desc; if (!desc) continue;
+      const x = i % W, y = (i / W) | 0, x0 = x - W / 2, z0 = y - H / 2, cp = this.coupes.get(i);
+      for (const pt of desc.parts) {
+        if (pt.g !== p.g) continue;
+        const d = DISPO[pt.d], cont = d.m === 1, tilt = pt.tilt ?? 0.04, c = pt.col;
+        for (let r = 0; r < d.n; r++) for (let k = 0; k < d.m; k++) {
+          const idx = r * d.m + k, h1 = hasard(x, y, idx * 3 + 1), h2 = hasard(x, y, idx * 3 + 2), h3 = hasard(x, y, idx * 3 + 3);
+          if (pt.dens && h3 > pt.dens) continue;
+          const px = x0 + (cont ? 0.5 : (k + 0.5 + (h1 - 0.5) * d.j) / d.m), pz = z0 + (r + 0.5 + (cont ? 0 : (h2 - 0.5) * d.j)) / d.n;
+          const ry = cont ? 0 : pt.rot != null ? pt.rot + (h1 - 0.5) * 0.35 : h3 * 6.2832, v = cont ? 1 : 0.86 + 0.28 * h2, vy = (cont ? 1 : 0.92 + 0.16 * h1) * (cp && cp.s * (px - cp.fx) < 0 ? 0.1 : 1);
+          K3.matrice(M, o * 16, px, base + (pt.y || 0), pz, ry, cont ? 0 : (h1 - 0.5) * 2 * tilt, cont ? 0 : (h2 - 0.5) * 2 * tilt, pt.s[0] * v, pt.s[1] * v * vy, pt.s[2] * v);
+          const b = cont ? 1 : 0.9 + 0.2 * h1;
+          C[o * 3] = c.r * b; C[o * 3 + 1] = c.g * b; C[o * 3 + 2] = c.b * b; o++;
+        }
+      }
+    }
+    p.n = o; p.im.count = o; p.im.instanceMatrix.needsUpdate = true; p.im.instanceColor.needsUpdate = true; p.sale = false;
+    if (p.im.castShadow) this.ombreSale = true;
   },
 
-  // ---------- Vent : ondulation qui traverse les champs par rafales ----------
-  vent(t, j, m) {
-    const force = Math.min(1, 0.3 + 0.6 * hasard(j, 5, 9) + (m.pluie > 5 ? 0.25 : 0)), dir = -0.3 + 0.6 * hasard(j, 6, 9);
-    const cx = Math.cos(dir), cy = Math.sin(dir);
-    this.ventForce = force; this.ventDir = dir;
-    return (x, y) => force * Math.sin(t / 480 - (x * cx + y * cy) * 0.8) * (0.55 + 0.45 * Math.sin(t / 2100 - x * 0.23 - y * 0.07));
-  },
-
-  // ---------- Animation d'un champ : machine qui passe case par case (semis ou récolte) ----------
+  // ---------- Animation d'un champ : la machine passe rang par rang (semis ou récolte) ----------
   // cases : [[x, y], …] ; avant : Map 'x,y' → { c, p, v, pourri } pour la récolte. Rend [{ x, y, fin }] (ms depuis maintenant).
-  animerChamp(cases, type, machine, avant, retard = 0) {
-    const rangs = new Map();
-    for (const [x, y] of cases) { if (!rangs.has(y)) rangs.set(y, []); rangs.get(y).push(x); }
-    const ys = [...rangs.keys()].sort((a, b) => a - b), ordre = [];
-    ys.forEach((y, r) => { const xs = rangs.get(y).sort((a, b) => a - b); if (r % 2) xs.reverse(); for (const x of xs) ordre.push([x, y, r % 2 ? -1 : 1]); });
-    const dur = this.reduit ? 1 : machine === 'personne' ? 300 : machine ? 230 : 160, t0 = performance.now() + retard, sortie = [];
-    ordre.forEach(([x, y, sens], i) => {
-      const k = x + ',' + y, a = avant?.get(k);
-      this.revel.set(y * this.pl.w + x, { t0: t0 + i * dur, dur, sens, type, avant: a || null, machine: i === ordre.length - 1 ? machine && { dernier: true, type: machine } : machine && { type: machine } });
-      sortie.push({ x, y, fin: retard + (i + 1) * dur });
+  // opts.livrer(kg) : récolte portée à la ferme par un tracteur et sa benne ; les tonnes ne comptent qu'à la livraison
+  transporte(machine) { return !!(this.gl && this.pl && !this.planches && this.D.ferme && machine === 'moissonneuse' && !this.reduit); },
+  transportEnCours() { return this.passages.some(p => p.transport); },
+  animerChamp(cases, type, machine, avant, retard = 0, opts = {}) {
+    if (!this.gl || !this.pl) return cases.map(([x, y]) => ({ x, y, fin: retard }));
+    const W = this.pl.w, H = this.pl.h, now = performance.now();
+    if (!machine) {
+      // une seule case semée à la main : elle apparaît tout de suite
+      return cases.map(([x, y]) => { this.revel.set(y * W + x, { jusque: now + retard + 120, avant: null }); return { x, y, fin: retard + 120 }; });
+    }
+    const transport = type === 'recolte' && opts.livrer && this.transporte(machine);
+    const personne = machine === 'personne', v = this.reduit ? 40 : personne ? 2.6 : transport ? 1.7 : 4.2, avance = machine === 'moissonneuse' ? 0.05 : machine === 'semoir' ? -0.3 : 0;
+    // la moisson commence par le rang qui longe la route ou le chemin le plus proche : la benne ne roule jamais dans le blé debout
+    const sens = transport ? this.sensRangs(cases) : 1;
+    const { pts, passe } = this.trajet(cases, personne ? 0.16 : 0.34, avance, sens);
+    const P = { transport };
+    const sortie = passe.map(c => {
+      const fin = retard + c.d / v * 1000, av = type === 'recolte' ? avant?.get(c.x + ',' + c.y) || null : null;
+      this.revel.set(c.y * W + c.x, transport ? { jusque: Infinity, avant: av, passe: P, dPass: c.d, kg: av?.kg || 0 } : { jusque: now + fin, avant: av });
+      return { x: c.x, y: c.y, fin };
     });
+    // la machine
+    const o = this.machine(machine); o.visible = false; o.userData.nom = { cle: 'machine:' + machine, libelle: { moissonneuse: 'Moissonneuse-batteuse', semoir: 'Tracteur et semoir', arracheuse: 'Tracteur et arracheuse', personne: 'Maraîcher' }[machine] || 'Machine' }; this.scene.add(o);
+    const L = Decor.longueur(pts);
+    Object.assign(P, { o, pts: pts.map(([x, z]) => [x - W / 2, z - H / 2]), L, v, t0: now + retard, type: machine, recolte: type === 'recolte', derniere: 0 });
+    if (transport) Object.assign(P, { d: 0, tremie: 0, livrer: opts.livrer, sens, reste: passe.length, benne: this.nouvelleBenne() });
+    this.passages.push(P);
+    this.majCases(F(), this.ctx || this.contexte(F()), false, cases.map(([x, y]) => y * W + x));
     return sortie;
   },
-
-  // ---------- Image ----------
-  dessiner(t, dt) {
-    const f = F(), pl = this.pl, mode = MODES[f.mode], m = f.meteo || { tmin: 6, tmax: 14, pluie: 0, neige: 0 }, g = this.g;
-    this.majFond(f, t);
-    g.setTransform(this.k, 0, 0, this.k, 0, 0);
-    g.imageSmoothingEnabled = this.lisse;
-    g.drawImage(this.fond, 0, 0);
-    Ciel.neigeAuSol(g, f, mode);
-    const vent = this.reduit ? () => 0 : this.vent(t, S.jour, m), doy = dateDe(S.jour).doy;
-    const pal = couleursFeuillage(doy), palId = Math.floor(doy / 6);
-    if (t - this.dernierMur > 250) this.recenserMurs(f, t);
-    // plantes et arbres, rangée par rangée
-    for (let y = 0; y < pl.h; y++) for (let x = 0; x < pl.w; x++) {
-      const ty = pl.types[y][x];
-      if (ty === 'c') this.planteCase(g, f, x, y, t, vent);
-      else if (ty === 'f' || ty === 'a') g.drawImage(this.spriteArbre(ty, x, y, pal, palId, Math.max(-1, Math.min(1, Math.round(vent(x, y) * 1.3)))), x * T - 12, y * T - MARGE);
-      else if (ty === 'e') this.reflets(g, x, y, t);
-    }
-    this.dessinerMachines(g, t);
-    this.dessinerParticules(g, t, dt);
-    Vie.dessinerSol(g, t, dt, f, m);
-    Ciel.dessinerSol(g, t, f, m);
-    Vie.dessinerAir(g, t, dt, f, m);
-    Ciel.dessinerDessus(g, t, dt, f, m);
-    this.dessinerReperes(g, t, f);
+  // Trajet en cases : chaque rang de bout en bout, demi-tour en demi-ellipse au-delà des deux bouts de rang (fournière)
+  trajet(cases, RX, avance, sens = 1) {
+    const rangs = new Map();
+    for (const [x, y] of cases) { if (!rangs.has(y)) rangs.set(y, []); rangs.get(y).push(x); }
+    const ys = [...rangs.keys()].sort((a, b) => (a - b) * sens);
+    const R = ys.map((y, r) => { const xs = rangs.get(y).sort((a, b) => a - b); return { y, xs, a: xs[0], b: xs.at(-1) + 1, s: r % 2 ? -1 : 1 }; });
+    const pts = [], passe = []; let L = 0;
+    const ajout = (x, z) => { const p = pts.at(-1); if (p) L += Math.hypot(x - p[0], z - p[1]); pts.push([x, z]); };
+    R.forEach((r, k) => {
+      const z = r.y + 0.5, prev = R[k - 1], next = R[k + 1];
+      const xin = k === 0 ? (r.s > 0 ? r.a - 0.7 : r.b + 0.7) : (r.s > 0 ? Math.min(r.a, prev.a) : Math.max(r.b, prev.b));
+      const xout = !next ? (r.s > 0 ? r.b + 0.7 : r.a - 0.7) : (r.s > 0 ? Math.max(r.b, next.b) : Math.min(r.a, next.a));
+      if (k === 0) ajout(xin, z);
+      const L0 = L;
+      for (const x of (r.s > 0 ? r.xs : [...r.xs].reverse())) passe.push({ x, y: r.y, d: Math.max(0, L0 + Math.abs(x + 0.5 - xin) - avance) });
+      ajout(xout, z);
+      if (next) {
+        const z1 = next.y + 0.5, cz = (z + z1) / 2, RZ = (z1 - z) / 2;
+        for (let i = 1; i <= 12; i++) { const th = i / 12 * Math.PI; ajout(xout + r.s * RX * Math.sin(th), cz - RZ * Math.cos(th)); }
+      }
+    });
+    return { pts, passe };
   },
-
-  planteCase(g, f, x, y, t, vent) {
-    const pl = this.pl, u = pl.unite[y * pl.w + x], i = y * pl.w + x, v = (hasard(x, y, 1) * 3) | 0;
-    let c = null, p = 0, pourri = false;
-    if (f.parcelles[u]) {
-      const cs = f.cases[x + ',' + y];
-      if (cs?.cult) { c = CULTURE[cs.cult]; p = cs.p; pourri = cs.mur > 12; }
+  // Côté par où commencer : celui de la route ou du chemin le plus proche du champ (1 = par le nord, -1 = par le sud)
+  sensRangs(cases) {
+    const pl = this.pl, cx = cases.reduce((a, c) => a + c[0], 0) / cases.length + 0.5, cy = cases.reduce((a, c) => a + c[1], 0) / cases.length + 0.5;
+    let mieux = null, dm = 1e9;
+    for (let y = 0; y < pl.h; y++) for (let x = 0; x < pl.w; x++) if ('rp'.includes(pl.types[y][x])) { const d = Math.hypot(x + 0.5 - cx, y + 0.5 - cy); if (d < dm) { dm = d; mieux = [x, y]; } }
+    return mieux && mieux[1] + 0.5 > cy ? -1 : 1;
+  },
+  // ---------- Tracteur et benne qui suivent la moissonneuse, puis portent le grain à la grange ----------
+  nouvelleBenne() {
+    const K = K3, G = K.G, g = new T3.Group(), r = new T3.Group(), benne = new T3.Group();
+    const roue = (x, z, rr, l) => [K.piece(G.cyl(rr, rr, l, 14), '#242424', [x, rr, z], [Math.PI / 2, 0, 0]), K.piece(G.cyl(rr * 0.5, rr * 0.5, l + 0.006, 10), '#e8b62a', [x, rr, z], [Math.PI / 2, 0, 0])];
+    K.mesh(g, K.fusion([
+      K.piece(G.boite(0.22, 0.1, 0.12), '#d4672a', [0.07, 0.17, 0]), K.piece(G.boite(0.16, 0.06, 0.1), '#4a4a4a', [0.07, 0.1, 0]), K.piece(G.boite(0.02, 0.08, 0.1), '#333333', [0.185, 0.16, 0]),
+      K.piece(G.boite(0.14, 0.02, 0.05), '#d4672a', [-0.07, 0.2, 0.1]), K.piece(G.boite(0.14, 0.02, 0.05), '#d4672a', [-0.07, 0.2, -0.1]),
+      K.piece(G.boite(0.06, 0.02, 0.07), '#2a2a2a', [-0.08, 0.21, 0]), K.piece(G.boite(0.012, 0.06, 0.07), '#2a2a2a', [-0.11, 0.25, 0]),
+      K.piece(G.cyl(0.007, 0.007, 0.1, 6), '#222222', [0.12, 0.27, 0.035]), K.piece(G.cyl(0.02, 0.02, 0.006, 10), '#222222', [-0.02, 0.26, 0], [0, 0, 0.5]),
+      K.piece(G.cyl(0.022, 0.026, 0.08, 8), '#3d5f8f', [-0.075, 0.26, 0]), K.piece(G.boule(6, 4), '#e2b48c', [-0.07, 0.32, 0], 0, 0.02), K.piece(G.boule(6, 4), '#4a5868', [-0.07, 0.335, 0], 0, [0.024, 0.01, 0.024]),
+      ...roue(-0.07, 0.11, 0.1, 0.05), ...roue(-0.07, -0.11, 0.1, 0.05), ...roue(0.13, 0.075, 0.05, 0.03), ...roue(0.13, -0.075, 0.05, 0.03),
+    ]), K.matV());
+    benne.position.set(-0.2, 0, 0); r.add(benne);      // pivot sur l'arrière de la benne pour basculer
+    K.mesh(r, K.fusion([K.piece(G.boite(0.13, 0.015, 0.015), '#2a2a2a', [0.26, 0.08, 0]), ...roue(0, 0.135, 0.06, 0.04), ...roue(0, -0.135, 0.06, 0.04)]), K.matV());
+    K.mesh(benne, K.fusion([K.piece(G.boite(0.42, 0.03, 0.25), '#8a5a34', [0.2, 0.12, 0]), K.piece(G.boite(0.42, 0.07, 0.015), '#9a6a40', [0.2, 0.17, 0.118]), K.piece(G.boite(0.42, 0.07, 0.015), '#9a6a40', [0.2, 0.17, -0.118]),
+      K.piece(G.boite(0.015, 0.07, 0.25), '#9a6a40', [0.41, 0.17, 0]), K.piece(G.boite(0.015, 0.07, 0.25), '#9a6a40', [-0.005, 0.17, 0])]), K.matV());
+    const tas = K.mesh(benne, G.boule(8, 6), K.mat('#e2b04a'), [0.2, 0.14, 0], 0, [0.18, 0.001, 0.1]);
+    g.add(Vie.ombre(0.1, 0.16)); r.add(Vie.ombre(0.15, 0.26));
+    this.sansOmbre(g); this.sansOmbre(r);
+    const nom = { cle: 'machine:tracteur-benne', libelle: 'Tracteur et benne' }; g.userData.nom = r.userData.nom = nom;
+    g.visible = r.visible = false; this.scene.add(g, r);
+    // départ : devant la grange, dans la cour
+    const F = this.D.ferme, L = (x, z) => F.groupe.localToWorld(new T3.Vector3(x, 0, z));
+    const p0 = L(0.37, -0.76), p1 = L(-0.3, -0.8);
+    return { g, r, benne, tas, etat: 'part', x: p0.x, z: p0.z, cap: Math.atan2(p1.z - p0.z, p1.x - p0.x), charge: 0, courbe: null, u: 0, pause: 0, livre: false, cr: null, echelle: 0 };
+  },
+  // Points de la ferme (repère de la ferme : porche au sud), en coordonnées monde
+  pointsFerme(noms) {
+    const F = this.D.ferme, P = { dehors: [0, 2.3], porche: [0, 1.6], dedans: [0, 1.25], a: [0.45, 0.92], b: [0.78, 0.3], c: [0.84, -0.42], c2: [0.62, -0.73], grange: [0.37, -0.76], d: [-0.3, -0.8], e: [-0.72, -0.35], e2: [-0.72, 0.4], f: [-0.3, 0.9] };
+    return noms.map(n => { const v = F.groupe.localToWorld(new T3.Vector3(P[n][0], 0, P[n][1])); return [v.x, v.z]; });
+  },
+  // Itinéraire par les routes et chemins (cases r, p) d'un point monde à un autre, lissé
+  parLesRoutes(de, vers) {
+    const pl = this.pl, W = pl.w, H = pl.h, ok = (x, y) => x >= 0 && y >= 0 && x < W && y < H && 'rp'.includes(pl.types[y][x]);
+    const proche = q => { let m = -1, dm = 1e9; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (ok(x, y)) { const d = Math.hypot(x + 0.5 - W / 2 - q[0], y + 0.5 - H / 2 - q[1]); if (d < dm) { dm = d; m = y * W + x; } } return m; };
+    const a = proche(de), b = proche(vers);
+    if (a < 0 || b < 0) return [de, vers];
+    const prev = new Map([[a, -1]]), file = [a];
+    for (let q = 0; q < file.length && !prev.has(b); q++) {
+      const i = file[q], x = i % W, y = (i / W) | 0;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]]) {
+        const nx = x + dx, ny = y + dy, j = ny * W + nx;
+        if (!ok(nx, ny) || prev.has(j) || (dx && dy && (ok(x + dx, y) || ok(x, y + dy)))) continue;
+        prev.set(j, i); file.push(j);
+      }
+    }
+    if (!prev.has(b)) return [de, vers];
+    const cs = []; for (let j = b; j !== -1; j = prev.get(j)) cs.push(j); cs.reverse();
+    let pts = cs.map(i => [i % W + 0.5 - W / 2, ((i / W) | 0) + 0.5 - H / 2]);
+    if (pts.length > 2) pts = Decor.simplifier(pts, 0.6);
+    return [de, ...pts, vers];
+  },
+  courbe(pts) {
+    const net = pts.filter((p, i) => !i || Math.hypot(p[0] - pts[i - 1][0], p[1] - pts[i - 1][1]) > 0.05);
+    const c = new T3.CatmullRomCurve3(net.map(([x, z]) => new T3.Vector3(x, 0, z)), false, 'centripetal'); return { c, L: c.getLength() };
+  },
+  // Vers la grange : sortir par le chaume vers la route, rouler jusqu'à l'allée, passer le porche, se mettre cul à la grange
+  versGrange(b) {
+    const al = this.D.allee, bout = al.at(-1), mil = al[1];
+    return this.courbe([...this.parLesRoutes([b.x, b.z], bout), mil, ...this.pointsFerme(['dehors', 'porche', 'dedans', 'a', 'b', 'c', 'c2', 'grange'])]);
+  },
+  // Retour : boucle dans la cour (jamais de pivot sur place), sortie par le porche, puis la route jusqu'au champ
+  depuisGrange(vers) {
+    const al = this.D.allee, cour = this.pointsFerme(['grange', 'd', 'e', 'e2', 'f', 'dedans', 'porche', 'dehors']);
+    if (!vers) return this.courbe(this.pointsFerme(['grange', 'd', 'e', 'e2', 'f']));
+    return this.courbe([...cour, al[1], ...this.parLesRoutes(al.at(-1), vers).slice(0, -1), vers]);
+  },
+  majBenne(P, t, s, m, cap, coupe) {
+    const b = P.benne, CAPA = 6500, VR = 2.2, ATTEL = 0.3;
+    const versCap = (c, k) => { let d = c - b.cap; d = Math.atan2(Math.sin(d), Math.cos(d)); b.cap += d * k; };
+    const fini = P.reste <= 0 && P.tremie < 1;
+    // à côté de la moissonneuse : un rang en arrière (côté déjà fauché), un peu en retrait
+    const cible = [m.x + 0.4 * Math.cos(cap), m.z - P.sens * 0.72 + 0.4 * Math.sin(cap)];
+    let transfert = false;
+    if (b.etat === 'part') { b.courbe = this.depuisGrange(cible); b.u = 0; b.etat = 'va'; }
+    if (b.etat === 'accompagne') {
+      const d = Math.hypot(cible[0] - b.x, cible[1] - b.z);
+      if (d < 0.6) { const k = Math.min(1, s * 10); b.x += (cible[0] - b.x) * k; b.z += (cible[1] - b.z) * k; versCap(cap, Math.min(1, s * 8)); }
+      else { const v = Math.min(VR, d * 3) * s / d; b.x += (cible[0] - b.x) * v; b.z += (cible[1] - b.z) * v; versCap(Math.atan2(cible[1] - b.z, cible[0] - b.x), Math.min(1, s * 5)); }
+      if (d < 0.2 && coupe && P.tremie > 0) { const q = Math.min(P.tremie, 3000 * s, CAPA - b.charge); P.tremie -= q; b.charge += q; transfert = q > 0; }
+      if (b.charge >= CAPA - 1 || (fini && b.charge > 1)) { b.courbe = this.versGrange(b); b.u = 0; b.etat = 'livre'; }
+      else if (fini) { b.courbe = this.versGrange(b); b.u = 0; b.etat = 'rentre'; }
+    } else if (['va', 'livre', 'retour', 'rentre', 'range'].includes(b.etat)) {
+      b.u = Math.min(1, b.u + VR * s / Math.max(0.01, b.courbe.L));
+      const p = b.courbe.c.getPointAt(b.u), tg = b.courbe.c.getTangentAt(b.u);
+      b.x = p.x; b.z = p.z; versCap(Math.atan2(tg.z, tg.x), Math.min(1, s * 10));
+      if (b.u >= 1) {
+        if (b.etat === 'livre') { b.etat = 'decharge'; b.pause = 0; b.livre = false; }
+        else if (b.etat === 'va' || b.etat === 'retour') b.etat = fini ? 'rentre-direct' : 'accompagne';
+        else if (b.etat === 'rentre') { b.courbe = this.depuisGrange(null); b.u = 0; b.etat = 'range'; }
+        else if (b.etat === 'range') b.etat = 'parti';
+      }
+      if (b.etat === 'rentre-direct') { b.courbe = this.versGrange(b); b.u = 0; b.etat = 'rentre'; }
+    } else if (b.etat === 'decharge') {
+      b.pause += s;
+      if (!b.livre && b.pause > 0.5) { P.livrer(b.charge); b.livre = true; b.livraison = b.charge; }
+      if (b.pause > 0.5) b.charge = Math.max(0, b.charge - b.livraison * s / 1.6);
+      if (b.pause > 2.6) { b.charge = 0; const fin2 = P.reste <= 0 && P.tremie < 1; b.courbe = this.depuisGrange(fin2 ? null : [cible[0], cible[1]]); b.u = 0; b.etat = fin2 ? 'range' : 'retour'; }
+    }
+    // tracteur, puis remorque attelée qui suit le point d'attelage sans pivoter sur place
+    const g = b.g, r = b.r; g.visible = r.visible = b.etat !== 'parti';
+    b.echelle = Math.min(1, b.echelle + s * 3); const ech = b.etat === 'range' ? Math.min(b.echelle, (1 - b.u) * 4) : b.echelle;
+    g.position.set(b.x, 0.004, b.z); g.rotation.y = -b.cap; g.scale.setScalar(Math.max(0.01, ech)); r.scale.setScalar(Math.max(0.01, ech));
+    const att = new T3.Vector3(-0.18, 0, 0).applyAxisAngle(new T3.Vector3(0, 1, 0), -b.cap).add(g.position);
+    if (!b.cr) b.cr = att.clone().add(new T3.Vector3(-Math.cos(b.cap) * ATTEL, 0, -Math.sin(b.cap) * ATTEL));
+    const dir = new T3.Vector3().subVectors(att, b.cr); dir.y = 0; const dl = dir.length() || 1; dir.multiplyScalar(1 / dl);
+    b.cr.copy(att).addScaledVector(dir, -ATTEL); r.position.copy(b.cr); r.rotation.y = -Math.atan2(dir.z, dir.x);
+    b.benne.rotation.z = b.etat === 'decharge' ? Math.min(0.55, Math.max(0, b.pause - 0.3) * 0.8) * (b.pause < 2.3 ? 1 : Math.max(0, (2.6 - b.pause) / 0.3)) : 0;
+    b.tas.scale.set(0.18, Math.max(0.001, 0.075 * Math.min(1, b.charge / CAPA)), 0.1); b.tas.visible = b.charge > 20;
+    if (b.etat === 'decharge' && b.pause > 0.6 && b.charge > 20 && !this.reduit) {
+      const q = b.benne.localToWorld(new T3.Vector3(-0.01, 0.13, 0));
+      for (let i = 0; i < 3; i++) this.parts.push({ x: q.x, y: q.y, z: q.z, vx: (Math.random() - 0.5) * 0.15, vy: 0.05, vz: (Math.random() - 0.5) * 0.15, g: 2.4, vie: 0.5, age: 0, c: K3.col(i % 2 ? '#e8b84a' : '#d8a83a') });
+    }
+    // vis de vidange : repliée vers l'arrière, dépliée du côté de la benne pendant le transfert
+    const vis = P.o.userData.vis;
+    if (vis) {
+      const loc = new T3.Vector3(b.x - m.x, 0, b.z - m.z).applyAxisAngle(new T3.Vector3(0, 1, 0), cap), cibleV = transfert ? (loc.z > 0 ? -Math.PI / 2 : Math.PI / 2) : Math.PI;
+      let dv = cibleV - vis.rotation.y; dv = Math.atan2(Math.sin(dv), Math.cos(dv)); vis.rotation.y += dv * Math.min(1, s * 3);
+      if (transfert && Math.abs(dv) < 0.3 && !this.reduit) {
+        const bec = vis.localToWorld(new T3.Vector3(0.69, -0.06, 0)), tasW = b.benne.localToWorld(new T3.Vector3(0.2, 0.2, 0));
+        // le grain coule du bec jusqu'au tas : trajectoire en cloche qui arrive sur la benne en 0,4 s
+        const T = 0.4, gv = 3;
+        for (let i = 0; i < 2; i++) this.parts.push({ x: bec.x, y: bec.y, z: bec.z, vx: (tasW.x - bec.x) / T, vy: (tasW.y - bec.y + 0.5 * gv * T * T) / T, vz: (tasW.z - bec.z) / T, g: gv, vie: T, age: Math.random() * 0.05, c: K3.col(i ? '#e8b84a' : '#f2cc5a') });
+      }
+    }
+    return b.etat === 'parti';
+  },
+  // Tout ce qui est encore en route (trémie, benne, cases pas encore fauchées) est livré d'un coup
+  viderTransports() {
+    for (const p of this.passages) if (p.transport) { let kg = p.tremie + p.benne.charge * (p.benne.livre ? 0 : 1); for (const rv of this.revel.values()) if (rv.passe === p) kg += rv.kg || 0; if (kg > 0) p.livrer(kg); p.tremie = 0; p.benne.charge = 0; }
+  },
+  centreFerme() {
+    const r = this.cv.getBoundingClientRect();
+    if (!this.D?.ferme) return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    const v = this.D.ferme.groupe.localToWorld(new T3.Vector3(0.6, 0.6, 0)).project(this.camera);
+    return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height };
+  },
+  // Modèles des machines (tournées vers +x)
+  machine(type) {
+    const K = K3, G = K.G, g = new T3.Group();
+    const roue = (x, z, r, l, jante = '#e2b62a') => [K.piece(G.cyl(r, r, l, 12), '#262626', [x, r, z], [Math.PI / 2, 0, 0]), K.piece(G.cyl(r * 0.45, r * 0.45, l + 0.01, 8), jante, [x, r, z], [Math.PI / 2, 0, 0])];
+    const chauffeur = (x, y) => [K.piece(G.boite(0.05, 0.07, 0.06), '#3a5a8a', [x, y + 0.035, 0]), K.piece(G.boule(6, 4), '#e8b88a', [x + 0.005, y + 0.095, 0], 0, 0.022), K.piece(G.cyl(0.035, 0.035, 0.008, 8), '#d8b050', [x + 0.005, y + 0.118, 0]), K.piece(G.cyl(0.016, 0.02, 0.02, 8), '#c8a040', [x + 0.005, y + 0.128, 0])];
+    const tracteur = (coul) => [
+      K.piece(G.boite(0.2, 0.09, 0.1), coul, [0.08, 0.13, 0]), K.piece(G.boite(0.04, 0.08, 0.09), '#3a3a3a', [0.19, 0.13, 0]),
+      K.piece(G.boite(0.1, 0.05, 0.16), coul, [-0.06, 0.12, 0]), ...roue(-0.06, 0.1, 0.085, 0.045), ...roue(-0.06, -0.1, 0.085, 0.045), ...roue(0.15, 0.06, 0.045, 0.03), ...roue(0.15, -0.06, 0.045, 0.03),
+      K.piece(G.cyl(0.008, 0.008, 0.09, 5), '#2a2a2a', [0.12, 0.21, 0.03]), K.piece(G.boite(0.05, 0.015, 0.05), '#2a2a2a', [-0.05, 0.16, 0]), ...chauffeur(-0.05, 0.165),
+      K.piece(G.boite(0.12, 0.012, 0.2), coul, [-0.06, 0.19, 0]),
+    ];
+    if (type === 'moissonneuse') {
+      K.mesh(g, K.fusion([
+        K.piece(G.boite(0.62, 0.34, 0.48), '#c9352a', [-0.02, 0.33, 0]), K.piece(G.boite(0.4, 0.14, 0.42), '#dc4a31', [-0.1, 0.56, 0]),
+        K.piece(G.boite(0.22, 0.2, 0.26), '#bfe6ff', [0.17, 0.6, -0.06]), K.piece(G.boite(0.27, 0.03, 0.31), '#f2f2f2', [0.17, 0.715, -0.06]),
+        K.piece(G.boite(0.2, 0.14, 0.3), '#a82a1f', [0.36, 0.2, 0]), K.piece(G.boite(0.16, 0.1, 1.02), '#e2b62a', [0.5, 0.08, 0]),
+        ...roue(0.12, 0.27, 0.16, 0.1), ...roue(0.12, -0.27, 0.16, 0.1), ...roue(-0.25, 0.24, 0.1, 0.08), ...roue(-0.25, -0.24, 0.1, 0.08),
+        K.piece(G.cyl(0.02, 0.02, 0.14, 6), '#262626', [-0.05, 0.7, 0.15]),
+      ]), K.matV());
+      // vis de vidange sur pivot : repliée vers l'arrière, dépliée sur le côté au-dessus de la benne
+      const vis = new T3.Group(); vis.position.set(-0.08, 0.66, 0.16); vis.rotation.y = Math.PI; g.add(vis); g.userData.vis = vis;
+      K.mesh(vis, K.fusion([K.piece(G.cyl(0.025, 0.025, 0.7, 6), '#9a9a9a', [0.35, 0, 0], [0, 0, Math.PI / 2]), K.piece(G.cyl(0.02, 0.02, 0.07, 6), '#7a7a7a', [0.69, -0.03, 0])]), K.matV());
+      const parts = [K.piece(G.cyl(0.03, 0.03, 0.96, 6), '#c99a18', [0, 0, 0], [Math.PI / 2, 0, 0])];
+      for (let i = 0; i < 5; i++) { const a = i * Math.PI * 2 / 5; parts.push(K.piece(G.boite(0.025, 0.025, 0.94), '#f0c53a', [Math.cos(a) * 0.09, Math.sin(a) * 0.09, 0])); }
+      g.userData.rabatteur = K.mesh(g, K.fusion(parts), K.matV(), [0.52, 0.2, 0]);
+      g.add(Vie.ombre(0.4, 0.5));
+    } else if (type === 'semoir') {
+      K.mesh(g, K.fusion([...tracteur('#c8402a'),
+        K.piece(G.boite(0.12, 0.08, 0.9), '#d8a830', [-0.3, 0.12, 0]), K.piece(G.boite(0.13, 0.02, 0.92), '#f2cc5a', [-0.3, 0.165, 0]),
+        ...[-0.42, 0.42].flatMap(z => roue(-0.3, z, 0.05, 0.025, '#d8a830')),
+        ...Array.from({ length: 9 }, (_, i) => K.piece(G.boite(0.01, 0.07, 0.01), '#4a4038', [-0.33, 0.05, -0.4 + i * 0.1])),
+        K.piece(G.boite(0.14, 0.012, 0.02), '#4a4038', [-0.18, 0.09, 0]),
+      ]), K.matV());
+      g.add(Vie.ombre(0.46, 0.32));
+    } else if (type === 'arracheuse') {
+      K.mesh(g, K.fusion([...tracteur('#3f7a3a'),
+        K.piece(G.boite(0.3, 0.1, 0.4), '#8a5a3a', [-0.36, 0.12, 0.05]), K.piece(G.boite(0.3, 0.02, 0.42), '#a87a4a', [-0.36, 0.18, 0.05]),
+        K.piece(G.boite(0.22, 0.03, 0.12), '#5a4228', [-0.32, 0.25, 0.2], [0.5, 0, 0]), ...roue(-0.4, 0.27, 0.06, 0.03), ...roue(-0.4, -0.17, 0.06, 0.03),
+        K.piece(G.boite(0.16, 0.012, 0.02), '#4a4038', [-0.17, 0.09, 0]),
+      ]), K.matV());
+      g.userData.terre = true; g.add(Vie.ombre(0.3, 0.36));
     } else {
-      const vo = this.voisinDe(f, u, S.jour);
-      if (vo.type === 'culture' && vo.p !== null) { c = vo.c; p = vo.p; }
+      // maraîcher au chapeau de paille, panier au bras
+      const corps = K.mesh(g, K.fusion([K.piece(G.boite(0.05, 0.075, 0.07), '#3a5a8a', [0, 0.115, 0]), K.piece(G.boule(6, 4), '#e8b88a', [0.005, 0.175, 0], 0, 0.024),
+        K.piece(G.cyl(0.045, 0.045, 0.008, 10), '#d8b050', [0.005, 0.2, 0]), K.piece(G.cyl(0.02, 0.024, 0.022, 8), '#c8a040', [0.005, 0.21, 0]),
+        K.piece(G.boite(0.05, 0.03, 0.04), '#a87a42', [0.01, 0.09, 0.055]), K.piece(G.boule(4, 3), '#7cbf52', [0.01, 0.11, 0.055], 0, 0.012)]), K.matV());
+      const jambe = () => K.mesh(g, K.fusion([K.piece(G.boite(0.022, 0.08, 0.022), '#4a3a2a', [0, -0.04, 0])]), K.matV(), [0, 0.08, 0]);
+      g.userData.jambes = [jambe(), jambe()]; g.userData.jambes[0].position.z = 0.017; g.userData.jambes[1].position.z = -0.017;
+      corps.castShadow = false; g.add(Vie.ombre(0.04, 0.05));
     }
-    const w = vent(x, y), souple = c && SOUPLES.has(c.forme) && p > 0.25, s = souple ? Math.max(-2, Math.min(2, Math.round(w * 2.2))) : 0;
-    const rv = this.revel.get(i);
-    if (rv) {
-      const a = (t - rv.t0) / rv.dur;
-      if (a >= 1) this.revel.delete(i);
-      else {
-        const X = x * T, Y = y * T - MARGE, cut = Math.round(T * clamp01(a)), apres = c ? this.spritePlante(c, p, v, s, pourri) : null;
-        const av = rv.avant ? this.spritePlante(rv.avant.c, rv.avant.p, rv.avant.v, s, rv.avant.pourri) : null;
-        const [ax, aw, bx, bw] = rv.sens > 0 ? [X + cut, T - cut, X, cut] : [X, T - cut, X + T - cut, cut];
-        if (av && aw > 0) g.drawImage(av, ax - X, 0, aw, T + MARGE, ax, Y, aw, T + MARGE);
-        if (apres && bw > 0) g.drawImage(apres, bx - X, 0, bw, T + MARGE, bx, Y, bw, T + MARGE);
-        return;
+    this.sansOmbre(g);
+    return g;
+  },
+  animerPassages(t, dt) {
+    const now = performance.now(), s = Math.min(0.05, dt / 1000);
+    this.passages = this.passages.filter(p => {
+      let d = (now - p.t0) / 1000 * p.v;
+      if (p.transport) {
+        if (now < p.t0) return true;
+        // trémie pleine (4 t) : la moissonneuse s'arrête et attend la benne ; au bout du champ elle attend qu'on la vide
+        const pleine = p.tremie >= 4000, dMax = p.reste > 0 || p.tremie >= 1 ? p.L - 0.25 : p.L + 0.25;
+        if (!pleine) p.d = Math.min(dMax, p.d + p.v * s);
+        d = p.d;
+        const a0 = Decor.surLigne(p.pts, Math.min(d, p.L)), b0 = Decor.surLigne(p.pts, Math.min(p.L, d + 0.12)), cap0 = Math.atan2(b0.z - a0.z, b0.x - a0.x);
+        const parti = this.majBenne(p, t, s, a0, cap0, Math.abs(Math.sin(cap0)) < 0.2);
+        if (d > p.L + 0.2) { p.o.visible = false; if (parti) { this.scene.remove(p.o, p.benne.g, p.benne.r); return false; } return true; }
       }
-    }
-    if (!c) return;
-    g.drawImage(this.spritePlante(c, p, v, s, pourri), x * T, y * T - MARGE);
-    // reflet clair qui court sur les céréales mûrissantes
-    if (p > 0.62 && w > 0.5 && (c.forme === 'epi' || c.forme === 'avoine')) { g.fillStyle = `rgba(255,244,200,${((w - 0.5) * 0.3).toFixed(2)})`; g.fillRect(x * T, y * T - 6, T, T + 6); }
-  },
-  reflets(g, x, y, t) {
-    for (let i = 0; i < 4; i++) {
-      const dx = ((t / 70 + hasard(x, y, i) * 48) % 48) | 0, yy = 6 + ((hasard(x, y, i + 9) * 36) | 0);
-      g.fillStyle = 'rgba(200,230,250,.55)'; g.fillRect(x * T + dx, y * T + yy, Math.min(5, 48 - dx), 1);
-    }
-  },
-
-  // ---------- Machines ----------
-  dessinerMachines(g, t) {
-    for (const [i, rv] of this.revel) {
-      if (!rv.machine) continue;
-      const a = (t - rv.t0) / rv.dur;
-      if (a < 0 || a >= 1) continue;
-      const x = i % this.pl.w, y = (i / this.pl.w) | 0, cx = x * T + (rv.sens > 0 ? a : 1 - a) * T, cy = y * T + T * 0.62;
-      const type = rv.machine.type;
-      g.save(); g.translate(Math.round(cx), Math.round(cy));
-      if (rv.sens < 0) g.scale(-1, 1);
-      if (type === 'personne') personne(g, -6, -24, t);
-      else if (type === 'moissonneuse') moissonneuse(g, -50, -33, t);
-      else if (type === 'semoir') tracteur(g, 2, -25, t, '#c8402a', type);
-      else tracteur(g, -6, -25, t, '#3f7a3a', type);
-      g.restore();
-      // poussière, paille, terre
-      if (Math.random() < 0.7 && !this.reduit) {
-        const derriere = cx - rv.sens * (type === 'moissonneuse' ? 54 : type === 'arracheuse' ? 34 : 16);
-        const col = type === 'moissonneuse' ? (Math.random() < 0.5 ? '#e8d08a' : '#c8a860') : type === 'arracheuse' ? '#8a6440' : '#b89870';
-        this.parts.push({ x: derriere, y: cy - 4 + Math.random() * 6, vx: -rv.sens * (8 + Math.random() * 14), vy: -10 - Math.random() * 14, g: 30, t0: t, vie: 700 + Math.random() * 500, col, a: 0.8 });
+      if (d < 0) return true;
+      if (d > p.L + 0.2) { this.scene.remove(p.o); return false; }
+      const a = Decor.surLigne(p.pts, Math.min(d, p.L)), b = Decor.surLigne(p.pts, Math.min(p.L, d + 0.12));
+      const cap = Math.atan2(b.z - a.z, b.x - a.x);
+      const e = Math.max(0, Math.min(1, d / 0.35, (p.L + 0.2 - d) / 0.35)), k = e * e * (3 - 2 * e);
+      p.o.visible = true; p.o.position.set(a.x, 0.004, a.z); p.o.rotation.y = -cap; p.o.scale.setScalar(Math.max(0.01, k));
+      if (p.o.userData.rabatteur) p.o.userData.rabatteur.rotation.z = -t / 1000 * 5;
+      // la barre de coupe (0,55 case devant le centre) couche les tiges une à une sur le rang en cours
+      if (p.recolte && p.type === 'moissonneuse' && Math.abs(Math.sin(cap)) < 0.2 && d < p.L) {
+        const sx = Math.sign(Math.cos(cap)), fx = a.x + Math.cos(cap) * 0.55, fz = a.z + Math.sin(cap) * 0.55, W = this.pl.w, H = this.pl.h;
+        const tx = Math.floor(fx + W / 2), ty = Math.floor(fz + H / 2), i = ty * W + tx, rv = this.revel.get(i);
+        if (tx >= 0 && tx < W && ty >= 0 && ty < H && rv && rv.avant) {
+          this.coupes.set(i, { fx, s: sx });
+          for (const pt of this.cel[i].desc?.parts || []) this.salir(pt.g, this.chunkDe(i));
+        }
       }
-    }
-  },
-  dessinerParticules(g, t, dt) {
-    const s = dt / 1000;
-    this.parts = this.parts.filter(p => {
-      const a = (t - p.t0) / p.vie;
-      if (a >= 1) return false;
-      p.x += p.vx * s; p.y += p.vy * s; p.vy += p.g * s;
-      g.globalAlpha = p.a * (1 - a); g.fillStyle = p.col; g.fillRect(Math.round(p.x), Math.round(p.y), p.taille || 1, p.taille || 1);
+      if (p.o.userData.jambes) { const sw = Math.sin(t / 110) * 0.5; p.o.userData.jambes[0].rotation.z = sw; p.o.userData.jambes[1].rotation.z = -sw; p.o.position.y = Math.abs(Math.sin(t / 110)) * 0.006; }
+      // poussière, paille, terre derrière la machine
+      if (!this.reduit && t - p.derniere > 40 && e > 0.5) {
+        p.derniere = t;
+        const arriere = p.type === 'moissonneuse' ? 0.4 : p.type === 'personne' ? 0.05 : 0.38, cx = a.x - Math.cos(cap) * arriere, cz = a.z - Math.sin(cap) * arriere;
+        const n = p.type === 'personne' ? 1 : 3, cols = p.type === 'moissonneuse' ? ['#e8d08a', '#c8a860', '#f2e2a8'] : p.type === 'arracheuse' ? ['#8a6440', '#6a4a2a'] : ['#b89870', '#d8c098'];
+        for (let i = 0; i < n; i++) this.parts.push({ x: cx + (Math.random() - 0.5) * 0.3, y: p.type === 'moissonneuse' ? 0.45 : 0.08, z: cz + (Math.random() - 0.5) * 0.3, vx: -Math.cos(cap) * (0.3 + Math.random() * 0.5) + (Math.random() - 0.5) * 0.3, vy: 0.2 + Math.random() * 0.5, vz: -Math.sin(cap) * (0.3 + Math.random() * 0.5) + (Math.random() - 0.5) * 0.3, g: 1.4, vie: 0.8 + Math.random() * 0.6, age: 0, c: K3.col(cols[i % cols.length]) });
+      }
       return true;
     });
-    g.globalAlpha = 1;
+  },
+  // Enrouleur et canon d'arrosage sur le plus grand champ cultivé, quand l'irrigation est en marche (mai à septembre)
+  irrigation(t, f, mode) {
+    const mois = this.ctx.mois, pl = this.pl, W = pl.w, H = pl.h;
+    let cle = '';
+    if (f.irrigation && mode.irrigation === 'enrouleur' && mois >= 5 && mois <= 9) {
+      const n = new Map(); for (const k in f.cases) if (f.cases[k].cult) { const [x, y] = k.split(',').map(Number), u = pl.unite[y * W + x]; n.set(u, (n.get(u) || 0) + 1); }
+      const u = [...n.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+      if (u != null) cle = String(u);
+    }
+    if (cle !== this.cleIrr) {
+      this.cleIrr = cle; if (this.enrouleur) { this.scene.remove(this.enrouleur); this.enrouleur = null; }
+      if (cle) {
+        const cases = [...this.casesUnite(+cle)], c = cases[(cases.length / 2) | 0], K = K3, G = K.G, o = new T3.Group();
+        K.mesh(o, K.fusion([K.piece(G.cyl(0.11, 0.11, 0.09, 14), '#2f6aa8', [0, 0.15, 0], [Math.PI / 2, 0, 0]), K.piece(G.cyl(0.05, 0.05, 0.1, 8), '#d8d8d8', [0, 0.15, 0], [Math.PI / 2, 0, 0]),
+          K.piece(G.boite(0.26, 0.03, 0.16), '#2a4a7a', [0, 0.05, 0]), K.piece(G.cyl(0.04, 0.04, 0.02, 8), '#222222', [-0.08, 0.04, 0.09], [Math.PI / 2, 0, 0]), K.piece(G.cyl(0.04, 0.04, 0.02, 8), '#222222', [-0.08, 0.04, -0.09], [Math.PI / 2, 0, 0])]), K.matV());
+        const tuyau = new T3.Mesh(new T3.CylinderGeometry(0.008, 0.008, 1, 5).rotateZ(Math.PI / 2).translate(0.5, 0, 0), K.mat('#2a2a2a')); tuyau.scale.x = 1.2; tuyau.position.y = 0.02; o.add(tuyau);
+        const canon = K.mesh(o, K.fusion([K.piece(G.boite(0.12, 0.03, 0.12), '#7a7a7a', [0, 0.03, 0]), K.piece(G.cyl(0.01, 0.012, 0.12, 5), '#5a5a5a', [0, 0.1, 0])]), K.matV(), [1.2, 0, 0]);
+        this.sansOmbre(o); o.position.set(c % W - W / 2 - 0.6, 0.004, ((c / W) | 0) - H / 2 + 0.5); o.userData.nom = { cle: 'machine:enrouleur', libelle: 'Enrouleur d’irrigation' }; this.scene.add(o); this.enrouleur = o; this.canon = canon;
+      }
+    }
+    if (!this.enrouleur || this.reduit) return;
+    const p = this.enrouleur.position, gx = p.x + 1.2, gz = p.z;
+    for (let i = 0; i < 4; i++) {
+      const a = Math.sin(t / 2600) * 2.2 + (Math.random() - 0.5) * 0.15, v = 1.3 + Math.random() * 0.25;
+      this.parts.push({ x: gx, y: 0.17, z: gz, vx: Math.cos(a) * v, vy: 1.0 + Math.random() * 0.2, vz: Math.sin(a) * v, g: 2.6, vie: 0.9, age: 0, c: K3.col(i % 2 ? '#e8f2fa' : '#bcd8f0') });
+    }
   },
   // Petites graines lancées au semis case par case
   graines(x, y) {
-    const t = performance.now(), cx = x * T + T / 2, cy = y * T + T / 2;
-    for (let i = 0; i < 12; i++) { const a = Math.PI * (1.1 + i / 14), v = 20 + Math.random() * 30; this.parts.push({ x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 10, g: 120, t0: t, vie: 420, col: i % 2 ? '#d8b878' : '#8a6440', a: 1 }); }
+    if (!this.pl || this.reduit) return;
+    const W = this.pl.w, H = this.pl.h;
+    for (let i = 0; i < 14; i++) { const a = Math.random() * 6.28, v = 0.3 + Math.random() * 0.5; this.parts.push({ x: x + 0.5 - W / 2, y: 0.15, z: y + 0.5 - H / 2, vx: Math.cos(a) * v, vy: 0.6 + Math.random() * 0.5, vz: Math.sin(a) * v, g: 3, vie: 0.5, age: 0, c: K3.col(i % 2 ? '#d8b878' : '#8a6440') }); }
   },
-  onde(px, py) { this.ondes.push({ x: px, y: py, t0: performance.now() }); },
+  onde(px, py) {
+    if (!this.gl || !this.pl) return;
+    const m = new T3.Mesh(new T3.RingGeometry(0.85, 1, 32).rotateX(-Math.PI / 2), new T3.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8, depthTest: false, depthWrite: false }));
+    m.position.set(px, 0.12, py); m.renderOrder = 30; this.scene.add(m);
+    this.ondes.push({ m, t0: performance.now() });
+  },
 
-  // ---------- Repères : champs mûrs, survol, sélection, ondes, trouvaille ----------
+  // ---------- Calques de jeu : limite de la ferme, champs mûrs, survol, sélection, trouvaille ----------
+  calques() {
+    const mk = (c, o, dt = false, ro = 20) => { const m = new T3.Mesh(new T3.BufferGeometry(), new T3.MeshBasicMaterial({ color: K3.col(c), transparent: true, opacity: o, depthTest: dt, depthWrite: false })); m.renderOrder = ro; m.frustumCulled = false; this.scene.add(m); return m; };
+    this.cLimite = mk('#fade8c', 0.9, true, 3); this.cMurs = mk('#ffd65a', 0.6, true, 4); this.cSurvol = mk('#ffffff', 0.7); this.cSel = mk('#ffe27a', 0.95); this.cCase = mk('#ffffff', 0.14);
+    const pts = new T3.BufferGeometry(); pts.setAttribute('position', new T3.BufferAttribute(new Float32Array(600 * 3), 3)); pts.setAttribute('color', new T3.BufferAttribute(new Float32Array(600 * 3), 3));
+    this.points = new T3.Points(pts, new T3.PointsMaterial({ size: 0.035, vertexColors: true, transparent: true, opacity: 0.95, depthWrite: false })); this.points.frustumCulled = false; this.scene.add(this.points);
+    const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
+    const rg = g.createRadialGradient(32, 32, 0, 32, 32, 32); rg.addColorStop(0, 'rgba(255,252,230,1)'); rg.addColorStop(0.25, 'rgba(255,240,170,.7)'); rg.addColorStop(1, 'rgba(255,240,170,0)');
+    g.fillStyle = rg; g.fillRect(0, 0, 64, 64); g.fillStyle = '#fffbe8'; g.fillRect(30, 4, 4, 56); g.fillRect(4, 30, 56, 4);
+    this.texEclat = new T3.CanvasTexture(c); this.eclats = [];
+    this.etoileTr = new T3.Sprite(new T3.SpriteMaterial({ map: this.texEclat, transparent: true, depthTest: false, depthWrite: false })); this.etoileTr.renderOrder = 31; this.etoileTr.visible = false; this.scene.add(this.etoileTr);
+  },
+  // Bandes le long des bords d'un ensemble de cases (à l'intérieur), largeur lw
+  bordure(ens, lw, y) {
+    const W = this.pl.w, H = this.pl.h, pos = [];
+    const quad = (x0, z0, x1, z1) => pos.push(x0, y, z0, x0, y, z1, x1, y, z0, x1, y, z0, x0, y, z1, x1, y, z1);
+    for (const i of ens) {
+      const x = i % W, yy = (i / W) | 0, X = x - W / 2, Z = yy - H / 2, a = (dx, dy) => { const nx = x + dx, ny = yy + dy; return nx >= 0 && ny >= 0 && nx < W && ny < H && ens.has(ny * W + nx); };
+      if (!a(0, -1)) quad(X, Z, X + 1, Z + lw); if (!a(0, 1)) quad(X, Z + 1 - lw, X + 1, Z + 1);
+      if (!a(-1, 0)) quad(X, Z, X + lw, Z + 1); if (!a(1, 0)) quad(X + 1 - lw, Z, X + 1, Z + 1);
+    }
+    const g = new T3.BufferGeometry(); g.setAttribute('position', new T3.Float32BufferAttribute(pos, 3)); return g;
+  },
+  casesUnite(u) { const pl = this.pl, s = new Set(); for (let i = 0; i < pl.unite.length; i++) if (pl.unite[i] === u) s.add(i); return s; },
+  remplacer(m, g) { m.geometry.dispose(); m.geometry = g; },
   recenserMurs(f, t) {
     this.dernierMur = t; this.murs = []; this.unitesMures = new Set();
     const pl = this.pl;
     for (const k in f.cases) { const c = f.cases[k]; if (c.cult && c.p >= 1) { const [x, y] = k.split(',').map(Number); this.murs.push([x, y]); this.unitesMures.add(pl.unite[y * pl.w + x]); } }
   },
-  contour(g, u, coul, lw, seulX, seulY) {
-    const pl = this.pl, meme = (x, y) => x >= 0 && y >= 0 && x < pl.w && y < pl.h && pl.unite[y * pl.w + x] === u;
-    g.fillStyle = coul;
-    const cases = seulX != null ? [[seulX, seulY]] : Rendu.casesUnite(u);
-    for (const [x, y] of cases) {
-      const autre = seulX != null ? () => false : meme;
-      if (!autre(x, y - 1)) g.fillRect(x * T, y * T, T, lw);
-      if (!autre(x, y + 1)) g.fillRect(x * T, (y + 1) * T - lw, T, lw);
-      if (!autre(x - 1, y)) g.fillRect(x * T, y * T, lw, T);
-      if (!autre(x + 1, y)) g.fillRect((x + 1) * T - lw, y * T, lw, T);
-    }
-  },
-  _casesUnite: new Map(),
-  casesUnite(u) {
-    const pl = this.pl, cle = pl.w + '|' + pl.h + '|' + u;
-    let c = this._casesUnite.get(cle);
-    if (!c) { c = []; for (let i = 0; i < pl.unite.length; i++) if (pl.unite[i] === u) c.push([i % pl.w, (i / pl.w) | 0]); this._casesUnite.set(cle, c); }
-    return c;
-  },
-  dessinerReperes(g, t, f) {
-    const pl = this.pl;
-    // limite de la ferme : liseré doré sur les bords des champs possédés
-    for (const [coul, l, o] of [['rgba(40,24,8,.35)', 1, 2], ['rgba(250,222,140,.8)', 2, 0]]) {
-      g.fillStyle = coul;
-      for (const k in f.cases) {
-        const [x, y] = k.split(',').map(Number), a = (dx, dy) => f.cases[(x + dx) + ',' + (y + dy)];
-        if (!a(0, -1)) g.fillRect(x * T, y * T + o, T, l);
-        if (!a(0, 1)) g.fillRect(x * T, y * T + T - l - o, T, l);
-        if (!a(-1, 0)) g.fillRect(x * T + o, y * T, l, T);
-        if (!a(1, 0)) g.fillRect(x * T + T - l - o, y * T, l, T);
-      }
-    }
+  majCalques(t, f) {
+    const pl = this.pl, W = pl.w, lw = this.planches ? 0.06 : 0.045;
+    // liseré doré autour des champs possédés
+    const cl = S.active + '|' + Object.keys(f.cases).length;
+    if (cl !== this.cleLimite) { this.cleLimite = cl; const s = new Set(Object.keys(f.cases).map(k => { const [x, y] = k.split(',').map(Number); return y * W + x; })); this.remplacer(this.cLimite, this.bordure(s, lw * 0.8, 0.04)); }
     // champs mûrs : contour qui palpite et étincelles
-    const puls = 0.45 + 0.35 * Math.sin(t / 260);
-    for (const u of this.unitesMures) this.contour(g, u, `rgba(255,214,90,${puls.toFixed(2)})`, 2);
-    if (this.murs.length && !this.reduit && Math.random() < Math.min(0.9, 0.12 + this.murs.length * 0.02)) {
-      const [x, y] = this.murs[(Math.random() * this.murs.length) | 0];
-      this.eclats.push({ x: x * T + 4 + Math.random() * 40, y: y * T - 4 + Math.random() * 40, t0: t, vie: 650 });
+    const cm = [...this.unitesMures].sort().join(',');
+    if (cm !== this.cleMurs) {
+      // contour posé à la hauteur des plantes mûres : visible au-dessus des épis, caché derrière la machine ou la ferme
+      this.cleMurs = cm; const geos = [];
+      const H = { mais: 0.68, sorgho: 0.55, topi: 0.75, tournesol: 0.64, epi: 0.33, avoine: 0.33, colza: 0.45, lin: 0.26 };
+      for (const u of this.unitesMures) {
+        const cs = this.casesUnite(u), i0 = [...cs][0], c = f.cases[(i0 % W) + ',' + ((i0 / W) | 0)], fo = c?.cult ? CULTURE[c.cult].forme : '';
+        geos.push(this.bordure(cs, lw, (H[fo] ?? 0.16) + 0.02));
+      }
+      const pos = geos.flatMap(g => [...g.attributes.position.array]), g = new T3.BufferGeometry(); g.setAttribute('position', new T3.Float32BufferAttribute(pos, 3)); geos.forEach(x => x.dispose());
+      this.remplacer(this.cMurs, g);
     }
-    this.eclats = this.eclats.filter(e => {
-      const a = (t - e.t0) / e.vie; if (a >= 1) return false;
-      const l = Math.round(Math.sin(a * Math.PI) * 3), x = Math.round(e.x), y = Math.round(e.y);
-      g.fillStyle = '#fffbe0'; g.fillRect(x, y, 1, 1);
-      g.fillStyle = 'rgba(255,240,170,.9)'; if (l) { g.fillRect(x - l, y, l, 1); g.fillRect(x + 1, y, l, 1); g.fillRect(x, y - l, 1, l); g.fillRect(x, y + 1, 1, l); }
-      return true;
-    });
+    this.cMurs.material.opacity = 0.45 + 0.35 * Math.sin(t / 260);
+    if (this.murs.length && !this.reduit && Math.random() < Math.min(0.9, 0.12 + this.murs.length * 0.02) && this.eclats.length < 24) {
+      const [x, y] = this.murs[(Math.random() * this.murs.length) | 0], sp = new T3.Sprite(new T3.SpriteMaterial({ map: this.texEclat, transparent: true, depthWrite: false, opacity: 0 }));
+      sp.position.set(x - W / 2 + Math.random(), 0.25 + Math.random() * 0.25, y - pl.h / 2 + Math.random()); sp.renderOrder = 25; this.scene.add(sp); this.eclats.push({ sp, t0: t, vie: 650 });
+    }
+    this.eclats = this.eclats.filter(e => { const a = (t - e.t0) / e.vie; if (a >= 1) { this.scene.remove(e.sp); e.sp.material.dispose(); return false; } const k = Math.sin(a * Math.PI); e.sp.scale.setScalar(0.08 + k * 0.14); e.sp.material.opacity = k; return true; });
+    // survol : contour blanc du champ ; voile clair sur la case quand elle est à vous
+    const sv = this.survol, u = sv && sv.tx >= 0 && sv.ty >= 0 && sv.tx < W && sv.ty < pl.h ? pl.unite[sv.ty * W + sv.tx] : -1;
+    if (u !== this.uniteSurvol) { this.uniteSurvol = u; this.remplacer(this.cSurvol, u >= 0 ? this.bordure(this.casesUnite(u), lw, 0.06) : new T3.BufferGeometry()); }
+    this.cSurvol.material.opacity = 0.55 + 0.25 * Math.sin(t / 200);
+    const surCase = u >= 0 && f.parcelles[u];
+    this.cCase.visible = !!surCase;
+    if (surCase) { if (!this.cCase.geometry.attributes.position) this.remplacer(this.cCase, new T3.PlaneGeometry(1, 1).rotateX(-Math.PI / 2)); this.cCase.position.set(sv.tx + 0.5 - W / 2, 0.055, sv.ty + 0.5 - pl.h / 2); }
+    // sélection
+    const sel = this.selection, cs = sel ? (sel.type === 'parcelle' ? 'p' + sel.u : 'c' + sel.tx + ',' + sel.ty) : '';
+    if (cs !== this.cleSel) { this.cleSel = cs; this.remplacer(this.cSel, !sel ? new T3.BufferGeometry() : this.bordure(sel.type === 'parcelle' ? this.casesUnite(sel.u) : new Set([sel.ty * W + sel.tx]), lw * 1.1, 0.065)); }
     // trouvaille à ramasser
-    const tr = S.trouvaille;
-    if (tr && tr.ferme === f.id) {
-      const bond = Math.abs(Math.sin(t / 300)) * 4, x = tr.x * T + 24, y = tr.y * T + 22 - bond;
-      g.fillStyle = 'rgba(30,18,8,.25)'; g.fillRect(x - 4, tr.y * T + 30, 9, 2);
-      g.fillStyle = '#fff3b0'; g.fillRect(x - 1, y - 1, 3, 3); g.fillStyle = '#ffffff'; g.fillRect(x, y - 4, 1, 9); g.fillRect(x - 4, y, 9, 1);
-      if (Math.random() < 0.25) this.eclats.push({ x: x - 8 + Math.random() * 16, y: y - 8 + Math.random() * 14, t0: t, vie: 500 });
-    }
-    // survol et sélection
-    if (this.survol) {
-      const { tx, ty } = this.survol, u = tx >= 0 && ty >= 0 && tx < pl.w && ty < pl.h ? pl.unite[ty * pl.w + tx] : -1;
-      if (u >= 0) {
-        const a = 0.55 + 0.25 * Math.sin(t / 200);
-        this.contour(g, u, `rgba(255,255,255,${a.toFixed(2)})`, 2);
-        if (f.parcelles[u]) { g.fillStyle = 'rgba(255,255,255,.10)'; g.fillRect(tx * T, ty * T, T, T); }
-      }
-    }
-    const sel = this.selection;
-    if (sel?.type === 'parcelle') this.contour(g, sel.u, '#ffe27a', 2);
-    if (sel?.type === 'case') this.contour(g, -1, '#ffe27a', 2, sel.tx, sel.ty);
+    const tr = S.trouvaille, ici = tr && tr.ferme === f.id;
+    this.etoileTr.visible = !!ici;
+    if (ici) { const bond = Math.abs(Math.sin(t / 300)) * 0.12; this.etoileTr.position.set(tr.x + 0.5 - W / 2, 0.32 + bond, tr.y + 0.5 - pl.h / 2); this.etoileTr.scale.setScalar(0.3 + 0.05 * Math.sin(t / 150)); }
     // ondes de clic
-    this.ondes = this.ondes.filter(o => {
-      const a = (t - o.t0) / 420; if (a >= 1) return false;
-      g.strokeStyle = `rgba(255,255,255,${(0.8 * (1 - a)).toFixed(2)})`; g.lineWidth = 2;
-      g.beginPath(); g.arc(o.x, o.y, 4 + a * 22, 0, Math.PI * 2); g.stroke();
-      return true;
-    });
+    this.ondes = this.ondes.filter(o => { const a = (performance.now() - o.t0) / 420; if (a >= 1) { this.scene.remove(o.m); o.m.geometry.dispose(); o.m.material.dispose(); return false; } o.m.scale.setScalar(0.06 + a * 0.4); o.m.material.opacity = 0.8 * (1 - a); return true; });
   },
-};
+  animerParticules(dt) {
+    const s = Math.min(0.05, dt / 1000), P = this.points.geometry.attributes.position.array, C = this.points.geometry.attributes.color.array;
+    this.parts = this.parts.filter(p => { p.age += s; if (p.age >= p.vie) return false; p.x += p.vx * s; p.y += p.vy * s; p.z += p.vz * s; p.vy -= p.g * s; if (p.y < 0.01) { p.y = 0.01; p.vx *= 0.5; p.vz *= 0.5; } return true; });
+    if (this.parts.length > 600) this.parts.splice(0, this.parts.length - 600);
+    const n = this.parts.length;
+    for (let i = 0; i < n; i++) { const p = this.parts[i]; P[i * 3] = p.x; P[i * 3 + 1] = p.y; P[i * 3 + 2] = p.z; C[i * 3] = p.c.r; C[i * 3 + 1] = p.c.g; C[i * 3 + 2] = p.c.b; }
+    this.points.geometry.setDrawRange(0, n); this.points.geometry.attributes.position.needsUpdate = true; this.points.geometry.attributes.color.needsUpdate = true;
+    this.points.material.size = Math.max(0.025, this.cam.R * 0.0016);
+  },
 
-// ---------- Machines (vue de côté, tournées vers la droite) ----------
-function roue(g, cx, cy, r, t) {
-  disque(g, cx, cy, r, '#2a2622'); disque(g, cx, cy, r - 1, '#3a3430');
-  disque(g, cx, cy, Math.max(1, r - 3), '#a8a498'); if (r > 5) disque(g, cx, cy, r - 5, '#8a8680');
-  const a = t / 120;
-  for (let i = 0; i < 4; i++) { const b = a + i * Math.PI / 2; P(g, cx + Math.round(Math.cos(b) * (r - 1)), cy + Math.round(Math.sin(b) * (r - 1)), '#14100c'); }
-  P(g, cx, cy, '#5a5650');
-}
-// Tracteur (36 × 26) avec son semoir ou sa remorque derrière
-function tracteur(g, x, y, t, coul, outil) {
-  const c = Math.floor(t / 110) % 2, cl = teinte(coul, 1.3), so = teinte(coul, 0.7);
-  ellipse(g, x + 18, y + 25, 19, 2, OMBRE);
-  if (outil === 'semoir') {
-    R(g, x - 19, y + 11, 17, 8, '#d8a830'); R(g, x - 19, y + 11, 17, 2, '#f2cc5a'); R(g, x - 19, y + 18, 17, 1, '#a07018');
-    R(g, x - 17, y + 8, 13, 3, '#c89a28'); R(g, x - 17, y + 8, 13, 1, '#e8be48');
-    for (let i = 0; i < 5; i++) { R(g, x - 18 + i * 4, y + 19, 1, 4, '#5a4a3a'); disque(g, x - 18 + i * 4, y + 23, 1, '#3a3430'); }
-    R(g, x - 3, y + 15, 6, 2, '#4a4038');
-  } else if (outil === 'arracheuse') {
-    R(g, x - 30, y + 7, 26, 12, '#8a6a42'); R(g, x - 30, y + 7, 26, 2, '#a88a5a'); R(g, x - 30, y + 18, 26, 1, '#5a4228');
-    for (let i = 0; i < 9; i++) disque(g, x - 28 + i * 3, y + 6 - (i % 2), 2, i % 3 ? '#c9a070' : '#b88a5a');
-    roue(g, x - 17, y + 21, 4, t); R(g, x - 4, y + 15, 6, 2, '#4a4038');
-  }
-  R(g, x + 12, y + 8 + c, 20, 10, coul); R(g, x + 12, y + 8 + c, 20, 2, cl); R(g, x + 12, y + 17 + c, 20, 1, so);
-  for (let i = 0; i < 3; i++) R(g, x + 15 + i * 5, y + 11 + c, 3, 1, so);
-  R(g, x + 32, y + 9 + c, 3, 9, '#3a3a3a'); for (let i = 0; i < 4; i++) R(g, x + 32, y + 10 + c + i * 2, 3, 1, '#7a7a7a');
-  R(g, x + 31, y + 8 + c, 3, 2, '#fff2b0');
-  R(g, x + 24, y + 1 + c, 2, 7, '#3a3430'); R(g, x + 23, y + c, 4, 2, '#2a2420');
-  R(g, x + 4, y + 10 + c, 9, 8, so); R(g, x + 6, y + 4 + c, 6, 8, '#3a5a8a'); R(g, x + 6, y + 4 + c, 6, 1, '#5a7aaa');
-  R(g, x + 7, y - 1 + c, 5, 5, '#e8b88a'); P(g, x + 10, y + 1 + c, '#3a2a1a');
-  R(g, x + 4, y - 2 + c, 10, 2, '#d8b050'); R(g, x + 6, y - 4 + c, 6, 2, '#c8a040');
-  ligne(g, x + 12, y + 6 + c, x + 15, y + 9 + c, '#2a2a2a'); P(g, x + 11, y + 6 + c, '#e8b88a');
-  R(g, x + 1, y + 7 + c, 17, 2, so);
-  roue(g, x + 9, y + 17, 8, t); roue(g, x + 28, y + 21, 4, t * 2);
-}
-// Moissonneuse-batteuse (60 × 34), barre de coupe et rabatteur à l'avant
-function moissonneuse(g, x, y, t) {
-  const c = Math.floor(t / 130) % 2, rouge = '#c8402a', cl = '#e86a4a', so = '#8a2a1a', a = t / 160;
-  ellipse(g, x + 30, y + 33, 30, 2, OMBRE);
-  R(g, x + 44, y + 20, 16, 8, '#c8b040'); R(g, x + 44, y + 27, 16, 1, '#8a7a2a'); R(g, x + 44, y + 20, 16, 1, '#e8d060');
-  for (let i = 0; i < 5; i++) R(g, x + 45 + i * 3, y + 28, 1, 2, '#5a5a5a');
-  for (let i = 0; i < 4; i++) { const b = a + i * Math.PI / 2; ligne(g, x + 52, y + 17, x + 52 + Math.round(Math.cos(b) * 7), y + 17 + Math.round(Math.sin(b) * 6), '#e8c848'); }
-  disque(g, x + 52, y + 17, 1, '#6a5a2a');
-  R(g, x + 4, y + 10 + c, 40, 16, rouge); R(g, x + 4, y + 10 + c, 40, 2, cl); R(g, x + 4, y + 25 + c, 40, 1, so);
-  for (let i = 0; i < 4; i++) R(g, x + 8 + i * 8, y + 15 + c, 5, 1, so);
-  R(g, x + 6, y + 3 + c, 18, 7, '#e8d08a'); R(g, x + 6, y + 3 + c, 18, 2, '#f6e4a8'); R(g, x + 5, y + 9 + c, 20, 1, so);
-  ligne(g, x + 6, y + 6 + c, x - 6, y + 2 + c, '#9a2a1a'); R(g, x - 8, y + 1 + c, 3, 3, '#6a1a10');
-  R(g, x + 28, y + 1 + c, 14, 10, rouge); R(g, x + 30, y + 3 + c, 10, 6, '#9fc4d8'); R(g, x + 30, y + 3 + c, 4, 2, '#d8ecf4'); R(g, x + 27, y + c, 16, 2, so);
-  roue(g, x + 14, y + 26, 7, t); roue(g, x + 37, y + 28, 5, t);
-}
-// Maraîcher (12 × 26) au chapeau de paille, panier au bras
-function personne(g, x, y, t) {
-  const pas = Math.floor(t / 160) % 2;
-  ellipse(g, x + 6, y + 25, 5, 1, OMBRE);
-  R(g, x + 1, y + 2, 10, 2, '#d8b050'); R(g, x + 3, y, 6, 2, '#c8a040'); R(g, x + 3, y + 4, 6, 5, '#e8b88a'); P(g, x + 7, y + 6, '#3a2a1a');
-  R(g, x + 2, y + 9, 8, 8, '#3a5a8a'); R(g, x + 2, y + 9, 8, 1, '#5a7aaa'); R(g, x + 4, y + 9, 1, 8, '#2a4a7a');
-  R(g, x + 9, y + 11, 2, 5, '#e8b88a');
-  R(g, x + 9, y + 15, 5, 4, '#a87a42'); R(g, x + 9, y + 15, 5, 1, '#c89a62'); P(g, x + 10, y + 14, '#7cbf52'); P(g, x + 12, y + 14, '#e86a3a');
-  R(g, x + 3 + pas, y + 17, 2, 8, '#4a3a2a'); R(g, x + 7 - pas, y + 17, 2, 8, '#4a3a2a'); R(g, x + 2 + pas, y + 24, 3, 1, '#2a2018'); R(g, x + 6 - pas, y + 24, 3, 1, '#2a2018');
-}
+  // ---------- Vent du jour ----------
+  vent(j, m) {
+    const force = Math.min(1, 0.3 + 0.6 * hasard(j, 5, 9) + (m.pluie > 5 ? 0.25 : 0)), dir = -0.3 + 0.6 * hasard(j, 6, 9);
+    this.ventForce = force; this.ventDir = dir;
+    K3.U.uForce.value = this.reduit ? 0 : force; K3.U.uVent.value.set(Math.cos(dir), Math.sin(dir));
+    return { force, dir };
+  },
+  contexte(f) {
+    const d = dateDe(S.jour), m = f.meteo || { tmin: 6, tmax: 14, pluie: 0, neige: 0 }, neige = Math.min(0.92, (f.neigeSol || 0) / 8);
+    return (this.ctx = { mois: d.mois, doy: d.doy, neige, givre: m.tmin < -0.5 && neige < 0.1, m });
+  },
 
-// ---------- Ciel : ombres des nuages, brume, pluie, neige, orage, lumière des saisons ----------
-const Ciel = {
-  gouttes: [], flocons: [], nuages: [], eclair: null, prochainEclair: 0, jour: -1, formes: null, neigeMotif: null,
-  preparer() {
-    this.formes = [0, 1, 2, 3].map(n => {
-      const c = document.createElement('canvas'); c.width = 420; c.height = 240;
-      const g = c.getContext('2d');
-      for (let i = 0; i < 7; i++) {
-        const x = 90 + hasard(n, i, 1) * 240, y = 70 + hasard(n, i, 2) * 100, r = 40 + hasard(n, i, 3) * 60;
-        const grad = g.createRadialGradient(x, y, 0, x, y, r);
-        grad.addColorStop(0, 'rgba(0,0,0,1)'); grad.addColorStop(0.7, 'rgba(0,0,0,.8)'); grad.addColorStop(1, 'rgba(0,0,0,0)');
-        g.fillStyle = grad; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+  // ---------- Image ----------
+  dessiner(t, dt) {
+    if (!this.gl || !this.pl) return;
+    const f = F(), mode = MODES[f.mode], c = this.cam;
+    c.tt = t / 1000;
+    // structure (achat, changement de mode) : tout revoir ; nouveau jour : tout revoir aussi (stades, saison, météo)
+    const cs = `${S.active}|${f.mode}|${Object.keys(f.parcelles).length}|${f.irrigation ? 1 : 0}`;
+    if (cs !== this.cleStruct || this.jourVu !== S.jour) {
+      const ctx = this.contexte(f), nouveauJour = this.jourVu !== S.jour;
+      this.cleStruct = cs; this.jourVu = S.jour;
+      if (nouveauJour) {
+        const m = ctx.m;
+        this.v = this.vent(S.jour, m);
+        if (Ciel.jour(S.jour, m, f, this.reduit)) this.ombreSale = true;
+        const s = this.D.maj(ctx.doy, f.sec || 0, ctx.neige);
+        // herbe et bords de chemins hors des champs
+        const pl = this.pl, W = pl.w, herbe = s.herbe.clone(), bois = s.herbe.clone().multiplyScalar(0.7);
+        if (ctx.givre) { herbe.lerp(K3.col('#e6eef2'), 0.35); bois.lerp(K3.col('#e6eef2'), 0.2); }
+        if (ctx.neige > 0.02) { herbe.lerp(K3.col('#f2f6fa'), ctx.neige); bois.lerp(K3.col('#f2f6fa'), ctx.neige * 0.8); }
+        for (let i = 0; i < W * pl.h; i++) { const ty = pl.types[(i / W) | 0][i % W]; if (ty !== 'c' || pl.unite[i] < 0) this.D.colorer(i, ty === 'f' ? bois : herbe); }
+        this.solSale = true;
       }
-      return c;
-    });
-    const n = document.createElement('canvas'); n.width = n.height = 96;
-    const g = n.getContext('2d'); g.fillStyle = '#f4f8fc'; g.fillRect(0, 0, 96, 96);
-    for (let i = 0; i < 260; i++) { g.fillStyle = i % 3 ? '#ffffff' : '#dce6f0'; g.fillRect((hasard(i, 1, 1) * 96) | 0, (hasard(i, 2, 1) * 96) | 0, 1 + (i % 2), 1); }
-    this.neigeMotif = n;
-  },
-  nouveauJour(j, m, W, H) {
-    this.jour = j;
-    const couvert = m.pluie + m.neige > 1, n = couvert ? 0 : Math.round(hasard(j, 3, 3) * 4);
-    while (this.nuages.length < n) this.nuages.push({ x: -420 - Math.random() * W * 0.5, y: Math.random() * (H - 120) - 60, f: (Math.random() * 4) | 0, v: 6 + Math.random() * 6, s: 0.8 + Math.random() * 0.8 });
-    this.nuages.length = Math.min(this.nuages.length, n);
-  },
-  // Neige au sol, sous les plantes et les arbres ; la ferme et les maisons du village restent lisibles
-  neigeAuSol(g, f, mode) {
-    const neige = Math.min(0.92, f.neigeSol / 8);
-    if (neige <= 0.02) return;
-    if (!this.formes) this.preparer();
-    const pl = Rendu.pl, W = pl.w * T, H = pl.h * T;
-    g.save(); g.beginPath(); g.rect(0, 0, W, H);
-    if (pl.ferme && mode.echelle === 'champs') g.rect(pl.ferme[0] * T + 10, pl.ferme[1] * T + 12, 4 * T - 20, 4 * T - 20);
-    for (let y = 0; y < pl.h; y++) for (let x = 0; x < pl.w; x++) if (pl.types[y][x] === 'b') g.rect(x * T, y * T, T, T);
-    g.clip('evenodd');
-    g.globalAlpha = neige; g.fillStyle = g.createPattern(this.neigeMotif, 'repeat'); g.fillRect(0, 0, W, H);
-    g.restore(); g.globalAlpha = 1;
-  },
-  dessinerSol(g, t, f, m) {
-    const pl = Rendu.pl, W = pl.w * T, H = pl.h * T;
-    if (!this.formes) this.preparer();
-    if (this.jour !== S.jour) this.nouveauJour(S.jour, m, W, H);
-    const neige = Math.min(0.92, f.neigeSol / 8);
-    // gelée blanche qui scintille
-    if (m.tmin < -0.5 && neige < 0.1 && !Rendu.reduit) for (let i = 0; i < 26; i++) {
-      const x = (hasard(i, Math.floor(t / 700 + i * 0.37), 4) * W) | 0, y = (hasard(i, Math.floor(t / 700 + i * 0.37), 5) * H) | 0;
-      g.fillStyle = 'rgba(240,248,255,.9)'; g.fillRect(x, y, 1, 1); g.fillRect(x - 1, y, 3, 1);
-    }
-    // ombres des nuages qui glissent
-    const dt = 1 / 60;
-    for (const n of this.nuages) {
-      if (!Rendu.reduit) n.x += n.v * dt * (0.6 + Rendu.ventForce);
-      if (n.x > W + 40) { n.x = -420 * n.s - Math.random() * 200; n.y = Math.random() * (H - 120) - 60; }
-      g.globalAlpha = 0.13; g.drawImage(this.formes[n.f], Math.round(n.x), Math.round(n.y), 420 * n.s, 240 * n.s);
-    }
-    g.globalAlpha = 1;
-  },
-  dessinerDessus(g, t, dt, f, m) {
-    const pl = Rendu.pl, W = pl.w * T, H = pl.h * T, s = Math.min(0.05, dt / 1000), d = dateDe(S.jour), eau = m.pluie + m.neige;
-    // lumière des saisons et du temps
-    if (m.neige > 0.3) { g.fillStyle = 'rgba(200,210,225,.12)'; g.fillRect(0, 0, W, H); }
-    else if (eau > 1) { g.fillStyle = `rgba(30,40,60,${Math.min(0.22, 0.08 + eau * 0.006).toFixed(3)})`; g.fillRect(0, 0, W, H); }
-    else if (m.tmax >= 28) { g.fillStyle = `rgba(255,170,60,${Math.min(0.1, (m.tmax - 27) * 0.012).toFixed(3)})`; g.fillRect(0, 0, W, H); }
-    else if (d.mois === 12 || d.mois <= 2) { g.fillStyle = 'rgba(150,180,220,.07)'; g.fillRect(0, 0, W, H); }
-    // brume des matins d'automne et d'hiver
-    if ((d.mois >= 10 || d.mois <= 3) && m.tmax - m.tmin < 4 && eau < 1) {
-      for (let i = 0; i < 5; i++) {
-        const x = ((t / 90 * (0.5 + i * 0.12) + i * 400) % (W + 600)) - 300, y = (i + 0.5) * H / 5;
-        g.globalAlpha = 0.22; g.drawImage(this.formes[i % 4], x, y - 90, 640, 180);
+      this.majCases(f, ctx, true);
+      this.derniereMaj = t;
+    } else if (t - this.derniereMaj > 250) { this.derniereMaj = t; this.majCases(f, this.ctx, false); }
+    // voiles des machines qui se lèvent : la case prend son nouvel état quand la machine passe
+    if (this.revel.size) {
+      const now = performance.now(), fini = [];
+      for (const [i, rv] of this.revel) if (now >= rv.jusque || (rv.passe && (rv.passe.d >= rv.dPass || !this.passages.includes(rv.passe)))) {
+        fini.push(i); this.revel.delete(i); this.coupes.delete(i);
+        if (rv.passe) { rv.passe.tremie += rv.kg || 0; rv.passe.reste--; }
       }
-      g.globalAlpha = 1;
-      g.fillStyle = 'rgba(230,236,240,.18)'; g.fillRect(0, 0, W, H);
+      if (fini.length) this.majCases(f, this.ctx, false, fini);
     }
-    if (Rendu.reduit) return;
-    // pluie
-    const neige = m.neige > 0.3, voulu = eau < 0.3 ? 0 : Math.min(neige ? 160 : 260, Math.round(24 + eau * (neige ? 8 : 10)));
-    const tab = neige ? this.flocons : this.gouttes;
-    (neige ? this.gouttes : this.flocons).length = 0;
-    while (tab.length < voulu) tab.push({ x: Math.random() * W, y: Math.random() * H, v: 0.7 + Math.random() * 0.6 });
-    tab.length = voulu;
-    if (voulu) {
-      if (neige) {
-        g.fillStyle = 'rgba(255,255,255,.92)';
-        for (const p of tab) {
-          p.y += 18 * p.v * s; p.x += (Math.sin(t / 600 + p.v * 9) * 10 + 6) * s;
-          if (p.y > H) { p.y = -2; p.x = Math.random() * W; } if (p.x > W) p.x = 0;
-          g.fillRect(p.x | 0, p.y | 0, p.v > 1 ? 2 : 1, p.v > 1 ? 2 : 1);
-        }
-      } else {
-        g.fillStyle = 'rgba(190,215,240,.55)';
-        for (const p of tab) {
-          p.y += 260 * p.v * s; p.x -= 50 * p.v * s;
-          if (p.y > H) { p.y = -6; p.x = Math.random() * (W + 60); } if (p.x < -4) p.x += W;
-          g.fillRect(p.x | 0, p.y | 0, 1, 5);
-        }
-        g.fillStyle = 'rgba(210,230,250,.7)';
-        for (let i = 0; i < Math.min(14, voulu / 12); i++) { const x = (Math.random() * W) | 0, y = (Math.random() * H) | 0; g.fillRect(x - 1, y, 1, 1); g.fillRect(x + 1, y, 1, 1); g.fillRect(x, y - 1, 1, 1); }
-      }
+    if (this.solSale) { this.D.solFini(); this.solSale = false; }
+    for (const p of this.pools.values()) if (p.sale) this.reconstruire(p);
+    if (t - this.dernierMur > 250) this.recenserMurs(f, t);
+    this.majCalques(t, f);
+    this.animerPassages(t, dt);
+    this.irrigation(t, f, mode);
+    this.animerParticules(dt);
+    const v = this.v || this.vent(S.jour, f.meteo || { pluie: 0 });
+    Vie.image(t, dt, { pointeur: this.pointeurM, vent: v, reduit: this.reduit, mois: this.ctx.mois });
+    K3.U.uTemps.value = t / 1000;
+    this.placer(c.tt);
+    Ciel.image(t, dt, { dist: c.R, cible: c.cible }, v, this.reduit);
+    // blocs hors champ : pas dessinés ; blocs proches : épis détaillés
+    this.camera.updateMatrixWorld();
+    this.frustum.setFromProjectionMatrix(this.m4.multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
+    for (const ch of this.chunks) { ch.vu = this.frustum.intersectsBox(ch.boite); ch.proche = ch.boite.distanceToPoint(this.camera.position) < 8.5; }
+    for (const p of this.pools.values()) {
+      if (!p.im) continue;
+      const ch = this.chunks[p.ch]; p.im.visible = p.n > 0 && ch.vu;
+      if (Plantes.PROCHE.has(p.g)) { const g = Plantes.geo(ch.proche ? p.g + '_p' : p.g); if (p.im.geometry !== g) p.im.geometry = g; }
     }
-    // orage d'été : éclairs
-    const orage = m.pluie >= 15 && m.tmax >= 21;
-    if (orage && t > this.prochainEclair) {
-      this.prochainEclair = t + 2500 + Math.random() * 6000;
-      const pts = []; let x = Math.random() * W, y = 0;
-      while (y < H * (0.4 + Math.random() * 0.4)) { pts.push([x, y]); x += (Math.random() - 0.5) * 60; y += 20 + Math.random() * 30; }
-      this.eclair = { t0: t, pts };
-    }
-    if (this.eclair) {
-      const a = (t - this.eclair.t0) / 380;
-      if (a >= 1) this.eclair = null;
-      else {
-        g.fillStyle = `rgba(235,240,255,${(0.42 * (1 - a) * (a < 0.15 ? 1 : 0.6)).toFixed(3)})`; g.fillRect(0, 0, W, H);
-        if (a < 0.35) { g.strokeStyle = '#fbf8ff'; g.lineWidth = 2; g.beginPath(); this.eclair.pts.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.stroke(); }
-      }
-    }
+    if (this.ombreSale) { this.gl.shadowMap.needsUpdate = true; this.ombreSale = false; }
+    const t0 = performance.now();
+    this.gl.render(this.scene, this.camera);
+    this.qualiteAuto(performance.now() - t0, dt);
+  },
+  // Si les images tardent, on rend moins de pixels (le Mac reste frais)
+  _n: 0, _cumul: 0,
+  qualiteAuto(ms, dt) {
+    this._n++; this._cumul += dt;
+    if (this._n < 90) return;
+    const moy = this._cumul / this._n; this._n = 0; this._cumul = 0;
+    if (moy > 40 && this.qualite > 1) { this.qualite = Math.max(1, this.qualite - 0.25); this.gl.setPixelRatio(this.qualite); this.dimensionner(); }
   },
 };

@@ -1,397 +1,319 @@
 'use strict';
-/* La vie autour de la ferme, en temps réel (quelle que soit la vitesse du jeu) : vols d'oiseaux (oies en migration
-   au printemps et à l'automne), corbeaux qui picorent les semis et s'envolent quand on approche, papillons sur les
-   fleurs, lièvre, poules dans la cour, fumée des cheminées, pigeons du pigeonnier, girouette, voitures sur les
-   routes, camion de livraison, feuilles mortes. Coordonnées en pixels d'art. */
+/* La vie autour de la ferme, en temps réel (quelle que soit la vitesse du jeu) : vaches sur les pâtures du RPG
+   d'avril à novembre, poules dans la cour, fumée des cheminées, pigeons autour du pigeonnier, voitures sur les
+   routes, camion de livraison qui part de la ferme, vols d'oiseaux (oies en migration au printemps et à
+   l'automne), corbeaux sur les terres nues qui s'envolent quand on approche, lièvre. Ombres en disques flous. */
 
 const Vie = {
-  etres: [], pl: null, routes: [], sortie: null, prochain: {}, fleurs: [], dernierFleurs: 0,
+  scene: null, D: null, pl: null, groupe: null, etres: [], vaches: [], poules: [], fumees: [], pigeons: [], prochain: {}, pature: [], nus: [], sortie: null,
 
-  init(pl, f) {
-    this.pl = pl; this.etres = []; this.fleurs = [];
+  init(scene, D, pl, f) {
+    if (this.groupe) this.groupe.parent?.remove(this.groupe);
+    this.scene = scene; this.D = D; this.pl = pl; this.etres = []; this.vaches = []; this.pature = []; this.nus = [];
+    this.groupe = new T3.Group(); scene.add(this.groupe); this.num = 0;
+    // voitures et camion entrent et sortent par la tranche du plateau : découpés aux bords
+    this.bords = [new T3.Plane(new T3.Vector3(1, 0, 0), pl.w / 2), new T3.Plane(new T3.Vector3(-1, 0, 0), pl.w / 2), new T3.Plane(new T3.Vector3(0, 0, 1), pl.h / 2), new T3.Plane(new T3.Vector3(0, 0, -1), pl.h / 2)];
     const t = performance.now();
-    this.prochain = { oiseaux: t + 5000, corbeaux: t + 2500, lievre: t + 20000, voiture: t + 3000, pigeons: t + 12000, fumee: t, feuille: t, papillon: t + 2000 };
-    this.routes = [];
-    for (let y = 0; y < pl.h; y++) for (let x = 0; x < pl.w; x++) if ('rp'.includes(pl.types[y][x]) && (x === 0 || y === 0 || x === pl.w - 1 || y === pl.h - 1)) this.routes.push(y * pl.w + x);
-    this.sortie = this.cheminSortie(pl);
-    this.fermeVisible = !!pl.ferme && MODES[f.mode].echelle === 'champs';
-    if (this.fermeVisible) {
-      const [fx, fy] = pl.ferme, [x0, y0, x1, y1] = FERME.cour;
+    this.prochain = { oiseaux: t + 6000, corbeaux: t + 4000, lievre: t + 25000, voiture: t + 2500, pigeons: t + 9000 };
+    this.geos();
+    // poules dans la cour, fumée des cheminées (dans le repère de la ferme)
+    this.poules = []; this.fumees = []; this.pigeons = [];
+    const F = D.ferme;
+    if (F) {
+      const cols = ['#f4efe4', '#c8743a', '#f4efe4', '#8a4a2a', '#e8e0d0'];
       for (let i = 0; i < 5; i++) {
-        const x = fx * T + x0 + Math.random() * (x1 - x0), y = fy * T + y0 + Math.random() * (y1 - y0);
-        this.etres.push({ type: 'poule', x, y, cx: x, cy: y, dir: 1, etat: 'picore', fin: t + Math.random() * 2000, col: ['#f2ece0', '#c8743a', '#f2ece0', '#8a4a2a', '#e8e0d0'][i], zone: [fx * T + x0, fy * T + y0, fx * T + x1, fy * T + y1] });
+        const p = new T3.Group(); K3.mesh(p, this.G.poule, K3.matV()); p.add(this.ombre(0.05));
+        p.children[0].material = K3.matV(); this.teinter(p.children[0], cols[i]);
+        const x = F.cour.x0 + Math.random() * (F.cour.x1 - F.cour.x0), z = F.cour.z0 + Math.random() * (F.cour.z1 - F.cour.z0);
+        p.position.set(x, 0.012, z); p.userData.nom = { cle: 'animal:poule-' + (i + 1), libelle: 'Poule ' + (i + 1) }; F.groupe.add(p);
+        this.poules.push({ o: p, x, z, cx: x, cz: z, etat: 'picore', fin: t + Math.random() * 2000, cap: Math.random() * 6 });
       }
+      const mf = () => new T3.MeshStandardMaterial({ color: K3.col('#ecebee'), transparent: true, opacity: 0.5, depthWrite: false, roughness: 1 });
+      F.cheminees.forEach((c, k) => { for (let i = 0; i < 5; i++) { const m = new T3.Mesh(this.G.bouffee, mf()); m.castShadow = false; F.groupe.add(m); this.fumees.push({ o: m, c, k: i / 5 + k * 0.37 }); } });
+      for (let i = 0; i < 3; i++) { const o = this.oiseau('#9aa0aa', 0.6); o.userData.nom = { cle: 'animal:pigeon-' + (i + 1), libelle: 'Pigeon ' + (i + 1) }; F.groupe.add(o); o.visible = false; this.pigeons.push({ o, ph: i * 2.1 }); }
     }
+    this.sortie = this.cheminSortie();
   },
 
-  // Parcours en largeur sur les cases dont le type est accepté
-  parcours(depart, accepte, diagonales) {
-    const pl = this.pl, W = pl.w, H = pl.h, prev = new Int32Array(W * H).fill(-2), file = [depart];
-    const pas = diagonales ? [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]] : [[1, 0], [-1, 0], [0, 1], [0, -1]];
-    prev[depart] = -1;
+  // ---------- Modèles ----------
+  G: null,
+  geos() {
+    if (this.G) return;
+    const K = K3, G = K.G;
+    this.G = {
+      vache: K.fusion([K.piece(G.boule(8, 6), '#f7f6f0', [0, 0.2, 0], 0, [0.17, 0.1, 0.09]), K.piece(G.boule(8, 6), '#262626', [-0.04, 0.23, 0.065], 0, [0.06, 0.05, 0.03]),
+        K.piece(G.boule(8, 6), '#262626', [0.06, 0.2, -0.065], 0, [0.05, 0.045, 0.03]), K.piece(G.boule(6, 4), '#262626', [-0.1, 0.27, -0.02], 0, [0.05, 0.03, 0.05]), K.piece(G.boule(6, 4), '#f0b4b4', [-0.06, 0.11, 0], 0, 0.03),
+        K.piece(G.cyl(0.006, 0.006, 0.14, 4), '#3a3a3a', [-0.17, 0.17, 0], [0, 0, -0.5]),
+        ...[[-0.1, 0.05], [-0.1, -0.05], [0.1, 0.05], [0.1, -0.05]].map(([x, z]) => K.piece(G.cyl(0.02, 0.018, 0.14, 5), '#3a3a3a', [x, 0.07, z]))]),
+      tete: K.fusion([K.piece(G.boule(8, 6), '#f7f6f0', [0.05, 0, 0], 0, [0.06, 0.05, 0.045]), K.piece(G.boule(6, 4), '#262626', [0.04, 0.02, 0], 0, [0.03, 0.03, 0.047]),
+        K.piece(G.boule(6, 4), '#e9a7a0', [0.1, -0.015, 0], 0, 0.03), K.piece(G.cone(0.012, 0.05, 4), '#e8e0c8', [0.04, 0.055, 0.03], [0.4, 0, 0]), K.piece(G.cone(0.012, 0.05, 4), '#e8e0c8', [0.04, 0.055, -0.03], [-0.4, 0, 0])]),
+      poule: K.fusion([K.piece(G.boule(6, 4), '#ffffff', [0, 0.035, 0], 0, [0.035, 0.03, 0.025]), K.piece(G.boule(6, 4), '#ffffff', [0.03, 0.065, 0], 0, 0.014),
+        K.piece(G.boule(4, 3), '#d8402a', [0.034, 0.082, 0], 0, [0.008, 0.008, 0.004]), K.piece(G.cone(0.005, 0.012, 4), '#e8b030', [0.046, 0.064, 0], [0, 0, -Math.PI / 2]),
+        K.piece(G.cone(0.012, 0.03, 4), '#ffffff', [-0.032, 0.05, 0], [0, 0, 0.9])]),
+      voiture: (() => { const dome = new T3.CylinderGeometry(0.1, 0.1, 0.24, 10, 1, false, 0, Math.PI); dome.rotateX(Math.PI / 2); dome.rotateY(Math.PI / 2);
+        return K.fusion([K.piece(G.boite(0.38, 0.09, 0.19), '#ffffff', [0, 0.1, 0]), K.piece(dome, '#ffffff', [-0.02, 0.145, 0], 0, [1, 0.8, 0.9]),
+          K.piece(G.boite(0.02, 0.05, 0.15), '#33495a', [0.08, 0.17, 0], [0, 0, -0.5]), K.piece(G.boite(0.015, 0.02, 0.05), '#fff4c0', [0.19, 0.1, 0.06]), K.piece(G.boite(0.015, 0.02, 0.05), '#fff4c0', [0.19, 0.1, -0.06]),
+          ...[[0.12, 0.095], [0.12, -0.095], [-0.12, 0.095], [-0.12, -0.095]].map(([x, z]) => K.piece(G.cyl(0.045, 0.045, 0.03, 8), '#222222', [x, 0.05, z], [Math.PI / 2, 0, 0]))]); })(),
+      camion: K.fusion([K.piece(G.boite(0.16, 0.16, 0.2), '#2f6a8a', [0.2, 0.13, 0]), K.piece(G.boite(0.02, 0.07, 0.17), '#33495a', [0.28, 0.17, 0]),
+        K.piece(G.boite(0.4, 0.06, 0.22), '#5a4a3a', [-0.08, 0.08, 0]), K.piece(G.boite(0.4, 0.08, 0.02), '#8a6a42', [-0.08, 0.15, 0.1]), K.piece(G.boite(0.4, 0.08, 0.02), '#8a6a42', [-0.08, 0.15, -0.1]),
+        ...[[0.0, 0.2, 0.09, 0.07], [-0.12, 0.3, 0.12, 0.05]].flatMap(([x, l, w, h]) => [K.piece(G.boite(l * 0.4, h, w), '#d9c271', [x, 0.14 + h / 2, 0.04]), K.piece(G.boite(l * 0.4, h, w), '#d4bc68', [x + 0.08, 0.14 + h / 2, -0.04])]),
+        ...[[0.2, 0.1], [0.2, -0.1], [-0.16, 0.1], [-0.16, -0.1]].map(([x, z]) => K.piece(G.cyl(0.05, 0.05, 0.035, 8), '#222222', [x, 0.05, z], [Math.PI / 2, 0, 0]))]),
+      corps: K.fusion([K.piece(G.boule(6, 4), '#ffffff', [0, 0, 0], 0, [0.05, 0.022, 0.022]), K.piece(G.boule(5, 3), '#ffffff', [0.045, 0.01, 0], 0, 0.016), K.piece(G.cone(0.02, 0.04, 4), '#ffffff', [-0.05, 0, 0], [0, 0, Math.PI / 2], [1, 1, 0.4])]),
+      aile: (() => { const s = new T3.Shape(); s.moveTo(0, 0); s.lineTo(0.035, 0.0); s.lineTo(0.012, 0.09); s.lineTo(-0.02, 0.07); s.closePath(); const g = new T3.ShapeGeometry(s); g.rotateX(-Math.PI / 2); return g; })(),
+      corbeau: K.fusion([K.piece(G.boule(6, 4), '#1e1e24', [0, 0.04, 0], 0, [0.045, 0.026, 0.024]), K.piece(G.boule(5, 3), '#1e1e24', [0.04, 0.062, 0], 0, 0.017), K.piece(G.cone(0.006, 0.02, 4), '#3a3a40', [0.06, 0.06, 0], [0, 0, -Math.PI / 2]),
+        K.piece(G.boite(0.04, 0.006, 0.02), '#1e1e24', [-0.05, 0.045, 0], [0, 0, 0.3]), K.piece(G.cyl(0.003, 0.003, 0.03, 3), '#3a3a40', [0, 0.012, 0.01]), K.piece(G.cyl(0.003, 0.003, 0.03, 3), '#3a3a40', [0, 0.012, -0.01])]),
+      lievre: K.fusion([K.piece(G.boule(6, 4), '#a8845a', [0, 0.05, 0], 0, [0.06, 0.035, 0.032]), K.piece(G.boule(5, 4), '#a8845a', [0.05, 0.075, 0], 0, 0.022), K.piece(G.boite(0.008, 0.05, 0.012), '#8a6a44', [0.045, 0.11, 0.008], [0, 0, -0.3]),
+        K.piece(G.boite(0.008, 0.05, 0.012), '#8a6a44', [0.045, 0.11, -0.008], [0, 0, -0.3]), K.piece(G.boule(4, 3), '#f2ece0', [-0.06, 0.06, 0], 0, 0.012)]),
+      bouffee: new T3.SphereGeometry(0.06, 8, 6),
+      ombre: (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'), r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, 'rgba(0,0,0,.42)'); r.addColorStop(0.6, 'rgba(0,0,0,.22)'); r.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = r; g.fillRect(0, 0, 64, 64); return new T3.CanvasTexture(c); })(),
+    };
+    this.mOmbre = new T3.MeshBasicMaterial({ map: this.G.ombre, transparent: true, depthWrite: false, opacity: 1 });
+  },
+  caseDe(x, z) { return Math.floor(x + this.pl.w / 2) + ',' + Math.floor(z + this.pl.h / 2); },
+  mOmbreBord() { if (!this._mob) { this._mob = this.mOmbre.clone(); this._mob.clippingPlanes = this.bords; } return this._mob; },
+  ombre(r, l = r) { const m = new T3.Mesh(new T3.PlaneGeometry(2 * l, 2 * r).rotateX(-Math.PI / 2), this.mOmbre); m.position.y = 0.006; m.renderOrder = 1; return m; },
+  teinter(mesh, c) { mesh.material.color = K3.col(c); },
+  oiseau(c, s = 1) {
+    const g = new T3.Group(), m = K3.mat(c, { side: T3.DoubleSide });
+    const corps = new T3.Mesh(this.G.corps, K3.matV()); this.teinter(corps, c); g.add(corps);
+    const a = new T3.Mesh(this.G.aile, m), b = new T3.Mesh(this.G.aile, m); b.scale.z = -1; a.position.set(0, 0.01, 0.012); b.position.set(0, 0.01, -0.012);
+    g.add(a, b); g.userData.ailes = [a, b]; g.scale.setScalar(s); return g;
+  },
+  battre(o, t, k) { const [a, b] = o.userData.ailes, v = Math.sin(t / 90 + k) * 0.9; a.rotation.x = -v; b.rotation.x = v; },
+
+  // ---------- Itinéraires ----------
+  // De la ferme jusqu'au bord de la carte, par les chemins et les routes (cases), lissé
+  cheminSortie() {
+    const D = this.D, pl = this.pl; if (!D.ferme || !D.allee) return null;
+    const W = pl.w, H = pl.h, fin = D.allee.at(-1), x0 = Math.floor(fin[0] + W / 2), y0 = Math.floor(fin[1] + H / 2);
+    const ok = (x, y) => x >= 0 && y >= 0 && x < W && y < H && 'rp'.includes(pl.types[y][x]);
+    let depart = null;
+    for (let r = 0; r < 3 && !depart; r++) for (let dy = -r; dy <= r && !depart; dy++) for (let dx = -r; dx <= r && !depart; dx++) if (ok(x0 + dx, y0 + dy)) depart = [x0 + dx, y0 + dy];
+    if (!depart) return null;
+    const prev = new Map([[depart[1] * W + depart[0], -1]]), file = [depart[1] * W + depart[0]];
+    let but = -1, mieux = 1e9;
     for (let q = 0; q < file.length; q++) {
       const i = file[q], x = i % W, y = (i / W) | 0;
-      for (const [dx, dy] of pas) {
-        const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
-        const j = ny * W + nx; if (prev[j] !== -2 || !accepte(pl.types[ny][nx])) continue;
-        prev[j] = i; file.push(j);
+      if ((x === 0 || y === 0 || x === W - 1 || y === H - 1)) { let n = 0; for (let j = i; j !== -1; j = prev.get(j)) n++; n += pl.types[y][x] === 'p' ? 8 : 0; if (n < mieux) { mieux = n; but = i; } }
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]]) {
+        const nx = x + dx, ny = y + dy, j = ny * W + nx;
+        if (!ok(nx, ny) || prev.has(j)) continue;
+        if (dx && dy && (ok(x + dx, y) || ok(x, y + dy))) continue;
+        prev.set(j, i); file.push(j);
       }
     }
-    return prev;
-  },
-  remonter(prev, fin) { const p = []; for (let i = fin; i !== -1; i = prev[i]) p.push(i); return p.reverse(); },
-  // Points (centres des cases), prolongés d'une case hors de la carte aux bouts qui touchent le bord
-  points(cases) {
-    const pl = this.pl, pts = cases.map(i => [(i % pl.w) * T + T / 2, ((i / pl.w) | 0) * T + T / 2]);
-    const hors = ([x, y]) => [x < T ? x - T : x > (pl.w - 1) * T ? x + T : x, y < T ? y - T : y > (pl.h - 1) * T ? y + T : y];
-    if (pts.length) { const a = hors(pts[0]), b = hors(pts.at(-1)); if (a[0] !== pts[0][0] || a[1] !== pts[0][1]) pts.unshift(a); if (b[0] !== pts.at(-1)[0] || b[1] !== pts.at(-1)[1]) pts.push(b); }
+    if (but < 0) return null;
+    const cases = []; for (let j = but; j !== -1; j = prev.get(j)) cases.push(j); cases.reverse();
+    let pts = cases.map(i => [i % W - W / 2 + 0.5, ((i / W) | 0) - H / 2 + 0.5]);
+    const b = cases.at(-1), bx = b % W, by = (b / W) | 0, last = pts.at(-1);
+    pts.push([bx === 0 ? -W / 2 - 0.3 : bx === W - 1 ? W / 2 + 0.3 : last[0], by === 0 ? -H / 2 - 0.3 : by === H - 1 ? H / 2 + 0.3 : last[1]]);
+    pts = [...D.allee.slice(0, -1), ...pts];
+    for (let k = 0; k < 2; k++) pts = Decor.chaikin(pts);
     return pts;
   },
-  // De la ferme jusqu'au bord de la carte par les routes et les chemins
-  cheminSortie(pl) {
-    if (!pl.ferme) return null;
-    const [fx, fy] = pl.ferme, depart = (fy + 1) * pl.w + fx + 1, bati = 'mb';
-    const prev = this.parcours(depart, t => 'mbrp'.includes(t));
-    let fin = -1, mieux = Infinity;
-    for (let i = 0; i < prev.length; i++) {
-      if (prev[i] === -2) continue;
-      const x = i % pl.w, y = (i / pl.w) | 0, ty = pl.types[y][x];
-      if ((x === 0 || y === 0 || x === pl.w - 1 || y === pl.h - 1) && (ty === 'r' || ty === 'p')) { const n = this.remonter(prev, i).length + (ty === 'p' ? 6 : 0); if (n < mieux) { mieux = n; fin = i; } }
+
+  // ---------- Chaque jour ----------
+  // pature : cases de pâture permanente ; nus : cases de terre nue ou à peine semée (pour les corbeaux)
+  jour(f, j, m, pature, nus) {
+    this.nus = nus; this.meteo = m;
+    const cle = c => this.caseDe(c[0] + 0.5, c[1] + 0.5);
+    if (pature.map(cle).join(';') !== (this.pature || []).map(cle).join(';')) {
+      this.pature = pature; this.dansPre = new Set(pature.map(cle)); this.morceaux = [];
+      const vu = new Set();
+      for (const c of pature) { if (vu.has(cle(c))) continue; const m = [], file = [c]; vu.add(cle(c)); while (file.length) { const a = file.pop(); m.push(a); for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const b = [a[0] + dx, a[1] + dz], k = cle(b); if (this.dansPre.has(k) && !vu.has(k)) { vu.add(k); file.push(b); } } } this.morceaux.push(m); }
+      this.vaches.forEach(v => this.groupe.remove(v.o)); this.vaches = [];
     }
-    if (fin < 0) return null;
-    const cases = this.remonter(prev, fin), k = cases.findIndex(i => !bati.includes(pl.types[(i / pl.w) | 0][i % pl.w]));
-    if (k < 1) return this.points(cases);
-    const pts = this.points(cases.slice(k)), a = cases[k - 1], b = cases[k];
-    pts.unshift([((a % pl.w) + (b % pl.w) + 1) * T / 2, (((a / pl.w) | 0) + ((b / pl.w) | 0) + 1) * T / 2]);
-    return pts;
-  },
-  // Position à la distance d sur une ligne brisée, décalée sur la voie de droite
-  surLigne(pts, d, voie) {
-    for (let i = 1; i < pts.length; i++) {
-      const [x0, y0] = pts[i - 1], [x1, y1] = pts[i], l = Math.hypot(x1 - x0, y1 - y0);
-      if (d <= l || i === pts.length - 1) {
-        const a = Math.min(1, d / l), dx = (x1 - x0) / l, dy = (y1 - y0) / l;
-        return { x: x0 + (x1 - x0) * a - dy * voie, y: y0 + (y1 - y0) * a + dx * voie, dx: Math.round(dx), dy: Math.round(dy), fini: d > l && i === pts.length - 1 };
-      }
-      d -= l;
+    const mois = dateDe(j).mois, dehors = mois >= 4 && mois <= 11 && pature.length;
+    const voulu = dehors ? Math.min(8, Math.max(2, Math.round(pature.length * 1.3))) : 0;
+    while (this.vaches.length > voulu) { const v = this.vaches.pop(); this.groupe.remove(v.o); }
+    while (this.vaches.length < voulu) {
+      const o = new T3.Group(); K3.mesh(o, this.G.vache, K3.matV()); const tete = new T3.Group(); tete.position.set(0.15, 0.24, 0); o.add(tete); K3.mesh(tete, this.G.tete, K3.matV());
+      o.add(this.ombre(0.13, 0.22)); o.traverse(c => { if (c.isMesh) c.castShadow = false; });
+      const k = this.vaches.length, mo = this.morceaux[k % this.morceaux.length], c = mo[(Math.random() * mo.length) | 0], x = c[0] + 0.25 + Math.random() * 0.5, z = c[1] + 0.25 + Math.random() * 0.5;
+      o.position.set(x, 0, z); o.scale.setScalar(0.9 + Math.random() * 0.2); o.userData.nom = { cle: 'animal:vache-' + (k + 1), libelle: 'Vache ' + (k + 1) }; this.groupe.add(o);
+      this.vaches.push({ o, tete, x, z, mo, cap: Math.random() * 6, but: null, fin: 0, broute: true });
     }
-    return { x: 0, y: 0, dx: 1, dy: 0, fini: true };
+    if (!dehors) this.vaches.forEach(v => this.groupe.remove(v.o));
   },
+
   // Camion de livraison qui quitte la ferme ; plusieurs livraisons d'affilée partent l'une après l'autre
   livraison() {
     if (!this.sortie || Rendu.reduit) return;
     const enRoute = this.etres.filter(e => e.type === 'camion');
     if (enRoute.length >= 3) return;
-    const d = enRoute.length ? Math.min(0, Math.min(...enRoute.map(e => e.d)) - 60) : 0;
-    this.etres.push({ type: 'camion', pts: this.sortie, d, v: 26, t0: performance.now() });
+    const o = new T3.Group(); K3.mesh(o, this.G.camion, K3.matV({ clippingPlanes: this.bords })).castShadow = false; const om = this.ombre(0.14, 0.32); om.material = this.mOmbreBord(); o.add(om); this.groupe.add(o);
+    o.userData.nom = { cle: 'vehicule:camion-' + (++this.num), libelle: 'Camion de livraison' };
+    const d = enRoute.length ? Math.min(0, Math.min(...enRoute.map(e => e.d)) - 0.8) : 0;
+    this.etres.push({ type: 'camion', o, pts: this.sortie, L: Decor.longueur(this.sortie), d, v: 0.9 });
   },
 
-  // ---------- Naissances ----------
-  naitre(t, f, m) {
-    const pl = this.pl, W = pl.w * T, H = pl.h * T, P = this.prochain, d = dateDe(S.jour), doy = d.doy, eau = m.pluie + m.neige;
-    const compte = type => this.etres.reduce((n, e) => n + (e.type === type), 0);
+  // ---------- Chaque image ----------
+  image(t, dt, ctx) {
+    const s = Math.min(0.05, dt / 1000), D = this.D, reduit = ctx.reduit;
+    if (reduit) return;
+    this.naitre(t, ctx);
+    // vaches : marchent d'un coin d'herbe à l'autre, broutent
+    for (const v of this.vaches) {
+      if (!v.but || t > v.fin) {
+        if (v.but && !v.broute) { v.broute = true; v.fin = t + 4000 + Math.random() * 9000; }
+        else { const c = v.mo[(Math.random() * v.mo.length) | 0]; v.but = [c[0] + 0.2 + Math.random() * 0.6, c[1] + 0.2 + Math.random() * 0.6]; v.broute = false; v.fin = t + 60000; }
+      }
+      if (!v.broute) {
+        const dx = v.but[0] - v.x, dz = v.but[1] - v.z, d = Math.hypot(dx, dz), cible = Math.atan2(dz, dx);
+        let dc = ((cible - v.cap + Math.PI * 3) % (Math.PI * 2)) - Math.PI; v.cap += Math.max(-1.2 * s, Math.min(1.2 * s, dc));
+        if (d < 0.05) v.fin = 0;
+        else if (Math.abs(dc) < 0.8) {
+          const nx = v.x + Math.cos(v.cap) * 0.09 * s, nz = v.z + Math.sin(v.cap) * 0.09 * s, a = 0.16;
+          // jamais contre la clôture : la case visée doit être de la pâture, à bonne distance du bord
+          const ok = [[a, a], [-a, a], [a, -a], [-a, -a]].every(([dx, dz]) => this.dansPre.has(this.caseDe(nx + dx, nz + dz)));
+          if (ok) { v.x = nx; v.z = nz; } else v.fin = 0;
+        }
+      }
+      v.o.position.set(v.x, 0, v.z); v.o.rotation.y = -v.cap; v.tete.rotation.z = v.broute ? -0.75 + Math.sin(t / 600 + v.x * 9) * 0.08 : 0;
+    }
+    // poules
+    for (const p of this.poules) {
+      const C = D.ferme.cour;
+      if (t > p.fin) {
+        if (p.etat === 'picore') { p.etat = 'marche'; p.cx = Math.max(C.x0, Math.min(C.x1, p.x + (Math.random() - 0.5) * 0.7)); p.cz = Math.max(C.z0, Math.min(C.z1, p.z + (Math.random() - 0.5) * 0.7)); p.fin = t + 3000; }
+        else { p.etat = 'picore'; p.fin = t + 900 + Math.random() * 2600; }
+      }
+      if (p.etat === 'marche') {
+        const dx = p.cx - p.x, dz = p.cz - p.z, d = Math.hypot(dx, dz);
+        if (d < 0.01) p.fin = 0; else { p.cap = Math.atan2(dz, dx); const v = Math.min(d, 0.22 * s); p.x += dx / d * v; p.z += dz / d * v; }
+      }
+      p.o.position.set(p.x, 0.012 + (p.etat === 'marche' ? Math.abs(Math.sin(t / 70)) * 0.008 : 0), p.z); p.o.rotation.y = -p.cap;
+      p.o.children[0].rotation.z = p.etat === 'picore' && Math.sin(t / 160 + p.x * 20) > 0.3 ? -0.5 : 0;
+    }
+    // fumée : plus épaisse quand il fait froid
+    const froid = this.meteo ? clamp01((16 - this.meteo.tmax) / 14) : 0.5;
+    for (const f of this.fumees) {
+      const v = (t / 4000 + f.k) % 1, vent = ctx.vent;
+      f.o.position.set(f.c.x + v * 0.45 * Math.cos(vent.dir) * (0.5 + vent.force), f.c.y + v * 1.0, f.c.z + v * 0.45 * Math.sin(vent.dir) * (0.5 + vent.force));
+      f.o.scale.setScalar(0.6 + v * 2.2); f.o.material.opacity = (0.15 + 0.4 * froid) * (1 - v) * Math.min(1, v * 8);
+    }
+    // pigeons qui tournent autour du pigeonnier, de temps en temps
+    if (D.ferme) {
+      const vol = (t % 40000) < 14000;
+      this.pigeons.forEach((p, i) => {
+        p.o.visible = vol; if (!vol) return;
+        const a = t / 1400 + p.ph, c = D.ferme.pigeonnier;
+        p.o.position.set(c.x + Math.cos(a) * (0.5 + i * 0.08), c.y + 0.15 + Math.sin(a * 2) * 0.05, c.z + Math.sin(a) * (0.5 + i * 0.08));
+        p.o.rotation.y = -a - Math.PI / 2; this.battre(p.o, t, i);
+      });
+    }
+    // êtres de passage
+    this.etres = this.etres.filter(e => {
+      if (e.type === 'voiture' || e.type === 'camion') {
+        e.d += e.v * s;
+        if (e.d < 0) { e.o.visible = false; return true; }
+        const p = Decor.surLigne(e.pts, e.d, e.voie ?? 0.07); e.o.visible = true;
+        e.o.position.set(p.x, 0.012, p.z); e.o.rotation.y = -p.cap;
+        if (p.fini) { this.groupe.remove(e.o); return false; }
+        return true;
+      }
+      if (e.type === 'vol') {
+        const a = (t - e.t0) / e.duree; if (a >= 1) { this.groupe.remove(e.o); return false; }
+        e.o.position.set(e.x0 + (e.x1 - e.x0) * a, e.y, e.z0 + (e.z1 - e.z0) * a);
+        e.oiseaux.forEach((o, k) => this.battre(o, t, k * 1.7)); return true;
+      }
+      if (e.type === 'corbeaux') return this.corbeaux(e, t, s, ctx);
+      if (e.type === 'lievre') {
+        e.d += 0.55 * s; const a = e.d / e.L; if (a >= 1) { this.groupe.remove(e.o); return false; }
+        const x = e.x0 + (e.x1 - e.x0) * a, z = e.z0 + (e.z1 - e.z0) * a, saut = Math.abs(Math.sin(e.d * 9));
+        e.o.position.set(x, saut * 0.04, z); e.o.children[0].rotation.z = (saut - 0.5) * 0.3; return true;
+      }
+      return true;
+    });
+  },
+  naitre(t, ctx) {
+    const P = this.prochain, D = this.D, pl = this.pl, W = pl.w, H = pl.h, mois = ctx.mois;
+    // voitures sur les routes qui sortent de la carte
+    if (t > P.voiture) {
+      P.voiture = t + 6000 + Math.random() * 10000;
+      const routes = D.routes.filter(r => (r.auBord[0] || r.auBord[1]) && Decor.longueur(r.pts) > 5);
+      if (routes.length && this.etres.filter(e => e.type === 'voiture').length < 3) {
+        const r = routes[(Math.random() * routes.length) | 0], sens = r.auBord[0] && (!r.auBord[1] || Math.random() < 0.5);
+        let pts = sens ? r.pts : [...r.pts].reverse(); const o = new T3.Group(), m = K3.matV({ clippingPlanes: this.bords });
+        const dehors = (a, b) => { const l = Math.hypot(a[0] - b[0], a[1] - b[1]) || 1; return [a[0] + (a[0] - b[0]) / l * 0.6, a[1] + (a[1] - b[1]) / l * 0.6]; };
+        const [b0, b1] = sens ? r.auBord : [r.auBord[1], r.auBord[0]];
+        if (b0) pts = [dehors(pts[0], pts[1]), ...pts]; if (b1) pts = [...pts, dehors(pts.at(-1), pts.at(-2))];
+        const coul = ['#8b9aa8', '#2a2a2e', '#e8e0c8', '#8ab0c8', '#a8382a', '#5a7a5a'][(Math.random() * 6) | 0];
+        const k = K3.mesh(o, this.G.voiture, m); k.castShadow = false; m.color = K3.col(coul); const om = this.ombre(0.12, 0.24); om.material = this.mOmbreBord(); o.add(om); this.groupe.add(o);
+        o.userData.nom = { cle: 'vehicule:voiture-' + (++this.num), libelle: 'Voiture' };
+        this.etres.push({ type: 'voiture', o, pts, d: 0, v: 1.1 + Math.random() * 0.5, voie: D.larg.r * 0.24 });
+      }
+    }
+    // vols d'oiseaux : oies en V au printemps et à l'automne, petits groupes sinon
     if (t > P.oiseaux) {
       P.oiseaux = t + 22000 + Math.random() * 30000;
-      const migration = (doy > 55 && doy < 120) || (doy > 250 && doy < 320);
-      if (migration && Math.random() < 0.7) {
-        const versNord = doy < 180, n = 7 + ((Math.random() * 9) | 0), x = W * (0.2 + Math.random() * 0.6), vx = (Math.random() - 0.5) * 14, vy = versNord ? -24 : 24;
-        const oiseaux = []; for (let i = 0; i < n; i++) { const r = Math.ceil(i / 2), cote = i % 2 ? 1 : -1; oiseaux.push({ ox: cote * r * 7, oy: r * 6 * (versNord ? 1 : -1), ph: Math.random() * 6 }); }
-        this.etres.push({ type: 'vol', x, y: versNord ? H + 60 : -60, vx, vy, oiseaux, grand: true, col: '#3a3836' });
-      } else {
-        const n = 3 + ((Math.random() * 6) | 0), a = Math.random() * Math.PI * 2, v = 42 + Math.random() * 20;
-        const x = W / 2 - Math.cos(a) * (W / 2 + 60), y = H / 2 - Math.sin(a) * (H / 2 + 60);
-        const oiseaux = []; for (let i = 0; i < n; i++) oiseaux.push({ ox: (Math.random() - 0.5) * 40, oy: (Math.random() - 0.5) * 30, ph: Math.random() * 6 });
-        this.etres.push({ type: 'vol', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, oiseaux, grand: false, col: '#2e2c2a' });
+      const migr = [3, 10, 11].includes(mois), n = migr ? 9 : 3 + ((Math.random() * 3) | 0), g = new T3.Group(), oiseaux = [];
+      for (let k = 0; k < n; k++) {
+        const o = this.oiseau(migr ? '#8a8478' : '#4a4a52', migr ? 1.6 : 0.9), rang = Math.ceil(k / 2), cote = k % 2 ? 1 : -1;
+        o.position.set(-rang * 0.22, (Math.random() - 0.5) * 0.05, migr ? cote * rang * 0.2 : (Math.random() - 0.5) * 0.8);
+        if (!migr) o.position.x = (Math.random() - 0.5) * 0.8;
+        g.add(o); oiseaux.push(o);
       }
+      const a = Math.random() * Math.PI * 2, R = Math.hypot(W, H) / 2 + 3, y = migr ? 5 : 2.6 + Math.random();
+      g.rotation.y = -(a + Math.PI); g.userData.nom = { cle: 'animal:oiseaux-' + (++this.num), libelle: migr ? 'Oies cendrées en migration' : 'Vol d’oiseaux' }; this.groupe.add(g);
+      this.etres.push({ type: 'vol', o: g, oiseaux, t0: t, duree: (2 * R) / (migr ? 1.6 : 2.2) * 1000, x0: Math.cos(a) * R, z0: Math.sin(a) * R, x1: -Math.cos(a) * R, z1: -Math.sin(a) * R, y });
     }
+    // corbeaux sur une terre nue
     if (t > P.corbeaux) {
-      P.corbeaux = t + 6000 + Math.random() * 9000;
-      const semis = [];
-      for (const k in f.cases) { const c = f.cases[k]; if (c.cult && c.p < 0.12) semis.push(k); }
-      if (semis.length && compte('corbeau') < 5) {
-        const n = 1 + ((Math.random() * 3) | 0);
-        for (let i = 0; i < n; i++) {
-          const [x, y] = semis[(Math.random() * semis.length) | 0].split(',').map(Number), cx = x * T + 6 + Math.random() * 36, cy = y * T + 8 + Math.random() * 34;
-          const depuis = Math.random() < 0.5 ? -40 : W + 40;
-          this.etres.push({ type: 'corbeau', etat: 'arrive', x: depuis, y: cy - 120, x0: depuis, y0: cy - 120, cx, cy, t0: t + i * 300, dir: depuis < 0 ? 1 : -1, fin: 0 });
+      P.corbeaux = t + 25000 + Math.random() * 25000;
+      if (this.nus.length && !this.etres.some(e => e.type === 'corbeaux')) {
+        const c = this.nus[(Math.random() * this.nus.length) | 0], g = [];
+        for (let k = 0; k < 3 + ((Math.random() * 3) | 0); k++) {
+          const o = new T3.Group(), vol = this.oiseau('#1e1e24', 1.1), sol = new T3.Mesh(this.G.corbeau, K3.matV()); sol.castShadow = false;
+          o.add(vol, sol, this.ombre(0.04, 0.06)); o.userData.nom = { cle: 'animal:corbeau-' + (++this.num), libelle: 'Corbeau freux' }; this.groupe.add(o);
+          g.push({ o, vol, sol, x: c[0] + 0.2 + Math.random() * 0.6, z: c[1] + 0.2 + Math.random() * 0.6, ph: Math.random() * 6 });
         }
+        const a = Math.random() * 6.28;
+        this.etres.push({ type: 'corbeaux', g, etat: 'arrive', t0: t, fin: t + 18000 + Math.random() * 15000, dx: Math.cos(a), dz: Math.sin(a) });
       }
     }
+    // lièvre qui traverse les champs
     if (t > P.lievre) {
-      P.lievre = t + 45000 + Math.random() * 60000;
-      const y = (2 + Math.random() * (pl.h - 4)) * T, gauche = Math.random() < 0.5;
-      this.etres.push({ type: 'lievre', x: gauche ? -12 : W + 12, y, dir: gauche ? 1 : -1, v: 46, pause: W * (0.3 + Math.random() * 0.4), etat: 'court', t0: t });
-    }
-    if (t > P.voiture && this.routes.length > 1) {
-      P.voiture = t + 12000 + Math.random() * 22000;
-      // une voiture sur les routes, ou un tracteur sur les chemins, d'un bord de la carte à un autre
-      for (let essai = 0; essai < 6 && compte('voiture') < 2; essai++) {
-        const a = this.routes[(Math.random() * this.routes.length) | 0], prev = this.parcours(a, ty => 'rp'.includes(ty), true);
-        const buts = this.routes.filter(b => b !== a && prev[b] !== -2 && this.remonter(prev, b).length > 8);
-        if (!buts.length) continue;
-        const cases = this.remonter(prev, buts[(Math.random() * buts.length) | 0]), pts = this.points(cases);
-        const route = cases.filter(i => pl.types[(i / pl.w) | 0][i % pl.w] === 'r').length / cases.length > 0.6;
-        const an = d.an, couleurs = !route ? ['#3f7a3a', '#c8402a', '#3f7a3a'] : an < 1975 ? ['#8a9aa8', '#3a5a7a', '#c8c0a8', '#7a2a2a', '#d8d0b8'] : an < 2000 ? ['#c83a2a', '#e8e0d0', '#2a4a8a', '#3a6a3a', '#d8b030'] : ['#e8e8e8', '#2a2a2e', '#8a8e94', '#2a4a7a', '#a82a2a'];
-        this.etres.push({ type: 'voiture', pts, d: 0, v: route ? 34 + Math.random() * 14 : 16, col: couleurs[(Math.random() * couleurs.length) | 0] });
-        break;
-      }
-    }
-    if (this.fermeVisible && t > P.pigeons && eau < 2) {
-      P.pigeons = t + 30000 + Math.random() * 40000;
-      const [fx, fy] = pl.ferme;
-      this.etres.push({ type: 'pigeons', cx: fx * T + FERME.pigeonnier[0], cy: fy * T + FERME.pigeonnier[1] - 30, t0: t, n: 3 + ((Math.random() * 3) | 0) });
-    }
-    // fumée : plus dense par temps froid
-    if (this.fermeVisible && t > P.fumee) {
-      P.fumee = t + (m.tmax < 8 ? 260 : m.tmax < 16 ? 520 : 1400);
-      const [fx, fy] = pl.ferme, ch = FERME.cheminees[(Math.random() * (m.tmax < 16 ? 2 : 1)) | 0];
-      this.etres.push({ type: 'fumee', x: fx * T + ch[0] + 0.5, y: fy * T + ch[1] - 2, t0: t, vie: 3200 + Math.random() * 1500 });
-    }
-    // feuilles mortes en automne
-    if (doy > 262 && doy < 335 && t > P.feuille) {
-      P.feuille = t + 160 + Math.random() * 260;
-      const x = (Math.random() * pl.w) | 0, y = (Math.random() * pl.h) | 0;
-      if (pl.types[y][x] === 'f' || pl.types[y][x] === 'a') {
-        const pal = couleursFeuillage(doy);
-        this.etres.push({ type: 'feuille', x: x * T + Math.random() * T, y: y * T + Math.random() * 20, vy: 8 + Math.random() * 6, t0: t, vie: 3500 + Math.random() * 2000, col: pal[(Math.random() * 3) | 0], ph: Math.random() * 6 });
-      }
-    }
-    // papillons par beau temps
-    if (t > P.papillon) {
-      P.papillon = t + 2500;
-      if (t - this.dernierFleurs > 4000) { this.dernierFleurs = t; this.fleurs = this.chercherFleurs(f); }
-      const voulu = doy > 95 && doy < 275 && m.tmax > 14 && eau < 0.5 ? Math.min(6, 1 + (this.fleurs.length >> 2)) : 0;
-      if (compte('papillon') < voulu) {
-        const cible = this.ciblePapillon(), cols = ['#f6f4ec', '#f2e070', '#f0a040', '#f6f4ec', '#c8d8f8'];
-        this.etres.push({ type: 'papillon', x: cible.x + (Math.random() - 0.5) * 200, y: cible.y - 120, cible, col: cols[(Math.random() * cols.length) | 0], t0: t, vie: 40000 + Math.random() * 30000, ph: Math.random() * 6 });
+      P.lievre = t + 50000 + Math.random() * 60000;
+      if (mois <= 5 || mois >= 9) {
+        const o = new T3.Group(); K3.mesh(o, this.G.lievre, K3.matV()).castShadow = false; o.add(this.ombre(0.05, 0.08)); o.userData.nom = { cle: 'animal:lievre-' + (++this.num), libelle: 'Lièvre d’Europe' }; this.groupe.add(o);
+        const z0 = (Math.random() - 0.5) * H * 0.8, z1 = z0 + (Math.random() - 0.5) * 6, x0 = -W / 2 - 0.3, x1 = W / 2 + 0.3, sens = Math.random() < 0.5;
+        const e = { type: 'lievre', o, x0: sens ? x0 : x1, x1: sens ? x1 : x0, z0, z1, d: 0, L: Math.hypot(x1 - x0, z1 - z0) };
+        o.rotation.y = -Math.atan2(e.z1 - e.z0, e.x1 - e.x0); this.etres.push(e);
       }
     }
   },
-  chercherFleurs(f) {
-    const pl = this.pl, out = [], fleurit = (c, p) => {
-      const z = { colza: [0.6, 0.8], lin: [0.55, 0.77], tournesol: [0.6, 0.84], pdt: [0.48, 0.74], sarrasin: [0.45, 0.82], feverole: [0.5, 0.76], legume: [0.48, 0.75], fraise: [0.4, 0.78], courgette: [0.4, 0.8], courge: [0.4, 0.8], melon: [0.4, 0.8], topi: [0.7, 0.92], epi: [0.55, 0.9] }[c.forme];
-      return z && p >= z[0] && p <= z[1];
-    };
-    for (let y = 0; y < pl.h; y++) for (let x = 0; x < pl.w; x++) {
-      if (pl.types[y][x] !== 'c') continue;
-      const u = pl.unite[y * pl.w + x]; let c = null, p = 0;
-      if (f.parcelles[u]) { const cs = f.cases[x + ',' + y]; if (cs?.cult) { c = CULTURE[cs.cult]; p = cs.p; } }
-      else { const v = Rendu.voisinDe(f, u, S.jour); if (v.c && v.p !== null) { c = v.c; p = v.p; } }
-      if (c && fleurit(c, p)) out.push([x, y]);
-    }
-    return out;
-  },
-  ciblePapillon() {
-    const pl = this.pl;
-    if (this.fleurs.length) { const [x, y] = this.fleurs[(Math.random() * this.fleurs.length) | 0]; return { x: x * T + 8 + Math.random() * 32, y: y * T + 4 + Math.random() * 30 }; }
-    return { x: Math.random() * pl.w * T, y: Math.random() * pl.h * T };
+  // Corbeaux : arrivent en planant, picorent, s'envolent si le pointeur s'approche ou au bout d'un moment
+  corbeaux(e, t, s, ctx) {
+    const p = ctx.pointeur;
+    if (e.etat === 'sol' && (t > e.fin || (p && e.g.some(c => Math.hypot(c.x - p.x, c.z - p.z) < 1.4)))) { e.etat = 'fuite'; e.t1 = t; }
+    const a = (t - e.t0) / 2500;
+    if (e.etat === 'arrive' && a >= 1) e.etat = 'sol';
+    let fini = true;
+    e.g.forEach((c, k) => {
+      let x = c.x, z = c.z, y = 0, vole = true;
+      if (e.etat === 'arrive') { const u = 1 - a; x -= e.dx * u * 6; z -= e.dz * u * 6; y = u * u * 2.5; }
+      else if (e.etat === 'fuite') { const u = (t - e.t1) / 1000 * (0.9 + k * 0.08); x += e.dx * u * 2.5; z += e.dz * u * 2.5; y = u * u * 0.9 + u * 0.4; }
+      else { vole = false; if (Math.sin(t / 700 + c.ph) > 0.7) { c.x += Math.cos(c.ph) * 0.03 * s; c.z += Math.sin(c.ph) * 0.03 * s; } }
+      if (e.etat !== 'fuite' || y < 6) fini = false;
+      c.o.position.set(x, y, z); c.vol.visible = vole; c.sol.visible = !vole; c.o.children[2].visible = y < 1;
+      c.o.rotation.y = vole ? -Math.atan2(e.dz, e.dx) : -c.ph; c.sol.rotation.z = !vole && Math.sin(t / 220 + c.ph * 3) > 0.4 ? -0.45 : 0;
+      if (vole) this.battre(c.vol, t, k);
+    });
+    if (fini) { e.g.forEach(c => this.groupe.remove(c.o)); return false; }
+    return true;
   },
 
-  // ---------- Mouvements et dessin ----------
-  dessinerSol(g, t, dt, f, m) {
-    if (Rendu.reduit) return;
-    this.naitre(t, f, m);
-    const s = Math.min(0.05, dt / 1000), W = this.pl.w * T, H = this.pl.h * T, ptr = Rendu.pointeur;
-    // girouette sur la grange
-    if (this.fermeVisible) {
-      const [fx, fy] = this.pl.ferme, gx = fx * T + FERME.girouette[0], gy = fy * T + FERME.girouette[1], a = Rendu.ventDir + Math.sin(t / 1700) * 0.25;
-      R(g, gx, gy - 6, 1, 6, '#3a3430');
-      const ex = Math.round(Math.cos(a) * 3), ey = Math.round(Math.sin(a) * 2);
-      P(g, gx + ex, gy - 6 + ey, '#2a2420'); P(g, gx - ex, gy - 6 - ey, '#2a2420'); P(g, gx + 2 * ex, gy - 6 + ey, '#2a2420'); P(g, gx - 2 * ex, gy - 7 - ey, '#c8a040');
+  // Bête sous le pointeur, pour la bulle (vaches, poules, corbeaux, lièvre)
+  animalSous(ray) {
+    const w = new T3.Vector3(), proche = (o, r, h) => { o.getWorldPosition(w); w.y += h; return ray.distanceToPoint(w) < r; };
+    if (this.vaches.some(v => v.o.parent && proche(v.o, 0.2, 0.2))) return ['Vache pie noire', 'laitière, à l’herbe'];
+    const F = this.D?.ferme;
+    if (F && this.poules.some(p => proche(p.o, 0.06 * F.s, 0.04 * F.s))) return ['Poule', 'dans la cour de la ferme'];
+    for (const e of this.etres) {
+      if (e.type === 'corbeaux' && e.etat === 'sol' && e.g.some(c => proche(c.o, 0.07, 0.04))) return ['Corbeau freux', 'cherche les graines'];
+      if (e.type === 'lievre' && proche(e.o, 0.08, 0.05)) return ['Lièvre d’Europe', 'traverse les champs'];
     }
-    this.etres = this.etres.filter(e => {
-      switch (e.type) {
-        case 'poule': {
-          if (t > e.fin) {
-            if (e.etat === 'picore') { const [x0, y0, x1, y1] = e.zone; e.cx = x0 + Math.random() * (x1 - x0); e.cy = y0 + Math.random() * (y1 - y0); e.etat = 'marche'; e.dir = e.cx > e.x ? 1 : -1; e.fin = t + 6000; }
-            else { e.etat = 'picore'; e.fin = t + 1200 + Math.random() * 3000; }
-          }
-          if (e.etat === 'marche') {
-            const dx = e.cx - e.x, dy = e.cy - e.y, l = Math.hypot(dx, dy);
-            if (l < 1) { e.etat = 'picore'; e.fin = t + 1000 + Math.random() * 3000; } else { e.x += dx / l * 9 * s; e.y += dy / l * 9 * s; }
-          }
-          poule(g, Math.round(e.x), Math.round(e.y), e.dir, e.col, e.etat === 'picore' && Math.floor(t / 220) % 3 === 0, e.etat === 'marche' && Math.floor(t / 140) % 2);
-          return true;
-        }
-        case 'corbeau': {
-          if (t < e.t0) return true;
-          if (e.etat === 'arrive') {
-            const a = Math.min(1, (t - e.t0) / 1800), u = 1 - (1 - a) * (1 - a);
-            e.x = e.x0 + (e.cx - e.x0) * u; e.y = e.y0 + (e.cy - e.y0) * u - Math.sin(a * Math.PI) * 20;
-            if (a >= 1) { e.etat = 'sol'; e.fin = t + 9000 + Math.random() * 12000; e.saut = 0; }
-            return true;
-          }
-          if (e.etat === 'sol') {
-            const peur = ptr && Math.hypot(ptr.px - e.x, ptr.py - e.y) < 40;
-            if (t > e.fin || peur) { e.etat = 'part'; e.t0 = t; e.x0 = e.x; e.y0 = e.y; e.dir = Math.random() < 0.5 ? -1 : 1; e.cx = e.x + e.dir * (W * 0.7); e.cy = e.y - 260; return true; }
-            if (t > e.saut) { e.saut = t + 700 + Math.random() * 1600; if (Math.random() < 0.5) { e.dir = Math.random() < 0.5 ? -1 : 1; e.x += e.dir * 3; } }
-            corbeau(g, Math.round(e.x), Math.round(e.y), e.dir, Math.floor(t / 260) % 4 === 0);
-          }
-          return true;
-        }
-        case 'lievre': {
-          const avance = e.etat === 'court';
-          if (avance) { e.x += e.dir * e.v * s; e.fait = (e.fait || 0) + e.v * s; }
-          if (avance && !e.paused && e.fait >= e.pause) { e.etat = 'assis'; e.paused = true; e.fin = t + 1600 + Math.random() * 1500; }
-          if (e.etat === 'assis' && t > e.fin) e.etat = 'court';
-          lievre(g, Math.round(e.x), Math.round(e.y - (avance ? Math.abs(Math.sin(t / 95)) * 3 : 0)), e.dir, avance, Math.floor(t / 95) % 2);
-          return e.x > -20 && e.x < W + 20;
-        }
-        case 'voiture': case 'camion': {
-          e.d += e.v * s;
-          if (e.d < 0) return true;                            // attend son tour dans la cour
-          const p = this.surLigne(e.pts, e.d, e.type === 'camion' ? 2 : 4);
-          if (p.fini) return false;
-          if (e.type === 'camion') { camion(g, Math.round(p.x), Math.round(p.y), p.dx, p.dy, t); if (Math.random() < 0.3) Rendu.parts.push({ x: p.x - p.dx * 17, y: p.y - p.dy * 17 - 3, vx: -p.dx * 6, vy: -8, g: -2, t0: t, vie: 900, col: '#9a948a', a: 0.6, taille: 2 }); }
-          else voiture(g, Math.round(p.x), Math.round(p.y), p.dx, p.dy, e.col);
-          return true;
-        }
-        default: return true;
-      }
-    });
-  },
-  dessinerAir(g, t, dt, f, m) {
-    if (Rendu.reduit) return;
-    const s = Math.min(0.05, dt / 1000), W = this.pl.w * T, H = this.pl.h * T, vent = Rendu.ventForce * Math.cos(Rendu.ventDir);
-    this.etres = this.etres.filter(e => {
-      switch (e.type) {
-        case 'fumee': {
-          const a = (t - e.t0) / e.vie; if (a >= 1) return false;
-          const age = (t - e.t0) / 1000, x = e.x + age * (4 + vent * 12) + Math.sin(age * 1.7 + e.t0) * 2, y = e.y - age * 10, r = Math.round(2 + a * 7);
-          g.globalAlpha = 0.5 * (1 - a); disque(g, Math.round(x), Math.round(y), r, a < 0.3 ? '#d8d4d0' : '#c4c0bc'); g.globalAlpha = 1;
-          return true;
-        }
-        case 'feuille': {
-          const a = (t - e.t0) / e.vie; if (a >= 1) return false;
-          const age = (t - e.t0) / 1000;
-          g.globalAlpha = a > 0.8 ? (1 - a) * 5 : 1;
-          const fx = Math.round(e.x + age * (6 + vent * 10) + Math.sin(age * 3 + e.ph) * 5), fy = Math.round(e.y + age * e.vy);
-          if (Math.floor(t / 180 + e.ph) % 2) { R(g, fx, fy, 3, 2, e.col); P(g, fx + 2, fy + 1, teinte(e.col, 0.75)); } else { R(g, fx + 1, fy, 1, 3, e.col); P(g, fx, fy + 1, teinte(e.col, 0.8)); }
-          g.globalAlpha = 1;
-          return true;
-        }
-        case 'papillon': {
-          if (t - e.t0 > e.vie) { e.cible = { x: e.x + (Math.random() - 0.5) * 400, y: -100 }; if (e.y < -50) return false; }
-          const dx = e.cible.x - e.x, dy = e.cible.y - e.y, l = Math.hypot(dx, dy);
-          if (l < 6 && t - e.t0 < e.vie) e.cible = Math.random() < 0.7 ? { x: e.x + (Math.random() - 0.5) * 60, y: e.y + (Math.random() - 0.5) * 40 } : this.ciblePapillon();
-          else { e.x += dx / l * 16 * s + Math.sin(t / 130 + e.ph) * 0.5; e.y += dy / l * 16 * s + Math.cos(t / 90 + e.ph) * 0.6; }
-          papillon(g, Math.round(e.x), Math.round(e.y), e.col, Math.floor(t / 90 + e.ph) % 2);
-          return true;
-        }
-        case 'vol': {
-          e.x += e.vx * s; e.y += e.vy * s;
-          for (const o of e.oiseaux) {
-            const x = Math.round(e.x + o.ox + Math.sin(t / 400 + o.ph) * 2), y = Math.round(e.y + o.oy + (e.grand ? 0 : Math.sin(t / 260 + o.ph) * 3)), aile = Math.floor(t / (e.grand ? 210 : 110) + o.ph) % 2;
-            g.globalAlpha = 0.16; oiseau(g, x + 22, y + 40, '#000', aile, e.grand); g.globalAlpha = 1;
-            oiseau(g, x, y, e.col, aile, e.grand);
-          }
-          return e.x > -220 && e.x < W + 220 && e.y > -220 && e.y < H + 220;
-        }
-        case 'corbeau': {
-          if (e.etat === 'arrive' && t >= e.t0) oiseau(g, Math.round(e.x), Math.round(e.y), '#1e1c1c', Math.floor(t / 120) % 2, false);
-          if (e.etat === 'part') {
-            const a = (t - e.t0) / 2200; if (a >= 1) return false;
-            const x = e.x0 + (e.cx - e.x0) * a, y = e.y0 + (e.cy - e.y0) * a * a;
-            oiseau(g, Math.round(x), Math.round(y), '#1e1c1c', Math.floor(t / 90) % 2, false);
-          }
-          return true;
-        }
-        case 'pigeons': {
-          const a = (t - e.t0) / 7000; if (a >= 1) return false;
-          for (let i = 0; i < e.n; i++) {
-            const ang = a * Math.PI * 2 * 1.5 + i * 0.5, r = 34 + Math.sin(a * Math.PI) * 26;
-            oiseau(g, Math.round(e.cx + Math.cos(ang) * r * 1.3), Math.round(e.cy + Math.sin(ang) * r * 0.7 - Math.sin(a * Math.PI) * 10), '#dcdce4', Math.floor(t / 100 + i) % 2, false);
-          }
-          return true;
-        }
-        default: return true;
-      }
-    });
+    return null;
   },
 };
-
-// ---------- Petits êtres ----------
-function oiseau(g, x, y, col, aile, grand) {
-  g.fillStyle = col;
-  const n = grand ? 6 : 4;
-  g.fillRect(x - 1, y, 3, grand ? 2 : 1); if (grand) g.fillRect(x, y - 2, 1, 2);
-  for (let i = 2; i <= n; i++) {
-    const dy = aile ? -Math.round((i - 1) * 0.6) : Math.round((i - 1) * 0.45);
-    g.fillRect(x - i, y + dy, 1, 1); g.fillRect(x + i, y + dy, 1, 1);
-    if (grand && i < n) { g.fillRect(x - i, y + dy + 1, 1, 1); g.fillRect(x + i, y + dy + 1, 1, 1); }
-  }
-}
-function poule(g, x, y, d, col, picore, pas) {
-  const so = teinte(col, 0.8);
-  ellipse(g, x, y + 5, 5, 1, OMBRE);
-  ellipse(g, x, y, 4, 3, col); ellipse(g, x - d, y + 1, 3, 2, so);
-  R(g, d > 0 ? x - 6 : x + 5, y - 3, 2, 3, so); P(g, x - 5 * d, y - 4, so);
-  const hx = x + (picore ? 5 : 4) * d, hy = y + (picore ? 1 : -3);
-  if (!picore) R(g, x + 3 * d, y - 2, 1, 2, col);
-  disque(g, hx, hy, 1, col); P(g, hx, hy - 2, '#d8302a'); P(g, hx - d, hy - 2, '#d8302a'); P(g, hx + 2 * d, hy, '#e8a030'); P(g, hx + d, hy - 1, '#1a1a1a');
-  R(g, x - 1 + (pas ? 1 : 0), y + 3, 1, 2, '#d8a030'); R(g, x + 2 - (pas ? 1 : 0), y + 3, 1, 2, '#d8a030');
-}
-function corbeau(g, x, y, d, picore) {
-  ellipse(g, x, y + 4, 5, 1, OMBRE);
-  ellipse(g, x, y, 4, 2, '#1e1c1c'); R(g, d > 0 ? x - 7 : x + 4, y - 1, 4, 2, '#1e1c1c'); P(g, x - d, y - 1, '#3a3638');
-  const hx = x + 4 * d, hy = y + (picore ? 2 : -2);
-  disque(g, hx, hy, 1, '#1e1c1c'); R(g, d > 0 ? hx + 2 : hx - 3, hy + (picore ? 1 : 0), 2, 1, '#6a6660'); P(g, hx, hy - 1, '#6a6a70');
-  R(g, x - 1, y + 2, 1, 2, '#3a3430'); R(g, x + 1, y + 2, 1, 2, '#3a3430');
-}
-function lievre(g, x, y, d, court, pas) {
-  const brun = '#9a7a52', sombre = '#7a5a3a';
-  ellipse(g, x, y + 6, 7, 1, OMBRE);
-  if (court) {
-    ellipse(g, x, y, 7, 3, brun); ellipse(g, x - d, y + 1, 5, 2, sombre); R(g, d > 0 ? x - 8 : x + 7, y - 2, 2, 2, '#f2ece0');
-    disque(g, x + 7 * d, y - 2, 2, brun); P(g, x + 8 * d, y - 3, '#2a2420');
-    for (let i = 0; i < 6; i++) { P(g, x + (5 - Math.round(i * 0.6)) * d, y - 4 - i, sombre); P(g, x + (6 - Math.round(i * 0.6)) * d, y - 4 - i, brun); }
-    P(g, x + 2 * d, y - 9, '#2a2420');
-    if (pas) { R(g, x - 6 * d, y + 3, 3, 1, sombre); R(g, x + 4 * d, y + 3, 3, 1, sombre); } else { R(g, x - 2, y + 3, 2, 2, sombre); R(g, x + 1, y + 3, 2, 2, sombre); }
-  } else {
-    ellipse(g, x, y, 4, 5, brun); ellipse(g, x - d, y + 2, 3, 3, sombre); R(g, x - 4 * d, y + 3, 2, 2, '#f2ece0');
-    disque(g, x + 2 * d, y - 6, 2, brun); P(g, x + 3 * d, y - 7, '#2a2420');
-    R(g, x + d, y - 15, 1, 8, sombre); R(g, x + 2 * d, y - 15, 1, 8, brun); P(g, x + d, y - 15, '#2a2420'); P(g, x + 2 * d, y - 15, '#2a2420');
-  }
-}
-function papillon(g, x, y, col, ouvert) {
-  R(g, x, y - 1, 1, 3, '#3a3430');
-  if (ouvert) { R(g, x - 2, y - 2, 2, 2, col); R(g, x + 1, y - 2, 2, 2, col); R(g, x - 2, y, 2, 1, teinte(col, 0.85)); R(g, x + 1, y, 2, 1, teinte(col, 0.85)); }
-  else { R(g, x - 1, y - 3, 1, 2, col); R(g, x + 1, y - 3, 1, 2, col); }
-}
-// Vus du dessus ; (dx, dy) = direction de la marche
-function voiture(g, x, y, dx, dy, col) {
-  const h = dx !== 0, av = h ? dx : dy, L = 20, l = 9, w = h ? L : l, ht = h ? l : L, x0 = Math.round(x - w / 2), y0 = Math.round(y - ht / 2);
-  g.fillStyle = OMBRE; g.fillRect(x0 + 1, y0 + 2, w, ht);
-  R(g, x0, y0, w, ht, col);
-  if (h) {
-    R(g, x0, y0, w, 1, teinte(col, 1.35)); R(g, x0, y0 + ht - 1, w, 1, teinte(col, 0.7));
-    R(g, x0 + 6, y0 + 2, 8, 5, teinte(col, 0.8)); R(g, av > 0 ? x0 + 14 : x0 + 4, y0 + 2, 2, 5, '#9fc4d8'); R(g, av > 0 ? x0 + 4 : x0 + 14, y0 + 2, 2, 5, '#6a8aa0');
-    const avant = av > 0 ? x0 + w - 1 : x0, arriere = av > 0 ? x0 : x0 + w - 1;
-    P(g, avant, y0 + 1, '#fff6c0'); P(g, avant, y0 + ht - 2, '#fff6c0'); P(g, arriere, y0 + 1, '#d83a2a'); P(g, arriere, y0 + ht - 2, '#d83a2a');
-  } else {
-    R(g, x0, y0, 1, ht, teinte(col, 1.35)); R(g, x0 + w - 1, y0, 1, ht, teinte(col, 0.7));
-    R(g, x0 + 2, y0 + 6, 5, 8, teinte(col, 0.8)); R(g, x0 + 2, av > 0 ? y0 + 14 : y0 + 4, 5, 2, '#9fc4d8'); R(g, x0 + 2, av > 0 ? y0 + 4 : y0 + 14, 5, 2, '#6a8aa0');
-    const avant = av > 0 ? y0 + ht - 1 : y0, arriere = av > 0 ? y0 : y0 + ht - 1;
-    P(g, x0 + 1, avant, '#fff6c0'); P(g, x0 + w - 2, avant, '#fff6c0'); P(g, x0 + 1, arriere, '#d83a2a'); P(g, x0 + w - 2, arriere, '#d83a2a');
-  }
-}
-function camion(g, x, y, dx, dy, t) {
-  const h = dx !== 0, av = h ? dx : dy;
-  const plateau = (bx, by, bw, bh) => {
-    R(g, bx, by, bw, bh, '#7a5228');
-    for (let i = 0; i < bw - 2; i += 6) for (let j = 0; j < bh - 2; j += 6) { R(g, bx + 1 + i, by + 1 + j, 5, 5, '#b47c44'); R(g, bx + 1 + i, by + 1 + j, 5, 1, '#d4a066'); P(g, bx + 3 + i, by + 3 + j, '#e8c860'); }
-  };
-  if (h) {
-    const x0 = Math.round(x - 16), y0 = Math.round(y - 6);
-    g.fillStyle = OMBRE; g.fillRect(x0 + 2, y0 + 3, 32, 12);
-    plateau(av > 0 ? x0 : x0 + 10, y0, 22, 12);
-    const cx = av > 0 ? x0 + 22 : x0; R(g, cx, y0, 10, 12, '#2a5a8a'); R(g, cx, y0, 10, 1, '#4a7aaa');
-    R(g, av > 0 ? cx + 6 : cx + 1, y0 + 2, 3, 8, '#9fc4d8'); P(g, av > 0 ? cx + 9 : cx, y0 + 1, '#fff6c0'); P(g, av > 0 ? cx + 9 : cx, y0 + 10, '#fff6c0');
-  } else {
-    const x0 = Math.round(x - 6), y0 = Math.round(y - 16);
-    g.fillStyle = OMBRE; g.fillRect(x0 + 2, y0 + 3, 12, 32);
-    plateau(x0, av > 0 ? y0 : y0 + 10, 12, 22);
-    const cy = av > 0 ? y0 + 22 : y0; R(g, x0, cy, 12, 10, '#2a5a8a'); R(g, x0, cy, 1, 10, '#4a7aaa');
-    R(g, x0 + 2, av > 0 ? cy + 6 : cy + 1, 8, 3, '#9fc4d8'); P(g, x0 + 1, av > 0 ? cy + 9 : cy, '#fff6c0'); P(g, x0 + 10, av > 0 ? cy + 9 : cy, '#fff6c0');
-  }
-}

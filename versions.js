@@ -13,8 +13,8 @@ window.VERSIONS = {
   "date": "2026-10-25T18:45:23+01:00"
  },
  "squid-ferme": {
-  "version": 2,
-  "date": "2026-10-27T21:03:39+01:00"
+  "version": 3,
+  "date": "2026-11-07T16:16:49+01:00"
  },
  "concentration": {
   "version": 1,
@@ -26,6 +26,6 @@ window.VERSIONS = {
  },
  "simulateur-mnt": {
   "version": 7,
-  "date": "2026-11-07T01:20:32+01:00"
+  "date": "2026-11-07T01:20:33+01:00"
  }
 };

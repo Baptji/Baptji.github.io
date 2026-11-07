@@ -239,10 +239,13 @@ function recolterChamp(f, u, seulement, retard = 0) {
     const k = cle(x, y), t = f.cases[k];
     avant.set(k, { c: CULTURE[t.cult], p: t.p, v: (hasard(x, y, 1) * 3) | 0, pourri: t.mur > 12 });
     const r = recolter(f, t, S.jour);
+    avant.get(k).kg = r.kg;
     recs.push({ x, y, r });
     const gr = groupes.get(r.c.id) || { c: r.c, kg: 0, kcal: 0, ha: 0, n: 0 };
     gr.kg += r.kg; gr.kcal += r.kcal; gr.ha += r.ha; gr.n++; groupes.set(r.c.id, gr);
   }
+  const an = dateDe(S.jour).an, rec = ((f.stats.recAn ??= {})[an] ??= {});
+  for (const gr of groupes.values()) { const q = rec[gr.c.id] ??= { kg: 0, kcal: 0 }; q.kg += gr.kg; q.kcal += gr.kcal; }
   let etoiles = 0, kgTot = 0, premieres = 0;
   const servies = new Set();
   for (const gr of groupes.values()) {
@@ -251,19 +254,41 @@ function recolterChamp(f, u, seulement, retard = 0) {
     for (const id of Meca.versCommandes(gr.c.id, gr.kg)) servies.add(id);
   }
   if (!visible) { Meca.majNiveau(false); majProduction(false); if (onglet === 'commandes') ongletSale = true; return recs.length; }
-  const fins = Rendu.animerChamp(cases, 'recolte', machinePour(f, recs[0].r.c, 'recolte'), avant, retard);
-  const cible = () => {
-    if (onglet === 'commandes') for (const id of servies) { const el = document.querySelector(`[data-commande="${id}"]`); if (el) return el; }
-    return document.getElementById('production');
+  // la caisse vole vers la commande servie (onglet ouvert) ou vers la ligne du produit dans le panneau des récoltes
+  const cible = id => () => {
+    if (onglet === 'commandes') for (const s of servies) { const el = document.querySelector(`[data-commande="${s}"]`); if (el) return el; }
+    return Recoltes.cible(id);
   };
+  const machine = machinePour(f, recs[0].r.c, 'recolte');
+  if (Rendu.transporte(machine)) {
+    // le grain part dans la trémie puis dans la benne : les tonnes ne comptent qu'à la livraison à la ferme
+    const kcalTot = recs.reduce((s, o) => s + o.r.kcal, 0), kcalKg = kgTot ? kcalTot / kgTot : 0, c = recs[0].r.c, vers = cible(c.id);
+    enAttente(c.id, kgTot, kcalTot);
+    const livrer = kg => {
+      Anim.caisse(() => Rendu.centreFerme(), c, vers, 0, null);
+      Anim.caisse(() => Rendu.centreFerme(), c, vers, 160, () => {
+        enAttente(c.id, -kg, -kg * kcalKg); majProduction(true, c.id);
+        const el = vers(); if (el.dataset?.commande) Compteur.rebond(el);
+      });
+    };
+    const fins = Rendu.animerChamp(cases, 'recolte', machine, avant, retard, { livrer });
+    const finTout = fins.at(-1).fin, centre = centreDe(cases);
+    Meca.envoyerEtoiles(etoiles, centre, finTout + 150);
+    Anim.texte(centre, `${masse(kgTot)}  ${'★'.repeat(premieres)}`, '#ffe08a', finTout);
+    Meca.tirerTrouvaille(f, cases);
+    setTimeout(() => { if (onglet === 'commandes') ongletSale = true; }, finTout + 1400);
+    majProduction(false);
+    return recs.length;
+  }
+  const fins = Rendu.animerChamp(cases, 'recolte', machine, avant, retard);
   const par = Math.max(1, Math.ceil(recs.length / 14));     // pas plus de 14 caisses par champ
   for (let i = 0; i < recs.length; i += par) {
     const lot = recs.slice(i, i + par), kg = lot.reduce((s, o) => s + o.r.kg, 0), kcal = lot.reduce((s, o) => s + o.r.kcal, 0);
-    const fin = fins[Math.min(fins.length - 1, i + par - 1)].fin, { x, y } = lot[0];
-    attente.kg += kg; attente.kcal += kcal;
-    Anim.caisse(() => Rendu.centre(x, y), lot[0].r.c, cible, fin, () => {
-      attente.kg -= kg; attente.kcal -= kcal; majProduction(true);
-      const el = cible(); if (el.dataset.commande) Compteur.rebond(el);
+    const fin = fins[Math.min(fins.length - 1, i + par - 1)].fin, { x, y } = lot[0], id = lot[0].r.c.id, vers = cible(id);
+    enAttente(id, kg, kcal);
+    Anim.caisse(() => Rendu.centre(x, y), lot[0].r.c, vers, fin, () => {
+      enAttente(id, -kg, -kcal); majProduction(true, id);
+      const el = vers(); if (el.dataset?.commande) Compteur.rebond(el);
     });
   }
   const finTout = fins.at(-1).fin, centre = centreDe(cases);
@@ -308,7 +333,7 @@ function changerMode(nouveau) {
 const ecran = document.getElementById('ecran');
 Rendu.init(ecran);
 let outil = { t: 'semer', id: 'ble' }, selection = null;
-const attente = { kg: 0, kcal: 0 };
+const attente = { kg: 0, kcal: 0, parC: {} };
 function selectionner(s) { selection = s; Rendu.selection = s; }
 
 // Curseurs en pixels : sac de graines, faucille, pièce pour acheter
@@ -337,7 +362,8 @@ function majCurseur(tx, ty) {
     const cs = f.cases[cle(tx, ty)];
     c = cs?.cult && cs.p >= 1 ? CURSEURS.faucille : outil.t === 'semer' && !cs?.cult ? CURSEURS.sac : outil.t === 'arracher' && cs?.cult ? 'crosshair' : 'pointer';
   } else if (p) c = CURSEURS.piece;
-  if (c !== curseur) { curseur = c; ecran.style.cursor = c; }
+  if (c === 'default') c = 'grab';
+  if (c !== curseur || ecran.style.cursor !== c) { curseur = c; ecran.style.cursor = c; }
 }
 
 let peinture = false, derniere = null, depart = null;
@@ -363,50 +389,46 @@ function appliquer(tx, ty, premier) {
   if (fait) apresAction(false); else majInfo();
   return fait;
 }
-ecran.addEventListener('pointerdown', e => {
-  const s = Rendu.sous(e);
-  Rendu.onde(s.px, s.py);
-  if (e.pointerType === 'mouse') {
-    if (e.button !== 0) return;
-    peinture = true; derniere = cle(s.tx, s.ty);
-    ecran.setPointerCapture(e.pointerId);
-    appliquer(s.tx, s.ty, true);
-  } else depart = { x: e.clientX, y: e.clientY };
-});
-ecran.addEventListener('pointermove', e => {
-  const s = Rendu.sous(e);
-  Rendu.survol = { tx: s.tx, ty: s.ty }; Rendu.pointeur = { px: s.px, py: s.py };
-  if (peinture && cle(s.tx, s.ty) !== derniere) {
-    const [px, py] = derniere.split(',').map(Number), n = Math.max(Math.abs(s.tx - px), Math.abs(s.ty - py));
-    for (let i = 1; i <= n; i++) appliquer(Math.round(px + (s.tx - px) * i / n), Math.round(py + (s.ty - py) * i / n), false);
-    derniere = cle(s.tx, s.ty);
-  }
-  if (e.pointerType === 'mouse') { majBulle(e, s.tx, s.ty); majCurseur(s.tx, s.ty); }
-});
-ecran.addEventListener('pointerup', e => {
-  peinture = false;
-  if (depart && Math.hypot(e.clientX - depart.x, e.clientY - depart.y) < 10) { const s = Rendu.sous(e); appliquer(s.tx, s.ty, true); }
-  depart = null;
-});
-ecran.addEventListener('pointerleave', () => { Rendu.survol = null; Rendu.pointeur = null; bulle.hidden = true; });
+// Le plateau est en 3D (rendu.js) : glisser fait tourner la vue, un clic sans glisser agit sur la case visée
+// (lancer de rayon jusqu'au sol), Option + glisser sème case par case.
+Rendu.quandClic = s => { Rendu.onde(s.px, s.py); appliquer(s.tx, s.ty, true); };
+Rendu.quandPeint = (s, e, premier) => {
+  if (premier) { Rendu.onde(s.px, s.py); peinture = true; derniere = cle(s.tx, s.ty); appliquer(s.tx, s.ty, true); return; }
+  if (!peinture || cle(s.tx, s.ty) === derniere) return;
+  const [px, py] = derniere.split(',').map(Number), n = Math.max(Math.abs(s.tx - px), Math.abs(s.ty - py));
+  for (let i = 1; i <= n; i++) appliquer(Math.round(px + (s.tx - px) * i / n), Math.round(py + (s.ty - py) * i / n), false);
+  derniere = cle(s.tx, s.ty);
+};
+Rendu.quandSurvol = (s, e) => { Rendu.survol = { tx: s.tx, ty: s.ty }; Rendu.pointeur = { px: s.px, py: s.py }; majBulle(e, s.tx, s.ty); majCurseur(s.tx, s.ty); };
+Rendu.quandSort = () => { Rendu.survol = null; Rendu.pointeur = null; bulle.hidden = true; };
+addEventListener('pointerup', () => { peinture = false; });
 
 // ---------- Bulle et panneau d'information ----------
 const bulle = document.getElementById('bulle');
+// q/ha et Mkcal/ha (rdt en t/ha, kcal pour 100 g : Mkcal/ha = t/ha × kcal / 100)
+const chiffres = (ha, c) => `${nf(ha * 10, 0)} q/ha · ${nf(ha * c.kcal / 100, 1)} Mkcal/ha`;
+function blocSol(f, t) {
+  const ru = ruMax(f, t), barre = (v, max, c) => `<i><b style="width:${Math.round(clamp(v / max, 0, 1) * 100)}%;background:${c}"></b></i>`;
+  return `<div class="sol"><span>Eau du sol</span>${barre(t.r, ru, '#4f9fdc')}<span>${nf(t.r)} / ${nf(ru)} mm</span>`
+    + `<span>Azote minéral</span>${barre(t.nmin, 120, '#6fb85a')}<span>${nf(t.nmin)} kg N/ha</span>`
+    + `<span>Vie du sol</span>${barre(t.vdt, 100, '#c08a52')}<span>vers ${nf(t.vdt)}/100 · MO ${nf(t.mo, 1)} %</span></div>`;
+}
 const etoilesTexte = n => `<span class="or">${'★'.repeat(n)}</span><span class="eteinte">${'★'.repeat(3 - n)}</span>`;
 function descriptionCase(f, t, long) {
   const ru = ruMax(f, t);
   const eau = `Eau du sol ${nf(t.r)} / ${nf(ru)} mm`;
-  if (!t.cult) return `<b>${MODES[f.mode].couvert ? 'Couvert végétal' : 'Terre nue'}</b><br>${eau}<br>Matière organique ${nf(t.mo, 2)} %${t.fam ? `<br>Précédent : ${t.fam}` : ''}`;
+  if (!t.cult) return `<b>${MODES[f.mode].couvert ? 'Couvert végétal' : 'Terre nue'}</b>${long ? `<br>${eau}<br>Matière organique ${nf(t.mo, 2)} %` : ''}${t.fam ? `<br>Précédent : ${t.fam}` : ''}${long ? '' : blocSol(f, t)}`;
   const c = CULTURE[t.cult], r = rendement(f, t, S.jour), mode = MODES[f.mode];
   const etat = t.p >= 1 ? (t.mur > 12 ? '<span class="mauvais">Trop mûr, se perd</span>' : '<span class="bon">Mûr : cliquez pour récolter</span>')
     : `Développement ${nf(t.p * 100)} % (${nf(t.dj)} / ${nf(c.dj)} °C·j)`;
-  if (t.p < 0.15) return `<b>${c.nom}</b><br>${etat}<br>Semé il y a peu : le rendement se dessine après la levée.${long ? `<br>${eau}<br>Azote minéral ${nf(t.nmin)} kg/ha · matière organique ${nf(t.mo, 2)} %` : ''}`;
-  let html = `<b>${c.nom}</b> ${etoilesTexte(etoilesRecolte(r.ha / c.rdt))}<br>${etat}<br>Prévu ≈ <b>${nf(r.ha, r.ha < 10 ? 1 : 0)} t/ha</b>, soit ${masse(r.ha * 1000 * mode.caseHa)} sur la case`;
+  if (t.p < 0.15) return `<b>${c.nom}</b><br>${etat}<br>${long ? 'Semé il y a peu : le rendement se dessine après la levée.' : `Référence ${chiffres(c.rdt, c)}`}${long ? `<br>${eau}<br>Azote minéral ${nf(t.nmin)} kg/ha · matière organique ${nf(t.mo, 2)} %` : blocSol(f, t)}`;
+  let html = `<b>${c.nom}</b> ${etoilesTexte(etoilesRecolte(r.ha / c.rdt))}<br>${etat}<br>Prévu ≈ <b>${nf(r.ha * 10, 0)} q/ha</b> · ${nf(r.ha * c.kcal / 100, 1)} Mkcal/ha${long ? `, soit ${masse(r.ha * 1000 * mode.caseHa)} sur la case` : ''}`;
   const freins = [['eau', r.eau], ['azote', r.azote], ['gel', r.gel], ['chaleur', r.chaleur], ['ombre des arbres', r.ombre], ['transition', r.trans]].filter(([, v]) => v < 0.97);
   if (freins.length) html += `<br><span class="mauvais">Pertes : ${freins.map(([n, v]) => `${n} −${nf((1 - v) * 100)} %`).join(', ')}</span>`;
   if (t.rot < 1) html += '<br><span class="mauvais">Même famille qu’avant : −12 %</span>';
   if (t.rot > 1) html += '<br><span class="bon">Après une légumineuse : +5 %</span>';
   if (long) html += `<br>${eau}<br>Azote minéral ${nf(t.nmin)} kg/ha · matière organique ${nf(t.mo, 2)} %`;
+  else html += blocSol(f, t);
   return html;
 }
 const NOM_RPG = { prairie: 'prairie', friche: 'friche ou bande enherbée' };
@@ -414,13 +436,16 @@ function descriptionVoisin(f, u) {
   const v = voisin(f, u, S.jour);
   const quoi = v.type === 'culture' ? v.c.nom.toLowerCase() : NOM_RPG[v.type];
   const quand = v.reel ? `déclaré à la PAC en ${v.an}` : v.an ? `assolement de ${v.an} à la PAC` : '';
-  return `<b>Champ voisin · ${surfaceTexte(surfaceUnite(f, u))}</b><br>${majuscule(quoi)}${quand ? ` <span class="discret">(${quand})</span>` : ''}`;
+  return `<b>Champ voisin · ${surfaceTexte(surfaceUnite(f, u))}</b><br>${majuscule(quoi)}${quand ? ` <span class="discret">(${quand})</span>` : ''}${v.type === 'culture' ? `<br>${chiffres(v.c.rdt, v.c)} <span class="discret">(moyenne)</span>` : ''}`;
 }
 function majBulle(e, tx, ty) {
-  const f = F(), p = parcelleDe(tx, ty);
+  // la bulle ne nomme que les cultures et les bêtes : rien sur la ferme, les routes, les chemins, les bois ou les haies
+  const f = F(), p = parcelleDe(tx, ty), bete = Rendu.animalSous(e);
   let html = '';
-  if (trouvailleIci(tx, ty)) html = '<b>Quelque chose brille</b><br>Cliquez pour ramasser.';
-  else if (surLaFerme(tx, ty)) html = '<b>La ferme</b><br>Cliquez pour voir la production.';
+  if (window.SF3D && SF3D.modeCommentaire) { const h = Rendu.objetSous(e.clientX, e.clientY); html = h ? `<b>${Rendu.nommer(h).libelle}</b>` : ''; }
+  else if (bete) html = `<b>${bete[0]}</b><br>${bete[1]}`;
+  else if (trouvailleIci(tx, ty)) html = '<b>Quelque chose brille</b><br>Cliquez pour ramasser.';
+  else if (surLaFerme(tx, ty)) html = '';
   else if (p && f.parcelles[p.u]) html = descriptionCase(f, f.cases[cle(tx, ty)], false);
   else if (p) html = `${descriptionVoisin(f, p.u)}<br>À vendre : ${euros(prixParcelle(f, p.u))}`;
   if (!html) { bulle.hidden = true; return; }
@@ -461,11 +486,15 @@ const spark = document.getElementById('spark'), gs = spark.getContext('2d');
 let dateVue = '';
 function majEntete() {
   const f = F(), m = f.meteo, el = document.getElementById('date'), txt = texteDate();
-  if (txt !== dateVue) { dateVue = txt; el.textContent = txt; if (S.vitesse > 0 && S.vitesse <= 3) Compteur.rebond(el, 'tourne'); }
-  document.getElementById('ferme-nom').textContent = `${lieu(f).nom} · ${MODES[f.mode].court}`;
+  if (txt !== dateVue) {
+    const nouvelAn = dateVue && dateVue.slice(-4) !== txt.slice(-4);
+    dateVue = txt; el.textContent = txt; if (S.vitesse > 0 && S.vitesse <= 3) Compteur.rebond(el, 'tourne');
+    Saison.maj(dateDe(S.jour)); if (nouvelAn) majProduction(false);
+  }
+  document.getElementById('ferme-nom').textContent = `Ferme ${S.active + 1} · ${MODES[f.mode].court}`;
   Compteur.animer(document.getElementById('argent'), S.argent, euros, 500);
   if (m) {
-    document.getElementById('temp').innerHTML = `<b>${nf(m.tmax, 0)}°</b> / ${nf(m.tmin, 0)}°`;
+    document.getElementById('temp').innerHTML = `<b>${nf((m.tmax + m.tmin) / 2, 1)} °C</b>`;
     document.getElementById('pluie').textContent = m.neige > 0.3 ? `${nf(m.neige, m.neige < 10 ? 1 : 0)} mm de neige` : `${nf(m.pluie, m.pluie < 10 ? 1 : 0)} mm`;
     document.getElementById('meteo').title = m.futur ? 'Temps simulé (après les dernières mesures SAFRAN)' : 'Temps mesuré (SAFRAN, Météo-France)';
     document.getElementById('meteo').classList.toggle('futur', m.futur);
@@ -487,12 +516,15 @@ function dessinerSpark(f) {
     gs.stroke();
   }
 }
-function majProduction(pulse) {
-  const f = F(), kg = Math.max(0, f.stats.kg - attente.kg), kcal = Math.max(0, f.stats.kcal - attente.kcal);
-  Compteur.animer(document.getElementById('prod-t'), kg, masse);
-  Compteur.animer(document.getElementById('prod-kcal'), kcal, energie);
-  Compteur.animer(document.getElementById('prod-pers'), personnesAn(kcal), p => `${nf(p, p < 10 ? 1 : 0)} pers.-an`);
-  if (pulse) Compteur.rebond(document.getElementById('production'), 'pulse');
+// Panneau « Récoltes » : ce qui est rentré à la grange cette année (ce qui roule encore n'est pas compté)
+function majProduction(pulse, id) {
+  if (!S || !S.fermes.length) return;
+  Recoltes.maj(F(), dateDe(S.jour).an, attente.parC, pulse ? id : null);
+}
+function enAttente(id, kg, kcal) {
+  attente.kg += kg; attente.kcal += kcal;
+  const q = attente.parC[id] ??= { kg: 0, kcal: 0 }; q.kg += kg; q.kcal += kcal;
+  if (q.kg < 0.5) delete attente.parC[id];
 }
 function regler(v) {
   S.vitesse = v;
@@ -509,7 +541,7 @@ document.getElementById('niveau').addEventListener('click', () => ouvrirOnglet('
 const menuFermes = document.getElementById('menu-fermes');
 document.getElementById('choix-ferme').addEventListener('click', () => {
   const peutCreer = S.fermes.every(pleine);
-  menuFermes.innerHTML = S.fermes.map((f, i) => `<button data-ferme="${i}" ${i === S.active ? 'aria-current="true"' : ''}>${lieu(f).nom} · ${MODES[f.mode].court}<span>${masse(f.stats.kg)}</span></button>`).join('')
+  menuFermes.innerHTML = S.fermes.map((f, i) => `<button data-ferme="${i}" ${i === S.active ? 'aria-current="true"' : ''}>Ferme ${i + 1} · ${MODES[f.mode].court}<span>${masse(f.stats.kg)}</span></button>`).join('')
     + `<button data-ferme="nouvelle" ${peutCreer ? '' : 'disabled'}>Nouvelle ferme${peutCreer ? '' : '<span>quand toutes les parcelles sont achetées</span>'}</button>`;
   menuFermes.hidden = !menuFermes.hidden;
 });
@@ -865,10 +897,10 @@ function boucle(t) {
     }
     if (t - derniereSauvegarde > 20000) { derniereSauvegarde = t; sauver(); }
     // plus rien en vol : les compteurs affichés rejoignent les vrais (au cas où une arrivée se serait perdue)
-    if (!Anim.effets.length && !Anim.enRetard && (attente.kg || attente.kcal || Meca.attente.etoiles)) { attente.kg = attente.kcal = 0; Meca.attente.etoiles = 0; majProduction(false); Meca.majNiveau(false); }
-    // 60 images par seconde quand quelque chose bouge vite, 30 sinon
-    const vif = Rendu.revel.size || Rendu.parts.length || Rendu.ondes.length || Anim.effets.length || Rendu.survol;
-    if (vif || t - dernierRendu > 30) { Rendu.dessiner(t, t - dernierRendu); dernierRendu = t; }
+    if (!Anim.effets.length && !Anim.enRetard && !Rendu.transportEnCours() && (attente.kg || attente.kcal || Meca.attente.etoiles)) { attente.kg = attente.kcal = 0; attente.parC = {}; Meca.attente.etoiles = 0; majProduction(false); Meca.majNiveau(false); }
+    // 60 images par seconde quand quelque chose bouge vite (geste, machine, effet), 20 au calme : le Mac reste frais
+    const vif = Rendu.revel.size || Rendu.parts.length || Rendu.ondes.length || Anim.effets.length || Rendu.bouge();
+    if (vif || t - dernierRendu > (Rendu.calme() ? 48 : 30)) { Rendu.dessiner(t, t - dernierRendu); dernierRendu = t; }
     Anim.dessiner(t);
   }
   requestAnimationFrame(boucle);
