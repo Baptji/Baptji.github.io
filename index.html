@@ -292,8 +292,15 @@ footer a { color: inherit; text-underline-offset: 3px; }
 
   <article class="app" data-app="concentration" aria-labelledby="concentration" style="--teinte:#5a4fe0">
     <div class="media revele">
-      <div class="cadre">
-        <div class="ecran"><img src="medias/concentration.jpg" alt="Sept durées à choisir, de 5 minutes à 1 heure, et un curseur pour une autre durée" width="1280" height="720" decoding="async"></div>
+      <div class="cadre" style="--cadre-fond:#ececec">
+        <div class="ecran defile">
+          <video src="medias/concentration-25.mp4" poster="medias/concentration-25.jpg" muted playsinline preload="none" class="actif" aria-label="25 minutes choisies : le compte à rebours file jusqu'à la fin, qui s'annonce par des ondes"></video>
+          <video src="medias/concentration-autre.mp4" poster="medias/concentration-autre.jpg" muted playsinline preload="none" aria-label="Une autre durée au curseur, 1 h 30, lancée, mise en pause puis reprise"></video>
+        </div>
+        <div class="clips" role="group" aria-label="Choisir une animation">
+          <button type="button" aria-label="25 minutes, jusqu'à la fin" aria-current="true"><i></i></button>
+          <button type="button" aria-label="Autre durée, pause"><i></i></button>
+        </div>
       </div>
     </div>
     <div class="texte">
@@ -307,8 +314,17 @@ footer a { color: inherit; text-underline-offset: 3px; }
 
   <article class="app" data-app="profils-sol" aria-labelledby="profils-sol" style="--teinte:#a0643a">
     <div class="media revele">
-      <div class="cadre">
-        <div class="ecran"><img src="medias/profils-sol.jpg" alt="Six fosses pédologiques côte à côte : horizons colorés, règle des profondeurs et livret Munsell" width="1280" height="720" decoding="async"></div>
+      <div class="cadre" style="--cadre-fond:#f6f4ee">
+        <div class="ecran defile">
+          <video src="medias/profils-sol-tirer.mp4" poster="medias/profils-sol-tirer.jpg" muted playsinline preload="none" class="actif" aria-label="Quatre fosses d'une toposéquence : les limites entre horizons tirées centimètre par centimètre"></video>
+          <video src="medias/profils-sol-couleur.mp4" poster="medias/profils-sol-couleur.jpg" muted playsinline preload="none" aria-label="Un horizon prend sa couleur dans le livret Munsell, puis reçoit un commentaire tapé sur le schéma"></video>
+          <video src="medias/profils-sol-taches.mp4" poster="medias/profils-sol-taches.jpg" muted playsinline preload="none" aria-label="Des taches d'hydromorphie ajoutées dans un horizon, plus abondantes, concentriques, puis la nappe à 70 cm"></video>
+        </div>
+        <div class="clips" role="group" aria-label="Choisir une animation">
+          <button type="button" aria-label="Limites des horizons" aria-current="true"><i></i></button>
+          <button type="button" aria-label="Couleur Munsell"><i></i></button>
+          <button type="button" aria-label="Taches et nappe"><i></i></button>
+        </div>
       </div>
     </div>
     <div class="texte">
@@ -321,8 +337,17 @@ footer a { color: inherit; text-underline-offset: 3px; }
 
   <article class="app travaux" data-app="simulateur-mnt" aria-labelledby="simulateur-mnt" style="--teinte:#2a7f8f">
     <div class="media revele">
-      <div class="cadre">
-        <div class="ecran"><img src="medias/simulateur-mnt.jpg" alt="Un vallon près de Vire en 3D : photo aérienne, écoulements, dépressions et courbes de niveau sur le relief LiDAR" width="1280" height="720" decoding="async"></div>
+      <div class="cadre" style="--cadre-fond:#dde2e6">
+        <div class="ecran defile">
+          <video src="medias/simulateur-affichage.mp4" poster="medias/simulateur-affichage.jpg" muted playsinline preload="none" class="actif" aria-label="La gorge des Vaux de Vire en 3D, qui tourne : photo aérienne, altitudes, relief exagéré, puis indice d'humidité"></video>
+          <video src="medias/simulateur-pluie.mp4" poster="medias/simulateur-pluie.jpg" muted playsinline preload="none" aria-label="Une pluie de 50 mm en une heure, en accéléré : les dépressions se remplissent et les écoulements s'allument"></video>
+          <video src="medias/simulateur-tracer.mp4" poster="medias/simulateur-tracer.jpg" muted playsinline preload="none" aria-label="Le site tracé en polygone sur la carte de l'IGN, téléchargé depuis le LiDAR HD, puis affiché en 3D"></video>
+        </div>
+        <div class="clips" role="group" aria-label="Choisir une animation">
+          <button type="button" aria-label="Affichages, en 3D" aria-current="true"><i></i></button>
+          <button type="button" aria-label="Pluie"><i></i></button>
+          <button type="button" aria-label="Tracer un site"><i></i></button>
+        </div>
         <p class="chantier">En travaux</p>
       </div>
     </div>
