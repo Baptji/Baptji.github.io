@@ -731,7 +731,8 @@ export class Vue3D {
     const echelle = 2 * cam.position.distanceTo(t) * Math.tan(THREE.MathUtils.degToRad(cam.fov / 2)) / h;
     const droite = new THREE.Vector3().setFromMatrixColumn(cam.matrix, 0);
     const avant = new THREE.Vector3().crossVectors(cam.up, droite).normalize();
-    const v = droite.multiplyScalar(dx * echelle).add(avant.multiplyScalar(dy * echelle));
+    // Monter les doigts recule la vue, les descendre l'avance (sens voulu par l'utilisateur, 07/11/2026).
+    const v = droite.multiplyScalar(dx * echelle).add(avant.multiplyScalar(-dy * echelle));
     cam.position.add(v); t.add(v);
     this.controls.update();
   }

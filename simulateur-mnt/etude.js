@@ -1,7 +1,7 @@
 /* Calques documentaires drapés sur le terrain (portage de Sources/Etude de l'app Mac, sans rapport ni export) :
  * géologie, pédologie (UCS et fiches du Référentiel), courbes de niveau, vues anciennes. */
-import { telecharger } from "./carte.js?v=20261107010435";
-import { contient } from "./geo.js?v=20261107010435";
+import { telecharger } from "./carte.js?v=20261107012032";
+import { contient } from "./geo.js?v=20261107012032";
 
 const BASE = "https://data.geopf.fr";
 export const CALQUES = [

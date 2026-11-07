@@ -1,6 +1,6 @@
 /* Carte IGN, zone du site et téléchargement du MNT (portage de Carte.swift et IGN.swift de l'app Mac).
  * Fonds WMTS et altitudes brutes (WMS float32) de la Géoplateforme, qui autorise les pages web. */
-import { versL93, versGeo, enMetropole, rect } from "./geo.js?v=20261107010435";   // rect : rectangle tracé
+import { versL93, versGeo, enMetropole, rect } from "./geo.js?v=20261107012032";   // rect : rectangle tracé
 
 const BASE = "https://data.geopf.fr";
 const FONDS = {

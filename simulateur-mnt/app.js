@@ -2,14 +2,14 @@
  * vue 3D et couches, remodelage et comparaison, export. Même logique que l'app Mac. */
 import * as THREE from "three";
 import { fromArrayBuffer } from "geotiff";
-import { Vue3D } from "./vue3d.js?v=20261107010435";
-import * as Couches from "./couches.js?v=20261107010435";
-import { geotiff, csvDepressions, zip, telecharger } from "./export.js?v=20261107010435";
-import * as Outils from "./outils.js?v=20261107010435";
-import { Carte, rechercher, plan as planMNT, telechargerMNT, infosZone, boiteDe, SOURCES, PAS, MARGE } from "./carte.js?v=20261107010435";
-import { Evenement } from "./evenement.js?v=20261107010435";
-import * as Etude from "./etude.js?v=20261107010435";
-import { deGrille, agrandi, lireEmprise } from "./geo.js?v=20261107010435";
+import { Vue3D } from "./vue3d.js?v=20261107012032";
+import * as Couches from "./couches.js?v=20261107012032";
+import { geotiff, csvDepressions, zip, telecharger } from "./export.js?v=20261107012032";
+import * as Outils from "./outils.js?v=20261107012032";
+import { Carte, rechercher, plan as planMNT, telechargerMNT, infosZone, boiteDe, SOURCES, PAS, MARGE } from "./carte.js?v=20261107012032";
+import { Evenement } from "./evenement.js?v=20261107012032";
+import * as Etude from "./etude.js?v=20261107012032";
+import { deGrille, agrandi, lireEmprise } from "./geo.js?v=20261107012032";
 
 const $ = id => document.getElementById(id);
 
@@ -94,7 +94,7 @@ const LIMITE = memoire <= 2 ? 3e6 : memoire <= 4 ? 6e6 : memoire <= 8 ? 12e6 : 2
 
 const vue = new Vue3D($("vue3d"));
 const evt = new Evenement(vue, { surImage: imageEvenement });
-const travailleur = new Worker("calcul.js?v=20261107010435");
+const travailleur = new Worker("calcul.js?v=20261107012032");
 let idCalcul = 0, idRuissellement = 0, enCalcul = false, minuterieRecalcul = 0;
 
 // ---------------------------------------------------------------------------
