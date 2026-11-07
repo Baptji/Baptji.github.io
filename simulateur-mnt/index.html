@@ -7,7 +7,7 @@
 <meta name="description" content="Écoulements, dépressions et TWI d'un MNT, en 3D, dans le navigateur : MNT LiDAR HD de l'IGN ou votre propre fichier, qui reste sur votre ordinateur.">
 <link rel="icon" href="icone.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="style.css?v=20261107005805">
+<link rel="stylesheet" href="style.css?v=20261107010435">
 <script type="importmap">
 {
   "imports": {
@@ -18,8 +18,8 @@
 }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="noyau.js?v=20261107005805"></script>
-<script type="module" src="app.js?v=20261107005805"></script>
+<script src="noyau.js?v=20261107010435"></script>
+<script type="module" src="app.js?v=20261107010435"></script>
 </head>
 <body>
 <header class="barre">
@@ -44,7 +44,7 @@
     <div id="bilan-pluie" class="flottant haut-droite" hidden></div>
     <div id="etiquettes-jauges" class="etiquettes-jauges" hidden></div>
     <div id="bulle" class="bulle" hidden></div>
-    <div id="aide" class="aide" hidden>Glisser : déplacer · clic droit ou ⇧ + glisser : tourner · molette : zoomer · double-clic : s'approcher · 0 : vue d'ensemble</div>
+    <div id="aide" class="aide" hidden>Glisser : tourner · deux doigts ou clic droit : déplacer · pincer : zoomer · double-clic : s'approcher · 0 : vue d'ensemble</div>
     <div id="voile" class="voile" hidden>
       <div class="carte-progres"><progress id="progres" max="1" value="0"></progress><div id="etape"></div>
         <button id="b-arreter" class="outil petit">Arrêter</button></div>

@@ -15,12 +15,20 @@ const COMMUN = /* glsl */`
 `;
 
 const SOMMET_TERRAIN = COMMUN + /* glsl */`
-  out vec2 vUv; out float vH; out float vVide;
+  out vec2 vUv; out float vH;
   void main() {
     vec2 t = position.xz;
     float z = texture(hauteurs, t).r;
-    vVide = z < -1e29 ? 1.0 : 0.0;
-    if (z < -1e29) z = b.x;
+    if (z < -1e29) {
+      // Sommet dans le vide (hors du polygone découpé, trou du LiDAR) : la moyenne de ses voisins,
+      // pour que le terrain ne plonge pas avant son bord, coupé net au pixel près.
+      float s = 0.0, n = 0.0;
+      for (int dy = -1; dy <= 1; dy++) for (int dx = -1; dx <= 1; dx++) {
+        float v = texture(hauteurs, t + vec2(float(dx), float(dy)) * a.zw).r;
+        if (v > -1e29) { s += v; n += 1.0; }
+      }
+      z = n > 0.0 ? s / n : b.x;
+    }
     vec3 p = vec3((t.x - 0.5) * a.x, (z - b.z) * b.w, (t.y - 0.5) * a.y);
     vUv = t; vH = z;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
@@ -35,7 +43,7 @@ const PIXEL_TERRAIN = COMMUN + /* glsl */`
   uniform vec4 p2;      // pinceau : cosinus et sinus de l'angle
   uniform sampler2D photo, coloration, couches, calque;
   uniform vec4 e;       // calques de l'étude présents
-  in vec2 vUv; in float vH; in float vVide;
+  in vec2 vUv; in float vH;
   out vec4 sortie;
   // Même règle que le noyau (rayonPinceau) : la cellule est dans la forme si r <= 1.
   float rayonPinceau(vec2 cel) {
@@ -48,15 +56,19 @@ const PIXEL_TERRAIN = COMMUN + /* glsl */`
     if (f == 2) return max(abs(x) / ra, abs(y) / rb);
     return max(abs(y), abs(x) * 0.8660254 + abs(y) * 0.5) / (ra * 0.8660254);
   }
-  vec3 hypsometrie(float t) {
-    vec3 cols[6] = vec3[6](vec3(0.184, 0.420, 0.227), vec3(0.498, 0.663, 0.376), vec3(0.847, 0.816, 0.561),
-                           vec3(0.725, 0.537, 0.357), vec3(0.541, 0.365, 0.278), vec3(0.929, 0.902, 0.875));
-    float x = clamp(t, 0.0, 1.0) * 5.0;
-    int i = min(int(x), 4);
-    return mix(cols[i], cols[i + 1], x - float(i));
+  // Turbo (Google, comme la rampe « Turbo » de QGIS) : du bas en bleu nuit au haut en rouge.
+  // Approximation polynomiale d'A. Mikhailov (2019).
+  vec3 hypsometrie(float x) {
+    x = clamp(x, 0.0, 1.0);
+    vec4 v4 = vec4(1.0, x, x * x, x * x * x);
+    vec2 v2 = v4.zw * v4.z;
+    return clamp(vec3(
+      dot(v4, vec4(0.13572138, 4.61539260, -42.66032258, 132.13108234)) + dot(v2, vec2(-152.94239396, 59.28637943)),
+      dot(v4, vec4(0.09140261, 2.19418839, 4.84296658, -14.18503333)) + dot(v2, vec2(4.27729857, 2.82956604)),
+      dot(v4, vec4(0.10667330, 12.64194608, -60.58204836, 110.36276771)) + dot(v2, vec2(-89.90310912, 27.34824973))), 0.0, 1.0);
   }
   void main() {
-    if (vVide > 0.001) discard;
+    if (texture(hauteurs, vUv).r < -1e29) discard;
     vec2 tx = a.zw;
     float z0 = vH;
     float hg = alt(vUv - vec2(tx.x, 0.0), z0), hd = alt(vUv + vec2(tx.x, 0.0), z0);
@@ -160,10 +172,11 @@ const PIXEL_TRAIT = /* glsl */`
 
 const SOMMET_SOCLE = COMMUN + /* glsl */`
   uniform float baseSocle;
+  in vec2 centre;   // la cellule valide dont la paroi borde le vide
   out vec3 vMonde; out float vH;
   void main() {
     vec2 t = position.xz;
-    float z = alt(t, b.x);
+    float z = alt(centre, b.x);
     float y = position.y > 0.5 ? baseSocle : (z - b.z) * b.w;
     vec3 p = vec3((t.x - 0.5) * a.x, y, (t.y - 0.5) * a.y);
     vMonde = p; vH = y;
@@ -191,7 +204,9 @@ export class Vue3D {
     this.camera = new THREE.PerspectiveCamera(35.5, 1, 1, 1e6);
     this.controls = new OrbitControls(this.camera, canvas);
     this.controls.enableDamping = false;
-    this.controls.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
+    // Clic : tourner ; clic droit ou ⇧ + glisser : déplacer. Trackpad : deux doigts déplacent, pincer zoome (molette).
+    this.controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+    canvas.parentElement.addEventListener("wheel", (e) => this.molette(e), { capture: true, passive: false });
     this.controls.screenSpacePanning = false;
     this.controls.maxPolarAngle = Math.PI / 2 - 0.02;
     this.controls.addEventListener("change", () => this.dessiner());
@@ -251,7 +266,8 @@ export class Vue3D {
     this.photo(null); this.coloration(null); this.couches(null); this.calque(null);
     this.eau(null); this.traits(null); this.jauges([]);
     for (const o of [this.terrain, this.socle]) if (o) { this.scene.remove(o); o.geometry.dispose(); }
-    // Maillage : sommets au centre des cellules (u = (c + 0,5) / C), comme dans l'app Mac.
+    // Maillage : sommets au centre des cellules (u = (c + 0,5) / C), comme dans l'app Mac ; ceux du tour
+    // sont posés sur le bord du MNT, pour que le terrain rejoigne ses parois.
     const pas = Math.max(1, Math.ceil(Math.max(g.lignes, g.colonnes) / 1000));
     const cols = [], lignes = [];
     for (let c = 0; c < g.colonnes; c += pas) cols.push(c);
@@ -259,11 +275,13 @@ export class Vue3D {
     for (let l = 0; l < g.lignes; l += pas) lignes.push(l);
     if (lignes[lignes.length - 1] !== g.lignes - 1) lignes.push(g.lignes - 1);
     const W = cols.length, H = lignes.length;
+    const uc = i => i === 0 ? 0 : i === W - 1 ? 1 : (cols[i] + 0.5) / g.colonnes;
+    const vc = j => j === 0 ? 0 : j === H - 1 ? 1 : (lignes[j] + 0.5) / g.lignes;
     const pos = new Float32Array(W * H * 3);
-    lignes.forEach((l, j) => cols.forEach((c, i) => {
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
       const k = 3 * (j * W + i);
-      pos[k] = (c + 0.5) / g.colonnes; pos[k + 1] = 0; pos[k + 2] = (l + 0.5) / g.lignes;
-    }));
+      pos[k] = uc(i); pos[k + 1] = 0; pos[k + 2] = vc(j);
+    }
     const idx = new Uint32Array((W - 1) * (H - 1) * 6);
     let q = 0;
     for (let j = 0; j < H - 1; j++) for (let i = 0; i < W - 1; i++) {
@@ -278,20 +296,27 @@ export class Vue3D {
     this.terrain = new THREE.Mesh(geo, mat);
     this.terrain.frustumCulled = false;
     this.scene.add(this.terrain);
-    // Parois : le tour du maillage, un sommet en haut (altitude lue dans la texture) et un en bas.
-    const tour = [];
-    cols.forEach(c => tour.push([c, lignes[0]]));
-    lignes.slice(1).forEach(l => tour.push([cols[W - 1], l]));
-    cols.slice(0, -1).reverse().forEach(c => tour.push([c, lignes[H - 1]]));
-    lignes.slice(0, -1).reverse().forEach(l => tour.push([cols[0], l]));
-    const s = [];
-    for (let k = 0; k < tour.length - 1; k++) {
-      const [c1, l1] = tour[k], [c2, l2] = tour[k + 1];
-      const u1 = (c1 + 0.5) / g.colonnes, v1 = (l1 + 0.5) / g.lignes, u2 = (c2 + 0.5) / g.colonnes, v2 = (l2 + 0.5) / g.lignes;
+    // Parois : sur chaque bord entre une cellule (échantillonnée) qui a une altitude et le vide ou le bord du MNT,
+    // un mur du terrain jusqu'au socle. Un MNT découpé selon un polygone a ainsi ses parois sur le polygone.
+    const valide = (i, j) => i >= 0 && j >= 0 && i < W && j < H && !Number.isNaN(g.z[lignes[j] * g.colonnes + cols[i]]);
+    const ub = k => k <= 0 ? 0 : k >= W ? 1 : ((cols[k - 1] + cols[k]) / 2 + 0.5) / g.colonnes;
+    const vb = k => k <= 0 ? 0 : k >= H ? 1 : ((lignes[k - 1] + lignes[k]) / 2 + 0.5) / g.lignes;
+    const s = [], ctr = [];
+    const mur = (u1, v1, u2, v2, cu, cv) => {
       s.push(u1, 0, v1, u2, 0, v2, u1, 1, v1, u2, 0, v2, u2, 1, v2, u1, 1, v1);
+      for (let k = 0; k < 6; k++) ctr.push(cu, cv);
+    };
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+      if (!valide(i, j)) continue;
+      const cu = (cols[i] + 0.5) / g.colonnes, cv = (lignes[j] + 0.5) / g.lignes;
+      if (!valide(i - 1, j)) mur(ub(i), vb(j), ub(i), vb(j + 1), cu, cv);
+      if (!valide(i + 1, j)) mur(ub(i + 1), vb(j), ub(i + 1), vb(j + 1), cu, cv);
+      if (!valide(i, j - 1)) mur(ub(i), vb(j), ub(i + 1), vb(j), cu, cv);
+      if (!valide(i, j + 1)) mur(ub(i), vb(j + 1), ub(i + 1), vb(j + 1), cu, cv);
     }
     const gs = new THREE.BufferGeometry();
     gs.setAttribute("position", new THREE.BufferAttribute(new Float32Array(s), 3));
+    gs.setAttribute("centre", new THREE.BufferAttribute(new Float32Array(ctr), 2));
     this.socle = new THREE.Mesh(gs, new THREE.ShaderMaterial({ glslVersion: THREE.GLSL3, uniforms: this.uniformes,
       vertexShader: SOMMET_SOCLE, fragmentShader: PIXEL_SOCLE, side: THREE.DoubleSide }));
     this.socle.frustumCulled = false;
@@ -351,7 +376,8 @@ export class Vue3D {
 
   /** Camion ou aspirateur en main : le clic gauche peint, ⇧ + glisser déplace la vue. */
   modePinceau(actif) {
-    this.controls.mouseButtons.LEFT = actif ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN;
+    // Le clic gauche peint : la rotation passe au clic droit, ⇧ + glisser et deux doigts déplacent toujours.
+    this.controls.mouseButtons.RIGHT = actif ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN;
   }
 
   texture(img) {
@@ -670,6 +696,44 @@ export class Vue3D {
     this.camera.position.copy(p).add(decalage);
     this.controls.update();
     this.dessiner();
+  }
+
+  /** Molette et trackpad : pincer (ctrl, envoyé par macOS) ou molette d'une souris zooment vers le point visé ;
+   *  deux doigts déplacent la vue, le terrain suit les doigts. Les commandes de three.js ne reçoivent rien. */
+  molette(e) {
+    if (e.target !== this.canvas || !this.grille) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const souris = e.deltaMode !== 0 || (e.deltaX === 0 && Math.abs(e.deltaY) >= 40 && Number.isInteger(e.deltaY));
+    if (e.ctrlKey || souris) {
+      const k = e.deltaMode === 1 ? 33 : e.deltaMode === 2 ? 400 : 1;
+      this.zoomer(Math.exp(e.deltaY * k * (e.ctrlKey ? 0.012 : 0.0015)), e.clientX, e.clientY);
+    } else this.deplacer(e.deltaX, e.deltaY);
+  }
+
+  /** Rapproche (f < 1) ou éloigne (f > 1) la caméra du point du terrain sous (x, y), qui reste sous le curseur. */
+  zoomer(f, x, y) {
+    const c = this.camera.position, t = this.controls.target, [w, h] = this.taille;
+    const d = c.distanceTo(t);
+    f = Math.min(Math.max(f, (this.grille.pas * 3) / d), (Math.max(w, h) * 12) / d);
+    const i = this.cellule(x, y), p = (i !== null && this.positionMonde(i)) || t.clone();
+    t.sub(p).multiplyScalar(f).add(p);
+    c.sub(p).multiplyScalar(f).add(p);
+    const n = c.distanceTo(t);
+    this.camera.near = Math.max(0.5, n / 2000); this.camera.far = n * 20 + 1e4;
+    this.camera.updateProjectionMatrix();
+    this.controls.update();
+  }
+
+  /** Déplace la vue parallèlement au sol, de (dx, dy) pixels. */
+  deplacer(dx, dy) {
+    const cam = this.camera, t = this.controls.target, h = this.canvas.clientHeight || 1;
+    const echelle = 2 * cam.position.distanceTo(t) * Math.tan(THREE.MathUtils.degToRad(cam.fov / 2)) / h;
+    const droite = new THREE.Vector3().setFromMatrixColumn(cam.matrix, 0);
+    const avant = new THREE.Vector3().crossVectors(cam.up, droite).normalize();
+    const v = droite.multiplyScalar(dx * echelle).add(avant.multiplyScalar(dy * echelle));
+    cam.position.add(v); t.add(v);
+    this.controls.update();
   }
 
   /** Cellule sous le point (x, y) du canvas : marche le long du rayon sur la grille des altitudes. */

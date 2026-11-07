@@ -2,14 +2,14 @@
  * vue 3D et couches, remodelage et comparaison, export. Même logique que l'app Mac. */
 import * as THREE from "three";
 import { fromArrayBuffer } from "geotiff";
-import { Vue3D } from "./vue3d.js?v=20261107005805";
-import * as Couches from "./couches.js?v=20261107005805";
-import { geotiff, csvDepressions, zip, telecharger } from "./export.js?v=20261107005805";
-import * as Outils from "./outils.js?v=20261107005805";
-import { Carte, rechercher, plan as planMNT, telechargerMNT, infosZone, boiteDe, SOURCES, PAS, MARGE } from "./carte.js?v=20261107005805";
-import { Evenement } from "./evenement.js?v=20261107005805";
-import * as Etude from "./etude.js?v=20261107005805";
-import { deGrille, agrandi, lireEmprise } from "./geo.js?v=20261107005805";
+import { Vue3D } from "./vue3d.js?v=20261107010435";
+import * as Couches from "./couches.js?v=20261107010435";
+import { geotiff, csvDepressions, zip, telecharger } from "./export.js?v=20261107010435";
+import * as Outils from "./outils.js?v=20261107010435";
+import { Carte, rechercher, plan as planMNT, telechargerMNT, infosZone, boiteDe, SOURCES, PAS, MARGE } from "./carte.js?v=20261107010435";
+import { Evenement } from "./evenement.js?v=20261107010435";
+import * as Etude from "./etude.js?v=20261107010435";
+import { deGrille, agrandi, lireEmprise } from "./geo.js?v=20261107010435";
 
 const $ = id => document.getElementById(id);
 
@@ -94,7 +94,7 @@ const LIMITE = memoire <= 2 ? 3e6 : memoire <= 4 ? 6e6 : memoire <= 8 ? 12e6 : 2
 
 const vue = new Vue3D($("vue3d"));
 const evt = new Evenement(vue, { surImage: imageEvenement });
-const travailleur = new Worker("calcul.js?v=20261107005805");
+const travailleur = new Worker("calcul.js?v=20261107010435");
 let idCalcul = 0, idRuissellement = 0, enCalcul = false, minuterieRecalcul = 0;
 
 // ---------------------------------------------------------------------------
@@ -213,7 +213,37 @@ function proposerReduction(g, nom, detail, cle) {
 }
 
 /** Chaque MNT ouvert ou téléchargé a son onglet ; le terrain affiché jusque-là garde le sien. */
-function installer(g, nom, detail, remarques, cle = null, site = null) {
+/** Découpe selon le polygone : les cellules dont le centre est dehors n'ont plus d'altitude (pair-impair,
+ *  par lignes de balayage). Rend le nombre de cellules retirées. */
+function decouper(g, anneaux) {
+  const C = g.colonnes, xs = [];
+  let retirees = 0;
+  for (let l = 0; l < g.lignes; l++) {
+    const y = g.y0 - (l + 0.5) * g.pas;
+    xs.length = 0;
+    for (const a of anneaux) for (let k = 0, n = a.length; k < n; k++) {
+      const [x1, y1] = a[k], [x2, y2] = a[(k + 1) % n];
+      if ((y1 > y) !== (y2 > y)) xs.push(x1 + (y - y1) * (x2 - x1) / (y2 - y1));
+    }
+    xs.sort((u, v) => u - v);
+    let k = 0;
+    for (let c = 0; c < C; c++) {
+      const x = g.x0 + (c + 0.5) * g.pas;
+      while (k < xs.length && xs[k] <= x) k++;
+      if (k % 2 === 0) { const i = l * C + c; if (!Number.isNaN(g.z[i])) retirees++; g.z[i] = NaN; }
+    }
+  }
+  return retirees;
+}
+
+/** Contour du terrain affiché sur la carte : le polygone découpé, sinon le rectangle du MNT. */
+function dessinerMNTCarte() {
+  const g = E.grille;
+  carte.dessinerMNT(g && enLambert93(g) ? (E.decoupe ? { anneaux: E.decoupe } : deGrille(g)) : null);
+}
+
+/** decoupe : anneaux du polygone selon lequel le MNT a été découpé ; horsSite : cellules retirées par ce découpage. */
+function installer(g, nom, detail, remarques, cle = null, decoupe = null, horsSite = 0) {
   finirPassage();
   quitterTerrain();
   Object.assign(E, etatTerrainVide(), { calques: E.calques.slice() });
@@ -221,12 +251,13 @@ function installer(g, nom, detail, remarques, cle = null, site = null) {
   onglets.push(o);
   ongletActif = o;
   E.origine = g; E.grille = g; E.nom = nom; E.detail = detail; E.remarques = remarques.slice();
-  E.cleProjet = cle; E.site = site;
+  E.cleProjet = cle; E.decoupe = decoupe;
   chargerProjet();
   let s = 0, n = 0, vides = 0;
   for (const v of g.z) if (Number.isNaN(v)) vides++; else { s += v; n++; }
   E.altitudeFixe = Math.round(s / Math.max(1, n));
-  if (vides) E.remarques.push(`${nombre(vides / g.z.length * 100, 1)} % du MNT sans altitude : l'eau s'y perd comme au bord.`);
+  // Hors du polygone découpé, le vide est voulu : seuls les trous dans le site sont signalés.
+  if (vides - horsSite > 0) E.remarques.push(`${nombre((vides - horsSite) / (g.z.length - horsSite) * 100, 1)} % du site sans altitude : l'eau s'y perd comme au bord.`);
   if (g.epsg && g.epsg !== 2154) E.remarques.push(`Système EPSG:${g.epsg} : la photo aérienne suppose du Lambert-93 (EPSG:2154).`);
   if (E.fond === "ecarts") E.fond = "altitudes";
   const p = E.pinceau;
@@ -234,7 +265,7 @@ function installer(g, nom, detail, remarques, cle = null, site = null) {
   p.largeur = Math.min(tailleMaxi(g), Math.max(g.pas, p.largeur));
   vue.charger(g);
   montrerEcran("terrain");
-  carte.dessinerMNT(enLambert93(g) ? deGrille(g) : null);
+  dessinerMNTCarte();
   reinitialiserCalques();
   modeOutil();
   vue.regler({ fond: indiceFond(), exageration: E.exageration, opaciteCouches: E.opaciteCouches, opacitePhoto: E.opacitePhoto });
@@ -290,7 +321,7 @@ function chercherPhoto(g) {
 const etatTerrainVide = () => ({ nom: "", detail: "", remarques: [], origine: null, grille: null, resultat: null, reference: null,
   comparaison: null, bilan: null, etatPhoto: null, surfaces: [], zoneSurface: [], accC: null, sigAccC: null, idResultat: 0, cleProjet: null,
   operations: [], historique: [], refaire: [], zone: [], point: null, saisie: "aucune", altitudeFixe: 0, altitudeEgal: 0,
-  depressionChoisie: null, lecture: null, erreur: null, etatCalques: {}, vueAncienne: 0, legende: {}, bornesEcart: [-1, 1], bornesTWI: [0, 1], site: null, jauges: [] });
+  depressionChoisie: null, lecture: null, erreur: null, etatCalques: {}, vueAncienne: 0, legende: {}, bornesEcart: [-1, 1], bornesTWI: [0, 1], site: null, decoupe: null, jauges: [] });
 const CLES_TERRAIN = [...Object.keys(etatTerrainVide()), "fond", "calques", "modePluie", "intensite", "montanaA", "montanaB", "duree", "station", "coefficient"];
 const onglets = [];
 let ongletActif = null, compteurOnglets = 0;
@@ -338,7 +369,7 @@ function entrerTerrain(o) {
   o.photo = null;
   vue.retablirVue(o.vue);
   vue.regler({ fond: indiceFond() });
-  carte.dessinerMNT(enLambert93(E.grille) ? deGrille(E.grille) : null);
+  dessinerMNTCarte();
   modeOutil();
   if (o.aRecalculer || !E.resultat) { o.aRecalculer = false; calculer(); }
   else { couchesAJour(); colorationAJour(); ruissellementAJour(); }
@@ -1572,8 +1603,8 @@ function afficherBulle() {
   const main = aLaMain() && !!E.resultat;
   $("vue3d").style.cursor = E.saisie !== "aucune" || main ? "crosshair" : "";
   $("aide").textContent = main
-    ? `Clic maintenu : ${E.outil === "camion" ? "verser" : "aspirer"} · ⇧ + glisser : déplacer · clic droit : tourner · molette : zoomer · Échap : reposer l'outil`
-    : "Glisser : déplacer · clic droit ou ⇧ + glisser : tourner · molette : zoomer · double-clic : s'approcher · 0 : vue d'ensemble";
+    ? `Clic maintenu : ${E.outil === "camion" ? "verser" : "aspirer"} · clic droit : tourner · deux doigts : déplacer · pincer : zoomer · Échap : reposer l'outil`
+    : "Glisser : tourner · deux doigts ou clic droit : déplacer · pincer : zoomer · double-clic : s'approcher · 0 : vue d'ensemble";
 }
 
 function travail(etape, fraction = 0) {
@@ -1752,7 +1783,8 @@ function montrerEcran(ecran) {
 }
 
 /** Étendue téléchargée : la zone tracée (ou la boîte de l'emprise) agrandie de la marge. */
-const etendue = () => E.zoneSite ? agrandi(E.zoneSite, MARGE) : null;
+// Un polygone est découpé tel quel (sa boîte suffit) ; un rectangle prend 20 m de marge.
+const etendue = () => !E.zoneSite ? null : E.emprise ? E.zoneSite : agrandi(E.zoneSite, MARGE);
 const planActuel = () => { const z = etendue(); return z ? planMNT(z, E.source, E.pasMNT) : null; };
 function probleme(p) {
   if (!p) return null;
@@ -1786,7 +1818,7 @@ function blocZone() {
     h.push(`<div class="ligne">${tracer("rectangle", "▭ Rectangle")}${tracer("polygone", "⬠ Polygone")}</div>`);
   } else {
     const aire = E.emprise ? E.emprise.anneaux.reduce((s, an) => s + Math.abs(an.reduce((q, p, k) => { const r = an[(k + 1) % an.length]; return q + p[0] * r[1] - r[0] * p[1]; }, 0)) / 2, 0) : 0;
-    h.push(`<div class="petit-texte">${aire ? `Site ${surface(aire)} · MNT ${metres(e.xmax - e.xmin)} × ${metres(e.ymax - e.ymin)}`
+    h.push(`<div class="petit-texte">${aire ? `Site ${surface(aire)}`
         : `${metres(e.xmax - e.xmin)} × ${metres(e.ymax - e.ymin)} · ${surface((e.xmax - e.xmin) * (e.ymax - e.ymin))}`}</div>
       <div class="ligne">${tracer("rectangle", "▭ Rectangle")}${tracer("polygone", "⬠ Polygone")}</div>
       <div class="ligne"><button class="outil petit" data-action="recentrer">Recentrer</button><button class="outil petit" data-action="effacer-zone-site">Effacer la zone</button></div>`);
@@ -1895,10 +1927,12 @@ async function telechargerZone() {
     let vides = 0;
     for (const v of g.z) if (Number.isNaN(v)) vides++;
     if (vides === g.z.length) { alerte(`Aucune altitude ${SOURCES[E.source].titre} sur cette zone : essayez le RGE ALTI.`); return; }
+    const horsSite = site ? decouper(g, site) : 0;
+    if (horsSite + vides >= g.z.length) { alerte("Le polygone ne contient aucune cellule du MNT : tracez-le plus grand ou baissez la résolution."); return; }
     const nom = E.emprise?.nom || nomTerrainLibre();
     const cle = ["zone", E.source, E.pasMNT, z.xmin, z.ymin, z.xmax, z.ymax].map(v => typeof v === "number" ? v.toFixed(1) : v).join("|");
     const an = E.source === "lidarHD" ? E.infosZone?.lidar?.annee : E.infosZone?.rge?.annee;
-    installer(g, nom, `${SOURCES[E.source].titre}${an ? " " + an : ""}, résolution ${metres(E.pasMNT)} (téléchargé à l'IGN)`, [], cle, site);
+    installer(g, nom, `${SOURCES[E.source].titre}${an ? " " + an : ""}, résolution ${metres(E.pasMNT)} (téléchargé à l'IGN)`, [], cle, site, horsSite);
   } catch (err) {
     telechargement = null;
     carte.chargement(false);

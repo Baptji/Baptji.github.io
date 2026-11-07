@@ -1,6 +1,6 @@
 /* Carte IGN, zone du site et téléchargement du MNT (portage de Carte.swift et IGN.swift de l'app Mac).
  * Fonds WMTS et altitudes brutes (WMS float32) de la Géoplateforme, qui autorise les pages web. */
-import { versL93, versGeo, enMetropole, rect } from "./geo.js?v=20261107005805";   // rect : rectangle tracé
+import { versL93, versGeo, enMetropole, rect } from "./geo.js?v=20261107010435";   // rect : rectangle tracé
 
 const BASE = "https://data.geopf.fr";
 const FONDS = {
@@ -387,9 +387,12 @@ export class Carte {
     el.setAttribute("filter", "url(#lueur-site)");
   }
 
+  /** Contour du MNT chargé : un rectangle { xmin… }, ou { anneaux } pour un MNT découpé selon un polygone. */
   dessinerMNT(r) {
     this.formeMNT?.remove(); this.formeMNT = null;
-    if (r) this.formeMNT = this.L.polygon(auxCoins(r), { color: "#0a6cdf", weight: 1.5, dashArray: "4 4", fill: false, interactive: false }).addTo(this.map);
+    if (!r) return;
+    const forme = r.anneaux ? r.anneaux.map(a => a.map(([x, y]) => versGeo(x, y))) : auxCoins(r);
+    this.formeMNT = this.L.polygon(forme, { color: "#0a6cdf", weight: 1.5, dashArray: "4 4", fill: false, interactive: false }).addTo(this.map);
   }
 
   cadrer(r) {
