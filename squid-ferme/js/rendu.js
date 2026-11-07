@@ -43,7 +43,7 @@ const Rendu = {
     if (this.monde) { this.scene.remove(this.monde); this.monde.traverse(o => { if (o.geometry && !o.userData.partage) o.geometry.dispose(); }); }
     for (const p of this.pools.values()) { this.scene.remove(p.im); p.im.dispose?.(); }
     this.viderTransports();
-    for (const p of this.passages) { this.scene.remove(p.o); if (p.benne) this.scene.remove(p.benne.g, p.benne.r); }
+    for (const p of this.passages) { this.scene.remove(p.o); if (p.id) Flotte.desinscrire(p.id); }
     if (this.cloture) { this.scene.remove(this.cloture); this.cloture = null; } this.clePature = ''; this.coupes = new Map();
     for (const o of this.talus?.values() || []) this.scene.remove(o); this.talus = new Map(); this.cleExpl = '';
     for (const o of this.verrous?.values() || []) this.scene.remove(o); this.verrous = new Map(); this.anims = [];
@@ -61,6 +61,7 @@ const Rendu = {
     this.chunkDe = i => { const x = i % W, y = (i / W) | 0; return ((y / this.CH) | 0) * NX + ((x / this.CH) | 0); };
     Vie.init(this.scene, this.D, pl, f);
     this.sansOmbre(Vie.groupe); [...Vie.poules, ...Vie.pigeons, ...Vie.fumees].forEach(e => this.sansOmbre(e.o));
+    Machines.init(this);
     this.cleLimite = ''; this.cleMurs = ''; this.uniteSurvol = null; this.cleSel = ''; this.cleIrr = ''; if (this.enrouleur) { this.scene.remove(this.enrouleur); this.enrouleur = null; }
     this.jourVu = -1; this.cleStruct = ''; this.ombreSale = true;
     // caméra : sur la ferme et ses champs, à mi-distance
@@ -144,7 +145,7 @@ const Rendu = {
   },
   // un geste de caméra il y a moins d'une seconde ; rien qui bouge vite
   bouge() { return performance.now() / 1000 - this.cam.dernier < 1.2 && this.cam.dernier < 1e8; },
-  calme() { return !this.passages.length && !this.parts.length; },
+  calme() { return !this.passages.length && !this.parts.length && !Machines.flotte.some(u => u.etat !== 'cour'); },
   sansOmbre(o) { o.traverse(c => { if (c.isMesh) c.castShadow = false; }); },
 
   dimensionner() {
@@ -522,7 +523,7 @@ const Rendu = {
   // cases : [[x, y], …] ; avant : Map 'x,y' → { c, p, v, pourri } pour la récolte. Rend [{ x, y, fin }] (ms depuis maintenant).
   // opts.livrer(kg) : récolte portée à la ferme par un tracteur et sa benne ; les tonnes ne comptent qu'à la livraison
   transporte(machine) { return !!(this.gl && this.pl && !this.planches && this.D.ferme && machine === 'moissonneuse' && !this.reduit); },
-  transportEnCours() { return this.passages.some(p => p.transport); },
+  transportEnCours() { return this.passages.some(p => p.transport) || Machines.flotte.some(u => u.charge > 1 && !u.livre); },
   animerChamp(cases, type, machine, avant, retard = 0, opts = {}) {
     if (!this.gl || !this.pl) return cases.map(([x, y]) => ({ x, y, fin: retard }));
     const W = this.pl.w, H = this.pl.h, now = performance.now();
@@ -531,24 +532,28 @@ const Rendu = {
       return cases.map(([x, y]) => { this.revel.set(y * W + x, { jusque: now + retard + 120, avant: null }); return { x, y, fin: retard + 120 }; });
     }
     const transport = type === 'recolte' && opts.livrer && this.transporte(machine);
+    const sortie = machine !== 'personne' && !this.planches && !!this.D.ferme && !this.reduit;
     const personne = machine === 'personne', v = this.reduit ? 40 : personne ? 2.6 : transport ? 1.7 : 4.2, avance = machine === 'moissonneuse' ? 0.05 : machine === 'semoir' || machine === 'charrue' ? -0.3 : 0;
     // la moisson commence par le rang qui longe la route ou le chemin le plus proche : la benne ne roule jamais dans le blé debout
     const sens = transport ? this.sensRangs(cases) : 1;
     const { pts, passe } = this.trajet(cases, personne ? 0.16 : 0.34, avance, sens);
     const P = { transport };
-    const sortie = passe.map(c => {
-      const fin = retard + c.d / v * 1000, av = type === 'recolte' ? avant?.get(c.x + ',' + c.y) || null : null;
-      this.revel.set(c.y * W + c.x, transport ? { jusque: Infinity, avant: av, passe: P, dPass: c.d, kg: av?.kg || 0 } : { jusque: now + fin, avant: av, voisin: type === 'labour' });
-      return { x: c.x, y: c.y, fin };
+    const sortie_ = passe.map(c => {
+      const av = type === 'recolte' ? avant?.get(c.x + ',' + c.y) || null : null;
+      this.revel.set(c.y * W + c.x, sortie ? { jusque: Infinity, avant: av, passe: P, dPass: c.d, kg: av?.kg || 0, voisin: type === 'labour' } : { jusque: now + retard + c.d / v * 1000, avant: av, voisin: type === 'labour' });
+      return { x: c.x, y: c.y, d: c.d };
     });
     // la machine
     const o = this.machine(machine); o.visible = false; o.userData.nom = { cle: 'machine:' + machine, libelle: { moissonneuse: 'Moissonneuse-batteuse', semoir: 'Tracteur et semoir', arracheuse: 'Tracteur et arracheuse', charrue: 'Tracteur et charrue', personne: 'Maraîcher' }[machine] || 'Machine' }; this.scene.add(o);
     const L = Decor.longueur(pts);
-    Object.assign(P, { o, pts: pts.map(([x, z]) => [x - W / 2, z - H / 2]), L, v, t0: now + retard, type: machine, recolte: type === 'recolte', derniere: 0 });
-    if (transport) Object.assign(P, { d: 0, tremie: 0, livrer: opts.livrer, sens, reste: passe.length, benne: this.nouvelleBenne() });
+    Object.assign(P, { o, pts: pts.map(([x, z]) => [x - W / 2, z - H / 2]), L, v, t0: now + retard, type: machine, recolte: type === 'recolte', derniere: 0, sortie, d: -1, reste: passe.length, sens });
+    if (transport) Object.assign(P, { tremie: 0, livrer: opts.livrer });
+    // la machine sort de la grange et va au champ par les routes : la tâche commence à son arrivée
+    const trajetMs = sortie ? Machines.preparerSortie(P) : 0;
+    for (const c of sortie_) c.fin = retard + trajetMs + c.d / v * 1000;
     this.passages.push(P);
     this.majCases(F(), this.ctx || this.contexte(F()), false, cases.map(([x, y]) => y * W + x));
-    return sortie;
+    return sortie_.map(({ x, y, fin }) => ({ x, y, fin }));
   },
   // Trajet en cases : chaque rang de bout en bout, demi-tour en demi-ellipse au-delà des deux bouts de rang (fournière)
   trajet(cases, RX, avance, sens = 1) {
@@ -580,37 +585,6 @@ const Rendu = {
     for (let y = 0; y < pl.h; y++) for (let x = 0; x < pl.w; x++) if ('rp'.includes(pl.types[y][x])) { const d = Math.hypot(x + 0.5 - cx, y + 0.5 - cy); if (d < dm) { dm = d; mieux = [x, y]; } }
     return mieux && mieux[1] + 0.5 > cy ? -1 : 1;
   },
-  // ---------- Tracteur et benne qui suivent la moissonneuse, puis portent le grain à la grange ----------
-  nouvelleBenne() {
-    const K = K3, G = K.G, g = new T3.Group(), r = new T3.Group(), benne = new T3.Group();
-    const roue = (x, z, rr, l) => [K.piece(G.cyl(rr, rr, l, 14), '#242424', [x, rr, z], [Math.PI / 2, 0, 0]), K.piece(G.cyl(rr * 0.5, rr * 0.5, l + 0.006, 10), '#e8b62a', [x, rr, z], [Math.PI / 2, 0, 0])];
-    K.mesh(g, K.fusion([
-      K.piece(G.boite(0.22, 0.1, 0.12), '#d4672a', [0.07, 0.17, 0]), K.piece(G.boite(0.16, 0.06, 0.1), '#4a4a4a', [0.07, 0.1, 0]), K.piece(G.boite(0.02, 0.08, 0.1), '#333333', [0.185, 0.16, 0]),
-      K.piece(G.boite(0.14, 0.02, 0.05), '#d4672a', [-0.07, 0.2, 0.1]), K.piece(G.boite(0.14, 0.02, 0.05), '#d4672a', [-0.07, 0.2, -0.1]),
-      K.piece(G.boite(0.06, 0.02, 0.07), '#2a2a2a', [-0.08, 0.21, 0]), K.piece(G.boite(0.012, 0.06, 0.07), '#2a2a2a', [-0.11, 0.25, 0]),
-      K.piece(G.cyl(0.007, 0.007, 0.1, 6), '#222222', [0.12, 0.27, 0.035]), K.piece(G.cyl(0.02, 0.02, 0.006, 10), '#222222', [-0.02, 0.26, 0], [0, 0, 0.5]),
-      K.piece(G.cyl(0.022, 0.026, 0.08, 8), '#3d5f8f', [-0.075, 0.26, 0]), K.piece(G.boule(6, 4), '#e2b48c', [-0.07, 0.32, 0], 0, 0.02), K.piece(G.boule(6, 4), '#4a5868', [-0.07, 0.335, 0], 0, [0.024, 0.01, 0.024]),
-      ...roue(-0.07, 0.11, 0.1, 0.05), ...roue(-0.07, -0.11, 0.1, 0.05), ...roue(0.13, 0.075, 0.05, 0.03), ...roue(0.13, -0.075, 0.05, 0.03),
-    ]), K.matV());
-    benne.position.set(-0.2, 0, 0); r.add(benne);      // pivot sur l'arrière de la benne pour basculer
-    K.mesh(r, K.fusion([K.piece(G.boite(0.13, 0.015, 0.015), '#2a2a2a', [0.26, 0.08, 0]), ...roue(0, 0.135, 0.06, 0.04), ...roue(0, -0.135, 0.06, 0.04)]), K.matV());
-    K.mesh(benne, K.fusion([K.piece(G.boite(0.42, 0.03, 0.25), '#8a5a34', [0.2, 0.12, 0]), K.piece(G.boite(0.42, 0.07, 0.015), '#9a6a40', [0.2, 0.17, 0.118]), K.piece(G.boite(0.42, 0.07, 0.015), '#9a6a40', [0.2, 0.17, -0.118]),
-      K.piece(G.boite(0.015, 0.07, 0.25), '#9a6a40', [0.41, 0.17, 0]), K.piece(G.boite(0.015, 0.07, 0.25), '#9a6a40', [-0.005, 0.17, 0])]), K.matV());
-    const tas = K.mesh(benne, G.boule(8, 6), K.mat('#e2b04a'), [0.2, 0.14, 0], 0, [0.18, 0.001, 0.1]);
-    g.add(Vie.ombre(0.1, 0.16)); r.add(Vie.ombre(0.15, 0.26));
-    this.sansOmbre(g); this.sansOmbre(r);
-    const nom = { cle: 'machine:tracteur-benne', libelle: 'Tracteur et benne' }; g.userData.nom = r.userData.nom = nom;
-    g.visible = r.visible = false; this.scene.add(g, r);
-    // départ : devant la grange, dans la cour
-    const F = this.D.ferme, L = (x, z) => F.groupe.localToWorld(new T3.Vector3(x, 0, z));
-    const p0 = L(0.37, -0.76), p1 = L(-0.3, -0.8);
-    return { g, r, benne, tas, etat: 'part', x: p0.x, z: p0.z, cap: Math.atan2(p1.z - p0.z, p1.x - p0.x), charge: 0, courbe: null, u: 0, pause: 0, livre: false, cr: null, echelle: 0 };
-  },
-  // Points de la ferme (repère de la ferme : porche au sud), en coordonnées monde
-  pointsFerme(noms) {
-    const F = this.D.ferme, P = { dehors: [0, 2.3], porche: [0, 1.6], dedans: [0, 1.25], a: [0.45, 0.92], b: [0.78, 0.3], c: [0.84, -0.42], c2: [0.62, -0.73], grange: [0.37, -0.76], d: [-0.3, -0.8], e: [-0.72, -0.35], e2: [-0.72, 0.4], f: [-0.3, 0.9] };
-    return noms.map(n => { const v = F.groupe.localToWorld(new T3.Vector3(P[n][0], 0, P[n][1])); return [v.x, v.z]; });
-  },
   // Itinéraire par les routes et chemins (cases r, p) d'un point monde à un autre, lissé
   parLesRoutes(de, vers) {
     const pl = this.pl, W = pl.w, H = pl.h, ok = (x, y) => x >= 0 && y >= 0 && x < W && y < H && 'rp'.includes(pl.types[y][x]);
@@ -632,84 +606,10 @@ const Rendu = {
     if (pts.length > 2) pts = Decor.simplifier(pts, 0.6);
     return [de, ...pts, vers];
   },
-  courbe(pts) {
-    const net = pts.filter((p, i) => !i || Math.hypot(p[0] - pts[i - 1][0], p[1] - pts[i - 1][1]) > 0.05);
-    const c = new T3.CatmullRomCurve3(net.map(([x, z]) => new T3.Vector3(x, 0, z)), false, 'centripetal'); return { c, L: c.getLength() };
-  },
-  // Vers la grange : sortir par le chaume vers la route, rouler jusqu'à l'allée, passer le porche, se mettre cul à la grange
-  versGrange(b) {
-    const al = this.D.allee, bout = al.at(-1), mil = al[1];
-    return this.courbe([...this.parLesRoutes([b.x, b.z], bout), mil, ...this.pointsFerme(['dehors', 'porche', 'dedans', 'a', 'b', 'c', 'c2', 'grange'])]);
-  },
-  // Retour : boucle dans la cour (jamais de pivot sur place), sortie par le porche, puis la route jusqu'au champ
-  depuisGrange(vers) {
-    const al = this.D.allee, cour = this.pointsFerme(['grange', 'd', 'e', 'e2', 'f', 'dedans', 'porche', 'dehors']);
-    if (!vers) return this.courbe(this.pointsFerme(['grange', 'd', 'e', 'e2', 'f']));
-    return this.courbe([...cour, al[1], ...this.parLesRoutes(al.at(-1), vers).slice(0, -1), vers]);
-  },
-  majBenne(P, t, s, m, cap, coupe) {
-    const b = P.benne, CAPA = 6500, VR = 2.2, ATTEL = 0.3;
-    const versCap = (c, k) => { let d = c - b.cap; d = Math.atan2(Math.sin(d), Math.cos(d)); b.cap += d * k; };
-    const fini = P.reste <= 0 && P.tremie < 1;
-    // à côté de la moissonneuse : un rang en arrière (côté déjà fauché), un peu en retrait
-    const cible = [m.x + 0.4 * Math.cos(cap), m.z - P.sens * 0.72 + 0.4 * Math.sin(cap)];
-    let transfert = false;
-    if (b.etat === 'part') { b.courbe = this.depuisGrange(cible); b.u = 0; b.etat = 'va'; }
-    if (b.etat === 'accompagne') {
-      const d = Math.hypot(cible[0] - b.x, cible[1] - b.z);
-      if (d < 0.6) { const k = Math.min(1, s * 10); b.x += (cible[0] - b.x) * k; b.z += (cible[1] - b.z) * k; versCap(cap, Math.min(1, s * 8)); }
-      else { const v = Math.min(VR, d * 3) * s / d; b.x += (cible[0] - b.x) * v; b.z += (cible[1] - b.z) * v; versCap(Math.atan2(cible[1] - b.z, cible[0] - b.x), Math.min(1, s * 5)); }
-      if (d < 0.2 && coupe && P.tremie > 0) { const q = Math.min(P.tremie, 3000 * s, CAPA - b.charge); P.tremie -= q; b.charge += q; transfert = q > 0; }
-      if (b.charge >= CAPA - 1 || (fini && b.charge > 1)) { b.courbe = this.versGrange(b); b.u = 0; b.etat = 'livre'; }
-      else if (fini) { b.courbe = this.versGrange(b); b.u = 0; b.etat = 'rentre'; }
-    } else if (['va', 'livre', 'retour', 'rentre', 'range'].includes(b.etat)) {
-      b.u = Math.min(1, b.u + VR * s / Math.max(0.01, b.courbe.L));
-      const p = b.courbe.c.getPointAt(b.u), tg = b.courbe.c.getTangentAt(b.u);
-      b.x = p.x; b.z = p.z; versCap(Math.atan2(tg.z, tg.x), Math.min(1, s * 10));
-      if (b.u >= 1) {
-        if (b.etat === 'livre') { b.etat = 'decharge'; b.pause = 0; b.livre = false; }
-        else if (b.etat === 'va' || b.etat === 'retour') b.etat = fini ? 'rentre-direct' : 'accompagne';
-        else if (b.etat === 'rentre') { b.courbe = this.depuisGrange(null); b.u = 0; b.etat = 'range'; }
-        else if (b.etat === 'range') b.etat = 'parti';
-      }
-      if (b.etat === 'rentre-direct') { b.courbe = this.versGrange(b); b.u = 0; b.etat = 'rentre'; }
-    } else if (b.etat === 'decharge') {
-      b.pause += s;
-      if (!b.livre && b.pause > 0.5) { P.livrer(b.charge); b.livre = true; b.livraison = b.charge; }
-      if (b.pause > 0.5) b.charge = Math.max(0, b.charge - b.livraison * s / 1.6);
-      if (b.pause > 2.6) { b.charge = 0; const fin2 = P.reste <= 0 && P.tremie < 1; b.courbe = this.depuisGrange(fin2 ? null : [cible[0], cible[1]]); b.u = 0; b.etat = fin2 ? 'range' : 'retour'; }
-    }
-    // tracteur, puis remorque attelée qui suit le point d'attelage sans pivoter sur place
-    const g = b.g, r = b.r; g.visible = r.visible = b.etat !== 'parti';
-    b.echelle = Math.min(1, b.echelle + s * 3); const ech = b.etat === 'range' ? Math.min(b.echelle, (1 - b.u) * 4) : b.echelle;
-    g.position.set(b.x, 0.004, b.z); g.rotation.y = -b.cap; g.scale.setScalar(Math.max(0.01, ech)); r.scale.setScalar(Math.max(0.01, ech));
-    const att = new T3.Vector3(-0.18, 0, 0).applyAxisAngle(new T3.Vector3(0, 1, 0), -b.cap).add(g.position);
-    if (!b.cr) b.cr = att.clone().add(new T3.Vector3(-Math.cos(b.cap) * ATTEL, 0, -Math.sin(b.cap) * ATTEL));
-    const dir = new T3.Vector3().subVectors(att, b.cr); dir.y = 0; const dl = dir.length() || 1; dir.multiplyScalar(1 / dl);
-    b.cr.copy(att).addScaledVector(dir, -ATTEL); r.position.copy(b.cr); r.rotation.y = -Math.atan2(dir.z, dir.x);
-    b.benne.rotation.z = b.etat === 'decharge' ? Math.min(0.55, Math.max(0, b.pause - 0.3) * 0.8) * (b.pause < 2.3 ? 1 : Math.max(0, (2.6 - b.pause) / 0.3)) : 0;
-    b.tas.scale.set(0.18, Math.max(0.001, 0.075 * Math.min(1, b.charge / CAPA)), 0.1); b.tas.visible = b.charge > 20;
-    if (b.etat === 'decharge' && b.pause > 0.6 && b.charge > 20 && !this.reduit) {
-      const q = b.benne.localToWorld(new T3.Vector3(-0.01, 0.13, 0));
-      for (let i = 0; i < 3; i++) this.parts.push({ x: q.x, y: q.y, z: q.z, vx: (Math.random() - 0.5) * 0.15, vy: 0.05, vz: (Math.random() - 0.5) * 0.15, g: 2.4, vie: 0.5, age: 0, c: K3.col(i % 2 ? '#e8b84a' : '#d8a83a') });
-    }
-    // vis de vidange : repliée vers l'arrière, dépliée du côté de la benne pendant le transfert
-    const vis = P.o.userData.vis;
-    if (vis) {
-      const loc = new T3.Vector3(b.x - m.x, 0, b.z - m.z).applyAxisAngle(new T3.Vector3(0, 1, 0), cap), cibleV = transfert ? (loc.z > 0 ? -Math.PI / 2 : Math.PI / 2) : Math.PI;
-      let dv = cibleV - vis.rotation.y; dv = Math.atan2(Math.sin(dv), Math.cos(dv)); vis.rotation.y += dv * Math.min(1, s * 3);
-      if (transfert && Math.abs(dv) < 0.3 && !this.reduit) {
-        const bec = vis.localToWorld(new T3.Vector3(0.69, -0.06, 0)), tasW = b.benne.localToWorld(new T3.Vector3(0.2, 0.2, 0));
-        // le grain coule du bec jusqu'au tas : trajectoire en cloche qui arrive sur la benne en 0,4 s
-        const T = 0.4, gv = 3;
-        for (let i = 0; i < 2; i++) this.parts.push({ x: bec.x, y: bec.y, z: bec.z, vx: (tasW.x - bec.x) / T, vy: (tasW.y - bec.y + 0.5 * gv * T * T) / T, vz: (tasW.z - bec.z) / T, g: gv, vie: T, age: Math.random() * 0.05, c: K3.col(i ? '#e8b84a' : '#f2cc5a') });
-      }
-    }
-    return b.etat === 'parti';
-  },
   // Tout ce qui est encore en route (trémie, benne, cases pas encore fauchées) est livré d'un coup
   viderTransports() {
-    for (const p of this.passages) if (p.transport) { let kg = p.tremie + p.benne.charge * (p.benne.livre ? 0 : 1); for (const rv of this.revel.values()) if (rv.passe === p) kg += rv.kg || 0; if (kg > 0) p.livrer(kg); p.tremie = 0; p.benne.charge = 0; }
+    for (const u of Machines.flotte) if (u.charge > 1 && u.source && !u.livre) { u.source.livrer(u.charge); u.charge = 0; }
+    for (const p of this.passages) if (p.transport) { let kg = p.tremie; for (const rv of this.revel.values()) if (rv.passe === p) kg += rv.kg || 0; if (kg > 0) p.livrer(kg); p.tremie = 0; }
   },
   centreFerme() {
     const r = this.cv.getBoundingClientRect();
@@ -731,7 +631,11 @@ const Rendu = {
     if (type === 'moissonneuse') {
       K.mesh(g, K.fusion([
         K.piece(G.boite(0.62, 0.34, 0.48), '#c9352a', [-0.02, 0.33, 0]), K.piece(G.boite(0.4, 0.14, 0.42), '#dc4a31', [-0.1, 0.56, 0]),
-        K.piece(G.boite(0.22, 0.2, 0.26), '#bfe6ff', [0.17, 0.6, -0.06]), K.piece(G.boite(0.27, 0.03, 0.31), '#f2f2f2', [0.17, 0.715, -0.06]),
+        K.piece(G.boite(0.2, 0.025, 0.24), '#8e2a20', [0.18, 0.512, -0.06]), K.piece(G.boite(0.2, 0.06, 0.012), '#a82a1f', [0.18, 0.54, -0.18]), K.piece(G.boite(0.012, 0.06, 0.24), '#a82a1f', [0.28, 0.54, -0.06]),
+        K.piece(G.boite(0.06, 0.02, 0.07), '#2a2a2a', [0.12, 0.54, -0.06]), K.piece(G.boite(0.012, 0.06, 0.07), '#2a2a2a', [0.09, 0.57, -0.06]),
+        K.piece(G.cyl(0.006, 0.006, 0.09, 5), '#2a2a2a', [0.21, 0.565, -0.06], [0, 0, 0.5]), K.piece(G.cyl(0.03, 0.03, 0.006, 12), '#1e1e1e', [0.235, 0.61, -0.06], [0, 0, 0.5]),
+        K.piece(G.boite(0.05, 0.07, 0.06), '#3a5a8a', [0.125, 0.585, -0.06]), K.piece(G.boule(6, 4), '#e8b88a', [0.13, 0.64, -0.06], 0, 0.022), K.piece(G.cyl(0.034, 0.034, 0.008, 10), '#d8b050', [0.13, 0.662, -0.06]),
+        K.piece(G.cyl(0.005, 0.005, 0.32, 5), '#cfcfcf', [0.1, 0.69, 0.02]), K.piece(G.cone(0.19, 0.06, 10), '#f0e6c8', [0.1, 0.86, 0.02]), K.piece(G.cyl(0.19, 0.19, 0.008, 10), '#c8402a', [0.1, 0.828, 0.02]),
         K.piece(G.boite(0.2, 0.14, 0.3), '#a82a1f', [0.36, 0.2, 0]), K.piece(G.boite(0.16, 0.1, 1.02), '#e2b62a', [0.5, 0.08, 0]),
         ...roue(0.12, 0.27, 0.16, 0.1), ...roue(0.12, -0.27, 0.16, 0.1), ...roue(-0.25, 0.24, 0.1, 0.08), ...roue(-0.25, -0.24, 0.1, 0.08),
         K.piece(G.cyl(0.02, 0.02, 0.14, 6), '#262626', [-0.05, 0.7, 0.15]),
@@ -778,43 +682,48 @@ const Rendu = {
   animerPassages(t, dt) {
     const now = performance.now(), s = Math.min(0.05, dt / 1000);
     this.passages = this.passages.filter(p => {
-      let d = (now - p.t0) / 1000 * p.v;
-      if (p.transport) {
-        if (now < p.t0) return true;
-        // trémie pleine (4 t) : la moissonneuse s'arrête et attend la benne ; au bout du champ elle attend qu'on la vide
-        const pleine = p.tremie >= 4000, dMax = p.reste > 0 || p.tremie >= 1 ? p.L - 0.25 : p.L + 0.25;
-        if (!pleine) p.d = Math.min(dMax, p.d + p.v * s);
-        d = p.d;
-        const a0 = Decor.surLigne(p.pts, Math.min(d, p.L)), b0 = Decor.surLigne(p.pts, Math.min(p.L, d + 0.12)), cap0 = Math.atan2(b0.z - a0.z, b0.x - a0.x);
-        const parti = this.majBenne(p, t, s, a0, cap0, Math.abs(Math.sin(cap0)) < 0.2);
-        if (d > p.L + 0.2) { p.o.visible = false; if (parti) { this.scene.remove(p.o, p.benne.g, p.benne.r); return false; } return true; }
+      if (p.sortie) {
+        // sortie de la grange, tâche au champ (avance pilotée, arrêts trémie pleine), retour à la grange
+        const range = Machines.avancerMachine(p, t, s, () => {
+          const pleine = p.transport && p.tremie >= Machines.TREMIE, dMax = p.transport && (p.reste > 0 || p.tremie >= 1) ? p.L - 0.25 : p.L;
+          if (!pleine) p.d = Math.min(dMax, Math.max(0, p.d) + p.v * s);
+          this.poserAuChamp(p, t, p.d, 1);
+          return p.d >= p.L - 1e-6;
+        });
+        if (range) { this.scene.remove(p.o); return false; }
+        return true;
       }
+      const d = (now - p.t0) / 1000 * p.v;
       if (d < 0) return true;
       if (d > p.L + 0.2) { this.scene.remove(p.o); return false; }
-      const a = Decor.surLigne(p.pts, Math.min(d, p.L)), b = Decor.surLigne(p.pts, Math.min(p.L, d + 0.12));
-      const cap = Math.atan2(b.z - a.z, b.x - a.x);
-      const e = Math.max(0, Math.min(1, d / 0.35, (p.L + 0.2 - d) / 0.35)), k = e * e * (3 - 2 * e);
-      p.o.visible = true; p.o.position.set(a.x, 0.004, a.z); p.o.rotation.y = -cap; p.o.scale.setScalar(Math.max(0.01, k));
-      if (p.o.userData.rabatteur) p.o.userData.rabatteur.rotation.z = -t / 1000 * 5;
-      // la barre de coupe (0,55 case devant le centre) couche les tiges une à une sur le rang en cours
-      if (p.recolte && p.type === 'moissonneuse' && Math.abs(Math.sin(cap)) < 0.2 && d < p.L) {
-        const sx = Math.sign(Math.cos(cap)), fx = a.x + Math.cos(cap) * 0.55, fz = a.z + Math.sin(cap) * 0.55, W = this.pl.w, H = this.pl.h;
-        const tx = Math.floor(fx + W / 2), ty = Math.floor(fz + H / 2), i = ty * W + tx, rv = this.revel.get(i);
-        if (tx >= 0 && tx < W && ty >= 0 && ty < H && rv && rv.avant) {
-          this.coupes.set(i, { fx, s: sx });
-          for (const pt of this.cel[i].desc?.parts || []) this.salir(pt.g, this.chunkDe(i));
-        }
-      }
-      if (p.o.userData.jambes) { const sw = Math.sin(t / 110) * 0.5; p.o.userData.jambes[0].rotation.z = sw; p.o.userData.jambes[1].rotation.z = -sw; p.o.position.y = Math.abs(Math.sin(t / 110)) * 0.006; }
-      // poussière, paille, terre derrière la machine
-      if (!this.reduit && t - p.derniere > 40 && e > 0.5) {
-        p.derniere = t;
-        const arriere = p.type === 'moissonneuse' ? 0.4 : p.type === 'personne' ? 0.05 : 0.38, cx = a.x - Math.cos(cap) * arriere, cz = a.z - Math.sin(cap) * arriere;
-        const n = p.type === 'personne' ? 1 : 3, cols = p.type === 'moissonneuse' ? ['#e8d08a', '#c8a860', '#f2e2a8'] : p.type === 'arracheuse' || p.type === 'charrue' ? ['#8a6440', '#6a4a2a'] : ['#b89870', '#d8c098'];
-        for (let i = 0; i < n; i++) this.parts.push({ x: cx + (Math.random() - 0.5) * 0.3, y: p.type === 'moissonneuse' ? 0.45 : 0.08, z: cz + (Math.random() - 0.5) * 0.3, vx: -Math.cos(cap) * (0.3 + Math.random() * 0.5) + (Math.random() - 0.5) * 0.3, vy: 0.2 + Math.random() * 0.5, vz: -Math.sin(cap) * (0.3 + Math.random() * 0.5) + (Math.random() - 0.5) * 0.3, g: 1.4, vie: 0.8 + Math.random() * 0.6, age: 0, c: K3.col(cols[i % cols.length]) });
-      }
+      const e = Math.max(0, Math.min(1, d / 0.35, (p.L + 0.2 - d) / 0.35));
+      this.poserAuChamp(p, t, d, e * e * (3 - 2 * e));
       return true;
     });
+  },
+  // La machine sur son trajet au champ, à la distance d (k : échelle d'apparition)
+  poserAuChamp(p, t, d, k) {
+    const a = Decor.surLigne(p.pts, Math.min(d, p.L)), b = Decor.surLigne(p.pts, Math.min(p.L, d + 0.12));
+    const cap = Math.atan2(b.z - a.z, b.x - a.x);
+    p.o.visible = true; p.o.position.set(a.x, 0.004, a.z); p.o.rotation.y = -cap; p.o.scale.setScalar(Math.max(0.01, k));
+    if (p.o.userData.rabatteur) p.o.userData.rabatteur.rotation.z = -t / 1000 * 5;
+    // la barre de coupe (0,55 case devant le centre) couche les tiges une à une sur le rang en cours
+    if (p.recolte && p.type === 'moissonneuse' && Math.abs(Math.sin(cap)) < 0.2 && d < p.L) {
+      const sx = Math.sign(Math.cos(cap)), fx = a.x + Math.cos(cap) * 0.55, fz = a.z + Math.sin(cap) * 0.55, W = this.pl.w, H = this.pl.h;
+      const tx = Math.floor(fx + W / 2), ty = Math.floor(fz + H / 2), i = ty * W + tx, rv = this.revel.get(i);
+      if (tx >= 0 && tx < W && ty >= 0 && ty < H && rv && rv.avant) {
+        this.coupes.set(i, { fx, s: sx });
+        for (const pt of this.cel[i].desc?.parts || []) this.salir(pt.g, this.chunkDe(i));
+      }
+    }
+    if (p.o.userData.jambes) { const sw = Math.sin(t / 110) * 0.5; p.o.userData.jambes[0].rotation.z = sw; p.o.userData.jambes[1].rotation.z = -sw; p.o.position.y = Math.abs(Math.sin(t / 110)) * 0.006; }
+    // poussière, paille, terre derrière la machine
+    if (!this.reduit && t - p.derniere > 40 && k > 0.5) {
+      p.derniere = t;
+      const arriere = p.type === 'moissonneuse' ? 0.4 : p.type === 'personne' ? 0.05 : 0.38, cx = a.x - Math.cos(cap) * arriere, cz = a.z - Math.sin(cap) * arriere;
+      const n = p.type === 'personne' ? 1 : 3, cols = p.type === 'moissonneuse' ? ['#e8d08a', '#c8a860', '#f2e2a8'] : p.type === 'arracheuse' || p.type === 'charrue' ? ['#8a6440', '#6a4a2a'] : ['#b89870', '#d8c098'];
+      for (let i = 0; i < n; i++) this.parts.push({ x: cx + (Math.random() - 0.5) * 0.3, y: p.type === 'moissonneuse' ? 0.45 : 0.08, z: cz + (Math.random() - 0.5) * 0.3, vx: -Math.cos(cap) * (0.3 + Math.random() * 0.5) + (Math.random() - 0.5) * 0.3, vy: 0.2 + Math.random() * 0.5, vz: -Math.sin(cap) * (0.3 + Math.random() * 0.5) + (Math.random() - 0.5) * 0.3, g: 1.4, vie: 0.8 + Math.random() * 0.6, age: 0, c: K3.col(cols[i % cols.length]) });
+    }
   },
   // Enrouleur et canon d'arrosage sur le plus grand champ cultivé, quand l'irrigation est en marche (mai à septembre)
   irrigation(t, f, mode) {
@@ -979,7 +888,7 @@ const Rendu = {
       const now = performance.now(), fini = [];
       for (const [i, rv] of this.revel) if (now >= rv.jusque || (rv.passe && (rv.passe.d >= rv.dPass || !this.passages.includes(rv.passe)))) {
         fini.push(i); this.revel.delete(i); this.coupes.delete(i);
-        if (rv.passe) { rv.passe.tremie += rv.kg || 0; rv.passe.reste--; }
+        if (rv.passe) { if (rv.passe.transport) rv.passe.tremie += rv.kg || 0; rv.passe.reste--; }
       }
       if (fini.length) this.majCases(f, this.ctx, false, fini);
     }
@@ -989,6 +898,7 @@ const Rendu = {
     this.majCalques(t, f);
     this.majExploitation(f, false); this.majVerrous(f); this.animer(t);
     this.animerPassages(t, dt);
+    Machines.image(t, dt); Machines.majPortes(dt);
     this.irrigation(t, f, mode);
     this.animerParticules(dt);
     const v = this.v || this.vent(S.jour, f.meteo || { pluie: 0 });

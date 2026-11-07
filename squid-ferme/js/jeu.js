@@ -4,10 +4,10 @@
    progression (étoiles, niveaux, commandes, trouvailles, bilan, premiers pas) : mecaniques.js. */
 
 // ---------- Monde ----------
-// Un vrai lieu (donnees/lieux.js) : grille « champs » de 50 m ou « planches » de 10 m selon le mode.
+// Un lieu tiré d'une graine (js/carte.js) : grille « champs » de 50 m ou « planches » de 10 m selon le mode.
 const NOMS_MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 const MOIS_COURT = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
-const CLE = 'squid-ferme-3';
+const CLE = 'squid-ferme-4';                     // 4 : cartes tirées d'une graine (les parties de Monchy, clé 3, sont effacées)
 const JOUR_MS = 5000;                               // durée d'un jour à la vitesse ×1
 const PRIX_TERRE_HA = { champs: 9000, planches: 60000 };   // € par hectare (terres de l'Artois ≈ 9 000 €/ha)
 const FAMILLE_ECHELLE = { champs: ['gc', 'acs', 'agro'], planches: ['mar'] };
@@ -53,7 +53,12 @@ const personnesAn = kcal => kcal / (BESOIN_KCAL * 365);
 const cle = (x, y) => x + ',' + y;
 const region = f => REGIONS.find(r => r.id === f.region);
 const lieu = f => LIEUX[f.lieu];
+// Le lieu d'une graine dans une région : fabriqué une fois, rangé avec les autres lieux
+function lieuDe(region, graine) { const L = Carte.generer(graine, region); LIEUX[L.id] = L; return L.id; }
 const majuscule = s => s.replace(/^./, m => m.toUpperCase());
+// « à » et « de » devant un nom de lieu-dit : au Tertre, aux Noyers, à la Motte ; du Tertre, des Noyers, de la Motte
+const aLieu = n => n.replace(/^Le /, 'au ').replace(/^Les /, 'aux ').replace(/^La /, 'à la ').replace(/^(?!au |aux |à la )/, 'à ');
+const deLieu = n => n.replace(/^Le /, 'du ').replace(/^Les /, 'des ').replace(/^La /, 'de la ').replace(/^(?!du |des |de la )/, 'de ');
 function texteDate(j = S.jour) { const d = dateDe(j); return `${d.jour === 1 ? '1er' : d.jour} ${NOMS_MOIS[d.mois - 1]} ${d.an}`; }
 function plages(ms) {
   const s = [...ms].sort((a, b) => a - b), out = [];
@@ -66,7 +71,7 @@ function plages(ms) {
   return out.join(', ');
 }
 
-// ---------- Parcelles : les vrais champs (ou des lots de planches) ----------
+// ---------- Parcelles : les champs de la carte (ou des lots de planches) ----------
 const planDe = f => LIEUX[f.lieu][MODES[f.mode].echelle];
 const typeCase = (pl, tx, ty) => tx < 0 || ty < 0 || tx >= pl.w || ty >= pl.h ? null : pl.types[ty][tx];
 function parcelleDe(tx, ty) {
@@ -116,13 +121,19 @@ function ajouterParcelle(f, u) {
 function champsDeDepart(f) {
   const pl = planDe(f), [fx, fy] = pl.ferme, but = MODES[f.mode].echelle === 'champs' ? 12 : 0.15;
   const dist = pl.unites.map((_, u) => Math.min(...casesDe(pl, u).map(([x, y]) => Math.hypot(x - fx - 1.5, y - fy - 1.5))));
-  const ordre = dist.map((d, u) => [d, u]).sort((a, b) => a[0] - b[0]);
+  const herbe = u => Object.values(pl.unites[u].rpg).every(c => RPG_HERBE.includes(c));
+  const ordre = dist.map((d, u) => [d, u]).filter(([, u]) => !herbe(u)).sort((a, b) => a[0] - b[0]);
   const pris = []; let surf = 0;
-  for (const [, u] of ordre) { if (surf >= but) break; pris.push(u); surf += surfaceUnite(f, u); }
+  for (const [, u] of ordre) {
+    if (surf >= but) break;
+    const s = surfaceUnite(f, u);
+    if (surf > 0 && surf + s > but * 1.5) continue;     // un trop grand champ attend : on cherche plus petit un peu plus loin
+    pris.push(u); surf += s;
+  }
   return pris;
 }
 
-// Culture d'un champ voisin : celle déclarée à la PAC cette année-là, ou l'assolement d'une année réelle
+// Culture d'un champ voisin : sa rotation, une culture par an
 const RPG_CULTURE = { BTH: 'ble', BTP: 'ble', BDH: 'ble', BDP: 'ble', EPE: 'epeautre', ORH: 'orge', ORP: 'orge', AVH: 'avoine', AVP: 'avoine',
   SGH: 'seigle', TTH: 'triticale', TTP: 'triticale', MIS: 'mais', MIE: 'mais', SOG: 'sorgho', SRS: 'sarrasin', CZH: 'colza', CZP: 'colza',
   TRN: 'tournesol', LIH: 'lin', LIP: 'lin', LIF: 'lin', SOJ: 'soja', FVL: 'feverole', FVP: 'feverole', PHI: 'pois', PPR: 'pois', PHF: 'pois',
@@ -144,7 +155,7 @@ function voisin(f, u, j) {
 function creerFerme(lieuId, mode) {
   const L = LIEUX[lieuId];
   const f = nouvelleFerme(L.climat, mode, S.jour);
-  Object.assign(f, { lieu: lieuId, histo: [], neigeSol: 0, climatAn: {}, sec: 0 });
+  Object.assign(f, { lieu: lieuId, graine: L.graine, histo: [], neigeSol: 0, climatAn: {}, sec: 0 });
   if (mode !== 'gc') f.modeAvant = 'gc';            // en 1959, la terre sort d'une culture classique : transition
   S.fermes.push(f); S.active = S.fermes.length - 1;
   for (const u of champsDeDepart(f)) ajouterParcelle(f, u);
@@ -152,15 +163,22 @@ function creerFerme(lieuId, mode) {
   f.moDepart = etatSol(f).mo;
   const ha = Object.keys(f.cases).length * MODES[mode].caseHa;
   S.argent += mode === 'mar' ? 4000 : ha * 900;
-  noter(`Installation à ${L.nom} (${MODES[mode].nom.toLowerCase()}) sur ${surfaceTexte(ha)}, le ${texteDate()}.`);
+  noter(`Installation ${aLieu(L.nom)} (${L.pays}, graine ${L.graine}, ${MODES[mode].nom.toLowerCase()}) sur ${surfaceTexte(ha)}, le ${texteDate()}.`);
   return f;
 }
 const surfaceTexte = ha => ha >= 1 ? nf(ha, ha < 10 ? 1 : 0) + ' ha' : nf(ha * 10000) + ' m²';
 function sauver() { if (!S) return; try { localStorage.setItem(CLE, JSON.stringify(S)); } catch (e) { /* stockage indisponible */ } }
 function charger() {
   try {
+    localStorage.removeItem('squid-ferme-3');      // parties de l'ancienne carte (vrais champs de Monchy) : on repart de zéro
     const t = localStorage.getItem(CLE);
-    if (t) { const s = JSON.parse(t); if ((s.v === 3 || s.v === 4) && s.fermes?.length) { S = s; Meca.completer(S); S.v = 4; return true; } }
+    if (t) {
+      const s = JSON.parse(t);
+      if (s.v === 5 && s.fermes?.length && s.fermes.every(f => f.graine)) {
+        for (const f of s.fermes) f.lieu = lieuDe(f.region, f.graine);
+        S = s; Meca.completer(S); return true;
+      }
+    }
   } catch (e) { /* partie neuve */ }
   return false;
 }
@@ -209,7 +227,7 @@ function unJour() {
     if (MODES[f.mode].arbres && ageArbres(f, S.jour) >= 50) {
       const ha = Object.keys(f.cases).length * MODES[f.mode].caseHa, bois = ha * 0.5 * 50;
       f.stats.bois += bois; f.arbresDepuis = S.jour;
-      noter(`Coupe des arbres de ${lieu(f).nom} : ${nf(bois)} t de bois d’œuvre. On replante.`);
+      noter(`Coupe des arbres ${deLieu(lieu(f).nom)} : ${nf(bois)} t de bois d’œuvre. On replante.`);
     }
     // Sécheresse visible : réserve moyenne du sol
     const sol = etatSol(f); f.sec = d.mois >= 5 && d.mois <= 10 ? clamp((0.42 - sol.r / sol.ru) / 0.3, 0, 1) : 0;
@@ -472,7 +490,7 @@ const NOM_RPG = { prairie: 'prairie', friche: 'friche ou bande enherbée' };
 function descriptionVoisin(f, u) {
   const v = voisin(f, u, S.jour);
   const quoi = v.type === 'culture' ? v.c.nom.toLowerCase() : NOM_RPG[v.type];
-  const quand = v.reel ? `déclaré à la PAC en ${v.an}` : v.an ? `assolement de ${v.an} à la PAC` : '';
+  const quand = lieu(f).genere ? '' : v.reel ? `déclaré à la PAC en ${v.an}` : v.an ? `assolement de ${v.an} à la PAC` : '';
   return `<b>Champ voisin · ${surfaceTexte(surfaceUnite(f, u))}</b><br>${majuscule(quoi)}${quand ? ` <span class="discret">(${quand})</span>` : ''}${v.type === 'culture' ? `<br>${chiffres(v.c.rdt, v.c)} <span class="discret">(moyenne)</span>` : ''}`;
 }
 function majBulle(e, tx, ty) {
@@ -498,15 +516,15 @@ function majInfo() {
     const o = OBJ_PARCELLES.find(x => x.id === parcellesAObjectif(f)[selection.u]);
     info.innerHTML = `<h3>Champ à débloquer</h3><p>${descriptionVoisin(f, selection.u)}</p><p class="ligne2">Il rejoint votre exploitation quand cet objectif est atteint : <b>${o.txt.toLowerCase()}</b>.</p>`;
   } else if (selection?.type === 'parcelle' && !f.parcelles[selection.u]) {
-    const u = selection.u, prix = prixParcelle(f, u), rpg = planDe(f).unites[u].rpg;
-    const histo = Object.entries(rpg).map(([an, code]) => { const c = RPG_CULTURE[code]; return `${an} ${c ? CULTURE[c].nom.toLowerCase() : RPG_HERBE.includes(code) ? 'prairie' : 'autre'}`; }).join(' · ');
+    const u = selection.u, prix = prixParcelle(f, u), un = planDe(f).unites[u], nomCode = code => { const c = RPG_CULTURE[code]; return c ? CULTURE[c].nom.toLowerCase() : RPG_HERBE.includes(code) ? 'prairie' : 'autre'; };
+    const histo = un.rot ? (new Set(un.rot).size > 1 ? un.rot.map(nomCode).join(' → ') : '') : Object.entries(un.rpg).map(([an, code]) => `${an} ${nomCode(code)}`).join(' · ');
     info.innerHTML = `<h3>Champ à acheter</h3><p>${descriptionVoisin(f, u)}</p>
-      ${histo ? `<p class="ligne2">Cultures déclarées : ${histo}</p>` : ''}
+      ${histo ? `<p class="ligne2">${un.rot ? 'Rotation du voisin' : 'Cultures déclarées'} : ${histo}</p>` : ''}
       <button class="principal" data-action="acheter" ${S.argent < prix ? 'disabled' : ''}>Acheter pour ${euros(prix)}</button>`;
   } else if (selection?.type === 'case' && f.cases[cle(selection.tx, selection.ty)]) {
     info.innerHTML = `<h3>Case de ${surfaceTexte(MODES[f.mode].caseHa)}</h3><p>${descriptionCase(f, f.cases[cle(selection.tx, selection.ty)], true)}</p>`;
   } else {
-    info.innerHTML = `<p class="discret">${lieu(f).nom} (${lieu(f).pays}). Cliquez un champ voisin pour voir ce qu’on y a vraiment cultivé, ou une de vos cases pour son eau et ce qui freine son rendement.</p>`;
+    info.innerHTML = `<p class="discret">${lieu(f).nom} (${lieu(f).pays}). Cliquez un champ voisin pour voir ce que le voisin y cultive, ou une de vos cases pour son eau et ce qui freine son rendement.</p>`;
   }
 }
 info.addEventListener('click', e => {
@@ -844,15 +862,18 @@ function verifierObjectifs() {
   }
 }
 
-// ---------- Installation : carte de France ----------
-// Pour commencer, un seul vrai lieu ; les autres régions sont annoncées.
+// ---------- Installation : région, graine, manière de cultiver ----------
+// La carte se tire d'une graine (js/carte.js) : la même graine, dans la même région, redonne la même carte partout.
 const install = document.getElementById('installation');
-let choixLieu = Object.keys(LIEUX)[0], choixMode = 'gc';
+const REGIONS_JOUABLES = REGIONS.filter(r => r.id !== 'monchy');   // Monchy : maille de l'ancien lieu réel, doublon de l'Artois
+let choixRegion = 'artois', choixGraine = Carte.nouvelleGraine(), choixMode = 'gc';
+const $i = id => document.getElementById(id);
 function ouvrirInstallation() {
   install.hidden = false;
-  document.getElementById('guide').hidden = true;
-  document.getElementById('install-titre').textContent = S ? 'Où installer la nouvelle ferme ?' : 'Où installer votre ferme ?';
-  const svg = document.getElementById('carte-france');
+  $i('guide').hidden = true;
+  $i('install-titre').textContent = S ? 'Où installer la nouvelle ferme ?' : 'Où installer votre ferme ?';
+  if (S) choixGraine = Carte.nouvelleGraine();
+  const svg = $i('carte-france');
   if (!svg.childElementCount) {
     const xs = FRANCE.join(' ').match(/-?\d+\.?\d*/g).map(Number);
     let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
@@ -860,49 +881,55 @@ function ouvrirInstallation() {
     svg.setAttribute('viewBox', `${x0 - 12} ${y0 - 12} ${x1 - x0 + 24} ${y1 - y0 + 24}`);
     const ns = 'http://www.w3.org/2000/svg';
     for (const d of FRANCE) { const p = document.createElementNS(ns, 'path'); p.setAttribute('d', d); p.setAttribute('class', 'pays'); svg.appendChild(p); }
-    const actifs = new Set(Object.values(LIEUX).map(L => L.climat));
-    for (const r of REGIONS) {
-      if (actifs.has(r.id)) continue;
-      const g = document.createElementNS(ns, 'g'); g.setAttribute('class', 'lieu bientot');
-      g.innerHTML = `<title>${r.nom} : bientôt</title><circle cx="${r.x}" cy="${r.y}" r="4"></circle>`;
+    for (const r of REGIONS_JOUABLES) {
+      const g = document.createElementNS(ns, 'g'); g.setAttribute('class', 'lieu'); g.dataset.lieu = r.id; g.setAttribute('tabindex', '0');
+      const gauche = r.x > 330;   // à l'est, l'étiquette passe à gauche du point
+      g.innerHTML = `<title>${r.nom} (${r.ville})</title><circle class="onde" cx="${r.x}" cy="${r.y}" r="7"></circle><circle cx="${r.x}" cy="${r.y}" r="5"></circle><text x="${gauche ? r.x - 14 : r.x + 14}" y="${r.y + 5}" text-anchor="${gauche ? 'end' : 'start'}">${r.nom}</text>`;
       svg.appendChild(g);
     }
-    for (const [id, L] of Object.entries(LIEUX)) {
-      const r = REGIONS.find(x => x.id === L.climat);
-      const g = document.createElementNS(ns, 'g'); g.setAttribute('class', 'lieu'); g.dataset.lieu = id; g.setAttribute('tabindex', '0');
-      g.innerHTML = `<title>${L.nom}</title><circle class="onde" cx="${r.x}" cy="${r.y}" r="7"></circle><circle cx="${r.x}" cy="${r.y}" r="7"></circle><text x="${r.x + 12}" y="${r.y + 5}">${L.nom}</text>`;
-      svg.appendChild(g);
-    }
+  }
+  const boite = $i('install-region');
+  if (!boite.dataset.pret) {
+    boite.dataset.pret = '1';
+    boite.innerHTML = `<h2 id="i-nom"></h2><p class="ligne2" id="i-ligne"></p>
+      <canvas id="i-apercu" class="apercu" aria-label="Carte de l’exploitation vue d’avion"></canvas>
+      <div class="graine"><label for="i-graine">Graine</label><input id="i-graine" maxlength="12" spellcheck="false" autocomplete="off" autocapitalize="characters">
+        <button id="i-de" type="button">Autre carte</button></div>
+      <p class="discret">Liseré doré : vos premiers champs. La même graine redonne la même carte, ici ou ailleurs.</p>
+      <div class="chiffres petit" id="i-chiffres"></div>`;
+    $i('i-graine').addEventListener('input', e => { const g = Carte.normaliser(e.target.value); if (g) { choixGraine = g; majInstallation(); } });
+    $i('i-graine').addEventListener('change', e => { e.target.value = choixGraine; });
+    $i('i-de').addEventListener('click', () => {
+      choixGraine = Carte.nouvelleGraine(); majInstallation();
+      $i('i-apercu').animate([{ opacity: 0.25, transform: 'scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: 280, easing: 'ease-out' });
+    });
   }
   majInstallation();
 }
 function majInstallation() {
-  const L = LIEUX[choixLieu], r = REGIONS.find(x => x.id === L.climat);
-  for (const g of document.querySelectorAll('#carte-france .lieu')) g.classList.toggle('actif', g.dataset.lieu === choixLieu);
-  document.getElementById('install-region').innerHTML = `<h2>${L.nom}</h2><p class="ligne2">${L.pays} · ${r.sol} · ${L.champs.unites.length} vrais champs sur 1,6 × 1,25 km</p>
-    <div class="chiffres petit"><div><b>${nf(r.tRef, 1)} °C</b><span>par an, 1961-1990</span></div><div><b>${nf(r.pRef)} mm</b><span>de pluie par an</span></div>
-    <div><b>${r.ru} mm</b><span>de réserve utile</span></div><div><b>+${nf(r.pente * 10, 2)} °C</b><span>par décennie depuis 1990</span></div></div>
-    <p class="discret">Champs déclarés à la PAC de 2015 à 2024, bâtiments, chemins et bois de la BD TOPO (IGN), climat SAFRAN de la maille.</p>`;
-  document.getElementById('install-modes').innerHTML = Object.entries(MODES).map(([id, m]) =>
-    `<button data-mode="${id}" aria-pressed="${id === choixMode}"><b>${m.nom}</b><span>1 case = ${m.echelle === 'champs' ? '50 × 50 m' : '10 × 10 m'}</span><span class="texte">${m.texte}</span></button>`).join('');
-  document.getElementById('install-go').textContent = S ? `S’installer le ${texteDate()}` : 'S’installer le 1er mars 1959';
+  const r = REGIONS.find(x => x.id === choixRegion), id = lieuDe(choixRegion, choixGraine), L = LIEUX[id], m = MODES[choixMode], pl = L[m.echelle];
+  for (const g of document.querySelectorAll('#carte-france .lieu')) { const a = g.dataset.lieu === choixRegion; g.classList.toggle('actif', a); if (a) g.parentNode.appendChild(g); }
+  $i('i-nom').textContent = L.nom;
+  $i('i-ligne').textContent = `${r.nom} (${r.ville}) · ${r.sol} · ${m.echelle === 'champs' ? `${pl.unites.length} champs sur 1,6 × 1,2 km` : `${pl.unites.length} lots de planches sur 320 × 240 m`}`;
+  if (document.activeElement !== $i('i-graine')) $i('i-graine').value = choixGraine;
+  Carte.apercu($i('i-apercu'), pl, { depart: new Set(champsDeDepart({ lieu: id, mode: choixMode })) });
+  $i('i-chiffres').innerHTML = `<div><b>${nf(r.tRef, 1)} °C</b><span>par an, 1961-1990</span></div><div><b>${nf(r.pRef)} mm</b><span>de pluie par an</span></div>
+    <div><b>${r.ru} mm</b><span>de réserve utile</span></div><div><b>+${nf(r.pente * 10, 2)} °C</b><span>par décennie depuis 1990</span></div>`;
+  $i('install-modes').innerHTML = Object.entries(MODES).map(([mid, mo]) =>
+    `<button data-mode="${mid}" aria-pressed="${mid === choixMode}"><b>${mo.nom}</b><span>1 case = ${mo.echelle === 'champs' ? '50 × 50 m' : '10 × 10 m'}</span><span class="texte">${mo.texte}</span></button>`).join('');
+  $i('install-go').textContent = S ? `S’installer le ${texteDate()}` : 'S’installer le 1er mars 1959';
 }
-document.getElementById('carte-france').addEventListener('click', e => {
-  const g = e.target.closest('.lieu'); if (!g || !g.dataset.lieu) return;
-  choixLieu = g.dataset.lieu; majInstallation();
-});
-document.getElementById('carte-france').addEventListener('keydown', e => {
-  const g = e.target.closest('.lieu'); if (!g || !g.dataset.lieu || (e.key !== 'Enter' && e.key !== ' ')) return;
-  e.preventDefault(); choixLieu = g.dataset.lieu; majInstallation();
-});
-document.getElementById('install-modes').addEventListener('click', e => { const b = e.target.closest('[data-mode]'); if (b) { choixMode = b.dataset.mode; majInstallation(); } });
-document.getElementById('install-go').addEventListener('click', async () => {
-  const bouton = document.getElementById('install-go');
+function choisirRegion(g) { if (!g || !g.dataset.lieu) return; choixRegion = g.dataset.lieu; majInstallation(); }
+$i('carte-france').addEventListener('click', e => choisirRegion(e.target.closest('.lieu')));
+$i('carte-france').addEventListener('keydown', e => { if (e.key !== 'Enter' && e.key !== ' ') return; e.preventDefault(); choisirRegion(e.target.closest('.lieu')); });
+$i('install-modes').addEventListener('click', e => { const b = e.target.closest('[data-mode]'); if (b) { choixMode = b.dataset.mode; majInstallation(); } });
+$i('install-go').addEventListener('click', async () => {
+  const bouton = $i('install-go');
   bouton.disabled = true; bouton.textContent = 'Chargement du climat…';
-  try { await Climat.charger(LIEUX[choixLieu].climat); } catch (e) { toast(e.message); bouton.disabled = false; majInstallation(); return; }
+  try { await Climat.charger(choixRegion); } catch (e) { toast(e.message); bouton.disabled = false; majInstallation(); return; }
   const neuve = !S;
-  if (neuve) { S = { v: 4, jour: DEBUT(), vitesse: 1, argent: 0, fermes: [], active: 0, objectifs: {}, journal: [] }; Meca.completer(S); S.guide = 0; S.prochaineCommande = S.jour + 18; }
-  const f = creerFerme(choixLieu, choixMode);
+  if (neuve) { S = { v: 5, jour: DEBUT(), vitesse: 1, argent: 0, fermes: [], active: 0, objectifs: {}, journal: [] }; Meca.completer(S); S.guide = 0; S.prochaineCommande = S.jour + 18; }
+  const f = creerFerme(lieuDe(choixRegion, choixGraine), choixMode);
   f.meteo = Climat.jour(f.region, S.jour);
   if (neuve) for (let i = 0; i < 2; i++) { const o = Meca.nouvelleCommande(); if (o) S.commandes.push(o); }
   install.hidden = true; bouton.disabled = false;

@@ -11,6 +11,7 @@ const Vie = {
     if (this.groupe) this.groupe.parent?.remove(this.groupe);
     this.scene = scene; this.D = D; this.pl = pl; this.etres = []; this.vaches = []; this.pature = []; this.nus = [];
     this.groupe = new T3.Group(); scene.add(this.groupe); this.num = 0;
+    for (const id of [...Flotte.mobiles.keys()]) if (id.startsWith('trafic')) Flotte.desinscrire(id);
     // voitures et camion entrent et sortent par la tranche du plateau : découpés aux bords
     this.bords = [new T3.Plane(new T3.Vector3(1, 0, 0), pl.w / 2), new T3.Plane(new T3.Vector3(-1, 0, 0), pl.w / 2), new T3.Plane(new T3.Vector3(0, 0, 1), pl.h / 2), new T3.Plane(new T3.Vector3(0, 0, -1), pl.h / 2)];
     const t = performance.now();
@@ -136,6 +137,45 @@ const Vie = {
     if (!dehors) this.vaches.forEach(v => this.groupe.remove(v.o));
   },
 
+  // Sept véhicules de 1960 (voitures, fourgonnette, camion de betteraves, tracteurs des voisins), tirés au hasard selon leur fréquence
+  modeles() {
+    if (this._modeles) return this._modeles;
+    const K = K3, G = K.G, vitre = '#9fc3d6', chrome = '#d6d6d2';
+    const R = (x, z, r, l, c = '#cfcfcf') => [K.piece(G.cyl(r, r, l, 10), '#1c1c1c', [x, r, z], [Math.PI / 2, 0, 0]), K.piece(G.cyl(r * 0.5, r * 0.5, l + 0.004, 8), c, [x, r, z], [Math.PI / 2, 0, 0])];
+    const quatre = (x, z, r, l, c) => [...R(x, z, r, l, c), ...R(x, -z, r, l, c), ...R(-x, z, r, l, c), ...R(-x, -z, r, l, c)];
+    const berline = (c, toit, L) => [K.piece(G.boite(L, 0.085, 0.2), c, [0, 0.088, 0]), K.piece(G.boite(L * 0.52, 0.072, 0.178), toit, [-L * 0.07, 0.166, 0]),
+      K.piece(G.boite(L * 0.53, 0.042, 0.184), vitre, [-L * 0.07, 0.17, 0]), K.piece(G.boite(L * 0.44, 0.018, 0.16), toit, [-L * 0.07, 0.208, 0]),
+      K.piece(G.boite(0.02, 0.024, 0.2), chrome, [L / 2 + 0.005, 0.06, 0]), K.piece(G.boite(0.02, 0.024, 0.2), chrome, [-L / 2 - 0.005, 0.06, 0]), ...quatre(L * 0.32, 0.1, 0.045, 0.03)];
+    const tracteurDe = (c, jante) => [K.piece(G.boite(0.2, 0.09, 0.1), c, [0.07, 0.16, 0]), K.piece(G.boite(0.15, 0.055, 0.09), '#4a4a4a', [0.07, 0.095, 0]),
+      K.piece(G.boite(0.12, 0.018, 0.05), c, [-0.06, 0.19, 0.095]), K.piece(G.boite(0.12, 0.018, 0.05), c, [-0.06, 0.19, -0.095]), K.piece(G.boite(0.05, 0.018, 0.06), '#2a2a2a', [-0.07, 0.2, 0]),
+      K.piece(G.cyl(0.006, 0.006, 0.09, 6), '#222222', [0.12, 0.25, 0.03]), K.piece(G.cyl(0.02, 0.024, 0.075, 8), '#6b5a40', [-0.065, 0.245, 0]), K.piece(G.boule(6, 4), '#e2b48c', [-0.06, 0.3, 0], 0, 0.019),
+      K.piece(G.cyl(0.026, 0.026, 0.012, 10), '#2b2b2b', [-0.06, 0.318, 0]), ...R(-0.06, 0.1, 0.09, 0.045, jante), ...R(-0.06, -0.1, 0.09, 0.045, jante), ...R(0.12, 0.07, 0.045, 0.028, jante), ...R(0.12, -0.07, 0.045, 0.028, jante)];
+    const dome = new T3.CylinderGeometry(0.1, 0.1, 0.3, 10, 1, false, 0, Math.PI); dome.rotateZ(Math.PI / 2);
+    const M = [
+      { nom: 'Petite voiture grise', v: [1.9, 2.4], p: 0.16, pieces: [K.piece(G.boite(0.38, 0.1, 0.2), '#8b9aa8', [0, 0.1, 0]), K.piece(dome, '#7d8c9a', [-0.02, 0.15, 0]),
+        ...[[0.12, 0.1], [0.12, -0.1], [-0.12, 0.1], [-0.12, -0.1]].map(([x, z]) => K.piece(G.cyl(0.045, 0.045, 0.03, 8), '#222222', [x, 0.05, z], [Math.PI / 2, 0, 0]))] },
+      { nom: 'Berline noire', v: [2.6, 3.2], p: 0.15, pieces: berline('#1f2328', '#1f2328', 0.46) },
+      { nom: 'Voiture ivoire et bordeaux', v: [2.3, 2.9], p: 0.14, pieces: berline('#e4d9bd', '#8e2f2a', 0.42) },
+      { nom: 'Fourgonnette bleue', v: [2.0, 2.5], p: 0.13, pieces: [K.piece(G.boite(0.1, 0.07, 0.18), '#5b7c96', [0.14, 0.075, 0]), K.piece(G.boite(0.27, 0.17, 0.19), '#5b7c96', [-0.045, 0.125, 0]),
+        K.piece(G.boite(0.012, 0.05, 0.16), vitre, [0.09, 0.17, 0]), K.piece(G.boite(0.05, 0.045, 0.194), vitre, [0.055, 0.17, 0]),
+        ...[-0.15, -0.09, -0.03].map(x => K.piece(G.boite(0.006, 0.14, 0.196), '#4d6b83', [x, 0.125, 0])), K.piece(G.boite(0.016, 0.02, 0.19), chrome, [0.195, 0.055, 0]), ...quatre(0.115, 0.095, 0.042, 0.028)] },
+      { nom: 'Camion de betteraves', v: [1.5, 1.9], p: 0.16, pieces: [K.piece(G.boite(0.14, 0.09, 0.19), '#3f6a4a', [0.27, 0.1, 0]), K.piece(G.boite(0.12, 0.16, 0.22), '#3f6a4a', [0.15, 0.15, 0]),
+        K.piece(G.boite(0.01, 0.06, 0.18), vitre, [0.211, 0.19, 0]), K.piece(G.boite(0.07, 0.05, 0.224), vitre, [0.15, 0.19, 0]), K.piece(G.boite(0.02, 0.03, 0.22), '#2a2a2a', [0.345, 0.06, 0]),
+        K.piece(G.boite(0.58, 0.03, 0.16), '#2a2a2a', [-0.04, 0.065, 0]), K.piece(G.boite(0.44, 0.025, 0.24), '#7a5a3a', [-0.12, 0.095, 0]),
+        K.piece(G.boite(0.44, 0.07, 0.012), '#8a6a44', [-0.12, 0.14, 0.114]), K.piece(G.boite(0.44, 0.07, 0.012), '#8a6a44', [-0.12, 0.14, -0.114]),
+        K.piece(G.boite(0.012, 0.07, 0.24), '#8a6a44', [-0.334, 0.14, 0]), K.piece(G.boite(0.012, 0.09, 0.24), '#8a6a44', [0.094, 0.15, 0]),
+        ...Array.from({ length: 18 }, (_, i) => K.piece(G.boule(6, 4), i % 3 ? '#e0cfa8' : '#cdb78e', [-0.29 + (i % 6) * 0.068, 0.14 + Math.floor(i / 6) * 0.025, (Math.floor(i / 6) % 2 ? 0.04 : -0.04) + ((i * 7) % 3 - 1) * 0.035], 0, 0.034)),
+        ...R(0.25, 0.11, 0.055, 0.035), ...R(0.25, -0.11, 0.055, 0.035), ...R(-0.2, 0.11, 0.055, 0.035), ...R(-0.2, -0.11, 0.055, 0.035)] },
+      { nom: 'Tracteur du voisin et ses bottes', v: [0.9, 1.15], p: 0.14, pieces: [...tracteurDe('#8f9497', '#8f9497'), K.piece(G.boite(0.12, 0.012, 0.012), '#2a2a2a', [-0.2, 0.07, 0]),
+        K.piece(G.boite(0.4, 0.02, 0.22), '#8a6a44', [-0.46, 0.1, 0]), ...R(-0.46, 0.12, 0.05, 0.03, '#8a6a44'), ...R(-0.46, -0.12, 0.05, 0.03, '#8a6a44'),
+        ...[[-0.56, 0.155, -0.055], [-0.56, 0.155, 0.055], [-0.37, 0.155, -0.055], [-0.37, 0.155, 0.055], [-0.465, 0.245, 0]].map(q => K.piece(G.boite(0.17, 0.09, 0.1), '#dcc06a', q))] },
+      { nom: 'Tracteur rouge', v: [1.05, 1.35], p: 0.12, pieces: tracteurDe('#b83a2c', '#e8e2d0') },
+    ];
+    for (const m of M) { m.geo = K.fusion(m.pieces); m.geo.computeBoundingBox(); const b = m.geo.boundingBox; m.geo.translate(-(b.min.x + b.max.x) / 2, 0, 0); m.L = (b.max.x - b.min.x) / 2; m.W = (b.max.z - b.min.z) / 2; delete m.pieces; }
+    this.matTrafic = K.matV({ clippingPlanes: this.bords });
+    return (this._modeles = M);
+  },
+  tirer(M) { let r = M.reduce((a, m) => a + m.p, 0) * Math.random(); for (const m of M) { r -= m.p; if (r <= 0) return m; } return M.at(-1); },
   // Camion de livraison qui quitte la ferme ; plusieurs livraisons d'affilée partent l'une après l'autre
   livraison() {
     if (!this.sortie || Rendu.reduit) return;
@@ -204,6 +244,14 @@ const Vie = {
     }
     // êtres de passage
     this.etres = this.etres.filter(e => {
+      if (e.type === 'trafic') {
+        const pose = e.tr.pose(e.s), libre = Flotte.devant(e.id, { x: pose.x, y: pose.y, cap: pose.cap }, e.L, e.W, 3, (m, dc) => Math.cos(dc) > -0.3);
+        e.v = Math.min(e.v + 1.2 * s, e.v0, Math.sqrt(2 * 3.5 * Math.max(0, libre - 0.14)));
+        e.s += e.v * s; const p = e.tr.pose(e.s);
+        e.x = p.x; e.y = p.y; e.cap = p.cap; e.o.visible = true; e.o.position.set(p.x, 0.012, p.y); e.o.rotation.y = -p.cap;
+        if (e.s >= e.tr.L - 1e-3) { this.groupe.remove(e.o); Flotte.desinscrire(e.id); return false; }
+        return true;
+      }
       if (e.type === 'voiture' || e.type === 'camion') {
         e.d += e.v * s;
         if (e.d < 0) { e.o.visible = false; return true; }
@@ -228,20 +276,28 @@ const Vie = {
   },
   naitre(t, ctx) {
     const P = this.prochain, D = this.D, pl = this.pl, W = pl.w, H = pl.h, mois = ctx.mois;
-    // voitures sur les routes qui sortent de la carte
+    // Trafic de 1960 sur les routes qui sortent du plateau : trois véhicules au plus, dans les deux sens, voie de droite,
+    // personne ne double (chacun règle sa vitesse sur ce qui roule devant lui) ; ils entrent et sortent par la tranche
     if (t > P.voiture) {
-      P.voiture = t + 6000 + Math.random() * 10000;
+      const nb = this.etres.filter(e => e.type === 'trafic').length;
+      P.voiture = t + 1500 + Math.random() * 6000 + nb * 1500;
       const routes = D.routes.filter(r => (r.auBord[0] || r.auBord[1]) && Decor.longueur(r.pts) > 5);
-      if (routes.length && this.etres.filter(e => e.type === 'voiture').length < 3) {
+      if (routes.length && nb < 3) {
         const r = routes[(Math.random() * routes.length) | 0], sens = r.auBord[0] && (!r.auBord[1] || Math.random() < 0.5);
-        let pts = sens ? r.pts : [...r.pts].reverse(); const o = new T3.Group(), m = K3.matV({ clippingPlanes: this.bords });
-        const dehors = (a, b) => { const l = Math.hypot(a[0] - b[0], a[1] - b[1]) || 1; return [a[0] + (a[0] - b[0]) / l * 0.6, a[1] + (a[1] - b[1]) / l * 0.6]; };
+        let pts = sens ? r.pts : [...r.pts].reverse();
+        const dehors = (a, b) => { const l = Math.hypot(a[0] - b[0], a[1] - b[1]) || 1; return [a[0] + (a[0] - b[0]) / l * 0.7, a[1] + (a[1] - b[1]) / l * 0.7]; };
         const [b0, b1] = sens ? r.auBord : [r.auBord[1], r.auBord[0]];
         if (b0) pts = [dehors(pts[0], pts[1]), ...pts]; if (b1) pts = [...pts, dehors(pts.at(-1), pts.at(-2))];
-        const coul = ['#8b9aa8', '#2a2a2e', '#e8e0c8', '#8ab0c8', '#a8382a', '#5a7a5a'][(Math.random() * 6) | 0];
-        const k = K3.mesh(o, this.G.voiture, m); k.castShadow = false; m.color = K3.col(coul); const om = this.ombre(0.12, 0.24); om.material = this.mOmbreBord(); o.add(om); this.groupe.add(o);
-        o.userData.nom = { cle: 'vehicule:voiture-' + (++this.num), libelle: 'Voiture' };
-        this.etres.push({ type: 'voiture', o, pts, d: 0, v: 1.1 + Math.random() * 0.5, voie: D.larg.r * 0.24 });
+        pts = Flotte.aDroite(pts, D.larg.r * 0.28);
+        const M = this.modeles(), m = this.tirer(M);
+        if (!Flotte.presDe(pts[0], m.L + 1.0)) {
+          const o = new T3.Group(), id = 'trafic-' + (++this.num); K3.mesh(o, m.geo, this.matTrafic).castShadow = false;
+          const om = this.ombre(m.W + 0.02, m.L + 0.04); om.material = this.mOmbreBord(); o.add(om); o.visible = false; this.groupe.add(o);
+          o.userData.nom = { cle: 'vehicule:' + id, libelle: m.nom };
+          const e = { type: 'trafic', id, o, tr: Flotte.trace([{ pts, r: 0.8 }]), s: 0, x: pts[0][0], y: pts[0][1], cap: 0, L: m.L, W: m.W, v0: m.v[0] + Math.random() * (m.v[1] - m.v[0]), v: m.v[1] };
+          Flotte.inscrire(id, 'trafic', () => [{ x: e.x, y: e.y, cap: e.cap, l: e.L, w: e.W }]);
+          this.etres.push(e);
+        }
       }
     }
     // vols d'oiseaux : oies en V au printemps et à l'automne, petits groupes sinon

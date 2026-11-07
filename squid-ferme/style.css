@@ -359,6 +359,18 @@ h3 { margin: 14px 0 6px; font-size: .78rem; text-transform: uppercase; letter-sp
 .lieu.bientot circle { fill: var(--muted); opacity: .35; stroke-width: 1; }
 .lieu:not(.bientot) circle:not(.onde) { fill: var(--accent); }
 .lieu text { font: 700 14px system-ui, sans-serif; fill: var(--ink); paint-order: stroke; stroke: var(--page); stroke-width: 4px; }
+.lieu:not(.actif) .onde, .lieu:not(.actif) text { display: none; }
+.lieu:not(.actif) circle { opacity: .7; }
+.lieu:not(.actif):hover text { display: block; }
+/* carte tirée d'une graine : aperçu vu d'avion et champ de la graine */
+.apercu { display: block; width: 100%; aspect-ratio: 32 / 24; border-radius: 10px; margin: 4px 0 2px; box-shadow: 0 0 0 1px var(--border), 0 6px 18px rgba(40, 25, 10, .14); background: #a7cf7e; }
+.graine { display: flex; align-items: center; gap: 8px; }
+.graine label { font-size: .85rem; color: var(--muted); }
+.graine input { flex: 1; min-width: 0; padding: 7px 10px; border-radius: 6px; border: 2px solid var(--border); background: var(--surface); color: var(--ink);
+  font: 700 1rem ui-monospace, 'SF Mono', Menlo, monospace; letter-spacing: .12em; text-transform: uppercase; }
+.graine input:focus { border-color: var(--accent); outline: none; }
+.graine button { padding: 7px 12px; border-radius: 6px; border: 2px solid var(--border); background: var(--surface); white-space: nowrap; }
+.graine button:hover { border-color: var(--muted); }
 .install-choix { display: grid; gap: 8px; }
 .install-choix h2 { margin: 0; font-size: 1.4rem; }
 .install-modes { display: grid; gap: 6px; }

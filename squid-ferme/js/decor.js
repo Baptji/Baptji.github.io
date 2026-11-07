@@ -171,6 +171,12 @@ const Decor = (() => {
     const g = new T3.BufferGeometry(); g.setAttribute('position', new T3.Float32BufferAttribute(pos, 3)); g.computeVertexNormals();
     return { g, E, R, I, hR };
   }
+  // Arc surbaissé : largeur w, montants h1, flèche f
+  function surbaisse(w, h1, f) {
+    const R = (w * w / 4 + f * f) / (2 * f), cy = h1 + f - R;
+    return { R, cy, haut: u => cy + Math.sqrt(Math.max(0, R * R - u * u)),
+      forme() { const sh = new T3.Shape(); sh.moveTo(-w / 2, 0); sh.lineTo(-w / 2, h1); sh.absarc(0, cy, R, Math.atan2(h1 - cy, -w / 2), Math.atan2(h1 - cy, w / 2), true); sh.lineTo(w / 2, 0); sh.closePath(); return sh; } };
+  }
   function arche(w, h) { const s = new T3.Shape(); s.moveTo(-w / 2, 0); s.lineTo(-w / 2, h - w / 2); s.absarc(0, h - w / 2, w / 2, Math.PI, 0, true); s.lineTo(w / 2, 0); s.closePath(); return s; }
 
   function ferme(parent) {
@@ -182,7 +188,7 @@ const Decor = (() => {
     const mPL = K.mat('#4b3a2a');
     A.toits = [mTui];
     A.roles = new Map([[mTui, 'toiture'], [mBri, 'mur'], [mPie, 'encadrement'], [mGou, 'soubassement'], [mVer, 'fenêtre'], [mCad, 'fenêtre'], [mVol, 'volet'], [mPor, 'porte'], [mGra, 'porte'], [mPL, 'porte'], [mNoir, 'passage voûté'], [mFai, 'faîtage']]);
-    const bloc = (x0, x1, y0, y1, z0, z1, m, k = 2.6) => { const g = new T3.BoxGeometry(x1 - x0, y1 - y0, z1 - z0); g.translate((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2); uvMonde(g, k); return K.mesh(parent, g, m); };
+    const bloc = (x0, x1, y0, y1, z0, z1, m, k = 2.6, par = parent) => { const g = new T3.BoxGeometry(x1 - x0, y1 - y0, z1 - z0); g.translate((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2); uvMonde(g, k); return K.mesh(par, g, m); };
     const X0 = fx(2), X1 = fx(62), Z0 = fz(2), Z1 = fz(62), D = 0.75, H = 0.46, O = 0.06, BH = 0.045, e = 0.004;
     bloc(X0 + D, X1 - D, 0, 0.012, Z0 + D, Z1 - D, K.matT(tx.paves, { roughness: 0.95 }), 7).castShadow = false;
     // murs jointifs (brique) et soubassement goudronné
@@ -198,7 +204,16 @@ const Decor = (() => {
     for (let k = 0; k < 4; k++) {
       const n = (k + 1) % 4;
       A.lignes.push(ligne(P(T.R[k], T.hR + 0.01), P(T.R[n], T.hR + 0.01), 0.035, 0.025, mFai), ligne(P(T.E[k], H + 0.008), P(T.R[k], T.hR + 0.01), 0.03, 0.02, mFai),
-        ligne(P(T.E[k], H - 0.012), P(T.E[n], H - 0.012), 0.012, 0.028, mFai), ligne(P(T.I[k], H - 0.012), P(T.I[n], H - 0.012), 0.012, 0.028, mFai));
+        ligne(P(T.I[k], H - 0.012), P(T.I[n], H - 0.012), 0.012, 0.028, mFai));
+      // rive extérieure, interrompue devant les avant-corps
+      const a = P(T.E[k], H - 0.012), b = P(T.E[n], H - 0.012), trous = k === 1 ? [[fz(22.4) - 0.65 - 0.08, fz(22.4) + 0.65 + 0.08, 'z']] : k === 2 ? [[fx(25) - 0.07, fx(39) + 0.07, 'x']] : [];
+      let morceaux = [[a, b]];
+      for (const [c0, c1, ax] of trous) morceaux = morceaux.flatMap(([u, v]) => {
+        const t0 = (c0 - u[ax]) / (v[ax] - u[ax]), t1 = (c1 - u[ax]) / (v[ax] - u[ax]), ta = Math.min(t0, t1), tb = Math.max(t0, t1);
+        if (tb <= 0 || ta >= 1) return [[u, v]];
+        const out = []; if (ta > 0.01) out.push([u, u.clone().lerp(v, ta)]); if (tb < 0.99) out.push([u.clone().lerp(v, tb), v]); return out;
+      });
+      for (const [u, v] of morceaux) A.lignes.push(ligne(u, v, 0.012, 0.028, mFai));
     }
     [18, 46].forEach(u => { bloc(fx(u) - 0.045, fx(u) + 0.045, H + 0.1, T.hR + 0.17, Z0 + D / 2 - 0.045, Z0 + D / 2 + 0.045, mBri); bloc(fx(u) - 0.055, fx(u) + 0.055, T.hR + 0.17, T.hR + 0.19, Z0 + D / 2 - 0.055, Z0 + D / 2 + 0.055, mPie); });
     A.cheminees = [18, 46].map(u => new T3.Vector3(fx(u), T.hR + 0.22, Z0 + D / 2));
@@ -218,9 +233,8 @@ const Decor = (() => {
     [10, 20, 44, 54].forEach(u => { fenetre(logisDos, fx(u), 0.1, 0.09, 0.13, false); fenetre(logisDos, fx(u), 0.29, 0.09, 0.11, false); });
     [22, 34, 46].forEach(u => porte(etaCour, fz(u), 0.13, 0.24, mPor)); [28, 40].forEach(u => fenetre(etaCour, fz(u), 0.2, 0.09, 0.07, false));
     [18, 30, 42].forEach(u => fenetre(etaDos, fz(u), 0.22, 0.08, 0.06, false));
-    porte(graCour, fz(32), 0.34, 0.36, mGra); for (let i = -2; i <= 2; i++) graCour(fz(32) + i * 0.065, 0, 0.006, 0.36, 0.012, 0.004, K.mat('#4a2716'));
-    graCour(fz(32), 0.36, 0.38, 0.03, 0.008, 0.016, mPie); [20, 44].forEach(u => porte(graCour, fz(u), 0.13, 0.24, mGra));
-    porte(graDos, fz(40), 0.13, 0.24, mGra);
+    porte(graCour, fz(44), 0.13, 0.24, mGra); fenetre(graCour, fz(36), 0.2, 0.09, 0.07, false);
+    porte(graDos, fz(44), 0.13, 0.24, mGra);
     [9, 17, 47, 55].forEach(u => fenetre(sudDos, fx(u), 0.2, 0.09, 0.07, false)); [17, 47].forEach(u => porte(sudCour, fx(u), 0.2, 0.26, mGra));
     // pigeonnier-porche au milieu de l'aile sud
     const TX0 = fx(25), TX1 = fx(39), TZ0 = Z1 - D - 0.05, TZ1 = Z1 + 0.05, HT = 0.98;
@@ -236,13 +250,59 @@ const Decor = (() => {
       const f = F('z', z, s); fenetre(f, fx(32), 0.52, 0.08, 0.1, false);
       f(fx(32), 0.79, 0.42, 0.014, 0.02, 0.035, mPie); for (let i = -2; i <= 2; i++) f(fx(32) + i * 0.075, 0.81, 0.035, 0.045, 0.004, 0.008, mNoir);
     });
-    // fumière, pompe, charrette de petites bottes
-    bloc(fx(25), fx(39), 0, 0.05, fz(29), fz(37), mBri);
-    K.mesh(parent, G.boule(8, 6), K.mat('#5e4128'), [fx(32), 0.05, fz(33)], 0, [0.4, 0.1, 0.22]);
+    // Porte charretière de la grange, côté chemin : avant-corps à pignon sur toute l'épaisseur de l'aile est, plus saillant
+    // que l'égout du toit, grande porte en arc surbaissé assez large et haute pour la moissonneuse, porte de cour en face.
+    // Les vantaux à planches s'ouvrent vers l'extérieur au passage d'une machine.
+    const PZ = fz(22.4), PL = 0.65, PX0 = X1 - D - 0.085, PX1 = X1 + 0.085, PH = 1.0, PR = 0.3, PXc = (PX0 + PX1) / 2;
+    const gp = new T3.Group(); gp.userData.nom = { cle: 'batiment:grange/porte-charretiere', libelle: 'Grange · porte charretière' }; parent.add(gp);
+    bloc(PX0, PX1, 0, PH, PZ - PL, PZ + PL, mBri, 2.6, gp); bloc(PX0 - e, PX1 + e, 0, BH, PZ - PL - e, PZ + PL + e, mGou, 2.6, gp);
+    bloc(PX0 - 0.012, PX1 + 0.012, PH - 0.03, PH - 0.005, PZ - PL - 0.012, PZ + PL + 0.012, mPie, 2.6, gp);
+    const pg = K.toit(2 * PL, PR, PX1 - PX0); pg.rotateY(Math.PI / 2); pg.translate(PXc, PH, PZ); uvMonde(pg, 2.6); K.mesh(gp, pg, mBri);
+    const pb = PL + 0.07, pente = PR / PL;
+    [-1, 1].forEach(sg => { const g = new T3.BoxGeometry(PX1 - PX0 + 0.14, 0.03, pb * Math.hypot(1, pente)); g.rotateX(sg * Math.atan(pente)); g.translate(PXc, PH + PR - pb / 2 * pente + 0.016, PZ + sg * pb / 2); uvMonde(g, 4.2); K.mesh(gp, g, mTui); });
+    const faite = ligne(new T3.Vector3(PX0 - 0.07, PH + PR + 0.03, PZ), new T3.Vector3(PX1 + 0.07, PH + PR + 0.03, PZ), 0.035, 0.025, mFai); A.lignes.push(faite);
+    [[PX1, PX1 + 0.008], [PX0 - 0.008, PX0]].forEach(([a, b]) => bloc(a, b, PH + 0.03, PH + 0.17, PZ - 0.06, PZ + 0.06, mGra, 2.6, gp));
+    const ext = (sh, d) => new T3.ExtrudeGeometry(sh, { depth: d, bevelEnabled: false, curveSegments: 16 });
+    const AE = surbaisse(1.12, 0.58, 0.22), AC = surbaisse(1.24, 0.58, 0.27);
+    K.mesh(gp, ext(AC.forme(), 0.012), mPie, [PX1, 0, PZ], [0, Math.PI / 2, 0]);
+    K.mesh(gp, ext(AE.forme(), 0.016), mNoir, [PX1, 0, PZ], [0, Math.PI / 2, 0]);
+    bloc(PX1, PX1 + 0.02, 0.79, 0.87, PZ - 0.045, PZ + 0.045, mPie, 2.6, gp);
+    const CW = 0.46, CH = 0.42;
+    bloc(PX0 - 0.006, PX0, 0, CH, PZ - CW / 2, PZ + CW / 2, mNoir, 2.6, gp);
+    [[PZ - CW / 2 - 0.04, PZ - CW / 2], [PZ + CW / 2, PZ + CW / 2 + 0.04]].forEach(([a, b]) => bloc(PX0 - 0.012, PX0, 0, CH + 0.05, a, b, mPie, 2.6, gp));
+    bloc(PX0 - 0.012, PX0, CH, CH + 0.05, PZ - CW / 2, PZ + CW / 2, mPie, 2.6, gp);
+    bloc(PX1, PX1 + 0.9, 0, 0.007, PZ - 0.62, PZ + 0.62, K.mat('#d9bc84'), 7).castShadow = false;   // terre battue devant la porte
+    const mVan = K.matV();
+    function vantail(w, haut, ep, rot, dehors) {
+      const sh = new T3.Shape(), N = 12; sh.moveTo(0, 0); sh.lineTo(0, haut(0));
+      for (let i = 1; i <= N; i++) sh.lineTo(w * i / N, haut(w * i / N));
+      sh.lineTo(w, 0); sh.closePath();
+      const z = dehors > 0 ? ep + 0.003 : -0.003, pc = [K.piece(ext(sh, ep), '#6b3a24')];
+      [0.1, Math.min(0.42, haut(w) - 0.08)].forEach(y => pc.push(K.piece(G.boite(w - 0.03, 0.024, 0.006), '#4a2716', [w / 2, y, z])));
+      for (let i = 1; i < 4; i++) pc.push(K.piece(G.boite(0.004, haut(w * i / 4) - 0.03, 0.004), '#4f2a17', [w * i / 4, haut(w * i / 4) / 2, z]));
+      const g = K.fusion(pc); g.rotateY(rot); return g;
+    }
+    const pivot = (x, z, geo) => { const g = new T3.Group(); g.position.set(x, 0, z); gp.add(g); K.mesh(g, geo, mVan); return g; };
+    const hE = u => AE.haut(0.56 - u), hC = () => CH;
+    const VAN = [
+      [pivot(PX1 + 0.036, PZ - 0.56, vantail(0.556, hE, 0.018, -Math.PI / 2, -1)), 1], [pivot(PX1 + 0.018, PZ + 0.56, vantail(0.556, hE, 0.018, Math.PI / 2, 1)), -1],
+      [pivot(PX0 - 0.004, PZ - CW / 2, vantail(CW / 2 - 0.002, hC, 0.016, -Math.PI / 2, 1)), -1], [pivot(PX0 - 0.02, PZ + CW / 2, vantail(CW / 2 - 0.002, hC, 0.016, Math.PI / 2, -1)), 1],
+    ];
+    A.portes = { u: 0, poser() { const k = this.u * this.u * (3 - 2 * this.u); VAN.forEach(([g, sg]) => { g.rotation.y = sg * k * 2.85; }); } };
+    // Circulation dans la ferme (repère de la ferme) : on entre par la grange, on vide sur l'aire à cul dans la porte de cour,
+    // on fait le tour de la cour et on sort par le porche (sens unique). Les machines se rangent dans la grange ; les tracteurs dans la cour.
+    A.voies = {
+      dehors: [PX1 + 1.35, PZ], seuil: [PX1 + 0.35, PZ], abri: [X1 - 0.45, PZ], cour: [PX0 - 0.25, PZ], vide: [0.12, PZ],
+      tour: [[-0.55, PZ, 0.3], [-0.85, -0.25, 0.3], [-0.85, 0.55, 0.3], [-0.45, 0.88, 0.3], [0, 1.2, 0.25]], porche: [0, 1.62], sortie: [0, 2.35],
+      places: [[0.86, -0.1], [0.52, -0.1], [0.18, -0.1]], rangee: 0.86,
+    };
+    // fumière (décalée vers l'ouest pour laisser passer les bennes), pompe, charrette de petites bottes
+    bloc(fx(22.4), fx(32), 0, 0.05, fz(30.4), fz(36.8), mBri);
+    K.mesh(parent, G.boule(8, 6), K.mat('#5e4128'), [fx(27.2), 0.05, fz(33.6)], 0, [0.27, 0.09, 0.16]);
     const paille = K.inst(parent, G.boite(0.03, 0.006, 0.008), K.mat('#c9a65a'), 30, false);
-    for (let i = 0; i < 30; i++) K.poser(paille, i, [fx(32) + (hasard(i) - 0.5) * 0.6, 0.12 + hasard(i + 9) * 0.02, fz(33) + (hasard(i + 3) - 0.5) * 0.25], [0, hasard(i + 5) * 6, 0]);
+    for (let i = 0; i < 30; i++) K.poser(paille, i, [fx(27.2) + (hasard(i) - 0.5) * 0.42, 0.11 + hasard(i + 9) * 0.02, fz(33.6) + (hasard(i + 3) - 0.5) * 0.2], [0, hasard(i + 5) * 6, 0]);
     K.mesh(parent, G.cyl(0.018, 0.022, 0.14, 8), K.mat('#2f4a3a'), [fx(38), 0.07, Z0 + D + 0.08]);
-    const ch = new T3.Group(); ch.position.set(fx(46), 0, fz(44)); ch.rotation.y = 0.5; parent.add(ch);
+    const ch = new T3.Group(); ch.position.set(-0.8, 0, -0.93); ch.rotation.y = 0; parent.add(ch);
     K.mesh(ch, G.boite(0.3, 0.025, 0.16), K.mat('#8a5a32'), [0, 0.09, 0]);
     [-0.1, 0.1].forEach(z => K.mesh(ch, G.cyl(0.055, 0.055, 0.014, 10), K.mat('#4a3424'), [0, 0.055, z * 0.9], [Math.PI / 2, 0, 0]));
     K.mesh(ch, G.cyl(0.006, 0.006, 0.22, 4), K.mat('#6a4a2a'), [-0.24, 0.07, 0], [0, 0, Math.PI / 2 - 0.25]);
@@ -375,8 +435,8 @@ const Decor = (() => {
           const u = t / 4, x = Math.floor(dx ? (dx > 0 ? emprise.x + emprise.w - 1 + r : emprise.x - r) : emprise.x + u), y = Math.floor(dy ? (dy > 0 ? emprise.y + emprise.h - 1 + r : emprise.y - r) : emprise.y + u);
           if (x >= 0 && y >= 0 && x < W && y < H && 'rp'.includes(pl.types[y][x])) n += 1 / r;
         }
-        return { k, n: n + (k === 0 ? 0.01 : 0) };
-      }).sort((a, b) => b.n - a.n)[0].k;
+        return n + (k === 0 ? 0.01 : 0);
+      }).map((n, k, t) => ({ k, n: t[(k + 1) % 4] + 0.6 * n })).sort((a, b) => b.n - a.n)[0].k;   // la grange regarde le côté suivant celui du porche
       fg.position.set(cx, 0, cz); fg.rotation.y = [0, Math.PI / 2, Math.PI, -Math.PI / 2][cote]; fg.scale.setScalar(s); g.add(fg); fg.updateMatrixWorld(true);
       const A = ferme(fg);
       for (const l of A.lignes) { l.lookAt(fg.localToWorld(l.userData.vise.clone())); }
@@ -389,6 +449,13 @@ const Decor = (() => {
       if (fin && mieux < 6) pts.push(fin);
       const allee = new T3.Mesh(ruban(chaikin(pts), 0.22 * s, 0.01), K.matT(tx.chemin, { roughness: 1, flatShading: false })); allee.receiveShadow = true; allee.userData.nom = { cle: 'batiment:allee', libelle: 'Ferme · allée' }; g.add(allee);
       D.allee = pts;
+      // chemin de terre devant la porte charretière, jusqu'à la route ou au chemin le plus proche
+      const L = (q, y = 0) => fg.localToWorld(new T3.Vector3(q[0], y, q[1])), sw = L(A.voies.seuil), dw = L(A.voies.dehors), dg = new T3.Vector3().subVectors(dw, sw).normalize();
+      let fin2 = null, m2 = 1e9;
+      for (const c of [...D.chemins, ...D.routes]) for (const p of c.pts) { const dx = p[0] - dw.x, dz = p[1] - dw.z, d = Math.hypot(dx, dz), av = dx * dg.x + dz * dg.z; if (av > -0.2 && d < m2) { m2 = d; fin2 = p; } }
+      const pg = [[sw.x, sw.z], [dw.x, dw.z]]; if (fin2 && m2 < 6) pg.push(fin2);
+      const ag = new T3.Mesh(ruban(chaikin(pg), 0.2 * s, 0.0095), K.matT(tx.chemin, { roughness: 1, flatShading: false })); ag.receiveShadow = true; ag.userData.nom = { cle: 'batiment:allee-grange', libelle: 'Ferme · chemin de la grange' }; g.add(ag);
+      D.alleeGrange = pg;
     }
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       if (pl.types[y][x] !== 'b' || bati.has(y * W + x)) continue;
