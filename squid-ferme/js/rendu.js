@@ -45,6 +45,8 @@ const Rendu = {
     this.viderTransports();
     for (const p of this.passages) { this.scene.remove(p.o); if (p.benne) this.scene.remove(p.benne.g, p.benne.r); }
     if (this.cloture) { this.scene.remove(this.cloture); this.cloture = null; } this.clePature = ''; this.coupes = new Map();
+    for (const o of this.talus?.values() || []) this.scene.remove(o); this.talus = new Map(); this.cleExpl = '';
+    for (const o of this.verrous?.values() || []) this.scene.remove(o); this.verrous = new Map(); this.anims = [];
     this.pools.clear(); this.passages = []; this.revel.clear(); this.parts = []; this.ondes.forEach(o => this.scene.remove(o.m)); this.ondes = [];
     this.echelle = mode.echelle; this.planches = mode.echelle === 'planches';
     this.D = Decor.construire(this.scene, pl, mode.echelle); this.monde = this.D.groupe;
@@ -278,7 +280,7 @@ const Rendu = {
     if (pl.types[y][x] !== 'c' || u < 0) return null;
     const base = { mois: ctx.mois, doy: ctx.doy, neige: ctx.neige, givre: ctx.givre, planches: this.planches };
     const rv = this.revel.get(i), voile = rv && performance.now() < rv.jusque ? rv : null;
-    if (f.parcelles[u]) {
+    if (f.parcelles[u] && !(voile && voile.voisin)) {
       const cs = f.cases[x + ',' + y]; if (!cs) return null;
       let c = cs.cult ? CULTURE[cs.cult] : null, p = cs.p, mur = cs.mur;
       if (voile) { if (voile.avant) { c = voile.avant.c; p = voile.avant.p; mur = voile.avant.pourri ? 13 : 0; } else c = null; }
@@ -289,13 +291,14 @@ const Rendu = {
         arbres: mode.arbres && y % 2 === 0 ? ageArbres(f, S.jour) : null });
     }
     const v = this.voisinDe(f, u, S.jour);
+    base.verrou = !!(f.parcellesObjectif && f.parcellesObjectif[u] != null && !f.parcelles[u]);
     if (v.type === 'culture') return Object.assign(base, { c: v.p !== null ? v.c : null, p: v.p ?? 0, mur: 0, chaume: v.p === null ? v.chaume : 0, paille: v.c.famille === 'poacée' && v.c.forme !== 'mais', labour: v.p === null && !v.chaume, mo: 2.2, sec: f.sec * 0.6 });
     if (v.type === 'prairie') return Object.assign(base, { prairie: ['PPH', 'SPH', 'SPL'].includes(v.code) ? 'ppn' : 'fauche', sec: f.sec * 0.6 });
     return Object.assign(base, { friche: true, sec: f.sec * 0.6 });
   },
   cleEtat(e) {
     const q = (v, n) => Math.round((v || 0) * n);
-    return `${e.c ? e.c.id : ''}|${q(e.p, 48)}|${e.mur > 12 ? 1 : 0}|${q(e.chaume, 30)}|${e.paille ? 1 : 0}${e.labour ? 1 : 0}${e.couvert ? 1 : 0}${e.residus ? 1 : 0}${e.fum ? 1 : 0}${e.goutte ? 1 : 0}${e.propre ? 1 : 0}|${q(e.mo, 4)}|${q(e.sec, 8)}|${q(e.neige, 10)}${e.givre ? 'g' : ''}|${e.mois}|${e.prairie || ''}${e.friche ? 1 : 0}|${e.prairie || e.friche || e.arbres != null ? Math.floor(e.doy / 3) : ''}|${e.arbres != null ? Math.round(e.arbres * 2) : ''}`;
+    return `${e.c ? e.c.id : ''}|${q(e.p, 48)}|${e.mur > 12 ? 1 : 0}|${q(e.chaume, 30)}|${e.paille ? 1 : 0}${e.labour ? 1 : 0}${e.couvert ? 1 : 0}${e.residus ? 1 : 0}${e.fum ? 1 : 0}${e.goutte ? 1 : 0}${e.propre ? 1 : 0}|${q(e.mo, 4)}|${q(e.sec, 8)}|${q(e.neige, 10)}${e.givre ? 'g' : ''}|${e.mois}|${e.prairie || ''}${e.friche ? 1 : 0}|${e.prairie || e.friche || e.arbres != null ? Math.floor(e.doy / 3) : ''}|${e.arbres != null ? Math.round(e.arbres * 2) : ''}|${e.verrou ? 'v' : ''}`;
   },
   // Met à jour les cases dont l'état visible a changé (toutes si force)
   majCases(f, ctx, force, seules) {
@@ -309,6 +312,7 @@ const Rendu = {
       if (cle === c.cle && !force) continue;
       if (cle === c.cle) continue;
       const desc = Plantes.decrire(e);
+      if (e.verrou) { const gris = K3.col('#a7a596'); desc.sol.lerp(gris, 0.5); for (const pt of desc.parts) pt.col = pt.col.clone().lerp(gris, 0.45); }
       if (this.planches && e.propre) {
         for (const pt of desc.parts) pt.y = (pt.y || 0) + 0.035;
         desc.parts.unshift({ g: 'planche', d: 'planche', s: [1, 1, 1], col: desc.sol.clone() });
@@ -322,6 +326,101 @@ const Rendu = {
       this.D.colorer(i, sol); this.solSale = true;
     }
     if (force) { Vie.jour(f, S.jour, f.meteo || {}, pature, nus); this.cloturer(pature); }
+  },
+  // Bords d'un ensemble de cases, rentrés de « ins » : rentrés aux coins saillants, prolongés aux coins rentrants (en cases)
+  bordsDe(ens, ins) {
+    const W = this.pl.w, H = this.pl.h, dans = (x, y) => x >= 0 && y >= 0 && x < W && y < H && ens.has(y * W + x), segs = [];
+    for (const i of ens) {
+      const x = i % W, y = (i / W) | 0;
+      for (const [nx, ny] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) {
+        if (dans(x + nx, y + ny)) continue;
+        const tx = -ny, ty = nx, cx = x + 0.5 + nx * (0.5 - ins), cy = y + 0.5 + ny * (0.5 - ins);
+        const bout = sg => { const ax = x + sg * tx, ay = y + sg * ty; return !dans(ax, ay) ? 0.5 - ins : dans(ax + nx, ay + ny) ? 0.5 + ins : 0.5; };
+        const a = bout(-1), b = bout(1);
+        segs.push({ x0: cx - tx * a, y0: cy - ty * a, x1: cx + tx * b, y1: cy + ty * b, i, cle: `${i}:${nx},${ny}` });
+      }
+    }
+    return segs;
+  },
+  // Talus gazonné couronné de piquets et de deux rangs de fil, le long du bord de l'exploitation ; il monte et descend en douceur
+  majExploitation(f, anime) {
+    const W = this.pl.w, H = this.pl.h, ens = new Set(Object.keys(f.cases).map(k => { const [x, y] = k.split(',').map(Number); return y * W + x; }));
+    const cle = [...ens].sort((a, b) => a - b).join(',');
+    if (cle === this.cleExpl) return;
+    this.cleExpl = cle;
+    const K = K3, G = K.G, segs = this.bordsDe(ens, 0.11), neufs = new Map(segs.map(s => [s.cle, s]));
+    for (const [k, o] of this.talus) if (!neufs.has(k)) { this.talus.delete(k); if (anime) this.anims.push({ o, t0: performance.now(), dur: 900, de: 1, a: 0, fin: () => this.scene.remove(o) }); else this.scene.remove(o); }
+    if (!this.geoTalus) { const sh = new T3.Shape(); sh.moveTo(-0.11, 0); sh.lineTo(-0.055, 0.07); sh.lineTo(0.055, 0.07); sh.lineTo(0.11, 0); sh.closePath(); const g = new T3.ExtrudeGeometry(sh, { depth: 1, bevelEnabled: false }); g.rotateY(Math.PI / 2); g.translate(-0.5, 0, 0); this.geoTalus = g; this.matTalus = K.mat('#7fae52'); }
+    let n = 0;
+    for (const sg of segs) {
+      if (this.talus.has(sg.cle)) continue;
+      const L = Math.hypot(sg.x1 - sg.x0, sg.y1 - sg.y0), o = new T3.Group();
+      const t = new T3.Mesh(this.geoTalus, this.matTalus); t.scale.x = L; t.castShadow = false; t.receiveShadow = true; o.add(t);
+      const pieces = [], np = Math.max(1, Math.round(L / 0.45));
+      for (let k = 0; k <= np; k++) pieces.push(K.piece(G.cyl(0.009, 0.012, 0.13, 5), '#7a5a3a', [-L / 2 + L * k / np, 0.135, 0], [0, k * 1.3, 0]));
+      [0.15, 0.185].forEach(h => pieces.push(K.piece(G.boite(L, 0.004, 0.004), '#707070', [0, h, 0])));
+      const c = K.mesh(o, K.fusion(pieces), K.matV()); c.castShadow = false;
+      o.position.set((sg.x0 + sg.x1) / 2 - W / 2, 0.004, (sg.y0 + sg.y1) / 2 - H / 2); o.rotation.y = Math.atan2(-(sg.y1 - sg.y0), sg.x1 - sg.x0);
+      o.userData.nom = { cle: 'bordure:talus', libelle: 'Talus de l’exploitation (clôturé)' };
+      this.scene.add(o); this.talus.set(sg.cle, o);
+      if (anime) { o.scale.y = 0.001; this.anims.push({ o, t0: performance.now() + 700 + (n++ % 12) * 60, dur: 800, de: 0, a: 1 }); }
+    }
+  },
+  // Parcelles à débloquer par un objectif : teintes éteintes, piquets à ruban sur le pourtour, panneau à cadenas
+  majVerrous(f) {
+    const pl = this.pl, W = pl.w, H = pl.h, po = f.parcellesObjectif || {};
+    const voulu = new Map(Object.entries(po).filter(([u]) => !f.parcelles[u]).map(([u, id]) => [+u, id]));
+    for (const [u, o] of this.verrous) if (!voulu.has(u)) { this.verrous.delete(u); this.anims.push({ o, t0: performance.now(), dur: 700, de: 1, a: 0, fin: () => this.scene.remove(o) }); }
+    const K = K3, G = K.G, own = new Set(Object.keys(f.cases).map(k => { const [x, y] = k.split(',').map(Number); return y * W + x; }));
+    for (const [u, id] of voulu) {
+      if (this.verrous.has(u)) continue;
+      const ob = (typeof OBJ_PARCELLES !== 'undefined' ? OBJ_PARCELLES : []).find(o => o.id === id) || { court: '?', txt: '' }, ens = this.casesUnite(u), g = new T3.Group(), pieces = [];
+      // piquets blancs à tête rouge et ruban rouge et blanc
+      for (const sg of this.bordsDe(ens, 0.05)) {
+        const L = Math.hypot(sg.x1 - sg.x0, sg.y1 - sg.y0), n = Math.max(1, Math.round(L / 0.5)), ry = Math.atan2(-(sg.y1 - sg.y0), sg.x1 - sg.x0);
+        for (let k = 0; k <= n; k++) { const x = sg.x0 + (sg.x1 - sg.x0) * k / n - W / 2, z = sg.y0 + (sg.y1 - sg.y0) * k / n - H / 2; pieces.push(K.piece(G.boite(0.012, 0.12, 0.012), '#f4f1e8', [x, 0.06, z]), K.piece(G.boite(0.014, 0.025, 0.014), '#d8402a', [x, 0.125, z])); }
+        for (let k = 0; k < n * 2; k++) { const f0 = (k + 0.5) / (n * 2), x = sg.x0 + (sg.x1 - sg.x0) * f0 - W / 2, z = sg.y0 + (sg.y1 - sg.y0) * f0 - H / 2; pieces.push(K.piece(G.boite(L / (n * 2), 0.018, 0.003), k % 2 ? '#f4f1e8' : '#d8402a', [x, 0.1, z], [0, ry, 0])); }
+      }
+      K.mesh(g, K.fusion(pieces), K.matV()).castShadow = false;
+      // panneau à cadenas, sur la case la plus proche de l'exploitation
+      let mieux = [...ens][0], dm = 1e9;
+      for (const i of ens) for (const j of own) { const d = Math.hypot(i % W - j % W, ((i / W) | 0) - ((j / W) | 0)); if (d < dm) { dm = d; mieux = i; } }
+      const tex = this.texPanneau(ob.court), pan = new T3.Group();
+      K.mesh(pan, G.cyl(0.012, 0.014, 0.3, 5), K.mat('#7a5a3a'), [0, 0.15, 0]);
+      K.mesh(pan, G.boite(0.34, 0.18, 0.02), K.mat('#8a6440'), [0, 0.33, 0]);
+      const face = new T3.Mesh(new T3.PlaneGeometry(0.32, 0.16), K.patcher(new T3.MeshStandardMaterial({ map: tex, roughness: 0.9 }))); face.position.set(0, 0.33, 0.011); pan.add(face);
+      pan.position.set(mieux % W + 0.5 - W / 2, 0.004, ((mieux / W) | 0) + 0.5 - H / 2); pan.rotation.y = this.cam.AZ; pan.scale.setScalar(1.5);
+      g.add(pan); this.sansOmbre(g);
+      g.userData.nom = { cle: 'parcelle:verrou-' + (u + 1), libelle: `Parcelle à débloquer · objectif : ${ob.txt}` };
+      this.scene.add(g); this.verrous.set(u, g);
+    }
+  },
+  texPanneau(txt) {
+    const c = document.createElement('canvas'); c.width = 256; c.height = 128; const g = c.getContext('2d');
+    g.fillStyle = '#f2e6c8'; g.fillRect(0, 0, 256, 128); g.strokeStyle = '#6a4a2a'; g.lineWidth = 8; g.strokeRect(4, 4, 248, 120);
+    // cadenas
+    g.strokeStyle = '#3a3a3a'; g.lineWidth = 9; g.beginPath(); g.arc(52, 52, 20, Math.PI, 0); g.stroke();
+    g.fillStyle = '#c8962a'; g.fillRect(24, 50, 56, 46); g.fillStyle = '#3a2a1a'; g.beginPath(); g.arc(52, 68, 7, 0, 7); g.fill(); g.fillRect(49, 70, 6, 14);
+    g.fillStyle = '#2b2118'; g.font = '800 30px -apple-system, system-ui, sans-serif'; g.textBaseline = 'middle';
+    const mots = txt.split(' '), l1 = mots.length > 1 && txt.length > 8 ? mots.slice(0, Math.ceil(mots.length / 2)).join(' ') : txt, l2 = l1 === txt ? '' : mots.slice(Math.ceil(mots.length / 2)).join(' ');
+    if (l2) { g.fillText(l1, 96, 46); g.fillText(l2, 96, 84); } else g.fillText(l1, 96, 64);
+    const t = new T3.CanvasTexture(c); t.encoding = T3.sRGBEncoding; t.anisotropy = 4; return t;
+  },
+  // Un champ rejoint l'exploitation : le talus s'abaisse et se reforme plus loin, la charrue laboure, une clôture neuve se pose
+  integrer(u) {
+    if (!this.gl || !this.pl) return;
+    const W = this.pl.w, cases = [...this.casesUnite(u)].map(i => [i % W, (i / W) | 0]);
+    this.majExploitation(F(), true); this.majVerrous(F());
+    if (!this.planches) this.animerChamp(cases, 'labour', 'charrue', null, 1500);
+  },
+  animer(t) {
+    const now = performance.now();
+    this.anims = this.anims.filter(a => {
+      const k = Math.max(0, Math.min(1, (now - a.t0) / a.dur)), e = k * k * (3 - 2 * k), v = a.de + (a.a - a.de) * e;
+      a.o.scale.y = Math.max(0.001, v); a.o.position.y = 0.004 - (1 - v) * 0.02;
+      if (k >= 1) { a.fin?.(); return false; }
+      return true;
+    });
   },
   // Clôture de pâture : piquets de bois tous les 0,3 case, deux rangs de barbelé, une barrière du côté de la route ou du chemin
   cloturer(pature) {
@@ -432,18 +531,18 @@ const Rendu = {
       return cases.map(([x, y]) => { this.revel.set(y * W + x, { jusque: now + retard + 120, avant: null }); return { x, y, fin: retard + 120 }; });
     }
     const transport = type === 'recolte' && opts.livrer && this.transporte(machine);
-    const personne = machine === 'personne', v = this.reduit ? 40 : personne ? 2.6 : transport ? 1.7 : 4.2, avance = machine === 'moissonneuse' ? 0.05 : machine === 'semoir' ? -0.3 : 0;
+    const personne = machine === 'personne', v = this.reduit ? 40 : personne ? 2.6 : transport ? 1.7 : 4.2, avance = machine === 'moissonneuse' ? 0.05 : machine === 'semoir' || machine === 'charrue' ? -0.3 : 0;
     // la moisson commence par le rang qui longe la route ou le chemin le plus proche : la benne ne roule jamais dans le blé debout
     const sens = transport ? this.sensRangs(cases) : 1;
     const { pts, passe } = this.trajet(cases, personne ? 0.16 : 0.34, avance, sens);
     const P = { transport };
     const sortie = passe.map(c => {
       const fin = retard + c.d / v * 1000, av = type === 'recolte' ? avant?.get(c.x + ',' + c.y) || null : null;
-      this.revel.set(c.y * W + c.x, transport ? { jusque: Infinity, avant: av, passe: P, dPass: c.d, kg: av?.kg || 0 } : { jusque: now + fin, avant: av });
+      this.revel.set(c.y * W + c.x, transport ? { jusque: Infinity, avant: av, passe: P, dPass: c.d, kg: av?.kg || 0 } : { jusque: now + fin, avant: av, voisin: type === 'labour' });
       return { x: c.x, y: c.y, fin };
     });
     // la machine
-    const o = this.machine(machine); o.visible = false; o.userData.nom = { cle: 'machine:' + machine, libelle: { moissonneuse: 'Moissonneuse-batteuse', semoir: 'Tracteur et semoir', arracheuse: 'Tracteur et arracheuse', personne: 'Maraîcher' }[machine] || 'Machine' }; this.scene.add(o);
+    const o = this.machine(machine); o.visible = false; o.userData.nom = { cle: 'machine:' + machine, libelle: { moissonneuse: 'Moissonneuse-batteuse', semoir: 'Tracteur et semoir', arracheuse: 'Tracteur et arracheuse', charrue: 'Tracteur et charrue', personne: 'Maraîcher' }[machine] || 'Machine' }; this.scene.add(o);
     const L = Decor.longueur(pts);
     Object.assign(P, { o, pts: pts.map(([x, z]) => [x - W / 2, z - H / 2]), L, v, t0: now + retard, type: machine, recolte: type === 'recolte', derniere: 0 });
     if (transport) Object.assign(P, { d: 0, tremie: 0, livrer: opts.livrer, sens, reste: passe.length, benne: this.nouvelleBenne() });
@@ -652,6 +751,11 @@ const Rendu = {
         K.piece(G.boite(0.14, 0.012, 0.02), '#4a4038', [-0.18, 0.09, 0]),
       ]), K.matV());
       g.add(Vie.ombre(0.46, 0.32));
+    } else if (type === 'charrue') {
+      // charrue à trois corps, déportée sur le côté du sillon
+      const corps = []; for (let i = 0; i < 3; i++) corps.push(K.piece(G.boite(0.12, 0.06, 0.02), '#9aa0a8', [-0.3 - i * 0.1, 0.05, 0.12 + i * 0.08], [0, 0.6, 0.3]), K.piece(G.cyl(0.006, 0.006, 0.12, 4), '#3a3a3a', [-0.3 - i * 0.1, 0.11, 0.12 + i * 0.08]));
+      K.mesh(g, K.fusion([...tracteur('#d4672a'), K.piece(G.boite(0.36, 0.025, 0.025), '#3a4a6a', [-0.34, 0.16, 0.18], [0, 0.55, 0]), ...corps, ...roue(-0.5, 0.36, 0.05, 0.03)]), K.matV());
+      g.userData.terre = true; g.add(Vie.ombre(0.26, 0.34));
     } else if (type === 'arracheuse') {
       K.mesh(g, K.fusion([...tracteur('#3f7a3a'),
         K.piece(G.boite(0.3, 0.1, 0.4), '#8a5a3a', [-0.36, 0.12, 0.05]), K.piece(G.boite(0.3, 0.02, 0.42), '#a87a4a', [-0.36, 0.18, 0.05]),
@@ -706,7 +810,7 @@ const Rendu = {
       if (!this.reduit && t - p.derniere > 40 && e > 0.5) {
         p.derniere = t;
         const arriere = p.type === 'moissonneuse' ? 0.4 : p.type === 'personne' ? 0.05 : 0.38, cx = a.x - Math.cos(cap) * arriere, cz = a.z - Math.sin(cap) * arriere;
-        const n = p.type === 'personne' ? 1 : 3, cols = p.type === 'moissonneuse' ? ['#e8d08a', '#c8a860', '#f2e2a8'] : p.type === 'arracheuse' ? ['#8a6440', '#6a4a2a'] : ['#b89870', '#d8c098'];
+        const n = p.type === 'personne' ? 1 : 3, cols = p.type === 'moissonneuse' ? ['#e8d08a', '#c8a860', '#f2e2a8'] : p.type === 'arracheuse' || p.type === 'charrue' ? ['#8a6440', '#6a4a2a'] : ['#b89870', '#d8c098'];
         for (let i = 0; i < n; i++) this.parts.push({ x: cx + (Math.random() - 0.5) * 0.3, y: p.type === 'moissonneuse' ? 0.45 : 0.08, z: cz + (Math.random() - 0.5) * 0.3, vx: -Math.cos(cap) * (0.3 + Math.random() * 0.5) + (Math.random() - 0.5) * 0.3, vy: 0.2 + Math.random() * 0.5, vz: -Math.sin(cap) * (0.3 + Math.random() * 0.5) + (Math.random() - 0.5) * 0.3, g: 1.4, vie: 0.8 + Math.random() * 0.6, age: 0, c: K3.col(cols[i % cols.length]) });
       }
       return true;
@@ -755,7 +859,7 @@ const Rendu = {
   // ---------- Calques de jeu : limite de la ferme, champs mûrs, survol, sélection, trouvaille ----------
   calques() {
     const mk = (c, o, dt = false, ro = 20) => { const m = new T3.Mesh(new T3.BufferGeometry(), new T3.MeshBasicMaterial({ color: K3.col(c), transparent: true, opacity: o, depthTest: dt, depthWrite: false })); m.renderOrder = ro; m.frustumCulled = false; this.scene.add(m); return m; };
-    this.cLimite = mk('#fade8c', 0.9, true, 3); this.cMurs = mk('#ffd65a', 0.6, true, 4); this.cSurvol = mk('#ffffff', 0.7); this.cSel = mk('#ffe27a', 0.95); this.cCase = mk('#ffffff', 0.14);
+    this.cLimite = mk('#fade8c', 0.9, true, 3); this.cLimite.visible = false; this.cMurs = mk('#ffd65a', 0.6, true, 4); this.cSurvol = mk('#ffffff', 0.7); this.cSel = mk('#ffe27a', 0.95); this.cCase = mk('#ffffff', 0.14);
     const pts = new T3.BufferGeometry(); pts.setAttribute('position', new T3.BufferAttribute(new Float32Array(600 * 3), 3)); pts.setAttribute('color', new T3.BufferAttribute(new Float32Array(600 * 3), 3));
     this.points = new T3.Points(pts, new T3.PointsMaterial({ size: 0.035, vertexColors: true, transparent: true, opacity: 0.95, depthWrite: false })); this.points.frustumCulled = false; this.scene.add(this.points);
     const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
@@ -883,6 +987,7 @@ const Rendu = {
     for (const p of this.pools.values()) if (p.sale) this.reconstruire(p);
     if (t - this.dernierMur > 250) this.recenserMurs(f, t);
     this.majCalques(t, f);
+    this.majExploitation(f, false); this.majVerrous(f); this.animer(t);
     this.animerPassages(t, dt);
     this.irrigation(t, f, mode);
     this.animerParticules(dt);

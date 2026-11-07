@@ -80,7 +80,6 @@ const Recoltes = {
   maj(f, an, enRoute, eclat) {
     const el = document.getElementById('recoltes'); if (!el) return;
     const ol = el.querySelector('ol'), L = this.donnees(f, an, enRoute);
-    el.querySelector('h2 span').textContent = an;
     if (this.an !== an || this.ferme !== f) { this.an = an; this.ferme = f; ol.innerHTML = ''; this.lignes.clear(); }
     for (const l of L) if (!this.lignes.has(l.id)) {
       const c = CULTURE[l.id], li = document.createElement('li');

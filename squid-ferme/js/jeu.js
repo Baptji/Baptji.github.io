@@ -24,6 +24,17 @@ const OBJECTIFS = [
   { id: 'an2150', txt: 'Tenir jusqu’en 2150', ok: () => dateDe(S.jour).an >= 2150 },
 ];
 
+// Champs voisins qui ne s'obtiennent que par un objectif (les autres s'achètent) : ils rejoignent l'exploitation quand l'objectif est atteint
+const OBJ_PARCELLES = [
+  { id: 'recolte', court: '1re récolte', txt: 'Faire une première récolte', ok: () => !!S.objectifs.recolte },
+  { id: 't100', court: '100 tonnes', txt: 'Récolter 100 tonnes', ok: () => !!S.objectifs.t100 },
+  { id: 'niv3', court: 'Niveau 3', txt: 'Atteindre le niveau 3', ok: () => niveauDe(S.etoiles || 0) >= 3 },
+  { id: 'p100', court: '100 personnes', txt: 'Nourrir 100 personnes pendant un an', ok: () => !!S.objectifs.p100 },
+  { id: 'record', court: 'Record', txt: 'Dépasser le rendement moyen français sur une culture', ok: () => !!S.objectifs.record },
+  { id: 'niv5', court: 'Niveau 5', txt: 'Atteindre le niveau 5', ok: () => niveauDe(S.etoiles || 0) >= 5 },
+  { id: 'mo', court: 'MO + 0,5', txt: 'Faire gagner un demi-point de matière organique à une ferme', ok: () => !!S.objectifs.mo },
+  { id: 'p1000', court: '1 000 personnes', txt: 'Nourrir 1 000 personnes pendant un an', ok: () => !!S.objectifs.p1000 },
+];
 let S = null;
 const F = () => S.fermes[S.active];
 const pleine = f => Object.keys(f.parcelles).length >= planDe(f).unites.length;
@@ -72,7 +83,31 @@ function casesDe(pl, u) {
 const centreDe = cases => { const xs = cases.map(c => c[0]), ys = cases.map(c => c[1]); return () => Rendu.centre((Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2); };
 const surfaceUnite = (f, u) => planDe(f).unites[u].n * MODES[f.mode].caseHa;
 const prixParcelle = (f, u) => Math.round(surfaceUnite(f, u) * PRIX_TERRE_HA[MODES[f.mode].echelle] * Math.pow(1.03, f.achats) / 10) * 10;
-const achetable = (f, u) => u >= 0 && !f.parcelles[u];
+const achetable = (f, u) => u >= 0 && !f.parcelles[u] && parcellesAObjectif(f)[u] == null;
+// Un champ voisin sur deux parmi les plus proches de l'exploitation porte un objectif (attribués une fois pour toutes)
+function parcellesAObjectif(f) {
+  if (f.parcellesObjectif) return f.parcellesObjectif;
+  const pl = planDe(f), own = Object.keys(f.cases).map(k => k.split(',').map(Number));
+  const dist = u => Math.min(...casesDe(pl, u).map(([x, y]) => Math.min(...own.map(([a, b]) => Math.hypot(x - a, y - b)))));
+  const cand = pl.unites.map((_, u) => u).filter(u => !f.parcelles[u]).map(u => [dist(u), u]).sort((a, b) => a[0] - b[0]).map(([, u]) => u), out = {};
+  OBJ_PARCELLES.forEach((o, i) => { const u = cand[i * 2 + 1] ?? cand[i]; if (u != null && out[u] == null) out[u] = o.id; });
+  return (f.parcellesObjectif = out);
+}
+function debloquerParcelles() {
+  for (const f of S.fermes) {
+    for (const [u, id] of Object.entries(parcellesAObjectif(f))) {
+      const o = OBJ_PARCELLES.find(x => x.id === id);
+      if (f.parcelles[u] || !o || !o.ok()) continue;
+      ajouterParcelle(f, +u);
+      noter(`Champ de ${surfaceTexte(surfaceUnite(f, +u))} débloqué : « ${o.txt} ».`);
+      if (f === F() && !document.hidden && install.hidden) {
+        Rendu.integrer(+u);
+        Meca.bandeau('Champ débloqué', `${surfaceTexte(surfaceUnite(f, +u))} · ${o.txt}`);
+        const c = centreDe(casesDe(planDe(f), +u))(); Anim.confettis(c.x, c.y, 50);
+      }
+    }
+  }
+}
 function ajouterParcelle(f, u) {
   f.parcelles[u] = true;
   for (const [x, y] of casesDe(planDe(f), u)) f.cases[cle(x, y)] = nouvelleCase(f);
@@ -113,6 +148,7 @@ function creerFerme(lieuId, mode) {
   if (mode !== 'gc') f.modeAvant = 'gc';            // en 1959, la terre sort d'une culture classique : transition
   S.fermes.push(f); S.active = S.fermes.length - 1;
   for (const u of champsDeDepart(f)) ajouterParcelle(f, u);
+  parcellesAObjectif(f);
   f.moDepart = etatSol(f).mo;
   const ha = Object.keys(f.cases).length * MODES[mode].caseHa;
   S.argent += mode === 'mar' ? 4000 : ha * 900;
@@ -311,10 +347,11 @@ function recolterTout() {
 function arracher(f, k) { const t = f.cases[k]; if (!t.cult) return false; Object.assign(t, { cult: null, p: 0, dj: 0, mur: 0 }); return true; }
 function acheter(u) {
   const f = F(), prix = prixParcelle(f, u);
-  if (!achetable(f, u)) return;
+  if (!achetable(f, u)) { const o = OBJ_PARCELLES.find(x => x.id === parcellesAObjectif(f)[u]); if (o) toast(`Ce champ se débloque avec un objectif : ${o.txt.toLowerCase()}.`); return; }
   if (S.argent < prix) { toast(`Il vous faut ${euros(prix)}.`); return; }
   S.argent -= prix; f.achats++;
   ajouterParcelle(f, u);
+  Rendu.integrer(u);
   const centre = centreDe(casesDe(planDe(f), u))();
   Anim.confettis(centre.x, centre.y, 45); Anim.texte(centre, 'Champ acheté', '#ffe08a');
   noter(`Champ de ${surfaceTexte(surfaceUnite(f, u))} acheté : vous cultivez ${surfaceTexte(Object.keys(f.cases).length * MODES[f.mode].caseHa)}.`);
@@ -447,7 +484,7 @@ function majBulle(e, tx, ty) {
   else if (trouvailleIci(tx, ty)) html = '<b>Quelque chose brille</b><br>Cliquez pour ramasser.';
   else if (surLaFerme(tx, ty)) html = '';
   else if (p && f.parcelles[p.u]) html = descriptionCase(f, f.cases[cle(tx, ty)], false);
-  else if (p) html = `${descriptionVoisin(f, p.u)}<br>À vendre : ${euros(prixParcelle(f, p.u))}`;
+  else if (p) { const o = OBJ_PARCELLES.find(x => x.id === parcellesAObjectif(f)[p.u]); html = `${descriptionVoisin(f, p.u)}<br>${o ? `À débloquer : ${o.court}` : `À vendre : ${euros(prixParcelle(f, p.u))}`}`; }
   if (!html) { bulle.hidden = true; return; }
   bulle.innerHTML = html; bulle.hidden = false;
   bulle.style.left = Math.min(e.clientX + 16, innerWidth - bulle.offsetWidth - 8) + 'px';
@@ -457,7 +494,10 @@ function majBulle(e, tx, ty) {
 const info = document.getElementById('info');
 function majInfo() {
   const f = F();
-  if (selection?.type === 'parcelle' && !f.parcelles[selection.u]) {
+  if (selection?.type === 'parcelle' && !f.parcelles[selection.u] && parcellesAObjectif(f)[selection.u] != null) {
+    const o = OBJ_PARCELLES.find(x => x.id === parcellesAObjectif(f)[selection.u]);
+    info.innerHTML = `<h3>Champ à débloquer</h3><p>${descriptionVoisin(f, selection.u)}</p><p class="ligne2">Il rejoint votre exploitation quand cet objectif est atteint : <b>${o.txt.toLowerCase()}</b>.</p>`;
+  } else if (selection?.type === 'parcelle' && !f.parcelles[selection.u]) {
     const u = selection.u, prix = prixParcelle(f, u), rpg = planDe(f).unites[u].rpg;
     const histo = Object.entries(rpg).map(([an, code]) => { const c = RPG_CULTURE[code]; return `${an} ${c ? CULTURE[c].nom.toLowerCase() : RPG_HERBE.includes(code) ? 'prairie' : 'autre'}`; }).join(' · ');
     info.innerHTML = `<h3>Champ à acheter</h3><p>${descriptionVoisin(f, u)}</p>
@@ -793,6 +833,7 @@ function apresAction(structure) {
 }
 // Chaque objectif atteint rapporte trois étoiles
 function verifierObjectifs() {
+  if (S?.fermes.length) debloquerParcelles();
   for (const o of OBJECTIFS) {
     if (S.objectifs[o.id] || !o.ok()) continue;
     S.objectifs[o.id] = true;
