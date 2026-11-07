@@ -91,7 +91,7 @@ const Rendu = {
       if (o.userData && o.userData.ferme) return this.nomFerme(hit, o);
     }
     const ud = hit.object.userData, id = hit.instanceId;
-    if (ud.arbres && id != null) return ud.arbres[id].t === 'haie' ? { cle: 'arbre:haie-' + (id + 1), libelle: 'Arbre de haut jet de la haie' } : { cle: 'arbre:bois-' + (id + 1), libelle: 'Arbre du bois' };
+    if (ud.arbres && id != null) return ud.arbres[id].t === 'haie' ? { cle: 'arbre:haie-' + (id + 1), libelle: 'Arbre de haut jet de la haie' } : ud.arbres[id].t === 'jardin' ? { cle: 'arbre:fruitier-' + (id + 1), libelle: 'Arbre fruitier' } : { cle: 'arbre:bois-' + (id + 1), libelle: 'Arbre du bois' };
     if (ud.buissons && id != null) return { cle: 'haie:' + (id + 1), libelle: 'Haie' };
     return this.nomCase(hit.point);
   },
@@ -332,16 +332,26 @@ const Rendu = {
   bordsDe(ens, ins) {
     const W = this.pl.w, H = this.pl.h, dans = (x, y) => x >= 0 && y >= 0 && x < W && y < H && ens.has(y * W + x), segs = [];
     for (const i of ens) {
-      const x = i % W, y = (i / W) | 0;
+      const x = i % W, y = (i / W) | 0, co = this.coinLibre(i, dans);
       for (const [nx, ny] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) {
         if (dans(x + nx, y + ny)) continue;
         const tx = -ny, ty = nx, cx = x + 0.5 + nx * (0.5 - ins), cy = y + 0.5 + ny * (0.5 - ins);
         const bout = sg => { const ax = x + sg * tx, ay = y + sg * ty; return !dans(ax, ay) ? 0.5 - ins : dans(ax + nx, ay + ny) ? 0.5 + ins : 0.5; };
-        const a = bout(-1), b = bout(1);
+        let a = bout(-1), b = bout(1);
+        // coin arrondi (virage d'un chemin) : le bord s'arrête où l'arc commence
+        if (co && nx === co.sx && !ny) { if (co.sx === co.sz) b = co.t; else a = co.t; }
+        if (co && ny === co.sz && !nx) { if (-co.sz === co.sx) b = co.t; else a = co.t; }
         segs.push({ x0: cx - tx * a, y0: cy - ty * a, x1: cx + tx * b, y1: cy + ty * b, i, cle: `${i}:${nx},${ny}` });
       }
+      if (co) { const p = this.D.arcCoin(i, ins, 4); for (let k = 0; k + 1 < p.length; k++) segs.push({ x0: p[k][0], y0: p[k][1], x1: p[k + 1][0], y1: p[k + 1][1], i, cle: `${i}:arc${k}` }); }
     }
     return segs;
+  },
+  // Coin arrondi d'une case dont les trois voisines du coin sont hors de l'ensemble (sinon le bord ne passe pas là)
+  coinLibre(i, dans) {
+    const co = this.D?.coinDe?.(i); if (!co) return null;
+    const x = i % this.pl.w, y = (i / this.pl.w) | 0;
+    return dans(x + co.sx, y) || dans(x, y + co.sz) || dans(x + co.sx, y + co.sz) ? null : co;
   },
   // Talus gazonné couronné de piquets et de deux rangs de fil, le long du bord de l'exploitation ; il monte et descend en douceur
   majExploitation(f, anime) {
@@ -430,18 +440,7 @@ const Rendu = {
     this.clePature = cle; if (this.cloture) { this.scene.remove(this.cloture); this.cloture = null; }
     if (!pature.length) return;
     const ens = new Set(pature.map(([x, z]) => Math.round(z + H / 2) * W + Math.round(x + W / 2))), dans = (x, y) => x >= 0 && y >= 0 && x < W && y < H && ens.has(y * W + x);
-    const ins = 0.06, segs = [];
-    for (const i of ens) {
-      const x = i % W, y = (i / W) | 0;
-      for (const [nx, ny] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) {
-        if (dans(x + nx, y + ny)) continue;
-        const tx = -ny, ty = nx, cx = x + 0.5 + nx * (0.5 - ins), cy = y + 0.5 + ny * (0.5 - ins);
-        // bouts : rentrés aux coins saillants, prolongés aux coins rentrants
-        const bout = sg => { const ax = x + sg * tx, ay = y + sg * ty; return !dans(ax, ay) ? 0.5 - ins : dans(ax + nx, ay + ny) ? 0.5 + ins : 0.5; };
-        const a = bout(-1), b = bout(1);
-        segs.push({ x0: cx - tx * a, y0: cy - ty * a, x1: cx + tx * b, y1: cy + ty * b, i });
-      }
-    }
+    const ins = 0.06, segs = this.bordsDe(ens, ins);   // bouts rentrés aux coins saillants, prolongés aux coins rentrants, arcs aux virages
     // une barrière par morceau de pâture, sur le côté le plus proche d'une route ou d'un chemin
     const voies = []; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if ('rp'.includes(pl.types[y][x])) voies.push([x + 0.5, y + 0.5]);
     const loin = sg => { const mx = (sg.x0 + sg.x1) / 2, my = (sg.y0 + sg.y1) / 2; return voies.length ? Math.min(...voies.map(([vx, vy]) => Math.hypot(vx - mx, vy - my))) : 0; };
@@ -450,7 +449,7 @@ const Rendu = {
       if (vu.has(i)) continue;
       const m = new Set([i]), file = [i]; vu.add(i);
       while (file.length) { const j = file.pop(), x = j % W, y = (j / W) | 0; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const k = (y + dy) * W + x + dx; if (dans(x + dx, y + dy) && !vu.has(k)) { vu.add(k); m.add(k); file.push(k); } } }
-      const cand = segs.filter(sg => m.has(sg.i)).sort((a, b) => loin(a) - loin(b))[0]; if (cand) portes.add(cand);
+      const cand = segs.filter(sg => m.has(sg.i) && Math.hypot(sg.x1 - sg.x0, sg.y1 - sg.y0) > 0.6).sort((a, b) => loin(a) - loin(b))[0]; if (cand) portes.add(cand);
     }
     const piquets = new Map(), fils = [], K = K3, G = K.G, g = new T3.Group();
     for (const sg of segs) {
@@ -500,16 +499,21 @@ const Rendu = {
     let o = 0;
     for (const i of cases) {
       const desc = this.cel[i].desc; if (!desc) continue;
-      const x = i % W, y = (i / W) | 0, x0 = x - W / 2, z0 = y - H / 2, cp = this.coupes.get(i);
+      const x = i % W, y = (i / W) | 0, x0 = x - W / 2, z0 = y - H / 2, cp = this.coupes.get(i), co = this.D.coinDe?.(i);
       for (const pt of desc.parts) {
         if (pt.g !== p.g) continue;
         const d = DISPO[pt.d], cont = d.m === 1, tilt = pt.tilt ?? 0.04, c = pt.col;
         for (let r = 0; r < d.n; r++) for (let k = 0; k < d.m; k++) {
           const idx = r * d.m + k, h1 = hasard(x, y, idx * 3 + 1), h2 = hasard(x, y, idx * 3 + 2), h3 = hasard(x, y, idx * 3 + 3);
           if (pt.dens && h3 > pt.dens) continue;
-          const px = x0 + (cont ? 0.5 : (k + 0.5 + (h1 - 0.5) * d.j) / d.m), pz = z0 + (r + 0.5 + (cont ? 0 : (h2 - 0.5) * d.j)) / d.n;
+          let px = x0 + (cont ? 0.5 : (k + 0.5 + (h1 - 0.5) * d.j) / d.m), pz = z0 + (r + 0.5 + (cont ? 0 : (h2 - 0.5) * d.j)) / d.n, lx = 1;
+          if (co) {   // coin arrondi : rien au-delà de l'arc ; un rang continu s'arrête à l'arc
+            const R = co.r - 0.06, dx = px + W / 2 - co.ox, dz = pz + H / 2 - co.oz;
+            if (cont) { if (dz * co.sz > 0) { const lim = co.ox - W / 2 + co.sx * (Math.abs(dz) < R ? Math.sqrt(R * R - dz * dz) : 0), a = co.sx > 0 ? x0 : Math.max(x0, lim), b = co.sx > 0 ? Math.min(x0 + 1, lim) : x0 + 1; if (b < a + 0.03) continue; px = (a + b) / 2; lx = b - a; } }
+            else if (dx * co.sx > 0 && dz * co.sz > 0 && Math.hypot(dx, dz) > R) continue;
+          }
           const ry = cont ? 0 : pt.rot != null ? pt.rot + (h1 - 0.5) * 0.35 : h3 * 6.2832, v = cont ? 1 : 0.86 + 0.28 * h2, vy = (cont ? 1 : 0.92 + 0.16 * h1) * (cp && cp.s * (px - cp.fx) < 0 ? 0.1 : 1);
-          K3.matrice(M, o * 16, px, base + (pt.y || 0), pz, ry, cont ? 0 : (h1 - 0.5) * 2 * tilt, cont ? 0 : (h2 - 0.5) * 2 * tilt, pt.s[0] * v, pt.s[1] * v * vy, pt.s[2] * v);
+          K3.matrice(M, o * 16, px, base + (pt.y || 0), pz, ry, cont ? 0 : (h1 - 0.5) * 2 * tilt, cont ? 0 : (h2 - 0.5) * 2 * tilt, pt.s[0] * v * lx, pt.s[1] * v * vy, pt.s[2] * v);
           const b = cont ? 1 : 0.9 + 0.2 * h1;
           C[o * 3] = c.r * b; C[o * 3 + 1] = c.g * b; C[o * 3 + 2] = c.b * b; o++;
         }
@@ -781,10 +785,18 @@ const Rendu = {
   bordure(ens, lw, y) {
     const W = this.pl.w, H = this.pl.h, pos = [];
     const quad = (x0, z0, x1, z1) => pos.push(x0, y, z0, x0, y, z1, x1, y, z0, x1, y, z0, x0, y, z1, x1, y, z1);
+    const dans = (x, y) => x >= 0 && y >= 0 && x < W && y < H && ens.has(y * W + x);
     for (const i of ens) {
-      const x = i % W, yy = (i / W) | 0, X = x - W / 2, Z = yy - H / 2, a = (dx, dy) => { const nx = x + dx, ny = yy + dy; return nx >= 0 && ny >= 0 && nx < W && ny < H && ens.has(ny * W + nx); };
-      if (!a(0, -1)) quad(X, Z, X + 1, Z + lw); if (!a(0, 1)) quad(X, Z + 1 - lw, X + 1, Z + 1);
-      if (!a(-1, 0)) quad(X, Z, X + lw, Z + 1); if (!a(1, 0)) quad(X + 1 - lw, Z, X + 1, Z + 1);
+      const x = i % W, yy = (i / W) | 0, X = x - W / 2, Z = yy - H / 2, a = (dx, dy) => dans(x + dx, yy + dy), co = this.coinLibre(i, dans);
+      // au coin arrondi, les deux bandes du coin s'arrêtent où l'arc commence
+      const bx = s => !co || s !== co.sz ? [X, X + 1] : co.sx > 0 ? [X, X + 0.5 + co.t] : [X + 0.5 - co.t, X + 1];
+      const bz = s => !co || s !== co.sx ? [Z, Z + 1] : co.sz > 0 ? [Z, Z + 0.5 + co.t] : [Z + 0.5 - co.t, Z + 1];
+      if (!a(0, -1)) { const [p, q] = bx(-1); quad(p, Z, q, Z + lw); } if (!a(0, 1)) { const [p, q] = bx(1); quad(p, Z + 1 - lw, q, Z + 1); }
+      if (!a(-1, 0)) { const [p, q] = bz(-1); quad(X, p, X + lw, q); } if (!a(1, 0)) { const [p, q] = bz(1); quad(X + 1 - lw, p, X + 1, q); }
+      if (co) {
+        const ex = this.D.arcCoin(i, 0, 8), inn = this.D.arcCoin(i, lw, 8), tri = (A, B, C) => { if ((B[1] - A[1]) * (C[0] - A[0]) - (B[0] - A[0]) * (C[1] - A[1]) < 0) [B, C] = [C, B]; for (const P of [A, B, C]) pos.push(P[0] - W / 2, y, P[1] - H / 2); };
+        for (let k = 0; k + 1 < ex.length; k++) { tri(ex[k], ex[k + 1], inn[k]); tri(ex[k + 1], inn[k + 1], inn[k]); }
+      }
     }
     const g = new T3.BufferGeometry(); g.setAttribute('position', new T3.Float32BufferAttribute(pos, 3)); return g;
   },

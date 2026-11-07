@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Squid Ferme</title>
 <meta name="description" content="Jeu de ferme sur le vrai climat de France depuis 1959 : rendements, énergie et état du sol selon la manière de cultiver.">
-<link rel="stylesheet" href="style.css?v=20261107181323">
+<link rel="stylesheet" href="style.css?v=20261107233242">
 </head>
 <body>
 <header class="entete">
@@ -19,6 +19,7 @@
     <span class="etoiles"><span class="or">★</span><b>0</b></span>
   </button>
   <span id="date" class="date"></span>
+  <span id="heure" class="heure" title="Heure de la journée de travail (6 h à 21 h)"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.2"/><line id="aiguille" x1="10" y1="10" x2="10" y2="4.6"/><circle class="axe" cx="10" cy="10" r="1.4"/></svg><b id="heure-txt"></b></span>
   <div id="meteo" class="meteo">
     <canvas id="icone-meteo" width="24" height="24"></canvas>
     <span id="temp"></span>
@@ -74,12 +75,9 @@
     <div class="install-carte">
       <h1 id="install-titre"></h1>
       <svg id="carte-france" role="group" aria-label="Régions agricoles"></svg>
-      <p class="discret">Climat réel SAFRAN (Météo-France) de chaque région, jour par jour depuis 1959.</p>
     </div>
     <div class="install-choix">
       <div id="install-region"></div>
-      <h3>Manière de cultiver</h3>
-      <div id="install-modes" class="install-modes"></div>
       <button id="install-go" class="principal grand"></button>
     </div>
   </div>
@@ -90,24 +88,24 @@
 <canvas id="effets" class="effets"></canvas>
 
 <script src="js/three.min.js"></script>
-<script src="donnees/regions.js?v=20261107181323"></script>
-<script src="donnees/lieux.js?v=20261107181323"></script>
-<script src="js/carte.js?v=20261107181323"></script>
-<script src="js/donnees.js?v=20261107181323"></script>
-<script src="js/climat.js?v=20261107181323"></script>
-<script src="js/agronomie.js?v=20261107181323"></script>
-<script src="js/dessin.js?v=20261107181323"></script>
-<script src="js/trois.js?v=20261107181323"></script>
-<script src="js/plantes.js?v=20261107181323"></script>
-<script src="js/decor.js?v=20261107181323"></script>
-<script src="js/ciel.js?v=20261107181323"></script>
-<script src="js/flotte.js?v=20261107181323"></script>
-<script src="js/machines.js?v=20261107181323"></script>
-<script src="js/vie.js?v=20261107181323"></script>
-<script src="js/rendu.js?v=20261107181323"></script>
-<script src="js/animations.js?v=20261107181323"></script>
-<script src="js/mecaniques.js?v=20261107181323"></script>
-<script src="js/interface.js?v=20261107181323"></script>
-<script src="js/jeu.js?v=20261107181323"></script>
+<script src="donnees/regions.js?v=20261107233242"></script>
+<script src="donnees/lieux.js?v=20261107233242"></script>
+<script src="js/carte.js?v=20261107233242"></script>
+<script src="js/donnees.js?v=20261107233242"></script>
+<script src="js/climat.js?v=20261107233242"></script>
+<script src="js/agronomie.js?v=20261107233242"></script>
+<script src="js/dessin.js?v=20261107233242"></script>
+<script src="js/trois.js?v=20261107233242"></script>
+<script src="js/plantes.js?v=20261107233242"></script>
+<script src="js/decor.js?v=20261107233242"></script>
+<script src="js/ciel.js?v=20261107233242"></script>
+<script src="js/flotte.js?v=20261107233242"></script>
+<script src="js/machines.js?v=20261107233242"></script>
+<script src="js/vie.js?v=20261107233242"></script>
+<script src="js/rendu.js?v=20261107233242"></script>
+<script src="js/animations.js?v=20261107233242"></script>
+<script src="js/mecaniques.js?v=20261107233242"></script>
+<script src="js/interface.js?v=20261107233242"></script>
+<script src="js/jeu.js?v=20261107233242"></script>
 </body>
 </html>

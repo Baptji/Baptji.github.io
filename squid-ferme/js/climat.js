@@ -14,7 +14,11 @@ const Climat = {
     const meta = REGIONS.find(r => r.id === id);
     const rep = await fetch(`donnees/climat/${id}.bin`);
     if (!rep.ok) throw new Error(`climat de ${meta.nom} introuvable`);
-    const tout = new Int16Array(await rep.arrayBuffer()), n = meta.jours;
+    let octets = await rep.arrayBuffer();
+    const tete = new Uint8Array(octets, 0, 2);
+    if (tete[0] === 0x1f && tete[1] === 0x8b)   // gzip : 435 régions × 250 Ko, ramenés à ~100 Ko chacune
+      octets = await new Response(new Blob([octets]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+    const tout = new Int16Array(octets), n = meta.jours;
     this.donnees[id] = { meta, c: [0, 1, 2, 3, 4].map(k => tout.subarray(k * n, (k + 1) * n)) };
   },
   pret(id) { return !!this.donnees[id]; },

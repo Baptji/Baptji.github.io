@@ -47,7 +47,19 @@ const Carte = (() => {
     cotentin: 'bocage', thierache: 'bocage', 'franche-comte': 'bocage', bresse: 'bocage', nivernais: 'bocage', anjou: 'bocage', 'pays-nantais': 'bocage',
     leon: 'bocage', rennes: 'bocage', cornouaille: 'bocage', limousin: 'bocage', segala: 'bocage', savoie: 'bocage',
   };
-  const systemeDe = region => SYSTEMES[SYSTEME_DE[region] || 'sud'];
+  // Petites régions (pays de Wikipédia) : le système de la région faite à la main la plus proche
+  const procheDe = new Map();
+  function regionModele(id) {
+    const R = REGIONS.find(x => x.id === id);
+    if (!R || !R.pays) return id;
+    if (!procheDe.has(id)) {
+      let best = null, d = Infinity;
+      for (const M of REGIONS) if (!M.pays && M.id !== 'monchy') { const e = (M.x - R.x) ** 2 + (M.y - R.y) ** 2; if (e < d) { d = e; best = M.id; } }
+      procheDe.set(id, best);
+    }
+    return procheDe.get(id);
+  }
+  const systemeDe = region => SYSTEMES[SYSTEME_DE[regionModele(region)] || 'sud'];
   // Rotations des lots de maraîchage voisins
   const ROT_LEGUMES = [['PTC', 'POR', 'CAR', 'CHU', 'OIG', 'HAR'], ['CAR', 'CHU', 'PTC', 'EPI', 'POR'], ['OIG', 'HAR', 'PTC', 'CHU', 'CAR'], ['FRA', 'FRA', 'FRA', 'PTC', 'POR']];
 

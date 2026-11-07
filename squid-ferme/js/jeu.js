@@ -784,7 +784,7 @@ const ONGLETS = {
     const f = F(), mode = MODES[f.mode], r = region(f), j = S.jour;
     const tr = mode.transition, ans = (j - f.modeDepuis) / 365, enTransition = f.modeAvant && ans < tr.ans;
     let html = `<h3>${r.nom} · ${r.ville}</h3>
-      <p class="ligne2">${r.sol} · ${r.ru} mm de réserve utile · ${nf(r.tRef, 1)} °C et ${nf(r.pRef)} mm par an en 1961-1990 · réchauffement depuis 1990 : +${nf(r.pente * 10, 2)} °C par décennie</p>
+      <p class="ligne2">${r.sol} · ${r.ru} mm de réserve utile · ${nf(r.tRef, 1)} °C et ${nf(r.pRef)} mm par an en 1961-1990 · réchauffement depuis 1960 : ${r.pente60 < 0 ? '−' : '+'}${nf(Math.abs(r.pente60 * 10), 2)} °C par décennie</p>
       <h3>${mode.nom}</h3><p>${mode.texte}</p>`;
     if (enTransition) html += `<p class="mauvais">Transition en cours : encore ${nf(tr.ans - ans, 1)} an(s), rendement −${nf(tr.perte * (1 - ans / tr.ans) * 100)} %.</p>`;
     if (mode.arbres) { const age = ageArbres(f, j); html += `<p class="ligne2">Arbres de ${nf(age, 0)} ans · bois sur pied ≈ ${nf(Object.keys(f.cases).length * mode.caseHa * 0.5 * age)} t · coupe à 50 ans.</p>`; }
@@ -866,12 +866,14 @@ function verifierObjectifs() {
 // La carte se tire d'une graine (js/carte.js) : la même graine, dans la même région, redonne la même carte partout.
 const install = document.getElementById('installation');
 const REGIONS_JOUABLES = REGIONS.filter(r => r.id !== 'monchy');   // Monchy : maille de l'ancien lieu réel, doublon de l'Artois
+// Plus de choix de la manière de cultiver à l'installation (demande du 07/11) : on s'installe en grande culture ;
+// mêler maraîchage, permaculture et grande culture sur une même ferme se fera dans le jeu.
 let choixRegion = 'artois', choixGraine = Carte.nouvelleGraine(), choixMode = 'gc';
 const $i = id => document.getElementById(id);
 function ouvrirInstallation() {
   install.hidden = false;
   $i('guide').hidden = true;
-  $i('install-titre').textContent = S ? 'Où installer la nouvelle ferme ?' : 'Où installer votre ferme ?';
+  $i('install-titre').textContent = `Choisissez où installer votre ${S ? 'nouvelle' : 'première'} ferme`;
   if (S) choixGraine = Carte.nouvelleGraine();
   const svg = $i('carte-france');
   if (!svg.childElementCount) {
@@ -884,7 +886,7 @@ function ouvrirInstallation() {
     for (const r of REGIONS_JOUABLES) {
       const g = document.createElementNS(ns, 'g'); g.setAttribute('class', 'lieu'); g.dataset.lieu = r.id; g.setAttribute('tabindex', '0');
       const gauche = r.x > 330;   // à l'est, l'étiquette passe à gauche du point
-      g.innerHTML = `<title>${r.nom} (${r.ville})</title><circle class="onde" cx="${r.x}" cy="${r.y}" r="7"></circle><circle cx="${r.x}" cy="${r.y}" r="5"></circle><text x="${gauche ? r.x - 14 : r.x + 14}" y="${r.y + 5}" text-anchor="${gauche ? 'end' : 'start'}">${r.nom}</text>`;
+      g.innerHTML = `<title>${r.nom} (${r.ville})</title><circle class="cible" cx="${r.x}" cy="${r.y}" r="8"></circle><circle class="onde" cx="${r.x}" cy="${r.y}" r="5"></circle><circle cx="${r.x}" cy="${r.y}" r="3.5"></circle><text x="${gauche ? r.x - 11 : r.x + 11}" y="${r.y + 5}" text-anchor="${gauche ? 'end' : 'start'}">${r.nom}</text>`;
       svg.appendChild(g);
     }
   }
@@ -895,8 +897,7 @@ function ouvrirInstallation() {
       <canvas id="i-apercu" class="apercu" aria-label="Carte de l’exploitation vue d’avion"></canvas>
       <div class="graine"><label for="i-graine">Graine</label><input id="i-graine" maxlength="12" spellcheck="false" autocomplete="off" autocapitalize="characters">
         <button id="i-de" type="button">Autre carte</button></div>
-      <p class="discret">Liseré doré : vos premiers champs. La même graine redonne la même carte, ici ou ailleurs.</p>
-      <div class="chiffres petit" id="i-chiffres"></div>`;
+      <div class="jauges-lieu" id="i-chiffres"></div>`;
     $i('i-graine').addEventListener('input', e => { const g = Carte.normaliser(e.target.value); if (g) { choixGraine = g; majInstallation(); } });
     $i('i-graine').addEventListener('change', e => { e.target.value = choixGraine; });
     $i('i-de').addEventListener('click', () => {
@@ -906,6 +907,42 @@ function ouvrirInstallation() {
   }
   majInstallation();
 }
+// Chiffres du lieu en jauges à six niveaux, dessin repris de Squid Food (demande du 07/11) : six segments égaux,
+// le niveau du lieu plein, les autres pâles, une pastille à la valeur. Niveaux = sextiles des régions du jeu
+// (mêmes données SAFRAN, même période) : chaque niveau regroupe un sixième des régions de France.
+// Une seule couleur par jauge, qui garde son sens partout : bleu pour l'eau, rouge pour le chaud.
+const signe = v => v < 0 ? '−' : '+';
+const JAUGES_LIEU = [
+  { k: 'tRef', nom: 'Température moyenne annuelle', teinte: 'chaud', unite: v => `${nf(v, 1)} °C`, sous: '1961-1990',
+    niveaux: ['Très froid', 'Froid', 'Frais', 'Doux', 'Chaud', 'Très chaud'],
+    ecart: d => `${nf(Math.abs(d), 1)} °C de ${d < 0 ? 'moins' : 'plus'} que la moyenne française` },
+  { k: 'pRef', nom: 'Pluie', teinte: 'eau', unite: v => `${nf(v)} mm`, sous: 'par an, 1961-1990',
+    niveaux: ['Très sec', 'Sec', 'Assez sec', 'Assez arrosé', 'Arrosé', 'Très arrosé'],
+    ecart: (d, moy) => `${nf(Math.abs(d) / moy * 100)} % de ${d < 0 ? 'moins' : 'plus'} que la moyenne française` },
+  { k: 'ru', nom: 'Réserve utile du sol', teinte: 'eau', unite: v => `${nf(v)} mm`, sous: '',
+    niveaux: ['Très faible', 'Faible', 'Assez faible', 'Assez bonne', 'Bonne', 'Très bonne'],
+    ecart: d => `${nf(Math.abs(d))} mm de ${d < 0 ? 'moins' : 'plus'} que la moyenne française` },
+  { k: 'pente60', f: 10, nom: 'Réchauffement', teinte: 'chaud', unite: v => `${signe(v)}${nf(Math.abs(v), 2)} °C`, sous: 'par décennie depuis 1960',
+    niveaux: ['Très lent', 'Lent', 'Assez lent', 'Assez rapide', 'Rapide', 'Très rapide'],
+    ecart: d => `${d < 0 ? 'plus lent' : 'plus rapide'} que la moyenne française (${signe(d)}${nf(Math.abs(d), 2)} °C)` },
+];
+const statsJauge = {};
+function jaugeLieu(q, r) {
+  if (!statsJauge[q.k]) {
+    const v = REGIONS_JOUABLES.map(x => x[q.k] * (q.f || 1)).sort((a, b) => a - b), c = p => v[Math.round(p * (v.length - 1))];
+    // bornes : du 2e centile aux 5 sextiles puis au 98e centile (les extrêmes isolés n'écrasent pas l'échelle)
+    statsJauge[q.k] = { moy: v.reduce((a, b) => a + b, 0) / v.length, bornes: [0.02, 1 / 6, 2 / 6, 3 / 6, 4 / 6, 5 / 6, 0.98].map(c) };
+  }
+  const s = statsJauge[q.k], b = s.bornes, val = r[q.k] * (q.f || 1), d = val - s.moy;
+  const n = Math.min(5, b.slice(1, 6).filter(x => val > x).length);
+  const pos = Math.max(0, Math.min(1, (n + Math.max(0, Math.min(1, (val - b[n]) / ((b[n + 1] - b[n]) || 1)))) / 6));
+  const proche = Math.abs(d) < 0.12 * (d < 0 ? s.moy - b[0] : b[6] - s.moy);
+  const segs = [0, 1, 2, 3, 4, 5].map(k => `<i class="s${k}${k === n ? ' actif' : ''}"></i>`).join('');
+  return `<div class="jauge-lieu ${q.teinte}">
+    <p><span>${q.nom}</span><b>${q.unite(val)}</b><em>${q.niveaux[n]}</em></p>
+    <i class="barre6" style="--pos:${(pos * 100).toFixed(1)}%">${segs}<i class="pastille"></i></i>
+    <small>${q.sous ? q.sous + ' · ' : ''}${proche ? 'dans la moyenne française' : q.ecart(d, s.moy)}</small></div>`;
+}
 function majInstallation() {
   const r = REGIONS.find(x => x.id === choixRegion), id = lieuDe(choixRegion, choixGraine), L = LIEUX[id], m = MODES[choixMode], pl = L[m.echelle];
   for (const g of document.querySelectorAll('#carte-france .lieu')) { const a = g.dataset.lieu === choixRegion; g.classList.toggle('actif', a); if (a) g.parentNode.appendChild(g); }
@@ -913,16 +950,12 @@ function majInstallation() {
   $i('i-ligne').textContent = `${r.nom} (${r.ville}) · ${r.sol} · ${m.echelle === 'champs' ? `${pl.unites.length} champs sur 1,6 × 1,2 km` : `${pl.unites.length} lots de planches sur 320 × 240 m`}`;
   if (document.activeElement !== $i('i-graine')) $i('i-graine').value = choixGraine;
   Carte.apercu($i('i-apercu'), pl, { depart: new Set(champsDeDepart({ lieu: id, mode: choixMode })) });
-  $i('i-chiffres').innerHTML = `<div><b>${nf(r.tRef, 1)} °C</b><span>par an, 1961-1990</span></div><div><b>${nf(r.pRef)} mm</b><span>de pluie par an</span></div>
-    <div><b>${r.ru} mm</b><span>de réserve utile</span></div><div><b>+${nf(r.pente * 10, 2)} °C</b><span>par décennie depuis 1990</span></div>`;
-  $i('install-modes').innerHTML = Object.entries(MODES).map(([mid, mo]) =>
-    `<button data-mode="${mid}" aria-pressed="${mid === choixMode}"><b>${mo.nom}</b><span>1 case = ${mo.echelle === 'champs' ? '50 × 50 m' : '10 × 10 m'}</span><span class="texte">${mo.texte}</span></button>`).join('');
-  $i('install-go').textContent = S ? `S’installer le ${texteDate()}` : 'S’installer le 1er mars 1959';
+  $i('i-chiffres').innerHTML = JAUGES_LIEU.map(q => jaugeLieu(q, r)).join('');
+  $i('install-go').textContent = S ? `Démarrer le ${texteDate()}` : 'Démarrer le 1er mars 1959';
 }
 function choisirRegion(g) { if (!g || !g.dataset.lieu) return; choixRegion = g.dataset.lieu; majInstallation(); }
 $i('carte-france').addEventListener('click', e => choisirRegion(e.target.closest('.lieu')));
 $i('carte-france').addEventListener('keydown', e => { if (e.key !== 'Enter' && e.key !== ' ') return; e.preventDefault(); choisirRegion(e.target.closest('.lieu')); });
-$i('install-modes').addEventListener('click', e => { const b = e.target.closest('[data-mode]'); if (b) { choixMode = b.dataset.mode; majInstallation(); } });
 $i('install-go').addEventListener('click', async () => {
   const bouton = $i('install-go');
   bouton.disabled = true; bouton.textContent = 'Chargement du climat…';
@@ -949,6 +982,7 @@ function boucle(t) {
       let n = 0;
       while (cumul >= pas && n < 10) { cumul -= pas; unJour(); n++; }
       if (n >= 10) cumul = 0;
+      majHeure(cumul / pas);
     }
     if (S.jour !== jourAffiche) {
       jourAffiche = S.jour;
@@ -973,10 +1007,17 @@ function boucle(t) {
   }
   requestAnimationFrame(boucle);
 }
+// Horloge de la barre du haut : chaque jour de jeu déroule la journée de travail, de 6 h à 21 h (aiguille des heures, cadran de 12 h)
+let heureVue = -1, angleVu = -1;
+function majHeure(part) {
+  const h = 6 + 15 * Math.max(0, Math.min(1, part)), a = Math.round((h % 12) * 30);
+  if (a !== angleVu) { angleVu = a; $i('aiguille').setAttribute('transform', `rotate(${a} 10 10)`); }
+  if (Math.floor(h) !== heureVue) { heureVue = Math.floor(h); $i('heure-txt').textContent = `${heureVue} h`; }
+}
 function demarrer() {
   Rendu.preparer();
   outilParDefaut();
-  majEntete(); majOutils(); majJournal(false); majInfo(); majProduction(false); Meca.majNiveau(false); majBadge();
+  majEntete(); majOutils(); majJournal(false); majInfo(); majProduction(false); Meca.majNiveau(false); majBadge(); majHeure(0);
   ouvrirOnglet('commandes');
   if (!enRoute) { enRoute = true; requestAnimationFrame(boucle); }
 }
