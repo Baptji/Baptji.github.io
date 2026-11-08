@@ -7,7 +7,7 @@
 // Un lieu tiré d'une graine (js/carte.js) : grille « champs » de 50 m ou « planches » de 10 m selon le mode.
 const NOMS_MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 const MOIS_COURT = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
-const CLE = 'squid-ferme-4';                     // 4 : cartes tirées d'une graine (les parties de Monchy, clé 3, sont effacées)
+const CLE = 'squid-ferme-5';                     // changer ce numéro remet toutes les parties à zéro (les clés précédentes sont effacées au chargement)
 const JOUR_MS = 5000;                               // durée d'un jour à la vitesse ×1
 const PRIX_TERRE_HA = { champs: 9000, planches: 60000 };   // € par hectare (terres de l'Artois ≈ 9 000 €/ha)
 const FAMILLE_ECHELLE = { champs: ['gc', 'acs', 'agro'], planches: ['mar'] };
@@ -170,7 +170,7 @@ const surfaceTexte = ha => ha >= 1 ? nf(ha, ha < 10 ? 1 : 0) + ' ha' : nf(ha * 1
 function sauver() { if (!S) return; try { localStorage.setItem(CLE, JSON.stringify(S)); } catch (e) { /* stockage indisponible */ } }
 function charger() {
   try {
-    localStorage.removeItem('squid-ferme-3');      // parties de l'ancienne carte (vrais champs de Monchy) : on repart de zéro
+    for (const k of ['squid-ferme-3', 'squid-ferme-4']) localStorage.removeItem(k);   // parties des clés précédentes : on repart de zéro
     const t = localStorage.getItem(CLE);
     if (t) {
       const s = JSON.parse(t);
