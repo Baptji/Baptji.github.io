@@ -509,7 +509,15 @@ const FORMES = {
 };
 // Cultures que le vent fait onduler, et stade montré sur les vignettes des semences
 const SOUPLES = new Set(['epi', 'avoine', 'lin', 'mais', 'sorgho', 'tournesol', 'topi', 'colza', 'feverole', 'sarrasin']);
-const STADE_ICONE = { colza: 0.7, lin: 0.66, tournesol: 0.74, sarrasin: 0.7, pdt: 0.62, feverole: 0.62, topi: 0.8, tomate: 1, fraise: 1 };
+// Formes des cultures ajoutées : le dessin de 2 D de la plante la plus proche ; la prairie a le sien
+Object.assign(FORMES, {
+  poisprot: FORMES.legume, lupin: FORMES.legume, luzerne: FORMES.legume, moutarde: FORMES.colza, chicoree: FORMES.betsucre, chanvre: FORMES.topi, miscanthus: FORMES.sorgho,
+  prairie(g, x0, y0, c, k, p, rnd) {
+    if (p < 0.05) return levee(g, x0, y0, p, rnd, 6);
+    grille(7, 6, (cx, base, n) => { const x = x0 + cx, b = y0 + base, h = 3 + (rnd(n) * 4 | 0); for (let i = 0; i < h; i++) { P(g, x + (i > 2 ? (n % 2 ? 1 : -1) : 0), b - i, n % 3 ? k.f : k.c); } if (n % 7 === 0) P(g, x, b - h - 1, k.a); });
+  },
+});
+const STADE_ICONE = { miscanthus: 0.8, chanvre: 0.8, moutarde: 0.7, lupin: 0.62, poisprot: 0.62, luzerne: 0.62, prairie: 0.8, chicoree: 0.7, colza: 0.7, lin: 0.66, tournesol: 0.74, sarrasin: 0.7, pdt: 0.62, feverole: 0.62, topi: 0.8, tomate: 1, fraise: 1 };
 
 // Plante entière dans une vignette (x0, y0 = coin de la case dans la vignette)
 function dessinerPlante(g, x0, y0, c, p, v, s, pourri) {
@@ -528,6 +536,14 @@ function produit(g, x, y, c) {
         for (let i = 0; i < 4; i++) { const ex = x + 8 + dx + a * 2, ey = y + 1 + i * 2; P(g, ex - 1, ey + 1, k.a); P(g, ex, ey, teinte(k.a, 1.2)); P(g, ex + 1, ey + 1, teinte(k.a, 0.85)); P(g, ex, ey + 1, k.a); }
       }
       R(g, x + 5, y + 11, 7, 2, '#c8a85a'); P(g, x + 5, y + 11, '#e8d080'); break;
+    case 'botte': case 'fourrage': case 'broyat': {
+      const pale = c.prod === 'broyat' ? '#d8c08a' : k.m, bas = teinte(pale, 0.75);
+      ellipse(g, x + 8, y + 14, 7, 1, OMBRE);
+      R(g, x + 2, y + 5, 12, 8, pale); R(g, x + 2, y + 11, 12, 2, bas);
+      for (let i = 0; i < 5; i++) { R(g, x + 3 + i * 2, y + 6 + (i % 2), 1, 4, teinte(pale, 1.2)); P(g, x + 4 + i * 2, y + 5 - (i % 2), pale); }
+      if (c.prod !== 'broyat') { R(g, x + 5, y + 5, 1, 8, '#7a6a48'); R(g, x + 10, y + 5, 1, 8, '#7a6a48'); }
+      break;
+    }
     case 'epi-mais':
       ellipse(g, x + 8, y + 8, 3, 6, k.a);
       for (let i = 0; i < 6; i++) { P(g, x + 7, y + 3 + i * 2, teinte(k.a, 1.25)); P(g, x + 9, y + 4 + i * 2, teinte(k.a, 0.82)); }

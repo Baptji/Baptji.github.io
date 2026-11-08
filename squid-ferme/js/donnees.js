@@ -9,7 +9,10 @@
    npt     : azote absorbé par tonne récoltée (kg N/t) ; leg : légumineuse qui fixe l'azote de l'air.
    semis   : mois de semis ou de plantation ; cycle : durée indicative (jours).
    prix    : prix moyen au producteur (€/kg), tiré chaque année autour de cette valeur (mecaniques.js) ; graine : semences ou plants (€/ha).
-   prod    : dessin du produit sur les caisses. forme, coul : dessin de la plante. */
+   prod    : dessin du produit sur les caisses. forme, coul : dessin de la plante. machine : engin de récolte, s'il n'est pas déduit de la catégorie.
+   vivace  : culture installée qui survit à la récolte : ans [min, max] de vie (null : jusqu'à l'arrachage), montee : part du rendement
+             par année, coupes : part du rendement de chaque coupe de l'année, repousse : degrés-jours entre deux coupes (dj = 1re coupe),
+             finHiver : récolte de février à avril sur tiges sèches, moAn : gain net de matière organique (point par an), vdt : vers de terre (sur 100). */
 const CULTURES = [
   // Céréales
   { id: 'ble', nom: 'Blé tendre', cat: 'Céréales', famille: 'poacée', forme: 'epi', prod: 'epi',
@@ -140,39 +143,88 @@ const CULTURES = [
   { id: 'fraise', nom: 'Fraise', cat: 'Légumes-fruits', famille: 'rosacée', forme: 'fraise', prod: 'fraise',
     rdt: 20, kcal: 32, tb: 5, dj: 1500, kc: 0.85, ky: 1.1, gel: -12, chaud: 32, npt: 6, hiver: true,
     semis: [8, 9], cycle: 260, prix: 4.0, graine: 8000, coul: { f: '#3f8a3a', c: '#6aad4f', m: '#d82a3a', a: '#f6f2e8' } },
+  // Ajouts du chantier C.5 (valeurs et niveau de confiance : references/nouvelles-cultures.md)
+  { id: 'bledur', nom: 'Blé dur', cat: 'Céréales', famille: 'poacée', forme: 'epi', prod: 'epi',
+    rdt: 5.3, kcal: 339, tb: 0, dj: 2200, kc: 1.15, ky: 1.05, gel: -12, chaud: 30, npt: 35, hiver: true,
+    semis: [10, 11], cycle: 265, prix: 0.265, graine: 180, coul: { f: '#5c9a3e', c: '#8aba5a', m: '#d2a84e', a: '#c08a3a' } },
+  { id: 'escourgeon', nom: 'Orge d’hiver', cat: 'Céréales', famille: 'poacée', forme: 'epi', prod: 'epi',
+    rdt: 6.6, kcal: 345, tb: 0, dj: 1950, kc: 1.15, ky: 1.0, gel: -12, chaud: 28, npt: 25, hiver: true,
+    semis: [9, 10], cycle: 265, prix: 0.19, graine: 130, coul: { f: '#66a24a', c: '#98c468', m: '#d6c070', a: '#ead88e' } },
+  { id: 'poisprot', nom: 'Pois protéagineux', cat: 'Légumineuses', famille: 'fabacée', forme: 'poisprot', prod: 'graine-jaune',
+    rdt: 3.5, kcal: 345, tb: 3, dj: 1400, kc: 1.1, ky: 1.15, gel: -6, chaud: 28, npt: 45, leg: true,
+    semis: [2, 3], cycle: 125, prix: 0.24, graine: 170, coul: { f: '#5aa04a', c: '#f4f2e6', m: '#b8a868', a: '#8a7a48' } },
+  { id: 'lupin', nom: 'Lupin doux', cat: 'Légumineuses', famille: 'fabacée', forme: 'lupin', prod: 'graine-beige',
+    rdt: 2.8, kcal: 371, tb: 3, dj: 1700, kc: 1.05, ky: 0.95, gel: -5, chaud: 30, npt: 55, leg: true,
+    semis: [3, 4], cycle: 150, prix: 0.32, graine: 200, coul: { f: '#4f9a4a', c: '#e8ecf8', m: '#b09a68', a: '#7a6a44' } },
+  { id: 'moutarde', nom: 'Moutarde brune', cat: 'Oléagineux', famille: 'brassicacée', forme: 'moutarde', prod: 'graine-noire',
+    rdt: 1.9, kcal: 508, tb: 3, dj: 1500, kc: 1.0, ky: 0.95, gel: -6, chaud: 31, npt: 55,
+    semis: [3, 4], cycle: 130, prix: 1.0, graine: 40, coul: { f: '#5a9652', c: '#86b478', m: '#9a8a50', a: '#f2d62a' } },
+  { id: 'chicoree', nom: 'Chicorée à café', cat: 'Racines et tubercules', famille: 'astéracée', forme: 'chicoree', prod: 'panais',
+    rdt: 51, kcal: 72, tb: 3, dj: 2100, kc: 1.1, ky: 1.0, gel: -5, chaud: 34, npt: 2.5, machine: 'arracheuse',
+    semis: [4, 5], cycle: 180, prix: 0.066, graine: 300, coul: { f: '#4f9048', c: '#7ab46a', m: '#e6d8b0', a: '#6a9ae0' } },
+  { id: 'chanvre', nom: 'Chanvre', cat: 'Plantes à fibres', famille: 'cannabacée', forme: 'chanvre', prod: 'botte',
+    rdt: 6.6, kcal: 0, tb: 1, dj: 1700, kc: 1.1, ky: 0.9, gel: -2, chaud: 36, npt: 20, machine: 'faucheuse',
+    semis: [4, 5], cycle: 135, prix: 0.11, graine: 170, coul: { f: '#3f8a3e', c: '#68ab56', m: '#c9b070', a: '#3f8a3e' } },
+  { id: 'linfibre', nom: 'Lin textile', cat: 'Plantes à fibres', famille: 'linacée', forme: 'lin', prod: 'botte',
+    rdt: 6, kcal: 0, tb: 5, dj: 850, kc: 1.0, ky: 1.0, gel: -4, chaud: 30, npt: 10, machine: 'arracheuse', rouit: true,
+    semis: [3, 4], cycle: 105, prix: 0.4, graine: 250, coul: { f: '#5e9a58', c: '#88b87a', m: '#b9a26a', a: '#6a8fe0' } },
+  { id: 'maisfourrage', nom: 'Maïs fourrage', cat: 'Fourrages et biomasse', famille: 'poacée', forme: 'mais', prod: 'fourrage',
+    rdt: 13.2, kcal: 0, tb: 6, dj: 1350, kc: 1.2, ky: 1.25, gel: -1, chaud: 35, npt: 12, machine: 'ensileuse',
+    semis: [4, 5], cycle: 150, prix: 0.09, graine: 220, coul: { f: '#4f9a3a', c: '#7cc05a', m: '#a8b868', a: '#d8c060' } },
+  { id: 'prairie', nom: 'Prairie de fauche', cat: 'Fourrages et biomasse', famille: 'poacée', forme: 'prairie', prod: 'botte',
+    rdt: 6, kcal: 0, tb: 0, dj: 1050, kc: 1.0, ky: 1.0, gel: -25, chaud: 34, npt: 20, machine: 'faucheuse',
+    vivace: { ans: null, montee: [0.6, 1], coupes: [0.6, 0.25, 0.15], repousse: 800, moAn: 0.021, vdt: 85 },
+    semis: [3, 4, 8, 9], cycle: 100, prix: 0.105, graine: 200, coul: { f: '#5a9a42', c: '#86bc62', m: '#c9b85a', a: '#f2d23a' } },
+  { id: 'luzerne', nom: 'Luzerne', cat: 'Fourrages et biomasse', famille: 'fabacée', forme: 'luzerne', prod: 'botte',
+    rdt: 11, kcal: 0, tb: 5, dj: 480, kc: 1.15, ky: 1.1, gel: -15, chaud: 38, npt: 30, leg: true, machine: 'faucheuse',
+    vivace: { ans: [3, 5], montee: [0.7, 1], coupes: [0.36, 0.28, 0.22, 0.14], repousse: 520, moAn: 0.021, vdt: 85 },
+    semis: [3, 4, 8], cycle: 60, prix: 0.12, graine: 250, coul: { f: '#4a8f3e', c: '#74b05a', m: '#b8a868', a: '#8a62c0' } },
+  { id: 'miscanthus', nom: 'Miscanthus géant', cat: 'Fourrages et biomasse', famille: 'poacée', forme: 'miscanthus', prod: 'broyat',
+    rdt: 12, kcal: 0, tb: 6, dj: 1500, kc: 1.1, ky: 0.85, gel: -3.4, chaud: 40, npt: 2, machine: 'ensileuse',
+    vivace: { ans: [10, 15], montee: [0.2, 0.4, 0.7, 0.85, 1], finHiver: true, moAn: 0.042, vdt: 85 },
+    semis: [4, 5], cycle: 300, prix: 0.14, graine: 3000, coul: { f: '#3f8a4a', c: '#6cae62', m: '#c8b078', a: '#ece0c4' } },
 ];
 
-const CATEGORIES = ['Céréales', 'Légumineuses', 'Oléagineux', 'Racines et tubercules', 'Légumes-feuilles', 'Légumes-fruits'];
+const CATEGORIES = ['Céréales', 'Légumineuses', 'Oléagineux', 'Racines et tubercules', 'Plantes à fibres', 'Fourrages et biomasse', 'Légumes-feuilles', 'Légumes-fruits'];
 const CULTURE = Object.fromEntries(CULTURES.map(c => [c.id, c]));
 const kcalParHa = c => c.rdt * 1e6 * c.kcal / 100;
 
-/* Modes de culture. Valeurs et sources détaillées dans references/modes-et-sol.md ([n] = numéro de source).
+/* Modes de culture, choisis parcelle par parcelle. Valeurs et sources détaillées dans references/modes-et-sol.md ([n] = numéro de source, table de R.1).
    couverture : part du sol couverte (résidus, paillage) ; −5 % d'évaporation du sol par 10 % couverts [13].
    erosion    : pertes en terre relatives au labour sur sol nu : semis direct ×0,18 [12].
-   kMO        : minéralisation annuelle de l'humus à 12 °C, k2 de 1 à 2 %/an [10] ; le semis direct ne stocke pas
-                plus de carbone sur 0-30 cm [5], seuls les couverts en ajoutent [4].
-   vdtMax     : vers de terre à l'équilibre (sur 100) ; ×2,4 sans labour [3].
-   potentiel  : rendement relatif ; transition : perte au départ, qui s'efface en « ans ». */
+   kMO        : minéralisation annuelle de l'humus à 12 °C [10], [16], [18] ; moNet : gain net hors apports (point de MO par an).
+   vdtMax     : vers de terre à l'équilibre (sur 100) [3], [24].
+   potentiel  : rendement relatif ; transition : perte au départ, qui s'efface en « ans ».
+   miseEnPlace : main-d'œuvre, paillage, plants : part de la valeur d'une récolte moyenne ajoutée au prix du semis (prix de jeu, à régler).
+   conversion  : installation des tunnels, en €/ha (prix de jeu, à régler). */
+const CASE_HA = 0.25;
+const CATS_CHAMP = ['Céréales', 'Légumineuses', 'Oléagineux', 'Plantes à fibres', 'Fourrages et biomasse'];
+const CATS_LEGUMES = ['Légumineuses', 'Racines et tubercules', 'Légumes-feuilles', 'Légumes-fruits'];
+const PAS_MARAICHER = ['betsucre', 'soja', 'feverole', 'lentille', 'poischiche', 'haricot', 'chicoree', 'poisprot', 'lupin'];
 const MODES = {
-  gc: { nom: 'Grande culture', court: 'Grande culture', echelle: 'champs', caseHa: 0.25,
-    labour: true, couvert: false, couverture: 0.05, erosion: 1, irrigation: 'enrouleur', fertilisation: 'minéral',
-    potentiel: 1.0, kMO: 0.015, vdtMax: 35, transition: { ans: 1, perte: 0 },
-    cats: ['Céréales', 'Légumineuses', 'Oléagineux', 'Racines et tubercules'], exclus: ['radis', 'navet', 'echalote', 'ail', 'topinambour'],
-    texte: 'Champs labourés, engrais minéraux, irrigation par enrouleur si vous la mettez en route. Le meilleur rendement tout de suite ; la matière organique baisse lentement et les vers de terre se font rares.' },
-  acs: { nom: 'Agriculture de conservation', court: 'ACS', echelle: 'champs', caseHa: 0.25,
-    labour: false, couvert: true, couverture: 0.7, erosion: 0.18, irrigation: 'enrouleur', fertilisation: 'minéral réduit',
-    potentiel: 1.0, kMO: 0.015, vdtMax: 85, transition: { ans: 5, perte: 0.06 },
-    cats: ['Céréales', 'Légumineuses', 'Oléagineux'], exclus: [], plus: ['betsucre'],
-    texte: 'Semis direct, couverts entre deux cultures, résidus en surface. Environ 6 % de rendement en moins au début, qui s’effacent en cinq ans ; deux fois et demie plus de vers de terre, cinq fois moins d’érosion, un sol qui perd moins d’eau.' },
-  agro: { nom: 'Agroforesterie', court: 'Agroforesterie', echelle: 'champs', caseHa: 0.25,
-    labour: true, couvert: false, couverture: 0.1, erosion: 0.7, irrigation: null, fertilisation: 'minéral réduit',
-    potentiel: 0.92, kMO: 0.015, vdtMax: 50, transition: { ans: 1, perte: 0 }, arbres: true,
-    cats: ['Céréales', 'Légumineuses', 'Oléagineux'], exclus: [],
-    texte: 'Lignes de noyers et de merisiers dans les champs (8 % de la surface). En grandissant, leur ombre retire jusqu’à 30 % de rendement aux cultures, mais adoucit les coups de chaleur, enrichit le sol et donne du bois coupé à 50 ans.' },
-  mar: { nom: 'Maraîchage', court: 'Maraîchage', echelle: 'planches', caseHa: 0.01,
-    labour: true, couvert: false, couverture: 0.5, erosion: 0.5, irrigation: 'goutte', fertilisation: 'fumier',
-    potentiel: 0.85, kMO: 0.018, vdtMax: 55, transition: { ans: 3, perte: 0.10 },
-    cats: ['Légumineuses', 'Racines et tubercules', 'Légumes-feuilles', 'Légumes-fruits'], exclus: ['betsucre', 'soja', 'feverole', 'lentille', 'poischiche', 'haricot'],
-    texte: 'Planches de 100 m² en bio : fumier, paillage, goutte-à-goutte. Une quarantaine de légumes ; les rendements bio sont environ 15 % sous le conventionnel, et trois ans de conversion au départ.' },
+  gc: { nom: 'Agriculture intensive', ordre: 'champs', labour: true, couvert: false, couverture: 0.05, erosion: 1, irrigation: 'enrouleur', fertilisation: 'minéral',
+    potentiel: 1.0, kMO: 0.015, moNet: 0, vdtMax: 35, transition: { ans: 1, perte: 0 },
+    cats: [...CATS_CHAMP, 'Racines et tubercules'], exclus: ['radis', 'navet', 'echalote', 'ail', 'topinambour'] },
+  acs: { nom: 'Agriculture de conservation des sols', ordre: 'champs', labour: false, couvert: true, couverture: 0.7, erosion: 0.18, irrigation: 'enrouleur', fertilisation: 'minéral réduit',
+    potentiel: 1.0, kMO: 0.015, moNet: 0.013, vdtMax: 85, transition: { ans: 5, perte: 0.06 },
+    cats: CATS_CHAMP, exclus: [], plus: ['betsucre'] },
+  perma: { nom: 'Permaculture', ordre: 'planches', labour: false, couvert: false, paillage: true, couverture: 0.5, erosion: 0.18, irrigation: 'goutte', fertilisation: 'paillage',
+    potentiel: 0.85, kMO: 0.015, moNet: 0.034, vdtMax: 100, transition: { ans: 3, perte: 0.10 }, miseEnPlace: 0.7,
+    cats: CATS_LEGUMES, exclus: PAS_MARAICHER },
+  marPA: { nom: 'Maraîchage plein air', ordre: 'planches', labour: false, couvert: false, planches: true, couverture: 0.5, erosion: 0.5, irrigation: 'goutte', fertilisation: 'fumier',
+    potentiel: 0.85, kMO: 0.018, moNet: 0, vdtMax: 50, transition: { ans: 3, perte: 0.10 }, miseEnPlace: 0.6,
+    cats: CATS_LEGUMES, exclus: PAS_MARAICHER },
+  marSerre: { nom: 'Maraîchage sous serre', ordre: 'planches', labour: false, couvert: false, planches: true, serre: true, couverture: 0.5, erosion: 0.5, irrigation: 'goutte', fertilisation: 'fumier',
+    potentiel: 1.10, kMO: 0.020, moNet: 0, vdtMax: 30, transition: { ans: 1, perte: 0 }, miseEnPlace: 0.6, conversion: 8000,
+    cats: CATS_LEGUMES, exclus: PAS_MARAICHER },
+  assoc: { nom: 'Cultures associées', ordre: 'champs', labour: false, couvert: false, assoc: true, couverture: 0.05, erosion: 1, irrigation: 'enrouleur', fertilisation: 'minéral réduit',
+    potentiel: 1.0, kMO: 0.015, moNet: 0.008, vdtMax: 43, transition: { ans: 1, perte: 0 },
+    cats: ['Céréales', 'Légumineuses', 'Oléagineux', 'Plantes à fibres'], exclus: ['chanvre'] },
+  // Hors du menu : gardée en réserve (lignes d'arbres [6], [7])
+  agro: { nom: 'Agroforesterie', ordre: 'champs', labour: true, couvert: false, couverture: 0.1, erosion: 0.7, irrigation: null, fertilisation: 'minéral réduit',
+    potentiel: 0.92, kMO: 0.015, moNet: 0, vdtMax: 50, transition: { ans: 1, perte: 0 }, arbres: true, cats: CATS_CHAMP, exclus: [] },
 };
+const MENU_MODES = ['gc', 'acs', 'perma', 'marPA', 'marSerre', 'assoc'];
 const cultureAutorisee = (mode, c) => (MODES[mode].cats.includes(c.cat) || (MODES[mode].plus || []).includes(c.id)) && !MODES[mode].exclus.includes(c.id);
+// Semis d'un hectare : semences, plus la mise en place propre au mode
+const coutSemis = (mode, c) => c.graine + (mode.miseEnPlace || 0) * c.rdt * 1000 * c.prix;

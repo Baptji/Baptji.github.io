@@ -116,8 +116,9 @@ const Decor = (() => {
     return morceaux.filter(c => c.length > 1).map(c => {
       let pts = c.map(i => [wx(pl, i % W) + 0.5, wz(pl, (i / W) | 0) + 0.5]);
       // les bouts qui touchent le bord de la carte vont jusqu'au bord du plateau
-      const bord = (p, i) => { const x = i % W, y = (i / W) | 0; if (degre(i) > 1) return p; return [x === 0 ? wx(pl, 0) : x === W - 1 ? wx(pl, W) : p[0], y === 0 ? wz(pl, 0) : y === H - 1 ? wz(pl, H) : p[1]]; };
-      pts[0] = bord(pts[0], c[0]); pts[pts.length - 1] = bord(pts.at(-1), c.at(-1));
+      // (seulement s'ils sortent de la carte : un chemin qui longe la bordure reste au milieu de sa case)
+      const bord = (p, i, j) => { const x = i % W, y = (i / W) | 0, dx = x - j % W, dy = y - ((j / W) | 0); if (degre(i) > 1) return p; return [x === 0 && dx < 0 ? wx(pl, 0) : x === W - 1 && dx > 0 ? wx(pl, W) : p[0], y === 0 && dy < 0 ? wz(pl, 0) : y === H - 1 && dy > 0 ? wz(pl, H) : p[1]]; };
+      pts[0] = bord(pts[0], c[0], c[1]); pts[pts.length - 1] = bord(pts.at(-1), c.at(-1), c.at(-2));
       const coins = coinsDe(c);
       if (coins.length) {
         // tronçons droits d'équerre reliés par des arcs tangents
@@ -435,11 +436,12 @@ const Decor = (() => {
     // rempli d'herbe, teinté avec la case du virage (sinon le fond vert foncé se verrait)
     const n = W * H, ARC = 8, nv = n * 4 + D.arrondis.size * (ARC * 2 + 2), pos = new Float32Array(nv * 3), col = new Float32Array(nv * 3), uv = new Float32Array(nv * 2), idxC = [], idxH = [], suite = new Map();
     const un = (x, y) => x < 0 || y < 0 || x >= W || y >= H ? -9 : pl.unite[y * W + x];
+    // bords d'une case de champ, rentrés là où commence la parcelle d'à côté
+    const rebord = (x, y, i) => { const u = pl.unite[i], b = pl.types[y][x] === 'c' && u >= 0 && !planches ? 0.035 : 0, ins = (dx, dy) => (b && un(x + dx, y + dy) !== u ? b : 0); return [wx(pl, x) + ins(-1, 0), wx(pl, x + 1) - ins(1, 0), wz(pl, y) + ins(0, -1), wz(pl, y + 1) - ins(0, 1)]; };
     let libre = n * 4;
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       const i = y * W + x, ty = pl.types[y][x], u = pl.unite[i], champ = ty === 'c' && u >= 0;
-      const b = champ && !planches ? 0.035 : 0, ins = s => (champ && un(x + s[0], y + s[1]) !== u ? b : 0);
-      const x0 = wx(pl, x) + ins([-1, 0]), x1 = wx(pl, x + 1) - ins([1, 0]), z0 = wz(pl, y) + ins([0, -1]), z1 = wz(pl, y + 1) - ins([0, 1]);
+      const b = champ && !planches ? 0.035 : 0, [x0, x1, z0, z1] = rebord(x, y, i);
       const yy = champ && !planches ? 0.004 : 0.001, ku = champ && !planches ? [1.7, 6] : [1.7, 1.7];
       const poser = (j, p) => { pos.set([p[0], yy, p[1]], j * 3); uv.set([p[0] * ku[0], -p[1] * ku[1]], j * 2); };
       const v = [[x0, z0], [x1, z0], [x1, z1], [x0, z1]], k = i * 4, cible = champ && !planches ? idxC : idxH, a = champ && D.arrondis.get(i);
@@ -459,13 +461,17 @@ const Decor = (() => {
     // deux maillages qui partagent sommets et couleurs : les champs (rangs le long de x) et le reste (grain de l'herbe)
     const aP = new T3.BufferAttribute(pos, 3), aC = new T3.BufferAttribute(col, 3), aU = new T3.BufferAttribute(uv, 2), nor = new Float32Array(nv * 3);
     for (let i = 0; i < nv; i++) nor[i * 3 + 1] = 1;
-    const aN = new T3.BufferAttribute(nor, 3);
+    const aN = new T3.BufferAttribute(nor, 3), aF = new T3.BufferAttribute(new Float32Array(nv), 1);
     D.sols = [[idxH, tx.grain], [idxC, tx.rangs]].map(([ix, map]) => {
-      const sg = new T3.BufferGeometry(); sg.setAttribute('position', aP); sg.setAttribute('color', aC); sg.setAttribute('uv', aU); sg.setAttribute('normal', aN); sg.setIndex(ix);
-      const m = new T3.Mesh(sg, K.patcher(new T3.MeshStandardMaterial({ vertexColors: true, map, roughness: 1, metalness: 0 }))); m.receiveShadow = true; g.add(m); return m;
+      const sg = new T3.BufferGeometry(); sg.setAttribute('position', aP); sg.setAttribute('color', aC); sg.setAttribute('uv', aU); sg.setAttribute('normal', aN); sg.setAttribute('aFiss', aF); sg.setIndex(ix);
+      const mat = K.patcher(new T3.MeshStandardMaterial({ vertexColors: true, map, roughness: 1, metalness: 0 }));
+      if (ix === idxC) K.fissurable(mat);
+      const m = new T3.Mesh(sg, mat); m.receiveShadow = true; g.add(m); return m;
     });
     D.colorer = (i, c) => { for (let k = 0; k < 4; k++) col.set([c.r, c.g, c.b], i * 12 + k * 3); for (const j of suite.get(i) || []) col.set([c.r, c.g, c.b], j * 3); };
-    D.solFini = () => { aC.needsUpdate = true; };
+    let fissSale = false;
+    D.fissurer = (i, v) => { const a = aF.array; if (a[i * 4] === v) return; for (let k = 0; k < 4; k++) a[i * 4 + k] = v; for (const j of suite.get(i) || []) a[j] = v; fissSale = true; };
+    D.solFini = () => { aC.needsUpdate = true; if (fissSale) { aF.needsUpdate = true; fissSale = false; } };
     const larg = planches ? { r: 0.74, p: 0.36 } : { r: 0.44, p: 0.22 };
     const mR = K.matT(tx.route, { roughness: 0.95, flatShading: false }), mC = K.matT(tx.chemin, { roughness: 1, flatShading: false });
     D.routes.forEach((r, i) => { const m = new T3.Mesh(ruban(r.pts, larg.r, 0.012), mR); m.receiveShadow = true; m.userData.nom = { cle: 'route:' + (i + 1), libelle: 'Route ' + (i + 1) }; g.add(m); });
@@ -526,43 +532,64 @@ const Decor = (() => {
     const typeC = (x, y) => x >= 0 && y >= 0 && x < W && y < H ? pl.types[y][x] : '#', uniteC = (x, y) => x >= 0 && y >= 0 && x < W && y < H ? pl.unite[y * W + x] : -9;
     const presFerme = (x, y) => { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (typeC(x + i, y + j) === 'm') return true; return false; };
     const limite = (x, y, x2, y2) => {   // la limite sépare deux champs, ou un champ d'un pré libre loin de la ferme
+      const rive = (a, b) => pl.bord && (a < pl.bord || b < pl.bord || a >= W - pl.bord || b >= H - pl.bord); if (rive(x, y) || rive(x2, y2)) return false;   // la bordure reste dégagée : les engins y tournent
       const c1 = typeC(x, y) === 'c' && uniteC(x, y) >= 0, c2 = typeC(x2, y2) === 'c' && uniteC(x2, y2) >= 0;
-      if (c1 && c2) return uniteC(x, y) !== uniteC(x2, y2);
+      if (c1 && c2) return uniteC(x, y) !== uniteC(x2, y2) && !pl.trous?.has(Carte.cleLimite(y * W + x, y2 * W + x2));   // un trou : pas de haie sur cette case de limite
       const [cx, cy] = c1 ? [x2, y2] : [x, y]; return (c1 || c2) && typeC(cx, cy) === 'h' && !presFerme(cx, cy);
     };
     const buissonHaie = (px, pz, enZ, s, n) => { const b = { x: px, z: pz, s: (1.05 + h(s + 1) * 0.4) * (0.85 + 0.25 * Math.sin(n * 0.7 + s)), rot: (enZ ? Math.PI / 2 : 0) + (h(s + 2) - 0.5) * 0.5, sl: 1.1 + h(s + 3) * 0.3 }; noter({ b: buissons.length }, px, pz); buissons.push(b); };
-    if (!planches) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-      const s = y * 131 + x * 37, X = wx(pl, x), Z = wz(pl, y);
-      if (y + 1 < H && limite(x, y, x, y + 1) && h(s + 0.1) > 0.04) for (let k = 0; k < 3; k++) { const a = (k + 0.25 + h(s + k * 3) * 0.5) / 3; buissonHaie(X + a, Z + 1 + (h(s + k * 5) - 0.5) * 0.05, false, s + k * 11, x * 3 + k); }
-      if (x + 1 < W && limite(x, y, x + 1, y)) for (const a of [0.03, 0.2, 0.8, 0.97]) buissonHaie(X + 1 + (h(s + a * 9) - 0.5) * 0.05, Z + a + (h(s + a * 13) - 0.5) * 0.05, true, s + a * 17, y * 3);
-      const hori = y + 1 < H && limite(x, y, x, y + 1), vert = x + 1 < W && limite(x, y, x + 1, y);
-      if ((hori || vert) && h(s + 0.77) < 0.2) {
-        const a = { x: hori ? X + 0.2 + h(s + 7) * 0.6 : X + 1, z: hori ? Z + 1 : Z + (h(s + 7) < 0.5 ? 0.04 : 0.96), s: 0.62 + h(s + 8) * 0.3, r: h(s + 9) * 6, t: 'limite' };
-        noter({ a: arbres.length, tronc: true }, a.x, a.z); arbres.push(a);
+    // La partie fixe du décor reste ; les haies de limite se recalculent quand le joueur divise ou fusionne (D.replan)
+    const nB0 = buissons.length, nA0 = arbres.length, ouvertes = new Set(), VIDE = new T3.Matrix4().makeScale(0, 0, 0), mArbre = K.matV({}, 0.04), mH = K.matV({}, 0.05), mT = K.matV({ side: T3.DoubleSide }, 0.8), mTronc = K.matV();
+    const clePos = (o, t) => t + o.x.toFixed(3) + ',' + o.z.toFixed(3), masques = D.masques = [];
+    const cache = (o, t) => ouvertes.has(clePos(o, t)) || masques.some(z => z(o.x, o.z));
+    function poserHaies() {
+      buissons.length = nB0; arbres.length = nA0; haies.clear();
+      if (!planches) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        const s = y * 131 + x * 37, X = wx(pl, x), Z = wz(pl, y);
+        if (y + 1 < H && limite(x, y, x, y + 1) && h(s + 0.1) > 0.04) for (let k = 0; k < 3; k++) { const a = (k + 0.25 + h(s + k * 3) * 0.5) / 3; buissonHaie(X + a, Z + 1 + (h(s + k * 5) - 0.5) * 0.05, false, s + k * 11, x * 3 + k); }
+        if (x + 1 < W && limite(x, y, x + 1, y)) for (const a of [0.03, 0.2, 0.8, 0.97]) buissonHaie(X + 1 + (h(s + a * 9) - 0.5) * 0.05, Z + a + (h(s + a * 13) - 0.5) * 0.05, true, s + a * 17, y * 3);
+        const hori = y + 1 < H && limite(x, y, x, y + 1), vert = x + 1 < W && limite(x, y, x + 1, y);
+        if ((hori || vert) && h(s + 0.77) < 0.2) {
+          const a = { x: hori ? X + 0.2 + h(s + 7) * 0.6 : X + 1, z: hori ? Z + 1 : Z + (h(s + 7) < 0.5 ? 0.04 : 0.96), s: 0.62 + h(s + 8) * 0.3, r: h(s + 9) * 6, t: 'limite' };
+          noter({ a: arbres.length, tronc: true }, a.x, a.z); arbres.push(a);
+        }
       }
+      for (const m of [D.troncs, D.houppiers, D.buissons]) if (m) { g.remove(m); m.dispose?.(); }
+      D.troncs = K.inst(g, GA.tronc, mTronc, arbres.length); D.houppiers = K.inst(g, GA.houppier, mArbre, arbres.length);
+      D.troncs.userData.arbres = D.houppiers.userData.arbres = arbres;
+      arbres.forEach((a, i) => { K.poser(D.troncs, i, [a.x, 0, a.z], [0, a.r, 0], a.s); K.poser(D.houppiers, i, [a.x, 0, a.z], [0, a.r, 0], a.s, '#4f8f3f'); if (cache(a, 'a')) { D.troncs.setMatrixAt(i, VIDE); D.houppiers.setMatrixAt(i, VIDE); } });
+      D.buissons = K.inst(g, GA.buisson, mH, buissons.length); D.buissons.userData.buissons = buissons; D.buissonsPos = buissons;
+      buissons.forEach((b, i) => { K.poser(D.buissons, i, [b.x, 0, b.z], [0, b.rot ?? i, 0], [b.s * (b.sl || 1), b.s * (0.9 + h(i) * 0.3), b.s], '#3a7a36'); if (cache(b, 'b')) D.buissons.setMatrixAt(i, VIDE); });
+      D.nbBuissons = buissons.length; D.nbHaies = [...haies.values()].reduce((a, l) => a + l.length, 0);
     }
-    const mArbre = K.matV({}, 0.04), mH = K.matV({}, 0.05), mT = K.matV({ side: T3.DoubleSide }, 0.8);
-    D.troncs = K.inst(g, GA.tronc, K.matV(), arbres.length); D.houppiers = K.inst(g, GA.houppier, mArbre, arbres.length);
-    D.troncs.userData.arbres = D.houppiers.userData.arbres = arbres;
-    arbres.forEach((a, i) => { K.poser(D.troncs, i, [a.x, 0, a.z], [0, a.r, 0], a.s); K.poser(D.houppiers, i, [a.x, 0, a.z], [0, a.r, 0], a.s, '#4f8f3f'); });
-    D.buissons = K.inst(g, GA.buisson, mH, buissons.length); D.buissons.userData.buissons = buissons; D.buissonsPos = buissons;
-    buissons.forEach((b, i) => K.poser(D.buissons, i, [b.x, 0, b.z], [0, b.rot ?? i, 0], [b.s * (b.sl || 1), b.s * (0.9 + h(i) * 0.3), b.s], '#3a7a36'));
+    poserHaies();
     D.touffes = K.inst(g, GA.touffe, mT, touffes.length, false);
     touffes.forEach((t, i) => K.poser(D.touffes, i, [t.x, 0, t.z], [0, t.r, 0], t.s, '#6aa84a'));
     if (roseaux.length) { const ro = K.inst(g, GA.roseau, K.matV({}, 0.5), roseaux.length); roseaux.forEach((r, i) => K.poser(ro, i, [r.x, 0, r.z], [(r.r - 0.5) * 0.3, 0, 0])); }
     // Un engin qui roule ouvre la haie sur son axe, pour de bon : les buissons s'effacent, les arbres ne cèdent que si leur tronc est sur la trace
-    const VIDE = new T3.Matrix4().makeScale(0, 0, 0), sur = (e, x, z, c, sn, l, lat) => { const dx = e.x - x, dz = e.z - z, lon = dx * c + dz * sn, la = -dx * sn + dz * c; return Math.abs(la) < lat && lon > -l && lon < l + 0.35; };
-    D.nbHaies = [...haies.values()].reduce((a, l) => a + l.length, 0);
+    const sur = (e, x, z, c, sn, l, lat) => { const dx = e.x - x, dz = e.z - z, lon = dx * c + dz * sn, la = -dx * sn + dz * c; return Math.abs(la) < lat && lon > -l && lon < l + 0.35; };
     D.degager = (x, z, cap, l) => {
       if (!haies.size) return;
       const c = Math.cos(cap), sn = Math.sin(cap), cx = Math.floor(x + W / 2), cy = Math.floor(z + H / 2);
       for (let j = cy - 1; j <= cy + 1; j++) for (let i = cx - 1; i <= cx + 1; i++) for (const e of haies.get(j * W + i) || []) {
         if (e.ouvert) continue;
-        if (e.b != null && sur(buissons[e.b], x, z, c, sn, l, 0.12)) { e.ouvert = true; D.buissons.setMatrixAt(e.b, VIDE); D.buissons.instanceMatrix.needsUpdate = true; }
-        else if (e.a != null && sur(arbres[e.a], x, z, c, sn, l, 0.07)) { e.ouvert = true; for (const m of [D.troncs, D.houppiers]) { m.setMatrixAt(e.a, VIDE); m.instanceMatrix.needsUpdate = true; } }
+        if (e.b != null && sur(buissons[e.b], x, z, c, sn, l, 0.12)) { e.ouvert = true; ouvertes.add(clePos(buissons[e.b], 'b')); D.buissons.setMatrixAt(e.b, VIDE); D.buissons.instanceMatrix.needsUpdate = true; }
+        else if (e.a != null && sur(arbres[e.a], x, z, c, sn, l, 0.07)) { e.ouvert = true; ouvertes.add(clePos(arbres[e.a], 'a')); for (const m of [D.troncs, D.houppiers]) { m.setMatrixAt(e.a, VIDE); m.instanceMatrix.needsUpdate = true; } }
       }
     };
-    D.arbres = arbres; D.nbBuissons = buissons.length; D.nbTouffes = touffes.length;
+    // Les bords où pousse une haie : [nord, est, sud, ouest], null s'il n'y en a aucune
+    D.retraits = new Map();
+    D.retrait = i => { if (planches) return null; let r = D.retraits.get(i); if (r === undefined) { const x = i % W, y = (i / W) | 0; r = [limite(x, y, x, y - 1), limite(x, y, x + 1, y), limite(x, y, x, y + 1), limite(x, y, x - 1, y)]; if (!r.some(Boolean)) r = null; D.retraits.set(i, r); } return r; };
+    D.replan = () => {
+      poserHaies(); D.retraits.clear();
+      for (let i = 0; i < n; i++) {
+        const x = i % W, y = (i / W) | 0; if (pl.types[y][x] !== 'c' || pl.unite[i] < 0) continue;
+        const [x0, x1, z0, z1] = rebord(x, y, i), v = [[x0, z0], [x1, z0], [x1, z1], [x0, z1]], a = D.arrondis.get(i), c = a ? (a.sx < 0 ? (a.sz < 0 ? 0 : 3) : (a.sz < 0 ? 1 : 2)) : -1;
+        v.forEach((p, j) => { if (j !== c) { pos[(i * 4 + j) * 3] = p[0]; pos[(i * 4 + j) * 3 + 2] = p[1]; uv[(i * 4 + j) * 2] = p[0] * 1.7; uv[(i * 4 + j) * 2 + 1] = -p[1] * 6; } });
+      }
+      aP.needsUpdate = true; aU.needsUpdate = true;
+    };
+    D.arbres = arbres; D.nbTouffes = touffes.length;
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (pl.types[y][x] === 'e') {
       const m = new T3.Mesh(G.boite(1, 0.02, 1), K.mat('#4f8fc4', { roughness: 0.15, metalness: 0.1, flatShading: false })); m.position.set(wx(pl, x) + 0.5, 0.0, wz(pl, y) + 0.5); m.receiveShadow = true; m.userData.nom = { cle: `eau:${x}-${y}`, libelle: 'Mare' }; g.add(m);
     }
@@ -645,6 +672,78 @@ const Decor = (() => {
       const pg = [[sw.x, sw.z], [dw.x, dw.z], ...versReseau([dw.x, dw.z], dg)];
       const pa = L(A.voies.porte), ag = new T3.Mesh(ruban(chaikin([[pa.x, pa.z], ...pg]), 0.2 * s, 0.0095),   /* dessiné jusqu'à la porte ; les machines suivent pg */ K.matT(tx.chemin, { roughness: 1, flatShading: false })); ag.receiveShadow = true; ag.userData.nom = { cle: 'batiment:allee-grange', libelle: 'Ferme · chemin de la grange' }; g.add(ag);
       D.alleeGrange = pg;
+      // Parking des visiteurs (C.8) : trois places en bataille dans la bande d'herbe qui borde la ferme, juste à côté de
+      // l'allée du porche et ouvertes sur la route ou le chemin. Rien n'y roule d'autre que les visiteurs : les engins
+      // restent sur l'allée et le réseau. Sol de terre, rondins en butée, touffes entre les places, haie basse au bout.
+      D.parking = null; D.parkingH = D.parkingT = D.parkingA = D.parkingSol = null;
+      const centreF = [fg.position.x, fg.position.z], lat = { x: dir.z, z: -dir.x };
+      // d'abord le côté du porche ; à défaut (route collée à la ferme, champ devant), le côté voisin qui donne sur le réseau
+      const cotesF = planches ? [] : [dir, lat, { x: -lat.x, z: -lat.z }, { x: -dir.x, z: -dir.z }];
+      cherche: for (let nc = 0; nc < cotesF.length; nc++) {
+        const c = cotesF[nc], aX = c.z, aZ = -c.x, E = [centreF[0] + c.x * 2, centreF[1] + c.z * 2], ver = (ao, de) => [E[0] + aX * ao + c.x * de, E[1] + aZ * ao + c.z * de];
+        const type = q => { const [x, y] = caseDe(q); return typeEn(x, y); };
+        const coupeAllee = (a0, a1) => [pts, D.alleeGrange].some(l => l.some((q, i) => { if (!i) return false; for (let u = 0; u <= 10; u++) { const x = l[i - 1][0] + (q[0] - l[i - 1][0]) * u / 10, z = l[i - 1][1] + (q[1] - l[i - 1][1]) * u / 10, ao = (x - E[0]) * aX + (z - E[1]) * aZ, de = (x - E[0]) * c.x + (z - E[1]) * c.z; if (de > -0.02 && de < 1.3 && ao > a0 - 0.1 && ao < a1 + 0.1) return true; } return false; }));
+        for (const k of [0, -1, 1, -2, 2, -3]) {
+          const sg = k >= 0 ? 1 : -1, a0 = k, a1 = k + 1, au = sg > 0 ? a0 : a1;
+          if (type(ver(k + 0.5, 0.5)) !== 'h' || !'rp'.includes(type(ver(k + 0.5, 1.5))) || coupeAllee(a0, a1)) continue;
+          const places = [0.3, 0.57, 0.84].map(d => { const p = ver(au + sg * d, 0.44), q = projeter(ver(au + sg * d, 1.2)); return q && Math.hypot(q[0] - p[0], q[1] - p[1]) < 1.6 ? { x: p[0], z: p[1], bouche: q, porte: ver(au + sg * d, 0.8) } : null; });
+          if (places.some(p => !p)) continue;
+          const zone = (x, z) => { const ao = (x - E[0]) * aX + (z - E[1]) * aZ, de = (x - E[0]) * c.x + (z - E[1]) * c.z; return ao > Math.min(au, au + sg) - 0.02 && ao < Math.max(au, au + sg) + 0.02 && de > -0.05 && de < 1.05; };
+          const VIDE0 = new T3.Matrix4().makeScale(0, 0, 0);
+          touffes.forEach((t, i) => { if (zone(t.x, t.z)) D.touffes.setMatrixAt(i, VIDE0); }); D.touffes.instanceMatrix.needsUpdate = true;
+          buissons.forEach((b, i) => { if (zone(b.x, b.z)) D.buissons.setMatrixAt(i, VIDE0); }); D.buissons.instanceMatrix.needsUpdate = true;
+          arbres.forEach((a, i) => { if (zone(a.x, a.z)) { D.troncs.setMatrixAt(i, VIDE0); D.houppiers.setMatrixAt(i, VIDE0); } }); D.troncs.instanceMatrix.needsUpdate = D.houppiers.instanceMatrix.needsUpdate = true;
+          masques.push(zone);
+          const gp = new T3.Group(); gp.userData.nom = { cle: 'batiment:parking', libelle: 'Parking des visiteurs' }; g.add(gp);
+          // Une clairière de terre et de gravier : contour arrondi et irrégulier, qui se fond dans l'herbe (les sommets du bord prennent la teinte du pré du jour)
+          const pose = (ao, de) => ver(au + sg * ao, de), CA = 0.55, CD = 0.6, RA = 0.47, RD0 = 0.6, RD1 = 0.82, NS = 64, ANN = [0.3, 0.55, 0.8, 0.93, 1.06];
+          const rayon = t => { const c = Math.cos(t), sn = Math.sin(t), rd = sn > 0 ? RD1 : RD0, e = 2.6, base = 1 / Math.pow(Math.pow(Math.abs(c / RA), e) + Math.pow(Math.abs(sn / rd), e), 1 / e); return base * (1 + 0.05 * Math.sin(3 * t + 1.3) + 0.035 * Math.sin(5 * t + 4.1) + 0.022 * Math.sin(9 * t + 2)); };
+          const nv = 1 + NS * ANN.length, P = new Float32Array(nv * 3), N = new Float32Array(nv * 3), Cc = new Float32Array(nv * 4), UV = new Float32Array(nv * 2), teinte = new Float32Array(nv), ix = [];
+          const ecrit = (v, ao, de, al) => { const q = pose(ao, de); P.set([q[0], 0.0085, q[1]], v * 3); N[v * 3 + 1] = 1; UV.set([q[0] * 1.7, -q[1] * 1.7], v * 2); Cc[v * 4 + 3] = al; };
+          ecrit(0, CA, CD, 1); teinte[0] = 0.5;
+          ANN.forEach((a, r) => { for (let k = 0; k < NS; k++) { const t = k / NS * 6.2832, v = 1 + r * NS + k, R = rayon(t) * a; ecrit(v, CA + Math.cos(t) * R, CD + Math.sin(t) * R, a < 0.75 ? 1 : a < 0.9 ? 0.7 : a < 1 ? 0.3 : 0); teinte[v] = h(v * 1.7); } });
+          for (let k = 0; k < NS; k++) { const k2 = (k + 1) % NS; ix.push(0, 1 + k, 1 + k2); for (let r = 0; r + 1 < ANN.length; r++) { const a = 1 + r * NS + k, b = 1 + r * NS + k2, c = a + NS, d = b + NS; ix.push(a, c, b, b, c, d); } }
+          const geoC = new T3.BufferGeometry(); geoC.setAttribute('position', new T3.BufferAttribute(P, 3)); geoC.setAttribute('normal', new T3.BufferAttribute(N, 3)); geoC.setAttribute('color', new T3.BufferAttribute(Cc, 4)); geoC.setAttribute('uv', new T3.BufferAttribute(UV, 2));
+          // normales vers le haut : les triangles doivent être vus de dessus, quel que soit le côté de la ferme
+          const [A, B, C] = ix.slice(9, 12).map(v => [P[v * 3], P[v * 3 + 2]]); if ((B[1] - A[1]) * (C[0] - A[0]) - (B[0] - A[0]) * (C[1] - A[1]) < 0) for (let k = 0; k + 2 < ix.length; k += 3) [ix[k + 1], ix[k + 2]] = [ix[k + 2], ix[k + 1]];
+          geoC.setIndex(ix);
+          // le sol de la clairière se teinte par la texture du chemin ; sur le bord, l'alpha du sommet tombe à zéro : l'herbe du décor reparaît en douceur
+          const clair = new T3.Mesh(geoC, K.patcher(new T3.MeshStandardMaterial({ vertexColors: true, map: tx.chemin, roughness: 1, metalness: 0, transparent: true, depthWrite: false }))); clair.receiveShadow = true; gp.add(clair);
+          D.parkingSol = (herbe, blanc, neige) => { for (let v = 0; v < nv; v++) { const k = 0.88 + teinte[v] * 0.18; Cc[v * 4] = k * (1 - neige * 0.35) + neige * 0.35; Cc[v * 4 + 1] = (k - 0.02) * (1 - neige * 0.35) + neige * 0.35; Cc[v * 4 + 2] = (k - 0.06) * (1 - neige * 0.3) + neige * 0.3; } geoC.attributes.color.needsUpdate = true; };
+          // Gravier fin, deux ornières claires par place, de l'herbe entre les deux
+          const pierre = new T3.IcosahedronGeometry(1, 0), mP = K.mat('#ffffff'), graviers = [];
+          for (let k = 0; k < 90; k++) { const t = h(k * 3.1) * 6.2832, R = Math.sqrt(h(k * 5.3)) * 0.78, ao = CA + Math.cos(t) * rayon(t) * R, de = CD + Math.sin(t) * rayon(t) * R; const q = pose(ao, de); graviers.push({ x: q[0], z: q[1], s: 0.004 + h(k * 7.9) * 0.006, c: h(k * 2.3) }); }
+          const gi = K.inst(gp, pierre, mP, graviers.length, false); graviers.forEach((b, i) => K.poser(gi, i, [b.x, 0.009, b.z], [0.4, b.c * 6, 0.2], [b.s, b.s * 0.55, b.s], K.col(b.c < 0.5 ? '#c7b99c' : '#a39378')));
+          const mO = K.matT(tx.chemin, { roughness: 1, flatShading: false, transparent: true, opacity: 0.55, depthWrite: false }); mO.color = K.col('#f2e9d2');
+          const ti = [], [ALIG, PA0] = [0.058, [0.3, 0.57, 0.84]], vague = (i, k, d) => (h(i * 11 + k * d * 7) - 0.5) * 0.018;
+          places.forEach((p, i) => {
+            for (const c of [-ALIG, ALIG]) {
+              const q = []; for (let n = 0; n <= 5; n++) { const d = 0.16 + n * 0.17; q.push(pose(PA0[i] + c + vague(i, n, 1 + c * 40), d)); }
+              const m = new T3.Mesh(ruban(chaikin(q), 0.026, 0.0098), mO); m.receiveShadow = true; gp.add(m);
+            }
+            for (let n = 0; n < 12; n++) { const q = pose(PA0[i] + (h(i * 3 + n) - 0.5) * 0.04, 0.17 + n * 0.07); ti.push({ x: q[0], z: q[1], s: 0.4 + h(i * 13 + n) * 0.4, r: i + n * 2 }); }
+          });
+          // Touffes qui mordent sur le bord, sauf du côté de la route
+          for (let k = 0; k < 90; k++) { const t = h(k * 4.7) * 6.2832; if (Math.sin(t) > 0.35) continue; const R = 0.8 + h(k * 1.9) * 0.22, q = pose(CA + Math.cos(t) * rayon(t) * R, CD + Math.sin(t) * rayon(t) * R); ti.push({ x: q[0], z: q[1], s: 0.55 + h(k * 8.1) * 0.6, r: k }); }
+          D.parkingT = K.inst(gp, GA.touffe, mT, ti.length, false); ti.forEach((t, i) => K.poser(D.parkingT, i, [t.x, 0, t.z], [0, t.r, 0], t.s, '#6aa84a'));
+          // Butées irrégulières : un rondin un peu de travers, de grosses pierres, un rondin court et une pierre
+          const bois = K.mat('#7a5a3a'), capA = Math.atan2(aZ, aX), rond = (ao, de, lg, r, br) => { const q = pose(ao, de); K.mesh(gp, K.G.cyl(r, r * 1.08, lg, 7), bois, [q[0], r * 0.9, q[1]], [Math.PI / 2, -capA + br, 0]); };
+          const grosses = [], gros = (ao, de, s) => { const q = pose(ao, de); grosses.push({ x: q[0], z: q[1], s }); };
+          rond(PA0[0], 0.1, 0.2, 0.017, 0.16); gros(PA0[1] - 0.075, 0.09, 0.034); gros(PA0[1] + 0.005, 0.075, 0.046); gros(PA0[1] + 0.085, 0.1, 0.03); rond(PA0[2] - 0.035, 0.1, 0.13, 0.021, -0.1); gros(PA0[2] + 0.075, 0.085, 0.038);
+          const gr = K.inst(gp, pierre, mP, grosses.length); grosses.forEach((b, i) => K.poser(gr, i, [b.x, b.s * 0.55, b.z], [0.5, i * 2.4, 0.3], [b.s * 1.15, b.s * 0.85, b.s], K.col(i % 2 ? '#8f8a80' : '#a59f92')));
+          // Fond de haie de tailles variées, modèles du décor, et un arbre si la bande le permet
+          const hi = []; for (let n = 0; n < 12; n++) { const ao = 1.0 + h(n * 5) * 0.14, de = 0.12 + (n + h(n * 3) * 0.7) / 12 * 0.82, q = pose(ao, de); if (n % 3 !== 2) hi.push({ x: q[0], z: q[1], s: 0.2 + h(n * 9) * 0.34 }); }
+          D.parkingH = K.inst(gp, GA.buisson, mH, hi.length); hi.forEach((b, i) => K.poser(D.parkingH, i, [b.x, 0, b.z], [0, i * 1.3, 0], [b.s * (1 + h(i) * 0.3), b.s * (0.8 + h(i * 2) * 0.5), b.s], '#3a7a36'));
+          const qa = pose(1.13, 0.38); if (type(qa) === 'h') { D.parkingA = K.inst(gp, GA.houppier, mArbre, 1); const ta = K.inst(gp, GA.tronc, mTronc, 1); K.poser(ta, 0, [qa[0], 0, qa[1]], [0, 1.2, 0], 0.5); K.poser(D.parkingA, 0, [qa[0], 0, qa[1]], [0, 1.2, 0], 0.5, '#4f8f3f'); }
+          // le chemin à pied jusqu'au porche : le long de la bande, puis autour de la ferme si le parking est sur un autre côté
+          const F2 = (u, v, w, r) => [centreF[0] + u.x * v + w.x * r, centreF[1] + u.z * v + w.z * r], tour = [];
+          if (nc === 1 || nc === 2) tour.push(F2(c, 2.8, dir, 2.4), F2(c, 2.4, dir, 2.4));
+          if (nc === 3) tour.push(F2(c, 2.8, lat, 2.4), F2(lat, 2.4, c, 2.4), F2(lat, 2.4, dir, 2.4));
+          const marche = [nc ? null : ver(au + sg * 0.1, 0.8), ...tour, [porche.x + dir.x * 0.25, porche.z + dir.z * 0.25], [porche.x, porche.z]].filter(Boolean);
+          D.parking = { places, ao: { x: aX, z: aZ }, marche };
+          break cherche;
+        }
+      }
     }
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       if (pl.types[y][x] !== 'b' || bati.has(y * W + x)) continue;
@@ -672,6 +771,10 @@ const Decor = (() => {
     if (D.nbBuissons) D.buissons.instanceColor.needsUpdate = true;
     for (let i = 0; i < D.nbTouffes; i++) { c.copy(i % 3 ? haute : herbe).lerp(blanc, neige * 0.8); D.touffes.setColorAt(i, c); }
     if (D.nbTouffes) D.touffes.instanceColor.needsUpdate = true;
+    if (D.parkingT) { for (let i = 0; i < D.parkingT.count; i++) { c.copy(i % 3 ? haute : herbe).lerp(blanc, neige * 0.8); D.parkingT.setColorAt(i, c); } D.parkingT.instanceColor.needsUpdate = true; }
+    if (D.parkingSol) D.parkingSol(herbe, blanc, neige, c);
+    if (D.parkingA) { c.copy(fe[0]).lerp(fe[2], 0.2).lerp(blanc, neige * 0.45); D.parkingA.setColorAt(0, c); D.parkingA.instanceColor.needsUpdate = true; }
+    if (D.parkingH) { for (let i = 0; i < D.parkingH.count; i++) { c.copy(fe[i % 2]).lerp(fe[2], 0.35).lerp(blanc, neige * 0.5); D.parkingH.setColorAt(i, c); } D.parkingH.instanceColor.needsUpdate = true; }
     D.fond.material.color.copy(herbe).multiplyScalar(0.82).lerp(blanc, neige * 0.85);
     const toits = [...(D.ferme ? D.ferme.toits : []), ...(D.toitsMaisons || [])];
     for (const m of toits) { const k = Math.min(0.85, neige); m.color.setRGB(1 - 0.45 * k, 1 - 0.42 * k, 1 - 0.38 * k); m.emissive.setRGB(0.42 * k, 0.44 * k, 0.47 * k); }

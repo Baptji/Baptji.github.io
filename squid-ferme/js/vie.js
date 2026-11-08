@@ -4,6 +4,7 @@
    routes, camion de livraison qui part de la ferme, vols d'oiseaux (oies en migration au printemps et à
    l'automne), corbeaux sur les terres nues qui s'envolent quand on approche, lièvre. Ombres en disques flous. */
 
+const t0Vie = () => performance.now();
 const Vie = {
   scene: null, D: null, pl: null, groupe: null, etres: [], vaches: [], poules: [], fumees: [], pigeons: [], prochain: {}, pature: [], nus: [], sortie: null,
 
@@ -15,7 +16,8 @@ const Vie = {
     // voitures et camion entrent et sortent par la tranche du plateau : découpés aux bords
     this.bords = [new T3.Plane(new T3.Vector3(1, 0, 0), pl.w / 2), new T3.Plane(new T3.Vector3(-1, 0, 0), pl.w / 2), new T3.Plane(new T3.Vector3(0, 0, 1), pl.h / 2), new T3.Plane(new T3.Vector3(0, 0, -1), pl.h / 2)];
     const t = performance.now();
-    this.prochain = { oiseaux: t + 6000, corbeaux: t + 4000, lievre: t + 25000, voiture: t + 2500, pigeons: t + 9000 };
+    this.prochain = { oiseaux: t + 6000, corbeaux: t + 4000, lievre: t + 25000, voiture: t + 2500, pigeons: t + 9000, visiteur: t + 12000 };
+    this.places = [null, null, null];
     this.geos();
     // poules dans la cour, fumée des cheminées (dans le repère de la ferme)
     this.poules = []; this.fumees = []; this.pigeons = [];
@@ -245,13 +247,15 @@ const Vie = {
     // êtres de passage
     this.etres = this.etres.filter(e => {
       if (e.type === 'trafic') {
-        const pose = e.tr.pose(e.s), libre = Flotte.veiller(e.veille ??= {}, e.x, e.y) ? Infinity : Flotte.devant(e.id, { x: pose.x, y: pose.y, cap: pose.cap }, e.L, e.W, 3, (m, dc) => Math.cos(dc) > -0.3);
+        const pose = e.tr.pose(e.s), libre = Flotte.veiller(e.veille ??= {}, e.x, e.y) || (e.stop != null && (e.presse || e.s > e.stop - 1.5)) ? Infinity : Flotte.devant(e.id, { x: pose.x, y: pose.y, cap: pose.cap }, e.L, e.W, 3, (m, dc) => Math.cos(dc) > -0.3);
         e.v = Math.min(e.v + 1.2 * s, e.v0, Math.sqrt(2 * 3.5 * Math.max(0, libre - 0.14)));
+        if (e.stop != null) e.v = Math.min(e.v, Math.sqrt(2 * 3.5 * Math.max(0, e.stop - e.s)));   // intercepté (Convoi)
         e.s += e.v * s; const p = e.tr.pose(e.s);
         e.x = p.x; e.y = p.y; e.cap = p.cap; e.o.visible = true; e.o.position.set(p.x, 0.012, p.y); e.o.rotation.y = -p.cap;
         if (e.s >= e.tr.L - 1e-3) { this.groupe.remove(e.o); Flotte.desinscrire(e.id); return false; }
         return true;
       }
+      if (e.type === 'visiteur') return this.visiteur(e, t, s);
       if (e.type === 'voiture' || e.type === 'camion') {
         e.d += e.v * s;
         if (e.d < 0) { e.o.visible = false; return true; }
@@ -287,6 +291,28 @@ const Vie = {
     }
     return null;
   },
+  // Du bord du plateau, par cette route, jusqu'à ressortir du plateau, voie de droite (null s'il n'y a pas d'issue). sens : la route prise de son début
+  itineraire(r, sens) {
+    const D = this.D, dehors = (a, b) => { const l = Math.hypot(a[0] - b[0], a[1] - b[1]) || 1; return [a[0] + (a[0] - b[0]) / l * 0.7, a[1] + (a[1] - b[1]) / l * 0.7]; };
+    let pts = sens ? r.pts : [...r.pts].reverse();
+    const [b0, b1] = sens ? r.auBord : [r.auBord[1], r.auBord[0]];
+    // une route qui s'arrête à un carrefour : le véhicule tourne ou continue tout droit jusqu'à ressortir du plateau
+    const suite = b1 ? [] : this.auCarrefour(D.routes, new Set([r]), sens ? r.fin : r.debut);
+    if (!suite) return null;
+    pts = [...pts, ...suite.slice(1)];
+    if (b0) pts = [dehors(pts[0], pts[1]), ...pts];
+    pts = [...pts, dehors(pts.at(-1), pts.at(-2))];
+    return Flotte.aDroite(pts, D.larg.r * 0.28);
+  },
+  lancerTrafic(m, pts) {
+    const o = new T3.Group(), id = 'trafic-' + (++this.num); this.modeles(); K3.mesh(o, m.geo, this.matTrafic).castShadow = false;
+    const om = this.ombre(m.W + 0.02, m.L + 0.04); om.material = this.mOmbreBord(); o.add(om); o.visible = false; this.groupe.add(o);
+    o.userData.nom = { cle: 'vehicule:' + id, libelle: m.nom };
+    const e = { type: 'trafic', id, o, modele: m.nom, tr: Flotte.trace([{ pts, r: 0.8 }]), s: 0, x: pts[0][0], y: pts[0][1], cap: 0, L: m.L, W: m.W, v0: m.v[0] + Math.random() * (m.v[1] - m.v[0]), v: m.v[1] };
+    Flotte.inscrire(id, 'trafic', () => [{ x: e.x, y: e.y, cap: e.cap, l: e.L, w: e.W }]);
+    this.etres.push(e);
+    return e;
+  },
   naitre(t, ctx) {
     const P = this.prochain, D = this.D, pl = this.pl, W = pl.w, H = pl.h, mois = ctx.mois;
     // Trafic de 1960 sur les routes qui sortent du plateau : trois véhicules au plus, dans les deux sens, voie de droite,
@@ -297,25 +323,11 @@ const Vie = {
       const routes = D.routes.filter(r => (r.auBord[0] || r.auBord[1]) && Decor.longueur(r.pts) > 5);
       if (routes.length && nb < 3) {
         const r = routes[(Math.random() * routes.length) | 0], sens = r.auBord[0] && (!r.auBord[1] || Math.random() < 0.5);
-        let pts = sens ? r.pts : [...r.pts].reverse();
-        const dehors = (a, b) => { const l = Math.hypot(a[0] - b[0], a[1] - b[1]) || 1; return [a[0] + (a[0] - b[0]) / l * 0.7, a[1] + (a[1] - b[1]) / l * 0.7]; };
-        const [b0, b1] = sens ? r.auBord : [r.auBord[1], r.auBord[0]];
-        // une route qui s'arrête à un carrefour : le véhicule tourne ou continue tout droit jusqu'à ressortir du plateau
-        const suite = b1 ? [] : this.auCarrefour(D.routes, new Set([r]), sens ? r.fin : r.debut);
-        if (suite) pts = [...pts, ...suite.slice(1)];
-        if (b0) pts = [dehors(pts[0], pts[1]), ...pts]; if (suite && pts.at(-1)) pts = [...pts, dehors(pts.at(-1), pts.at(-2))];
-        pts = Flotte.aDroite(pts, D.larg.r * 0.28);
-        const M = this.modeles(), m = this.tirer(M);
-        if (suite && !Flotte.presDe(pts[0], m.L + 1.0)) {
-          const o = new T3.Group(), id = 'trafic-' + (++this.num); K3.mesh(o, m.geo, this.matTrafic).castShadow = false;
-          const om = this.ombre(m.W + 0.02, m.L + 0.04); om.material = this.mOmbreBord(); o.add(om); o.visible = false; this.groupe.add(o);
-          o.userData.nom = { cle: 'vehicule:' + id, libelle: m.nom };
-          const e = { type: 'trafic', id, o, tr: Flotte.trace([{ pts, r: 0.8 }]), s: 0, x: pts[0][0], y: pts[0][1], cap: 0, L: m.L, W: m.W, v0: m.v[0] + Math.random() * (m.v[1] - m.v[0]), v: m.v[1] };
-          Flotte.inscrire(id, 'trafic', () => [{ x: e.x, y: e.y, cap: e.cap, l: e.L, w: e.W }]);
-          this.etres.push(e);
-        }
+        const pts = this.itineraire(r, sens), m = this.tirer(this.modeles());
+        if (pts && !Flotte.presDe(pts[0], m.L + 1.0)) this.lancerTrafic(m, pts);
       }
     }
+    if (t > P.visiteur) { P.visiteur = t + this.DELAI[0] + Math.random() * (this.DELAI[1] - this.DELAI[0]); this.accueillir(); }
     // vols d'oiseaux : oies en V au printemps et à l'automne, petits groupes sinon
     if (t > P.oiseaux) {
       P.oiseaux = t + 22000 + Math.random() * 30000;
@@ -354,6 +366,102 @@ const Vie = {
         o.rotation.y = -Math.atan2(e.z1 - e.z0, e.x1 - e.x0); this.etres.push(e);
       }
     }
+  },
+  // ---------- Visiteurs (C.8) : une voiture se gare, on va au porche, on paie, on repart un produit de la ferme dans les mains ----------
+  DELAI: [20000, 50000],
+  places: [null, null, null],
+  // Ce que la ferme peut vendre : ce qui est en grange, sinon ce qu'elle a déjà produit (rien tant qu'elle n'a rien récolté)
+  produitAuHasard() { const f = F(), l = Object.keys(f.lots).filter(id => CULTURE[id]), v = l.length ? l : Object.keys(f.produits || {}).filter(id => CULTURE[id]); return v.length ? CULTURE[v[(Math.random() * v.length) | 0]] : null; },
+  // D'un point du plateau au bord : par les routes, du bord où passe le trafic (dehors : hors du plateau, la voiture y est coupée)
+  depuisLeBord() {
+    const D = this.D, routes = D.routes.filter(r => r.auBord[0] || r.auBord[1]); if (!routes.length) return null;
+    const r = routes[(Math.random() * routes.length) | 0], d = r.auBord[0] && (!r.auBord[1] || Math.random() < 0.5), a = d ? r.pts[0] : r.pts.at(-1), b = d ? r.pts[1] : r.pts.at(-2), l = Math.hypot(a[0] - b[0], a[1] - b[1]) || 1;
+    return [a[0] + (a[0] - b[0]) / l * 0.7, a[1] + (a[1] - b[1]) / l * 0.7];
+  },
+  accueillir() {
+    const P = this.D.parking; if (!P || !S || S.vitesse <= 0 || Rendu.planches) return;
+    const i = this.places.findIndex(p => !p), c = i < 0 ? null : this.produitAuHasard(); if (!c) return;
+    const dep = this.depuisLeBord(); if (!dep || Flotte.presDe(dep, 1.0)) return;
+    const pl = P.places[i], M = this.modeles().slice(0, 4), m = M[(Math.random() * M.length) | 0], route = Machines.routes(dep, pl.bouche);
+    const tr = Flotte.trace([{ pts: [dep, ...route.slice(1, -1), pl.bouche, [pl.x, pl.z]], r: 0.3 }]);
+    const o = new T3.Group(), id = 'trafic-visiteur-' + (++this.num); K3.mesh(o, m.geo, this.matTrafic).castShadow = false;
+    const om = this.ombre(m.W + 0.02, m.L + 0.04); om.material = this.mOmbreBord(); o.add(om); o.visible = false; this.groupe.add(o);
+    o.userData.nom = { cle: 'vehicule:' + id, libelle: 'Voiture de visiteurs' };
+    const e = { type: 'visiteur', etat: 'arrive', id, o, i, pl, c, L: m.L, W: m.W, x: dep[0], y: dep[1], cap: 0, cond: Flotte.conduite(tr, { vmax: 1.3, acc: 1.2, frein: 2.2, alat: 0.8, tempo: 0.5 }), gens: [], paye: false };
+    this.places[i] = e;
+    Flotte.inscrire(id, 'trafic', () => e.etat === 'arrive' || e.etat === 'part' ? [{ x: e.x, y: e.y, cap: e.cap, l: e.L, w: e.W }] : []);
+    this.etres.push(e);
+  },
+  rouler(e, s) {
+    const c = e.cond, pose = c.tr.pose(c.s), force = Flotte.veiller(e.veille ??= {}, e.x, e.y);
+    const gene = force || pose.recul ? Infinity : Flotte.devant(e.id, { x: pose.x, y: pose.y, cap: pose.cap }, e.L, e.W, 2.5, (m, dc) => Math.cos(dc) > -0.3);
+    Flotte.conduire(c, s, gene, force);
+    const p = c.tr.pose(c.s); e.x = p.x; e.y = p.y; e.cap = p.cap; e.o.visible = true; e.o.position.set(p.x, 0.012, p.y); e.o.rotation.y = -p.cap;
+    return c.fini;
+  },
+  visiteur(e, t, s) {
+    if (e.etat === 'arrive') { if (this.rouler(e, s)) { e.etat = 'gare'; e.gens = this.descendre(e); } return true; }
+    if (e.etat === 'gare') { if (e.gens.every(g => this.marcher(e, g, t, s))) this.repartir(e); return true; }
+    if (this.rouler(e, s)) { this.groupe.remove(e.o); Flotte.desinscrire(e.id); return false; }
+    return true;
+  },
+  // La voiture recule jusqu'à la voie, se remet dans le sens du départ et reprend les routes jusqu'au bord du plateau
+  repartir(e) {
+    const pl = e.pl, but = this.depuisLeBord() || [e.x, e.y], v = Machines.routes(pl.bouche, but), n = v[Math.min(2, v.length - 1)], l = Math.hypot(n[0] - pl.bouche[0], n[1] - pl.bouche[1]) || 1;
+    const T = [(n[0] - pl.bouche[0]) / l, (n[1] - pl.bouche[1]) / l], B = [pl.bouche[0] - T[0] * 0.5, pl.bouche[1] - T[1] * 0.5], id = e.id;
+    const tr = Flotte.trace([{ pts: [[pl.x, pl.z], pl.bouche, B], recul: true, r: 0.28, attendre: () => Flotte.presDe(pl.bouche, 0.9, null, id) }, { pts: [B, ...v.slice(1), but], r: 0.3 }]);
+    e.cond = Flotte.conduite(tr, { vmax: 1.3, acc: 1.0, frein: 2.2, alat: 0.8, tempo: 0.4 }); e.etat = 'part'; e.veille = {}; this.places[e.i] = null;
+  },
+  // Une ou deux personnes : du cul de la voiture au porche par le bord de l'allée, un moment à la ferme, et retour
+  descendre(e) {
+    const P = this.D.parking, n = 1 + (Math.random() < 0.45 ? 1 : 0), ec = (d, k) => [d[0] + P.ao.x * k, d[1] + P.ao.z * k], gens = [];
+    for (let k = 0; k < n; k++) {
+      const dec = (k - (n - 1) / 2) * 0.05, aller = [ec(e.pl.porte, dec), ...P.marche.map((q, i) => i === P.marche.length - 1 ? q : ec(q, dec))];
+      const p = this.personne(); p.position.set(aller[0][0], 0.012, aller[0][1]); this.groupe.add(p);
+      gens.push({ o: p, pts: aller, s: 0, sens: 1, attente: 0, phase: 'va', depart: t0Vie() + k * 500 });
+    }
+    return gens;
+  },
+  marcher(e, g, t, s) {
+    if (g.phase === 'fini') return true;
+    if (g.phase === 'dedans') { if (t < g.attente) return false; g.phase = 'revient'; g.sens = -1; g.o.visible = true; this.payer(e, g); return false; }
+    if (t < g.depart) { g.o.visible = false; return false; }
+    g.o.visible = true;
+    const P = g.pts, L = g.L ??= P.slice(1).reduce((a, q, i) => a + Math.hypot(q[0] - P[i][0], q[1] - P[i][1]), 0);
+    g.s += 0.42 * s * g.sens;
+    if (g.sens > 0 && g.s >= L) { g.phase = 'dedans'; g.o.visible = false; g.attente = t + 2500 + Math.random() * 3000; g.s = L; return false; }
+    if (g.sens < 0 && g.s <= 0) { g.phase = 'fini'; this.groupe.remove(g.o); return true; }
+    let d = g.s, i = 0; for (; i < P.length - 2; i++) { const l = Math.hypot(P[i + 1][0] - P[i][0], P[i + 1][1] - P[i][1]); if (d <= l) break; d -= l; }
+    const a = P[i], b = P[i + 1], l = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1, u = Math.max(0, Math.min(1, d / l)), x = a[0] + (b[0] - a[0]) * u, z = a[1] + (b[1] - a[1]) * u;
+    g.o.position.set(x, 0.012 + Math.abs(Math.sin(t / 95)) * 0.006, z); g.o.rotation.y = -Math.atan2((b[1] - a[1]) * g.sens, (b[0] - a[0]) * g.sens);
+    const j = Math.sin(t / 95) * 0.55; g.o.userData.jambes[0].rotation.z = j; g.o.userData.jambes[1].rotation.z = -j;
+    return false;
+  },
+  // Le prix s'affiche au-dessus de l'acheteur, l'argent entre sans rien interrompre, le produit passe dans ses mains
+  payer(e, g) {
+    g.o.add(this.produit(e.c)); if (e.paye) return; e.paye = true;
+    const f = F(), eur = 5 + Math.floor(Math.random() * 46); S.argent += eur; f.ventes = (f.ventes || 0) + eur; if (typeof majEntete === 'function') majEntete();
+    const o = g.o; Anim.texte(() => Rendu.ecranDe(o.position.x, 0.42, o.position.z), `${eur} €`, '#ffe08a', 0, Anim.spritePiece());
+  },
+  personne() {
+    const K = K3, G = K.G, g = new T3.Group(), t = ['#b5483a', '#3f6f8f', '#5f7f45', '#c79a3a', '#7a5a8a', '#d8d2c4'], B = this.G.pers ??= { corps: K.fusion([K.piece(G.cyl(0.03, 0.042, 0.13, 8), '#ffffff', [0, 0.155, 0])]), tete: K.fusion([K.piece(G.boule(8, 6), '#e2b48c', [0, 0.255, 0], 0, 0.033)]), jambe: K.fusion([K.piece(G.boite(0.024, 0.09, 0.024), '#3a3f4a', [0, -0.045, 0])]) };
+    const c = new T3.Mesh(B.corps, K.matV()); c.material.color = K.col(t[(Math.random() * t.length) | 0]); g.add(c);
+    g.add(new T3.Mesh(B.tete, K.matV()));
+    const jambes = [-0.02, 0.02].map(z => { const j = new T3.Mesh(B.jambe, K.matV()); j.position.set(0, 0.09, z); g.add(j); return j; });
+    g.add(this.ombre(0.035, 0.05)); g.userData.jambes = jambes; g.userData.nom = { cle: 'animal:visiteur-' + (++this.num), libelle: 'Visiteur de la ferme' }; g.traverse(m => { if (m.isMesh) m.castShadow = false; });
+    return g;
+  },
+  // Ce qu'on emporte, d'après la culture : botte de racines, gerbe, cageot de ce qu'on a produit
+  COULEURS: { carotte: '#e8762a', panais: '#e6dcb8', betterave: '#8a2040', radis: '#d8405a', navet: '#efe6ea', tubercule: '#c8a468', 'tubercule-rose': '#c88a7a', betsucre: '#e0cfa8', oignon: '#c88a3a', echalote: '#b56a4a', ail: '#efe9dc', salade: '#7fbf4a', feuilles: '#4f9a3a', poireau: '#8fbf6a', chou: '#6fa54a', choufleur: '#efe9d0', artichaut: '#6f8f5a', tomate: '#d8402a', courgette: '#3f7f3a', potiron: '#e08a2a', melon: '#d9b45a', fraise: '#d8303a', gousse: '#6fae4a', 'epi-mais': '#e8b83a', botte: '#c9a65a', fourrage: '#8fae4a' },
+  produit(c) {
+    const K = K3, G = K.G, co = this.COULEURS[c.prod] || (c.cat === 'Céréales' ? '#d9b64a' : '#b8a060'), cle = c.cat + c.prod, C = this._prod ??= new Map();
+    if (!C.has(cle)) {
+      const P = c.cat === 'Racines et tubercules' && ['racine', 'chicoree'].includes(c.forme) ? [...[-0.022, 0, 0.022].map(z => K.piece(G.cone(0.013, 0.08, 6), co, [0, 0.11, z], [Math.PI, 0, 0])), K.piece(G.boule(6, 4), '#5f9a3a', [0, 0.17, 0], 0, [0.02, 0.03, 0.03])]
+        : ['epi', 'avoine'].includes(c.forme) || c.prod === 'botte' || c.prod === 'fourrage' ? [K.piece(G.cyl(0.018, 0.012, 0.13, 6), '#c9a65a', [0, 0.12, 0]), K.piece(G.boule(6, 4), co, [0, 0.2, 0], 0, [0.028, 0.045, 0.028]), K.piece(G.boite(0.04, 0.012, 0.04), '#8a6a44', [0, 0.12, 0])]
+        : [K.piece(G.boite(0.075, 0.04, 0.09), '#a07d50', [0, 0.11, 0]), ...[[-0.02, -0.025], [-0.02, 0.025], [0.02, -0.025], [0.02, 0.025], [0, 0]].map(([x, z]) => K.piece(G.boule(6, 4), co, [x, 0.14, z], 0, 0.019))];
+      C.set(cle, K.fusion(P));
+    }
+    const m = new T3.Mesh(C.get(cle), K.matV()); m.position.set(0.05, 0.03, 0); m.castShadow = false; return m;
   },
   // Corbeaux : arrivent en planant, picorent, s'envolent si le pointeur s'approche ou au bout d'un moment
   corbeaux(e, t, s, ctx) {

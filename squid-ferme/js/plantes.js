@@ -13,6 +13,7 @@ const Plantes = (() => {
   const rosette = (k, L, w, a0, arc, y, cols, off = 0, n = 3, pointe) => { const p = []; for (let i = 0; i < k; i++) p.push(F(L * (0.85 + 0.3 * K.hasard(i + k)), w, a0, arc, off + i * Math.PI * 2 / k + K.hasard(i * 3 + k) * 0.4, [0, y, 0], cols[i % cols.length], n, pointe)); return p; };
   const brin = (b, d, h, r, c = B) => K.oriente(G.brin(h, r), c, b, d);
   const boule = (c, p, s, sub = 0) => K.piece(sub === 1 ? G.ico1() : sub === -1 ? G.octa() : G.ico(), c, p, null, s);
+  const feuillage = (c, p, s) => Object.assign(boule(c, p, s), { haut: true });
 
   // ---------- Céréales à paille ----------
   // Épi : épillets en deux rangées alternées le long de l'axe (proche), un seul fuseau (loin) ; barbes pour orge, seigle, triticale.
@@ -20,7 +21,7 @@ const Plantes = (() => {
     const v = new V3(...d).normalize();
     if (pend) v.set(v.x * 0.6 + pend[0], -0.5, v.z * 0.6 + pend[1]).normalize();
     const q = new T3.Quaternion().setFromUnitVectors(HAUT, v), u = new V3(1, 0, 0).applyQuaternion(q);
-    const L = { seigle: 0.075, orge: 0.05, triticale: 0.06, ble: 0.058 }[type], r = type === 'seigle' ? 0.0058 : type === 'orge' ? 0.0062 : 0.0076;
+    const L = { seigle: 0.075, orge: 0.05, triticale: 0.06, ble: 0.058, bledur: 0.056, escourgeon: 0.058 }[type], r = type === 'seigle' ? 0.0058 : type === 'orge' ? 0.0062 : type === 'escourgeon' ? 0.0085 : 0.0076;
     const out = [], at = t => [top[0] + v.x * t, top[1] + v.y * t, top[2] + v.z * t];
     if (!proche) out.push(K.piece(G.octa(), B, at(L / 2), null, [r * 1.6, L / 2, r * 1.9], q));
     else {
@@ -33,10 +34,10 @@ const Plantes = (() => {
       out.push(K.piece(G.octa(), B, at(L * 1.02), null, [r * 0.7, L * 0.08, r * 0.8], q));
     }
     if (type !== 'ble') {
-      const lb = { orge: 0.075, seigle: 0.05, triticale: 0.04 }[type], nb = proche ? 5 : 2;
+      const lb = { orge: 0.075, seigle: 0.05, triticale: 0.04, bledur: 0.1, escourgeon: 0.085 }[type], nb = proche ? (type === 'bledur' || type === 'escourgeon' ? 8 : 5) : type === 'bledur' ? 3 : 2;
       for (let k = 0; k < nb; k++) {
         const a = k / nb * 6.28, base = at(L * (0.35 + 0.6 * k / nb)), w = new V3(v.x + Math.cos(a) * 0.18, v.y, v.z + Math.sin(a) * 0.18).normalize();
-        out.push(K.oriente(G.brin(lb, 0.0011), GR, base, [w.x, w.y, w.z]));
+        out.push(K.oriente(G.brin(lb, type === 'bledur' ? 0.0013 : 0.0011), type === 'bledur' ? '#8a7054' : GR, base, [w.x, w.y, w.z]));
       }
     }
     return out;
@@ -64,7 +65,7 @@ const Plantes = (() => {
       if (!type) p.push(F(0.08, 0.015, 1.0, 1.4, -a + 2.6, K.bout(b, d, hi * 0.15), B, 2));
       const top = K.bout(b, d, hi);
       if (type === 'avoine') p.push(...panicule(top, d, proche));
-      else if (type) p.push(...epi(type.replace('_mur', ''), top, d, proche, type === 'orge_mur' ? [Math.cos(a) * 0.5, Math.sin(a) * 0.5] : null));
+      else if (type) p.push(...epi(type.replace('_mur', ''), top, d, proche, type.endsWith('_mur') ? [Math.cos(a) * 0.5, Math.sin(a) * 0.5] : null));
     }
     return K.fusion(p);
   }
@@ -146,7 +147,7 @@ const Plantes = (() => {
     feverole_fleurs: () => { const p = []; for (let i = 0; i < 3; i++) { const a = i * 2.1; for (let j = 0; j < 2; j++) { const t = K.bout([Math.cos(a) * 0.012, 0, Math.sin(a) * 0.012], [Math.cos(a) * 0.08, 1, Math.sin(a) * 0.08], 0.17 + j * 0.05); p.push(boule('#f4f2ee', [t[0] + 0.008, t[1], t[2]], [0.009, 0.007, 0.007], -1), boule('#2a2420', [t[0] + 0.011, t[1] + 0.001, t[2] + 0.004], 0.0035, -1)); } } return K.fusion(p); },
     lin: () => { const p = []; for (let i = 0; i < 5; i++) { const a = i * 1.26, d = [Math.cos(a) * 0.08, 1, Math.sin(a) * 0.08], b = [Math.cos(a) * 0.006, 0, Math.sin(a) * 0.006]; p.push(brin(b, d, 0.24, 0.0022, GR)); const t = K.bout(b, d, 0.24); p.push(boule(B, t, 0.006)); p.push(F(0.03, 0.005, 0.8, 0.6, a, K.bout(b, d, 0.1), B, 2)); } return K.fusion(p); },
     lin_fleurs: () => K.fusion([0, 1, 2, 3, 4].map(i => { const a = i * 1.26, t = K.bout([Math.cos(a) * 0.006, 0, Math.sin(a) * 0.006], [Math.cos(a) * 0.08, 1, Math.sin(a) * 0.08], 0.245); return K.piece(G.octa(), i % 2 ? '#7f9ee8' : '#94b2f0', t, null, [0.012, 0.004, 0.012]); })),
-    pdt: () => K.fusion([[0, 0.07, 0, 0.07], [0.055, 0.055, 0.025, 0.055], [-0.05, 0.055, -0.03, 0.052], [0.01, 0.06, -0.055, 0.05], [-0.02, 0.05, 0.05, 0.05], [0.03, 0.1, 0.01, 0.04]].map(([x, y, z, r], i) => boule(i % 2 ? B : GR, [x, y, z], r))),
+    pdt: () => K.fusion([[0, 0.07, 0, 0.07], [0.055, 0.055, 0.025, 0.055], [-0.05, 0.055, -0.03, 0.052], [0.01, 0.06, -0.055, 0.05], [-0.02, 0.05, 0.05, 0.05], [0.03, 0.1, 0.01, 0.04]].map(([x, y, z, r], i) => feuillage(i % 2 ? B : GR, [x, y, z], r))),
     pdt_fleurs: () => K.fusion([[0.01, 0.13, 0.02, '#f6f2fc'], [-0.04, 0.11, 0.04, '#c7a3e6'], [0.05, 0.11, -0.03, '#f6f2fc'], [-0.02, 0.12, -0.05, '#f6f2fc'], [0.035, 0.14, 0.03, '#e0c8f0']].map(([x, y, z, c]) => boule(c, [x, y, z], 0.014))),
     butte: () => { const g = G.cyl(0.115, 0.115, 1, 7); g.rotateZ(Math.PI / 2); return K.fusion([K.piece(g, B, [0, -0.055, 0])]); },
     betterave: () => K.fusion(rosette(8, 0.12, 0.05, 0.75, 1.05, 0.008, [B, GR, GR2], 0.2, 3, 0.55)),
@@ -167,7 +168,7 @@ const Plantes = (() => {
     choufleur_tete: () => K.fusion([boule('#f2ead0', [0, 0.05, 0], [0.042, 0.026, 0.042], 1)]),
     artichaut: () => K.fusion([K.piece(G.cyl(0.008, 0.01, 0.18, 5), '#8aa89a', [0, 0.09, 0]), ...rosette(8, 0.15, 0.06, 0.75, 1.35, 0.01, ['#8aa89a', '#9ab8a8', '#7f9e90'], 0, 3, 0.4)]),
     artichaut_boutons: () => K.fusion([[0, 0.2, 0], [0.04, 0.16, 0.02], [-0.035, 0.15, -0.03]].map(([x, y, z], i) => boule(i ? '#6f8a6a' : '#7a6a80', [x, y, z], [0.022, 0.028, 0.022]))),
-    tomate: () => K.fusion([K.piece(G.cyl(0.004, 0.005, 0.36, 4), '#a8865a', [0.012, 0.18, 0]), ...[0.06, 0.12, 0.18, 0.24].map((y, i) => boule(i % 2 ? '#3f7f34' : '#4a8c3c', [(i % 2 ? -0.01 : 0.01), y, (i % 2 ? 0.01 : -0.012)], 0.05 - i * 0.006))]),
+    tomate: () => K.fusion([K.piece(G.cyl(0.004, 0.005, 0.36, 4), '#a8865a', [0.012, 0.18, 0]), ...[0.06, 0.12, 0.18, 0.24].map((y, i) => feuillage(i % 2 ? '#3f7f34' : '#4a8c3c', [(i % 2 ? -0.01 : 0.01), y, (i % 2 ? 0.01 : -0.012)], 0.05 - i * 0.006))]),
     tomates: () => K.fusion([[0.04, 0.08, 0.01], [-0.035, 0.12, 0.03], [0.03, 0.16, -0.035], [-0.03, 0.19, -0.02], [0.035, 0.22, 0.025], [0.0, 0.1, 0.045]].map(([x, y, z]) => boule(B, [x, y, z], 0.016))),
     courgette: () => K.fusion([...rosette(6, 0.09, 0.08, 0.45, 0.6, 0.01, ['#3f7f34', '#4a8a3a'], 0, 3, 0.45), boule('#f2b52a', [0.03, 0.04, 0.02], [0.014, 0.01, 0.014]), boule('#f2b52a', [-0.03, 0.035, -0.025], [0.012, 0.009, 0.012])]),
     courgette_fruits: () => K.fusion([K.piece(G.cyl(0.012, 0.011, 0.075, 6), '#2f5a2a', [0.05, 0.012, 0.01], [0, 0.4, Math.PI / 2]), K.piece(G.cyl(0.011, 0.01, 0.065, 6), '#3a6a30', [-0.04, 0.011, 0.04], [0, -0.8, Math.PI / 2])]),
@@ -189,6 +190,10 @@ const Plantes = (() => {
     residus: () => K.fusion([0, 1, 2, 3, 4, 5].map(i => K.piece(G.boite(0.05, 0.004, 0.006), i % 2 ? B : GR, [(K.hasard(i) - 0.5) * 0.12, 0.004, (K.hasard(i + 9) - 0.5) * 0.12], [0, K.hasard(i + 4) * 6, 0]))),
     goutte: () => { const g = G.cyl(0.006, 0.006, 0.9, 4); g.rotateZ(Math.PI / 2); return K.fusion([K.piece(g, '#262626', [0, 0.012, -0.18]), K.piece(g.clone(), '#262626', [0, 0.012, 0.18])]); },
     planche: () => K.fusion([K.piece(G.boite(0.88, 0.035, 0.88), B, [0, 0.0175, 0])]),
+    // Maraîchage : quatre planches par case, séparées par des passe-pieds
+    planches_m: () => K.fusion([0, 1, 2, 3].map(k => K.piece(G.boite(1, 0.035, 0.205), B, [0, 0.0175, (k + 0.5) / 4 - 0.5]))),
+    // Serre : trois tunnels par case, trois arceaux chacun (la bâche translucide est un maillage à part, Rendu.majSerres)
+    arceaux: () => { const P = [], R = 0.135, N = 7; for (let b = 0; b < 3; b++) for (const x of [-0.34, 0, 0.34]) for (let a = 0; a < N; a++) { const t = Math.PI * (a + 0.5) / N, l = Math.PI * R * 1.1 / N; P.push(K.piece(G.boite(0.006, l, 0.006), '#e8eef0', [x, R * 1.15 * Math.sin(t), (b + 0.5) / 3 - 0.5 + R * Math.cos(t)], [t, 0, 0])); } return K.fusion(P); },
     agro_tronc: () => K.fusion([K.piece(G.cyl(0.035, 0.05, 0.5, 6), '#6b4426', [0, 0.25, 0]), K.piece(G.cyl(0.012, 0.018, 0.16, 4), '#6b4426', [0.05, 0.46, 0.02], [0, 0, -0.7])]),
     agro_houppier: () => K.fusion([K.piece(G.ico1(), B, [0, 0.7, 0], null, [0.22, 0.28, 0.22]), K.piece(G.ico1(), GR, [0.1, 0.6, 0.06], null, 0.16), K.piece(G.ico(), B, [-0.08, 0.82, -0.04], null, 0.13)]),
   };
@@ -211,6 +216,76 @@ const Plantes = (() => {
     tournesol_jeune: () => K.fusion([K.piece(G.cyl(0.005, 0.007, 0.05, 4), GR, [0, 0.025, 0]), ...rosette(4, 0.08, 0.065, 0.45, 0.7, 0.03, [B, GR], 0.3, 3, 0.5)]),
     tournesol_tige: () => tournesolTige(0.6), capitule_bouton: () => capitule('bouton', 0.6), capitule_fleur: () => capitule('fleur', 0.6), capitule_mur: () => capitule('mur', 0.6),
   });
+
+  // ---------- Cultures ajoutées (C.5) ----------
+  Object.assign(FAB, {
+    epi_bledur: () => cereale('bledur', false, 0.31), epi_bledur_p: () => cereale('bledur', true, 0.31),
+    epi_escourgeon: () => cereale('escourgeon', false, 0.28), epi_escourgeon_p: () => cereale('escourgeon', true, 0.28),
+    epi_escourgeon_mur: () => cereale('escourgeon_mur', false, 0.28), epi_escourgeon_mur_p: () => cereale('escourgeon_mur', true, 0.28),
+    // Pois : tiges couchées et emmêlées, folioles par deux, vrilles
+    poisprot: () => {
+      const p = [];
+      for (let i = 0; i < 6; i++) {
+        const a = i * 1.05, d = [Math.cos(a) * 0.9, 0.5, Math.sin(a) * 0.9];
+        p.push(brin([0, 0, 0], d, 0.14, 0.002, GR));
+        for (let j = 0; j < 3; j++) { const t = K.bout([0, 0, 0], d, 0.04 + j * 0.04); p.push(F(0.03, 0.022, 0.5, 0.5, a + 1.5 + j * 2, t, j % 2 ? B : GR, 2, 0.5), F(0.03, 0.022, 0.5, 0.5, a - 1.5 + j * 2, t, B, 2, 0.5)); }
+        const bout = K.bout([0, 0, 0], d, 0.14);
+        for (let k = 0; k < 2; k++) p.push(brin(bout, [Math.cos(a + k * 2) * 0.6, 0.7, Math.sin(a + k * 2) * 0.6], 0.04, 0.0008, GR));
+      }
+      return K.fusion(p);
+    },
+    poisprot_fleurs: () => K.fusion([0, 1, 2, 3, 4, 5].map(i => { const a = i * 1.05, r = 0.08 + (i % 2) * 0.03; return boule(i % 2 ? '#f6f6ee' : '#ffffff', [Math.cos(a) * r, 0.075 + (i % 3) * 0.012, Math.sin(a) * r], [0.011, 0.008, 0.011], -1); })),
+    // Lupin : feuilles en éventail à sept folioles, grappe dressée de fleurs
+    lupin: () => {
+      const p = [];
+      for (let i = 0; i < 3; i++) {
+        const a = i * 2.1, d = [Math.cos(a) * 0.08, 1, Math.sin(a) * 0.08], b = [Math.cos(a) * 0.012, 0, Math.sin(a) * 0.012];
+        p.push(brin(b, d, 0.27, 0.0035, GR));
+        for (let j = 0; j < 3; j++) {
+          const n = K.bout(b, d, 0.06 + j * 0.06), s = a + j * 1.8, dp = [Math.cos(s) * 0.8, 0.5, Math.sin(s) * 0.8], m = K.bout(n, dp, 0.035);
+          p.push(brin(n, dp, 0.035, 0.0012, GR));
+          for (let k = 0; k < 7; k++) p.push(F(0.034, 0.009, 0.15, 0.25, s + (k - 3) * 0.72, m, k % 2 ? B : GR, 2));
+        }
+      }
+      return K.fusion(p);
+    },
+    lupin_fleurs: () => { const p = []; for (let i = 0; i < 3; i++) { const a = i * 2.1, t = K.bout([Math.cos(a) * 0.012, 0, Math.sin(a) * 0.012], [Math.cos(a) * 0.08, 1, Math.sin(a) * 0.08], 0.2); for (let j = 0; j < 7; j++) { const b = j * 2.4; p.push(boule(j % 2 ? '#f4f4fa' : '#dfe4f6', [t[0] + Math.cos(b) * (0.016 - j * 0.0015), t[1] + j * 0.016, t[2] + Math.sin(b) * (0.016 - j * 0.0015)], 0.008, -1)); } } return K.fusion(p); },
+    // Moutarde : plante grêle très ramifiée, petites grappes jaunes
+    moutarde: () => { const p = [brin([0, 0, 0], [0, 1, 0], 0.5, 0.004, GR)]; for (let i = 0; i < 6; i++) { const a = i * 1.7, b = [0, 0.18 + i * 0.045, 0], d = [Math.cos(a) * 0.5, 0.8, Math.sin(a) * 0.5]; p.push(brin(b, d, 0.16 - i * 0.012, 0.002, GR)); p.push(F(0.05, 0.022, 0.4, 0.5, a, [0, 0.05 + i * 0.03, 0], i % 2 ? B : GR, 2, 0.45)); } return K.fusion(p); },
+    moutarde_fleurs: () => { const p = []; for (let i = 0; i < 6; i++) { const a = i * 1.7, t = K.bout([0, 0.18 + i * 0.045, 0], [Math.cos(a) * 0.5, 0.8, Math.sin(a) * 0.5], 0.16 - i * 0.012); for (let j = 0; j < 3; j++) p.push(boule(j % 2 ? '#f6dc2a' : '#ecc814', [t[0] + (j - 1) * 0.008, t[1] + j * 0.006, t[2]], [0.009, 0.006, 0.009], -1)); } p.push(boule('#f6dc2a', [0, 0.51, 0], [0.012, 0.008, 0.012], -1)); return K.fusion(p); },
+    // Chicorée : rosette dressée de longues feuilles dentelées
+    chicoree: () => K.fusion(rosette(10, 0.16, 0.03, 1.1, 1.05, 0.006, [B, GR, GR2], 0.15, 3, 0.32)),
+    // Chanvre : haute tige grêle, feuilles digitées en étages
+    chanvre: () => {
+      const h = 0.86, p = [K.piece(G.cyl(0.005, 0.009, h, 5), GR, [0, h / 2, 0])];
+      for (let i = 0; i < 7; i++) {
+        const y = 0.2 + i * 0.1, a0 = i * 2.4, n = 7 - (i > 4 ? 2 : 0);
+        for (let cote = 0; cote < 2; cote++) { const a = a0 + cote * Math.PI, b = [Math.cos(a) * 0.012, y, Math.sin(a) * 0.012]; for (let k = 0; k < n; k++) p.push(F(0.09 - Math.abs(k - (n - 1) / 2) * 0.012 - i * 0.003, 0.012, 0.25, 0.45, a + (k - (n - 1) / 2) * 0.48, b, k % 2 ? B : GR, 2)); }
+      }
+      return K.fusion(p);
+    },
+    // Prairie de fauche : hautes graminées fines, panicules légères
+    prairie_herbe: () => K.fusion([...rosette(11, 0.17, 0.016, 1.3, 1.2, 0, [B, GR, GR2], 0.2, 3), ...[0, 1, 2].flatMap(i => { const a = i * 2.1 + 0.4, d = [Math.cos(a) * 0.2, 1, Math.sin(a) * 0.2], t = K.bout([0, 0, 0], d, 0.24); return [brin([0, 0, 0], d, 0.24, 0.0016, GR), K.piece(G.octa(), GR2, t, null, [0.009, 0.026, 0.009])]; })]),
+    // Luzerne : touffe de tiges droites, feuilles à trois folioles
+    luzerne: () => { const p = []; for (let i = 0; i < 6; i++) { const a = i * 1.05, d = [Math.cos(a) * 0.14, 1, Math.sin(a) * 0.14]; p.push(brin([0, 0, 0], d, 0.18, 0.002, GR)); for (let j = 0; j < 4; j++) { const t = K.bout([0, 0, 0], d, 0.05 + j * 0.035); for (let k = -1; k <= 1; k++) p.push(F(0.02, 0.009, 0.35, 0.3, a + j * 2.3 + k * 0.9, t, j % 2 ? B : GR, 2, 0.5)); } } return K.fusion(p); },
+    luzerne_fleurs: () => K.fusion([0, 1, 2, 3, 4, 5].map(i => { const a = i * 1.05, t = K.bout([0, 0, 0], [Math.cos(a) * 0.14, 1, Math.sin(a) * 0.14], 0.185); return boule(i % 2 ? '#8a62c0' : '#a884d8', t, [0.009, 0.013, 0.009], -1); })),
+    // Miscanthus : très hautes cannes à longues feuilles retombantes, plumets clairs en automne, cannes nues en hiver
+    miscanthus: () => {
+      const p = [];
+      for (let i = 0; i < 5; i++) {
+        const a = i * 2.4 + 0.3, r = i ? 0.02 + i * 0.006 : 0, b = [Math.cos(a) * r, 0, Math.sin(a) * r], d = [Math.cos(a) * 0.05, 1, Math.sin(a) * 0.05], h = 0.92 + (i % 3) * 0.05;
+        p.push(brin(b, d, h, 0.0055, GR));
+        for (let j = 0; j < 5; j++) p.push(F(0.3 - j * 0.02, 0.016, 0.55, 2.0, a + j * 2.3, K.bout(b, d, 0.25 + j * 0.14), j % 2 ? B : GR, 4));
+      }
+      return K.fusion(p);
+    },
+    miscanthus_sec: () => { const p = []; for (let i = 0; i < 5; i++) { const a = i * 2.4 + 0.3, r = i ? 0.02 + i * 0.006 : 0, b = [Math.cos(a) * r, 0, Math.sin(a) * r], d = [Math.cos(a) * 0.05, 1, Math.sin(a) * 0.05], h = 0.92 + (i % 3) * 0.05; p.push(brin(b, d, h, 0.0055, i % 2 ? B : GR)); p.push(F(0.16, 0.01, 1.2, 1.5, a + 1, K.bout(b, d, 0.5), GR, 3)); } return K.fusion(p); },
+    miscanthus_plumes: () => { const p = []; for (let i = 0; i < 5; i++) { const a = i * 2.4 + 0.3, r = i ? 0.02 + i * 0.006 : 0, b = [Math.cos(a) * r, 0, Math.sin(a) * r], d = [Math.cos(a) * 0.05, 1, Math.sin(a) * 0.05], h = 0.92 + (i % 3) * 0.05, t = K.bout(b, d, h); for (let k = 0; k < 6; k++) { const s = k * 1.05 + i; p.push(brin(t, [Math.cos(s) * 0.45, 1, Math.sin(s) * 0.45], 0.09, 0.0022, k % 2 ? B : GR)); } } return K.fusion(p); },
+    miscanthus_chaume: () => K.fusion([0, 1, 2, 3, 4, 5, 6].map(i => { const a = i * 0.9, r = i ? 0.028 : 0; return K.piece(G.cyl(0.005, 0.006, 0.05 + (i % 3) * 0.012, 4), i % 2 ? B : GR, [Math.cos(a) * r, 0.03, Math.sin(a) * r]); })),
+  });
+  Object.assign(SOUPLE, { prairie_herbe: 1.0, epi_bledur: 1.0, epi_escourgeon: 1.0, epi_escourgeon_mur: 0.9, poisprot: 0.5, poisprot_fleurs: 0.5, lupin: 0.4, lupin_fleurs: 0.4, moutarde: 0.8, moutarde_fleurs: 0.8, chicoree: 0.3, chanvre: 0.3, luzerne: 0.7, luzerne_fleurs: 0.7, miscanthus: 0.32, miscanthus_sec: 0.2, miscanthus_plumes: 0.45, miscanthus_chaume: 0 });
+  for (const m of ['miscanthus', 'miscanthus_sec', 'chanvre']) OMBRE.add(m);
+  for (const m of ['epi_bledur', 'epi_escourgeon', 'epi_escourgeon_mur']) PROCHE.add(m);
   const cache = new Map();
   const geo = cle => { let g = cache.get(cle); if (!g) { if (!FAB[cle]) throw new Error('modèle inconnu : ' + cle); g = FAB[cle](); cache.set(cle, g); } return g; };
 
@@ -220,8 +295,8 @@ const Plantes = (() => {
     cer: { n: 6, m: 6, j: 0.6 }, lev: { n: 6, m: 6, j: 0.45 }, r4: { n: 4, m: 4, j: 0.12 }, r5: { n: 4, m: 5, j: 0.15 },
     colza: { n: 5, m: 6, j: 0.5 }, butte: { n: 3, m: 1, j: 0 }, pdt: { n: 3, m: 4, j: 0.12 }, buis: { n: 5, m: 5, j: 0.45 },
     lin: { n: 6, m: 7, j: 0.6 }, m3: { n: 3, m: 3, j: 0.12 }, m4: { n: 4, m: 4, j: 0.12 }, m5: { n: 5, m: 5, j: 0.15 },
-    pre: { n: 5, m: 5, j: 0.95 }, andain: { n: 2, m: 1, j: 0 }, bottes: { n: 3, m: 3, j: 0.7 }, sillon: { n: 10, m: 1, j: 0 },
-    res: { n: 3, m: 3, j: 0.9 }, goutte: { n: 1, m: 1, j: 0 }, planche: { n: 1, m: 1, j: 0 }, agro: { n: 1, m: 2, j: 0.08 },
+    pre: { n: 5, m: 5, j: 0.95 }, foin: { n: 8, m: 8, j: 0.95 }, linf: { n: 11, m: 11, j: 0.55 }, andain: { n: 2, m: 1, j: 0 }, bottes: { n: 3, m: 3, j: 0.7 }, sillon: { n: 10, m: 1, j: 0 },
+    res: { n: 3, m: 3, j: 0.9 }, paille: { n: 6, m: 6, j: 0.95 }, goutte: { n: 1, m: 1, j: 0 }, planche: { n: 1, m: 1, j: 0 }, agro: { n: 1, m: 2, j: 0.08 },
   };
 
   // ---------- Couleurs ----------
@@ -232,11 +307,14 @@ const Plantes = (() => {
     seigle: { h: 1.25, jeune: '#6e9c7c', vert: '#6a9a6c', mur: '#cdb47e', epi: 'epi_seigle' },
     triticale: { h: 1.12, jeune: '#6aa44f', vert: '#64984a', mur: '#dcbc74', epi: 'epi_triticale' },
     avoine: { h: 1, jeune: '#78a85a', vert: '#74a456', mur: '#dccb8e', epi: 'epi_avoine' },
+    bledur: { h: 1.02, jeune: '#649c48', vert: '#5a8f46', mur: '#d4ae5a', epi: 'epi_bledur' },
+    escourgeon: { h: 0.92, jeune: '#6eaa4e', vert: '#66a058', mur: '#e0c87e', epi: 'epi_escourgeon' },
   };
   const LEG = { pois: 0.85, lentille: 0.7, poischiche: 0.85, soja: 1.5, haricot: 1.05, haricotvert: 1.05 };
   const COLLET = { carotte: '#ec7a26', panais: '#ebdfb4', betterave: '#7a1e3a', radis: '#d8344a', navet: '#e6daf0' };
   const BULBE = { oignon: '#c8924a', echalote: '#b26e58', ail: '#eee8da' };
   const SEC = '#b8a04e', NEIGE = '#f2f6fa';
+  const SANS_SYMPTOME = /fleurs|plumes|capitule|gousses|collet|bulbe|tete|boutons|fruit|baies|tomates|potiron|butte|sillon|residus|andain|botte|chaume|planche|arceaux|goutte|agro_/;
 
   // Sol nu : brun selon la matière organique, plus clair s'il est sec
   const SOL_C = new T3.Color();
@@ -265,7 +343,7 @@ const Plantes = (() => {
         else if (p < s3) { const q = k(s2, s3); pose('tiges', 'cer', [1, (0.45 + 0.5 * q) * v.h, 1], fin(mix(v.jeune, v.vert, q))); couvre = 0.95; canopee = v.vert; }
         else {
           let m = k(c.hiver ? 0.84 : 0.74, 0.98); if (c.hiver && mois < 6) m = Math.min(m, 0.3); if (mois >= 9 || mois <= 2) m = 1;
-          const g = v.epi === 'epi_orge' && p >= 0.97 ? 'epi_orge_mur' : v.epi;
+          const g = (v.epi === 'epi_orge' || v.epi === 'epi_escourgeon') && p >= 0.97 ? v.epi + '_mur' : v.epi;
           const col = mix(v.vert, v.mur, m);
           pose(g, 'cer', [1, v.h * (0.92 + 0.08 * k(s3, s3 + 0.08)), 1], fin(col), { tilt: pourri ? 0.55 : 0.05, proche: true });
           couvre = 0.95; canopee = mix(v.vert, v.mur, m);
@@ -275,7 +353,7 @@ const Plantes = (() => {
         if (p < 0.06) lev(false, 'r4');
         else if (p < 0.3) { pose('mais_jeune', 'r4', 0.35 + 0.75 * k(0.06, 0.3), fin('#5c9436')); couvre = 0.2 + p; canopee = '#5c9436'; }
         else {
-          let m = k(0.8, 1); if (mois < 9 && !sorgho) m = Math.min(m, 0.25);
+          let m = k(0.8, 1); if (mois < 9 && !sorgho) m = Math.min(m, 0.25); if (c.machine === 'ensileuse') m = Math.min(m, 0.3);   // le maïs fourrage se récolte encore vert
           const col = fin(mix('#5c9436', '#c8b27a', m)), s = [1, 0.4 + 0.6 * k(0.3, 0.62), 1];
           pose(sorgho ? 'sorgho' : 'mais', 'r4', s, col, { tilt: pourri ? 0.4 : 0.03 });
           if (sorgho && p > 0.55) pose('sorgho_tete', 'r4', s, fin(mix('#8aa04a', '#9a3a22', k(0.55, 0.85))), { tilt: pourri ? 0.4 : 0.03 });
@@ -301,7 +379,7 @@ const Plantes = (() => {
         }
       } else if (f === 'lin') {
         if (p < 0.06) lev(true, 'lin');
-        else { const m = k(0.72, 1), s = [1, 0.3 + 0.7 * k(0.06, 0.5), 1]; pose('lin', 'lin', s, fin(mix('#6f9a5a', '#c8a860', m))); if (p > 0.45 && p < 0.72 && (mois === 6 || mois === 7)) pose('lin_fleurs', 'lin', s, fin('#ffffff')); couvre = 0.8; canopee = mix('#6f9a5a', '#c8a860', m); }
+        else { const m = k(0.72, 1), s = [1, (c.rouit ? 1.35 : 1) * (0.3 + 0.7 * k(0.06, 0.5)), 1], di = c.rouit ? 'linf' : 'lin'; pose('lin', di, s, fin(mix('#6f9a5a', '#c8a860', m))); if (p > 0.45 && p < 0.72 && (mois === 6 || mois === 7)) pose('lin_fleurs', di, s, fin('#ffffff')); couvre = c.rouit ? 0.98 : 0.8; canopee = mix('#6f9a5a', '#c8a860', m); }
       } else if (f === 'legume') {
         const h = LEG[c.id] || 1, sec = c.id !== 'haricotvert';
         if (p < 0.06) lev(true, 'buis');
@@ -318,6 +396,47 @@ const Plantes = (() => {
       } else if (f === 'sarrasin') {
         if (p < 0.06) lev(true, 'buis');
         else { const s = 0.4 + 0.6 * k(0.06, 0.45), m = k(0.85, 1); pose('sarrasin', 'buis', s, fin(mix('#6a9a48', '#8a4a32', m))); if (p > 0.35 && p < 0.9) pose('sarrasin_fleurs', 'buis', s, fin(mix('#ffffff', '#9a6a50', m))); couvre = 0.75; canopee = mix('#7aa058', '#8a4a32', m); }
+      } else if (f === 'poisprot') {
+        if (p < 0.06) lev(true, 'buis');
+        else { const s = [1, 0.4 + 0.6 * k(0.06, 0.55), 1], m = k(0.75, 1); pose('poisprot', 'buis', s, fin(mix('#5aa04a', '#b8a868', m))); if (p > 0.45 && p < 0.72) pose('poisprot_fleurs', 'buis', s, fin('#ffffff')); if (p >= 0.68) pose('gousses', 'buis', [s[0], s[1] * 1.3, s[2]], fin(mix('#6aa84a', '#b09a60', m))); couvre = 0.75; canopee = mix('#5aa04a', '#b8a868', m); }
+      } else if (f === 'lupin') {
+        if (p < 0.06) lev(true, 'buis');
+        else { const s = [1, 0.3 + 0.7 * k(0.06, 0.55), 1], m = k(0.78, 1); pose('lupin', 'buis', s, fin(mix('#4f9a4a', '#b0a268', m))); if (p > 0.42 && p < 0.72) pose('lupin_fleurs', 'buis', s, fin('#ffffff')); if (p >= 0.68) pose('gousses', 'buis', [s[0], s[1] * 2.4, s[2]], fin(mix('#6aa84a', '#a89058', m))); couvre = 0.7; canopee = mix('#4f9a4a', '#b0a268', m); }
+      } else if (f === 'moutarde') {
+        if (p < 0.06) lev(true, 'colza');
+        else { const s = [1, 0.3 + 0.7 * k(0.06, 0.55), 1], m = k(0.78, 1), fleur = p > 0.42 && p < 0.74; pose('moutarde', 'colza', s, fin(mix('#5a9652', '#a08a50', m))); if (fleur) pose('moutarde_fleurs', 'colza', s, fin('#ffffff')); couvre = 0.8; canopee = fleur ? '#dcc02c' : mix('#5a9652', '#a08a50', m); }
+      } else if (f === 'chicoree') {
+        if (p < 0.06) lev(true, 'r5');
+        else { const s = 0.3 + 0.8 * k(0.06, 0.5); pose('chicoree', 'r5', s, fin(mix('#3f8a48', '#8aa048', k(0.9, 1) * 0.5))); pose('collet_bett', 'r5', Math.max(0.5, s * 0.8), fin('#ffffff')); couvre = 0.2 + 0.7 * k(0.06, 0.5); canopee = '#3f8a48'; }
+      } else if (f === 'chanvre') {
+        if (p < 0.06) lev(true, 'cer');
+        else { const s = [1, 0.15 + 0.85 * k(0.06, 0.65), 1], m = k(0.82, 1); pose('chanvre', 'cer', s, fin(mix('#3f8a3e', '#b8a468', m))); couvre = 0.95; canopee = mix('#3f8a3e', '#b8a468', m); }
+      } else if (f === 'miscanthus') {
+        // Cannes vertes en été, jaunies à l'automne, nues et pâles en hiver jusqu'à la récolte ; ensuite le chaume, d'où repartent les pousses
+        const hiver = mois === 12 || mois <= 3;
+        if (p < 0.08) {
+          if (e.ans) pose('miscanthus_chaume', 'buis', 1, K.col('#c8b488'));
+          if (p > 0.012) pose('levee', 'buis', 1.4 + 3 * p, fin('#6aa84a'));
+          sol = sol.lerp(K.col('#b89a68'), e.ans ? 0.5 : 0.15); couvre = 0.2;
+        } else if (hiver && p >= 0.5) {
+          pose('miscanthus_sec', 'buis', 1, fin(p >= 1 ? '#d8c08e' : '#c8b07e'), { tilt: 0.05 }); pose('miscanthus_plumes', 'buis', 1, fin('#efe4cc'), { tilt: 0.05 });
+          sol = sol.lerp(K.col('#b89a68'), 0.55); couvre = 0.45; canopee = '#a89468';
+        } else {
+          const j = mois === 10 ? 0.45 : mois >= 11 ? 0.85 : 0, s = [1, 0.12 + 0.88 * k(0.08, 0.7), 1];
+          pose('miscanthus', 'buis', s, fin(mix('#3f8a4a', '#c8b078', j)), { tilt: 0.04 });
+          if (p > 0.6 && mois >= 9) pose('miscanthus_plumes', 'buis', s, fin('#ece0c4'), { tilt: 0.04 });
+          couvre = 0.95; canopee = mix('#3f8a4a', '#c8b078', j);
+        }
+      } else if (f === 'prairie' || f === 'luzerne') {
+        // Fauche : l'herbe coupée en andains, puis les petites bottes, puis la repousse
+        const luz = f === 'luzerne', sa = couleursSaison(e.doy, e.sec || 0), a = e.fauche, coupee = a != null && a < 22;
+        if (!luz) sol = K.col(sa.h).clone();
+        const h = e.dort ? 0.4 : coupee ? 0.35 : 0.4 + 0.9 * k(0, 0.9), col = fin(luz ? (e.dort ? '#6a8a58' : '#4a8f3e') : mix(sa.c, '#4f9a3e', e.dort ? 0.2 : 0.6)), g = luz ? 'luzerne' : (coupee || e.dort) ? 'pre' : 'prairie_herbe';
+        pose(g, luz ? 'buis' : 'foin', [1, luz ? h : h * (g === 'pre' ? 1 : 1.05), 1], col);
+        if (coupee) { if (a < 5) pose('andain', 'andain', 1, K.col(luz ? '#a8b85a' : '#c9b85a')); else pose('botte', 'bottes', 1, K.col(luz ? '#b8c070' : '#d4c26e'), { dens: 0.35 }); }
+        else if (!e.dort && p > 0.75) pose(luz ? 'luzerne_fleurs' : 'fleurs_pre', luz ? 'buis' : 'pre', [1, h, 1], K.col('#ffffff'), { dens: luz ? undefined : 0.3 });
+        couvre = 1; canopee = luz ? '#4a8f3e' : null;
+        if (!luz && !e.dort) sol = sol.lerp(K.col('#6aa84a'), 0.75);
       } else if (f === 'pdt') {
         pose('butte', 'butte', 1, couleurSol((e.mo ?? 2.2) + 0.4, e.sec || 0));
         if (p >= 0.12) {
@@ -372,8 +491,9 @@ const Plantes = (() => {
       const s = couleursSaison(e.doy, e.sec || 0);
       sol = K.col(s.h).clone(); pose('friche', 'pre', 1, K.col(s.c)); couvre = 1;
     } else {
-      // Terre sans culture : chaume, andains et petites bottes après la moisson, couvert, résidus, labour
-      if (e.chaume > 0) {
+      // Terre sans culture : lin qui rouit en andains, chaume, andains et petites bottes après la moisson, couvert, résidus, labour
+      if (e.rouit != null) pose('andain', 'andain', 1, K.melange('#c8b078', '#8a8678', e.rouit));
+      else if (e.chaume > 0) {
         const paille = mix('#a89060', '#e2c886', e.chaume);
         sol = sol.lerp(K.col('#cdb478'), 0.25 + 0.6 * e.chaume);
         pose('chaume', 'cer', [1, 0.6 + 0.4 * e.chaume, 1], paille);
@@ -391,6 +511,17 @@ const Plantes = (() => {
     if (e.fum) sol.lerp(K.col('#3a2414'), 0.35);
     if (e.goutte && e.planches) pose('goutte', 'goutte', 1, K.col('#ffffff'));
     if (canopee) sol.lerp(K.col(canopee).clone().multiplyScalar(0.8), clamp01(couvre) * 0.85);
+    // Alerte en cours (C.3b) : la teinte des plantes se calcule dans le nuanceur (K3), ici le code et la pâleur du sol
+    if (e.sy && e.c && e.p < 1) {
+      const az = e.sy % 3, eau = (e.sy / 3) | 0;
+      for (const pt of P) {
+        if (!SANS_SYMPTOME.test(pt.g)) pt.sy = e.sy;
+        else if (pt.g === 'butte' && eau) pt.col = pt.col.clone().lerp(K.col('#d3bc90'), eau === 2 ? 0.55 : 0.22);
+      }
+      if (canopee && az) sol.lerp(K.col('#b7b25c'), clamp01(couvre) * (az === 2 ? 0.4 : 0.14));
+      if (eau) sol.lerp(K.col('#d3bc90'), eau === 2 ? 0.62 : 0.24);
+    }
+    if (e.paillage) { pose('residus', 'paille', 1, K.col('#d2b46a')); sol.lerp(K.col('#b89a58'), 0.6); }
     if (e.neige > 0.02) { sol.lerp(K.col(NEIGE), e.neige); for (const pt of P) if (pt.g !== 'botte') pt.col = pt.col.clone().lerp(K.col(NEIGE), e.neige * (['sillon', 'chaume', 'residus', 'butte', 'planche'].includes(pt.g) ? 1 : pt.s[1] < 0.6 ? 0.8 : 0.45)); }
     return { parts: P, sol };
   }

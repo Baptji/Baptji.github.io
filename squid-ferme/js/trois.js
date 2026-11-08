@@ -36,21 +36,86 @@ const K3 = (() => {
     vMonde = wpos.xz;
     vec4 mvPosition = viewMatrix * wpos;
     gl_Position = projectionMatrix * mvPosition;`;
-  // Patch commun : le vent (si souple > 0) et l'ombre des nuages qui glissent.
-  K.patcher = (m, souple = 0, nuages = true) => {
+  // Symptômes d'une alerte (C.3b) : code porté par la partie entière du rouge de l'instance, 2 × (3 × eau + azote), eau et azote de 0 à 2.
+  // Aucun attribut d'instance en plus : les géométries restent partagées. aBout vaut 0 à la base d'une feuille, 1 à sa pointe.
+  const vec = c => { const v = K.col(c); return `vec3(${v.r.toFixed(3)}, ${v.g.toFixed(3)}, ${v.b.toFixed(3)})`; };
+  const symptomes = () => `
+    vColor = color;
+    vec3 ic = instanceColor; float sy = floor( ic.r / 2.0 ); ic.r -= 2.0 * sy; vColor *= ic;
+    vFiss = 0.0;
+    if ( sy > 8.5 ) vFiss = sy - 9.0;   // planche de maraîchage : seulement le niveau de fissures
+    else if ( sy > 0.5 ) {
+      float ea = floor( sy / 3.0 ), az = sy - 3.0 * ea, ton = 0.55 + 0.45 * color.g;
+      if ( az > 0.5 ) {
+        float fort = az - 1.0;
+        vColor = mix( vColor, mix( ${vec('#b9cf6a')}, ${vec('#c8c85a')}, fort ) * ton, mix( 0.2, 0.5, fort ) );
+        vColor = mix( vColor, ${vec('#ecd23a')} * ton, smoothstep( mix( 0.55, 0.22, fort ), mix( 0.95, 0.7, fort ), aBout ) * mix( 0.9, 1.0, fort ) );
+      }
+      if ( ea > 0.5 ) {
+        float fort = ea - 1.0;
+        vColor = mix( vColor, mix( ${vec('#8f9563')}, ${vec('#c9b06e')}, fort ) * ton, mix( 0.3, 0.74, fort ) );
+        vColor = mix( vColor, mix( ${vec('#b9a56c')}, ${vec('#a98f5a')}, fort ) * ton, smoothstep( mix( 0.62, 0.3, fort ), mix( 0.98, 0.75, fort ), aBout ) );
+      }
+    }`;
+  // Patch commun : le vent (si souple > 0), l'ombre des nuages qui glissent, les symptômes des cultures.
+  K.patcher = (m, souple = 0, nuages = true, sympt = false) => {
     m.onBeforeCompile = sh => {
       Object.assign(sh.uniforms, K.U);
-      sh.vertexShader = 'uniform float uTemps;\nuniform vec2 uVent;\nuniform float uForce;\nvarying vec2 vMonde;\n'
-        + sh.vertexShader.replace('#include <project_vertex>', projection(souple));
+      sh.vertexShader = 'uniform float uTemps;\nuniform vec2 uVent;\nuniform float uForce;\nvarying vec2 vMonde;\n' + (sympt ? 'attribute float aBout;\nvarying float vFiss;\n' : '')
+        + sh.vertexShader.replace('#include <project_vertex>', projection(souple)).replace('#include <color_vertex>', sympt ? symptomes() : '#include <color_vertex>');
       sh.fragmentShader = 'uniform sampler2D tNuages;\nuniform vec2 uNuageDecal;\nuniform float uNuage;\nuniform float uEchelleNuage;\nvarying vec2 vMonde;\n'
         + sh.fragmentShader.replace('#include <color_fragment>', `#include <color_fragment>
           ${nuages ? 'diffuseColor.rgb *= 1.0 - uNuage * texture2D( tNuages, vMonde * uEchelleNuage + uNuageDecal ).r;' : ''}`);
     };
-    m.customProgramCacheKey = () => 'sf' + souple + (nuages ? 'n' : '');
+    m.customProgramCacheKey = () => 'sf' + souple + (nuages ? 'n' : '') + (sympt ? 's' : '');
+    return m;
+  };
+  // Sol qui se fend quand l'eau manque (C.3b). Motif périodique calculé une fois : rouge = distance à la fissure (réseau de Voronoï
+  // déformé, 8 × 8 cellules), vert = masque lent qui ne laisse qu'une partie du réseau au stade léger.
+  let _texFiss = null;
+  const texFissures = () => {
+    if (_texFiss) return _texFiss;
+    const N = 512, C = 8, pas = N / C, d = new Uint8Array(N * N * 4), h = K.hasard, tau = Math.PI * 2;
+    const germe = (a, b) => { const i = ((a % C) + C) % C + C * (((b % C) + C) % C); return [(a + 0.12 + 0.76 * h(i * 2 + 1)) * pas, (b + 0.12 + 0.76 * h(i * 2 + 2)) * pas]; };
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const px = x + 7 * Math.sin(tau * y * 3 / N + 1.1) + 3.5 * Math.sin(tau * y * 7 / N + 4), py = y + 7 * Math.sin(tau * x * 2 / N + 2.3) + 3.5 * Math.sin(tau * x * 6 / N + 0.4);
+      const cx = Math.floor(px / pas), cy = Math.floor(py / pas);
+      let m = 1e9, ax = 0, ay = 0;
+      for (let b = -1; b <= 1; b++) for (let a = -1; a <= 1; a++) { const [sx, sy] = germe(cx + a, cy + b), q = (sx - px) ** 2 + (sy - py) ** 2; if (q < m) { m = q; ax = sx; ay = sy; } }
+      let bord = 1e9;
+      for (let b = -2; b <= 2; b++) for (let a = -2; a <= 2; a++) {
+        const [sx, sy] = germe(cx + a, cy + b), ex = sx - ax, ey = sy - ay, l = Math.hypot(ex, ey);
+        if (l > 1e-3) bord = Math.min(bord, ((px - (ax + sx) / 2) * -ex + (py - (ay + sy) / 2) * -ey) / l);
+      }
+      const o = (y * N + x) * 4, lent = 0.5 + 0.28 * Math.sin(tau * x * 3 / N + 0.7) * Math.cos(tau * y * 2 / N + 1.9) + 0.22 * Math.sin(tau * (x + y) * 4 / N + 3.1);
+      d[o] = Math.min(255, Math.max(0, bord / (pas / 2)) * 255); d[o + 1] = Math.max(0, Math.min(1, lent)) * 255; d[o + 3] = 255;
+    }
+    const t = new T3.DataTexture(d, N, N, T3.RGBAFormat); t.wrapS = t.wrapT = T3.RepeatWrapping; t.magFilter = T3.LinearFilter; t.minFilter = T3.LinearMipmapLinearFilter; t.generateMipmaps = true; t.anisotropy = 4; t.needsUpdate = true;
+    return (_texFiss = t);
+  };
+  // m : matériau passé par K.patcher. instance : le niveau vient du code d'instance (planches de maraîchage) et non de l'attribut aFiss du sol.
+  K.fissurable = (m, instance) => {
+    const base = m.onBeforeCompile;
+    m.onBeforeCompile = sh => {
+      base(sh);
+      sh.uniforms.tFiss = { value: texFissures() };
+      if (!instance) sh.vertexShader = 'attribute float aFiss;\nvarying float vFiss;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n    vFiss = aFiss;');
+      sh.fragmentShader = 'uniform sampler2D tFiss;\nvarying float vFiss;\n' + sh.fragmentShader.replace('#include <color_fragment>', `#include <color_fragment>
+        if ( vFiss > 0.5 ) {
+          vec4 f = texture2D( tFiss, vMonde * 0.375 );
+          float fort = vFiss - 1.0, large = mix( 0.05, 0.095, fort );
+          float part = mix( smoothstep( 0.46, 0.62, f.g ), 1.0, fort );
+          float ligne = ( 1.0 - smoothstep( large * 0.35, large, f.r ) ) * part * mix( 0.72, 0.92, fort );
+          float levre = ( smoothstep( large * 0.7, large * 1.3, f.r ) - smoothstep( large * 1.3, large * 2.6, f.r ) ) * part * mix( 0.12, 0.22, fort );
+          diffuseColor.rgb *= 1.0 + levre;
+          diffuseColor.rgb = mix( diffuseColor.rgb, diffuseColor.rgb * vec3( 0.2, 0.16, 0.13 ), ligne );
+        }`);
+    };
+    m.customProgramCacheKey = () => 'sfissures' + (instance ? 'i' : '');
     return m;
   };
   K.mat = (c, o, souple) => K.patcher(new T3.MeshStandardMaterial(Object.assign({ color: K.col(c), roughness: 0.9, metalness: 0, flatShading: true }, o || {})), souple);
-  K.matV = (o, souple) => K.patcher(new T3.MeshStandardMaterial(Object.assign({ vertexColors: true, roughness: 0.9, metalness: 0, flatShading: true }, o || {})), souple);
+  K.matV = (o, souple, sympt) => K.patcher(new T3.MeshStandardMaterial(Object.assign({ vertexColors: true, roughness: 0.9, metalness: 0, flatShading: true }, o || {})), souple, true, sympt);
   K.matT = (map, o) => K.patcher(new T3.MeshStandardMaterial(Object.assign({ map, roughness: 0.92, metalness: 0, flatShading: true }, o || {})));
 
   K.texture = (dessin, S = 128, rep = true) => {
@@ -64,22 +129,27 @@ const K3 = (() => {
   K.piece = (g, c, p, r, s, q) => ({ g, c, p, r, s, q });
   K.fusion = parts => {
     let n = 0;
+    const hautDe = {};
     const geos = parts.map(pt => {
       const g = pt.g.index ? pt.g.toNonIndexed() : pt.g.clone();
       if (!g.attributes.normal) g.computeVertexNormals();
+      if (pt.haut) hautDe[parts.indexOf(pt)] = Array.from(g.attributes.position.array).filter((_, i) => i % 3 === 1).map(y => ((y + 1) / 2) ** 3);   // feuillage en boule : la pointe est le sommet
       if (pt.q) _q.copy(pt.q); else { _e.set(...(pt.r || [0, 0, 0])); _q.setFromEuler(_e); }
       _m.compose(_p.set(...(pt.p || [0, 0, 0])), _q, _s.set(...(Array.isArray(pt.s) ? pt.s : [pt.s || 1, pt.s || 1, pt.s || 1])));
       g.applyMatrix4(_m); n += g.attributes.position.count; return { g, c: K.col(pt.c) };
     });
-    const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), col = new Float32Array(n * 3);
+    const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), col = new Float32Array(n * 3), bout = new Float32Array(n);
     let o = 0;
-    geos.forEach(({ g, c }) => {
+    geos.forEach(({ g, c }, k) => {
+      const pt = parts[k];
       pos.set(g.attributes.position.array, o * 3); nor.set(g.attributes.normal.array, o * 3);
+      if (g.attributes.aBout) bout.set(g.attributes.aBout.array, o);
+      if (pt.haut) for (let i = 0; i < hautDe[k].length; i++) bout[o + i] = hautDe[k][i];
       for (let i = 0; i < g.attributes.position.count; i++) { col[(o + i) * 3] = c.r; col[(o + i) * 3 + 1] = c.g; col[(o + i) * 3 + 2] = c.b; }
       o += g.attributes.position.count; g.dispose();
     });
     const out = new T3.BufferGeometry();
-    out.setAttribute('position', new T3.BufferAttribute(pos, 3)); out.setAttribute('normal', new T3.BufferAttribute(nor, 3)); out.setAttribute('color', new T3.BufferAttribute(col, 3));
+    out.setAttribute('position', new T3.BufferAttribute(pos, 3)); out.setAttribute('normal', new T3.BufferAttribute(nor, 3)); out.setAttribute('color', new T3.BufferAttribute(col, 3)); out.setAttribute('aBout', new T3.BufferAttribute(bout, 1));
     out.computeBoundingSphere();
     return out;
   };
@@ -118,16 +188,16 @@ const K3 = (() => {
   };
   // Feuille en ruban le long de +x depuis l'origine : monte (angle a0) puis s'arque de « arc » radians ; largeur w ; n segments.
   G.feuille = (L, w, a0 = 0.9, arc = 1.2, n = 3, pointe = 0.7) => {
-    const pos = [];
+    const pos = [], bout = [];
     let x = 0, y = 0, prev = null;
     for (let i = 0; i <= n; i++) {
       const t = i / n, th = a0 - arc * t, l = w * Math.pow(Math.sin(Math.PI * Math.min(0.999, 0.12 + t * 0.88)), pointe) * (i === n ? 0 : 1);
       if (i) { x += Math.cos(th) * L / n; y += Math.sin(th) * L / n; }
       const cur = [[x, y, -l / 2], [x, y, l / 2]];
-      if (prev) pos.push(...prev[0], ...cur[0], ...prev[1], ...prev[1], ...cur[0], ...cur[1]);
+      if (prev) { const a = (i - 1) / n; pos.push(...prev[0], ...cur[0], ...prev[1], ...prev[1], ...cur[0], ...cur[1]); bout.push(a, t, a, a, t, t); }
       prev = cur;
     }
-    const g = new T3.BufferGeometry(); g.setAttribute('position', new T3.Float32BufferAttribute(pos, 3)); g.computeVertexNormals(); return g;
+    const g = new T3.BufferGeometry(); g.setAttribute('position', new T3.Float32BufferAttribute(pos, 3)); g.setAttribute('aBout', new T3.Float32BufferAttribute(bout, 1)); g.computeVertexNormals(); return g;
   };
   // Brin à trois faces, base à l'origine, le long de +y
   G.brin = (h, r) => { const g = new T3.CylinderGeometry(r * 0.6, r, h, 3, 1, true); g.translate(0, h / 2, 0); return g; };

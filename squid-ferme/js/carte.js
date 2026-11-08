@@ -132,6 +132,70 @@ const Carte = (() => {
     return [T2, L2];
   }
 
+  // ---------- Bordure et accès (film du 8 novembre) ----------
+  // Une case d'herbe tout autour de la carte : les engins y tournent au lieu de sortir dans le vide ; routes et chemins la traversent.
+  function ceinture(pl) {
+    const w = pl.w + 2, h = pl.h + 2, t = (x, y) => x >= 0 && y >= 0 && x < pl.w && y < pl.h ? pl.types[y][x] : null, types = [], unite = new Array(w * h).fill(-1);
+    for (let y = -1; y <= pl.h; y++) {
+      let l = '';
+      for (let x = -1; x <= pl.w; x++) {
+        let c = t(x, y);
+        if (c === null) { const b = t(Math.max(0, Math.min(pl.w - 1, x)), Math.max(0, Math.min(pl.h - 1, y))), coin = (x < 0 || x >= pl.w) && (y < 0 || y >= pl.h); c = !coin && 'rp'.includes(b) ? b : 'h'; }
+        else unite[(y + 1) * w + x + 1] = pl.unite[y * pl.w + x];
+        l += c;
+      }
+      types.push(l);
+    }
+    return { ...pl, w, h, types, unite, ferme: [pl.ferme[0] + 1, pl.ferme[1] + 1], bord: 1 };
+  }
+  // Chaque champ doit avoir un coin de départ ouvert sur une route ou un chemin. Sinon un chemin est percé jusqu'à ce coin :
+  // par l'herbe de préférence, à travers une haie ou un bois s'il le faut, en dernier recours sur le bord d'un champ voisin.
+  function ouvrirChamps(pl) {
+    const w = pl.w, h = pl.h, T = pl.types.map(l => [...l]), U = pl.unite, ty = (x, y) => x >= 0 && y >= 0 && x < w && y < h ? T[y][x] : '#';
+    const pres = new Set(pl.unites.flatMap((d, u) => Object.values(d.rpg).includes('PPH') ? [u] : []));
+    function reseau() {
+      const vu = new Set(), pile = [];
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (T[y][x] === 'r') { vu.add(y * w + x); pile.push(y * w + x); }
+      while (pile.length) { const i = pile.pop(), x = i % w, y = (i / w) | 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const j = (y + dy) * w + x + dx; if ((dx || dy) && 'rp'.includes(ty(x + dx, y + dy)) && !vu.has(j)) { vu.add(j); pile.push(j); } } }
+      return vu;
+    }
+    // les cases juste dehors des quatre coins de rangs d'un champ, l'accès dans l'axe des rangs d'abord
+    function coins(u) {
+      const rangs = new Map(); U.forEach((v, i) => { if (v === u) { const y = (i / w) | 0, x = i % w, r = rangs.get(y) || [x, x]; rangs.set(y, [Math.min(r[0], x), Math.max(r[1], x)]); } });
+      if (!rangs.size) return [];
+      const ys = [...rangs.keys()].sort((a, b) => a - b), o = [];
+      for (const [y, s] of [[ys[0], -1], [ys.at(-1), 1]]) { const [a, b] = rangs.get(y); o.push([a - 1, y, 0], [b + 1, y, 0], [a, y + s, 0.5], [b, y + s, 0.5]); }
+      return o.filter(([x, y]) => x >= 0 && y >= 0 && x < w && y < h && U[y * w + x] !== u);
+    }
+    const prix = (x, y) => { const c = ty(x, y), u = U[y * w + x]; return c === 'h' ? 1 : c === 'a' ? 2 : c === 'f' ? 3 : c === 'c' && u >= 0 ? (pres.has(u) ? 40 : 8) : Infinity; };
+    function chemin(u, res) {
+      const dist = new Map(), avant = new Map(), file = [];
+      for (const [x, y, p] of coins(u)) { const q = prix(x, y); if (q < Infinity) { const i = y * w + x; if (!dist.has(i) || dist.get(i) > q + p) { dist.set(i, q + p); avant.set(i, -1); file.push(i); } } }
+      const faits = new Set();
+      while (file.length) {
+        file.sort((a, b) => dist.get(a) - dist.get(b));
+        const i = file.shift(); if (faits.has(i)) continue; faits.add(i);
+        const x = i % w, y = (i / w) | 0;
+        if (V4.some(([dx, dy]) => x + dx >= 0 && x + dx < w && res.has((y + dy) * w + x + dx))) { const p = []; for (let j = i; j !== -1; j = avant.get(j)) p.push(j); return { cout: dist.get(i), p }; }
+        for (const [dx, dy] of V4) {
+          const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= w || ny >= h || U[ny * w + nx] === u) continue;
+          const c = dist.get(i) + prix(nx, ny), j = ny * w + nx; if (c < Infinity && (!dist.has(j) || c < dist.get(j))) { dist.set(j, c); avant.set(j, i); file.push(j); }
+        }
+      }
+      return null;
+    }
+    const ouvert = (u, res) => coins(u).some(([x, y]) => res.has(y * w + x));
+    let res = reseau(), reste = pl.unites.map((_, u) => u).filter(u => !ouvert(u, res));
+    while (reste.length) {
+      const q = reste.map(u => ({ u, ch: chemin(u, res) })).filter(e => e.ch).sort((a, b) => a.ch.cout - b.ch.cout)[0];
+      if (!q) break;
+      for (const i of q.ch.p) { const v = U[i]; if (v >= 0) { U[i] = -1; const d = pl.unites[v]; d.n--; d.surf = Math.round(d.n * 25) / 100; } T[(i / w) | 0][i % w] = 'p'; }
+      res = reseau(); reste = reste.filter(u => !ouvert(u, res));
+    }
+    pl.types = T.map(l => l.join(''));
+    return pl;
+  }
+
   // ---------- Champs : cases de 50 m ----------
   function champs(r, sys) {
     const T = grille('c'), pre = grille(false);
@@ -284,7 +348,7 @@ const Carte = (() => {
       const { rpg, rot } = herbe ? rpgDe([herbe], 0) : (() => { const ro = r.choix(sys.rot); return rpgDe(ro, r.ent(0, ro.length - 1)); })();
       return { surf: Math.round(nb * 25) / 100, rpg, rot, n: nb };
     });
-    return { pas: 50, w: W, h: H, types: T2.map(l => l.join('')), unite, unites, ferme: [mx ? W - 4 - fx : fx, my ? H - 4 - fy : fy] };
+    return ouvrirChamps(ceinture({ pas: 50, w: W, h: H, types: T2.map(l => l.join('')), unite, unites, ferme: [mx ? W - 4 - fx : fx, my ? H - 4 - fy : fy] }));
   }
 
   // ---------- Planches : cases de 10 m (maraîchage) ----------
@@ -330,12 +394,12 @@ const Carte = (() => {
   function generer(graine, region) {
     graine = normaliser(graine) || 'SQUID';
     const id = idDe(graine, region);
-    if (cache.has(id)) return cache.get(id);
+    if (cache.has(id)) return structuredClone(cache.get(id));   // chaque partie reçoit son exemplaire : le joueur y redécoupe ses champs
     const R = REGIONS.find(x => x.id === region) || REGIONS[0], sys = systemeDe(R.id);
     const r = tirage(graine + '/' + R.id), nom = r.choix(LIEUXDITS);
     const L = { id, nom, pays: R.nom, climat: R.id, graine, genere: true, champs: champs(tirage(graine + '/champs/' + R.id), sys), planches: planches(tirage(graine + '/planches')) };
     cache.set(id, L);
-    return L;
+    return structuredClone(L);
   }
 
   // ---------- Aperçu : la carte vue d'avion, sur un canevas ----------
@@ -378,5 +442,91 @@ const Carte = (() => {
     }
   }
 
-  return { generer, apercu, nouvelleGraine, normaliser, idDe, systemeDe, W, H };
+
+  // ---------- Découpage du joueur : diviser, fusionner, trous dans les haies ----------
+  // Tout se fait sur une copie, vérifiée, puis recopiée dans le plan : une opération refusée ne laisse aucune trace.
+  const cleLimite = (i, j) => i < j ? i + ':' + j : j + ':' + i;
+  const voisins4 = (pl, i) => { const w = pl.w, h = pl.h, x = i % w, y = (i / w) | 0, o = []; if (x > 0) o.push(i - 1); if (x < w - 1) o.push(i + 1); if (y > 0) o.push(i - w); if (y < h - 1) o.push(i + w); return o; };
+  const reseauEn = (pl, i) => 'rp'.includes(pl.types[(i / pl.w) | 0][i % pl.w]);
+  const casesUnite = (pl, u) => { const o = []; pl.unite.forEach((v, i) => { if (v === u) o.push([i % pl.w, (i / pl.w) | 0]); }); return o; };
+  function recompter(pl) { for (const d of pl.unites) d.n = 0; for (const v of pl.unite) if (v >= 0) pl.unites[v].n++; for (const d of pl.unites) d.surf = Math.round(d.n * 25) / 100; }
+  // De la case i0 à la route : à travers son champ et les trous des haies. Rend [i0, …, dernière case de champ, case de route].
+  function cheminVersReseau(pl, i0) {
+    const avant = new Map([[i0, -1]]), file = [i0];
+    for (let q = 0; q < file.length; q++) {
+      const i = file[q];
+      for (const j of voisins4(pl, i)) if (reseauEn(pl, j)) { const p = [j]; for (let k = i; k !== -1; k = avant.get(k)) p.unshift(k); return p; }
+      for (const j of voisins4(pl, i)) if (!avant.has(j) && pl.unite[j] >= 0 && (pl.unite[j] === pl.unite[i] || pl.trous?.has(cleLimite(i, j)))) { avant.set(j, i); file.push(j); }
+    }
+    return null;
+  }
+  // Les quatre coins de départ des rangs d'un ensemble de cases [[x, y], …] : la case du coin, la voisine dans l'axe, la voisine de côté
+  function coinsDeRangs(pl, cases) {
+    const rangs = new Map(), o = [];
+    for (const [x, y] of cases) { const r = rangs.get(y) || { a: x, b: x + 1 }; r.a = Math.min(r.a, x); r.b = Math.max(r.b, x + 1); rangs.set(y, r); }
+    const ys = [...rangs.keys()].sort((a, b) => a - b);
+    if (!ys.length) return o;
+    for (const sens of ys.length > 1 ? [1, -1] : [1]) {
+      const y = sens > 0 ? ys[0] : ys.at(-1), { a, b } = rangs.get(y);
+      for (const cote of [1, -1]) o.push({ sens, cote, y, a, b, xe: cote > 0 ? a : b - 1, nx: cote > 0 ? a - 1 : b });
+    }
+    return o;
+  }
+  // Par où un engin peut entrer : les coins ouverts sur le réseau ; à défaut, un chemin (par) à travers le champ et les trous des haies
+  function entrees(pl, cases) {
+    const rp = (x, y) => 'rp'.includes(pl.types[y]?.[x] || '#'), coins = coinsDeRangs(pl, cases);
+    const directs = coins.flatMap(c => { const axial = rp(c.nx, c.y), cote2 = rp(c.xe, c.y - c.sens); return axial || cote2 ? [{ ...c, axial, cote2 }] : []; });
+    if (directs.length) return directs;
+    return coins.flatMap(c => { const par = cheminVersReseau(pl, c.y * pl.w + c.xe); return par ? [{ ...c, axial: false, cote2: false, par }] : []; });
+  }
+  const copiePlan = pl => ({ ...pl, unite: pl.unite.slice(), unites: pl.unites.map(d => ({ ...d })), trous: new Set(pl.trous || []) });
+  function validerPlan(pl, p) { p.unite.forEach((v, i) => { pl.unite[i] = v; }); pl.unites.splice(0, pl.unites.length, ...p.unites); pl.trous = p.trous; }
+  const tousAccessibles = p => p.unites.every((d, u) => !d.n || entrees(p, casesUnite(p, u)).length > 0);
+  // Les limites à percer : d'abord le coin d'une partie sans ouverture directe (l'engin arrive au début d'un rang), puis réparties sur le contour
+  function percer(p, nu, u) {
+    const cases = casesUnite(p, nu), c0 = cases.reduce((m, c) => [m[0] + c[0] / cases.length, m[1] + c[1] / cases.length], [0, 0]);
+    const segs = [], ang = i => Math.atan2(((i / p.w) | 0) - c0[1], i % p.w - c0[0]);
+    p.unite.forEach((v, i) => { if (v === nu) for (const j of voisins4(p, i)) if (p.unite[j] === u) segs.push([i, j]); });
+    segs.sort((a, b) => ang(a[0]) - ang(b[0]));
+    const k = Math.max(1, Math.min(6, Math.round(segs.length / 5))), pris = [];
+    const milieu = s => [(s[0] % p.w + s[1] % p.w) / 2, (((s[0] / p.w) | 0) + ((s[1] / p.w) | 0)) / 2], pres = (a, b) => { const [m, n] = [milieu(a), milieu(b)]; return Math.hypot(m[0] - n[0], m[1] - n[1]) < 1.5; };
+    const prendre = s => { if (s && !pris.some(q => q === s)) pris.push(s); };
+    for (const [ens, autre] of [[cases, u], [casesUnite(p, u), nu]]) {
+      if (entrees(p, ens)[0] && !entrees(p, ens)[0].par) continue;
+      const w = p.w, s = coinsDeRangs(p, ens).flatMap(c => [[c.y * w + c.xe, c.y * w + c.nx], [c.y * w + c.xe, (c.y - c.sens) * w + c.xe]]).filter(([a, b]) => b >= 0 && b < p.unite.length && p.unite[b] === autre).map(([a, b]) => segs.find(q => (q[0] === a && q[1] === b) || (q[0] === b && q[1] === a))).find(Boolean);
+      prendre(s);
+    }
+    for (let m = 0; m < k && pris.length < k; m++) { const i0 = Math.floor((m + 0.5) * segs.length / k); for (let d = 0; d < segs.length; d++) { const s = segs[(i0 + d) % segs.length]; if (pris.includes(s) || pris.some(q => pres(q, s))) continue; pris.push(s); break; } }
+    if (!pris.length && segs.length) pris.push(segs[0]);
+    for (const [i, j] of pris) p.trous.add(cleLimite(i, j));
+  }
+  // carres : indices de cases, tous dans u. Rend { u: nouvelle unité } ou { erreur } ; essai : ne touche pas au plan
+  function diviser(pl, u, carres, essai = false) {
+    const p = copiePlan(pl), nu = p.unites.length;
+    for (const i of carres) p.unite[i] = nu;
+    p.unites.push({ ...p.unites[u], n: 0, surf: 0 }); recompter(p);
+    percer(p, nu, u);
+    if (!tousAccessibles(p)) return { erreur: 'acces' };
+    if (!essai) validerPlan(pl, p);
+    return { u: nu };
+  }
+  // La parcelle b rejoint a ; la haie et les trous entre les deux disparaissent
+  function fusionner(pl, a, b) {
+    const p = copiePlan(pl);
+    p.unite.forEach((v, i) => { if (v === b) p.unite[i] = a; });
+    recompter(p);
+    for (const k of [...p.trous]) { const [i, j] = k.split(':').map(Number); if (p.unite[i] === p.unite[j]) p.trous.delete(k); }
+    if (!tousAccessibles(p)) return { erreur: 'acces' };
+    validerPlan(pl, p);
+    return { u: a };
+  }
+  // Retrouve le découpage sauvegardé sur un plan neuf
+  function rejouerDecoupe(pl, d) {
+    if (!d) return;
+    while (pl.unites.length < d.n) pl.unites.push({ rpg: {}, rot: [], n: 0, surf: 0 });
+    for (const k in d.cases) pl.unite[+k] = d.cases[k];
+    recompter(pl); pl.trous = new Set(d.trous || []);
+  }
+
+  return { generer, apercu, nouvelleGraine, normaliser, idDe, systemeDe, W, H, cleLimite, entrees, diviser, fusionner, rejouerDecoupe };
 })();

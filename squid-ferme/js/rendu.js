@@ -39,7 +39,7 @@ const Rendu = {
   // ---------- Monde du lieu ----------
   preparer() {
     if (!this.gl) return;
-    const f = F(), pl = this.pl = planDe(f), mode = MODES[f.mode], W = pl.w, H = pl.h;
+    const f = F(), pl = this.pl = planDe(f), W = pl.w, H = pl.h;
     if (this.monde) { this.scene.remove(this.monde); this.monde.traverse(o => { if (o.geometry && !o.userData.partage) o.geometry.dispose(); }); }
     for (const p of this.pools.values()) { this.scene.remove(p.im); p.im.dispose?.(); }
     this.viderTransports();
@@ -48,8 +48,8 @@ const Rendu = {
     for (const a of this.halos || []) this.scene.remove(a.g); this.halos = [];
     for (const o of this.verrous?.values() || []) this.scene.remove(o); this.verrous = new Map(); this.anims = [];
     this.pools.clear(); this.passages = []; this.revel.clear(); this.parts = []; this.ondes.forEach(o => this.scene.remove(o.m)); this.ondes = [];
-    this.echelle = mode.echelle; this.planches = mode.echelle === 'planches';
-    this.D = Decor.construire(this.scene, pl, mode.echelle); this.monde = this.D.groupe;
+    this.echelle = 'champs'; this.planches = false;
+    this.D = Decor.construire(this.scene, pl, 'champs'); this.monde = this.D.groupe;
     this.cel = Array.from({ length: W * H }, () => ({ cle: '', desc: null }));
     const NX = Math.ceil(W / this.CH), NZ = Math.ceil(H / this.CH);
     this.chunks = [];
@@ -214,7 +214,7 @@ const Rendu = {
       if (!this.pl) return;
       this.figer(); try { cv.setPointerCapture(e.pointerId); } catch (er) { /* pointeur synthétique */ } pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (pts.size === 2) { const [a, b] = [...pts.values()], m = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; glisse = null; pince = { d: Math.hypot(a.x - b.x, a.y - b.y) }; this.prise = this.solSous(m.x, m.y); return; }
-      const pan = e.button === 2 || e.button === 1 || e.shiftKey, peint = e.altKey && e.button === 0 && !(window.SF3D && SF3D.modeCommentaire);
+      const pan = e.button === 2 || e.button === 1 || e.shiftKey, peint = (e.altKey || this.peinture) && !e.shiftKey && e.button === 0 && !(window.SF3D && SF3D.modeCommentaire);
       glisse = { x: e.clientX, y: e.clientY, az: this.cam.az, el: this.cam.el, bouge: false, pan, peint, curseur: cv.style.cursor };
       this.prise = pan ? this.solSous(e.clientX, e.clientY) : null;
       if (peint && this.quandPeint) this.quandPeint(this.sous(e), e, true);
@@ -276,20 +276,34 @@ const Rendu = {
   },
 
   // ---------- État visible de chaque case ----------
-  etatCase(i, f, mode, ctx) {
+  etatCase(i, f, ctx) {
     const pl = this.pl, W = pl.w, x = i % W, y = (i / W) | 0, u = pl.unite[i];
     if (pl.types[y][x] !== 'c' || u < 0) return null;
-    const base = { mois: ctx.mois, doy: ctx.doy, neige: ctx.neige, givre: ctx.givre, planches: this.planches };
+    const base = { mois: ctx.mois, doy: ctx.doy, neige: ctx.neige, givre: ctx.givre };
     const rv = this.revel.get(i), voile = rv && performance.now() < rv.jusque ? rv : null;
     if (f.parcelles[u] && !(voile && voile.voisin)) {
       const cs = f.cases[x + ',' + y]; if (!cs) return null;
-      let c = cs.cult ? CULTURE[cs.cult] : null, p = cs.p, mur = cs.mur;
-      if (voile) { if (voile.avant) { c = voile.avant.c; p = voile.avant.p; mur = voile.avant.pourri ? 13 : 0; } else c = null; }
-      const chaume = !c && cs.chaume != null ? clamp01(1 - (S.jour - cs.chaume) / 45) : 0;
+      const mode = MODES[cs.mode];
+      // Une machine n'a pas encore atteint cette case : on montre l'état d'avant son passage
+      const lire = (s, n) => {
+        let c = s.cult ? CULTURE[s.cult] : null, p = s.p, mur = s.mur;
+        if (voile) { const a = voile.avant; if (a) { const q = n ? a.b : a.c ? a : null; if (q) { c = q.c; p = q.p; mur = q.pourri ? 13 : 0; } } else if ((voile.slots || [0]).includes(n)) c = null; }
+        return { c, p, mur };
+      };
+      const { c, p, mur } = lire(cs, 0);
+      const labouree = voile?.labourDe ? voile.labourDe.d >= voile.dLab || !this.passages.includes(voile.labourDe) : null;
+      const chaume = !c && cs.chaume != null && !labouree ? clamp01(1 - (S.jour - cs.chaume) / 45) : 0;
+      const ageCoupe = cs.fauche != null ? S.jour - cs.fauche : null, rouit = !c && ageCoupe != null && ageCoupe < 60 && CULTURE[cs.prec]?.rouit ? ageCoupe / 60 : null;
       const sec = clamp01((0.4 - cs.r / ruMax(f, cs)) / 0.3) * (ctx.mois >= 4 && ctx.mois <= 10 ? 1 : 0.3);
-      return Object.assign(base, { propre: true, c, p, mur, chaume, paille: cs.fam === 'poacée', labour: mode.labour && !c && !chaume, couvert: mode.couvert && !c && !chaume,
-        residus: !mode.labour && !mode.couvert && (!c || p < 0.4), fum: cs.fum > 0, goutte: mode.irrigation === 'goutte' && f.irrigation, mo: cs.mo, sec,
-        arbres: mode.arbres && y % 2 === 0 ? ageArbres(f, S.jour) : null });
+      const sy = this.symptomes.get(u) || 0;
+      const e = Object.assign(base, { propre: true, sy, c, p, mur, chaume, paille: cs.fam === 'poacée', labour: mode.labour && !c && !chaume && rouit == null && labouree !== false, couvert: mode.couvert && !c && !chaume && rouit == null, rouit, ans: cs.inst?.ans ?? 0, dort: !!cs.dort, fauche: c?.vivace ? ageCoupe : null,
+        residus: !mode.labour && !mode.couvert && !mode.planches && !mode.paillage && (!c || p < 0.4), fum: cs.fum > 0, goutte: mode.irrigation === 'goutte' && f.irrigation, mo: cs.mo, sec,
+        planches: !!mode.planches, paillage: !!mode.paillage, serre: !!mode.serre, arbres: mode.arbres && y % 2 === 0 ? ageArbres(cs, S.jour) : null });
+      if (mode.assoc) {
+        const b = cs.b || { cult: null, p: 0, mur: 0 }, q = lire(b, 1), ch = !q.c && b.chaume != null ? clamp01(1 - (S.jour - b.chaume) / 45) : 0;
+        e.b = { mois: ctx.mois, doy: ctx.doy, neige: ctx.neige, givre: ctx.givre, propre: true, sy, c: q.c, p: q.p, mur: q.mur, chaume: ch, paille: true, residus: !q.c, mo: cs.mo, sec };
+      }
+      return e;
     }
     const v = this.voisinDe(f, u, S.jour);
     base.verrou = true;   // tout champ voisin est grisé, à vendre comme à objectif
@@ -299,25 +313,28 @@ const Rendu = {
   },
   cleEtat(e) {
     const q = (v, n) => Math.round((v || 0) * n);
-    return `${e.c ? e.c.id : ''}|${q(e.p, 48)}|${e.mur > 12 ? 1 : 0}|${q(e.chaume, 30)}|${e.paille ? 1 : 0}${e.labour ? 1 : 0}${e.couvert ? 1 : 0}${e.residus ? 1 : 0}${e.fum ? 1 : 0}${e.goutte ? 1 : 0}${e.propre ? 1 : 0}|${q(e.mo, 4)}|${q(e.sec, 8)}|${q(e.neige, 10)}${e.givre ? 'g' : ''}|${e.mois}|${e.prairie || ''}${e.friche ? 1 : 0}|${e.prairie || e.friche || e.arbres != null ? Math.floor(e.doy / 3) : ''}|${e.arbres != null ? Math.round(e.arbres * 2) : ''}|${e.verrou ? 'v' : ''}`;
+    return `${e.b ? this.cleEtat(e.b) + '#' : ''}${e.planches ? 'P' : ''}${e.paillage ? 'L' : ''}${e.serre ? 'S' : ''}${e.c ? e.c.id : ''}|${e.c?.vivace ? `${Math.floor(e.doy / 3)}.${e.dort ? 1 : 0}.${e.ans ? 1 : 0}.${e.fauche == null ? '' : e.fauche < 5 ? 'a' : e.fauche < 22 ? 'b' : ''}` : ''}|${e.rouit == null ? '' : q(e.rouit, 4)}|${q(e.p, 48)}|${e.mur > 12 ? 1 : 0}|${q(e.chaume, 30)}|${e.paille ? 1 : 0}${e.labour ? 1 : 0}${e.couvert ? 1 : 0}${e.residus ? 1 : 0}${e.fum ? 1 : 0}${e.goutte ? 1 : 0}${e.propre ? 1 : 0}|${q(e.mo, 4)}|${q(e.sec, 8)}|${q(e.neige, 10)}${e.givre ? 'g' : ''}|${e.mois}|${e.prairie || ''}${e.friche ? 1 : 0}|${e.prairie || e.friche || e.arbres != null ? Math.floor(e.doy / 3) : ''}|${e.arbres != null ? Math.round(e.arbres * 2) : ''}|${e.verrou ? 'v' : ''}|${e.sy || ''}`;
   },
   // Met à jour les cases dont l'état visible a changé (toutes si force)
   majCases(f, ctx, force, seules) {
-    const mode = MODES[f.mode], ids = seules || this.cel.keys();
+    const ids = seules || this.cel.keys();
     const pature = force ? [] : null, nus = force ? [] : null, W = this.pl.w, H = this.pl.h;
     for (const i of ids) {
-      const e = this.etatCase(i, f, mode, ctx), c = this.cel[i];
+      const e = this.etatCase(i, f, ctx), c = this.cel[i];
       if (force && e) { const pt = [i % W - W / 2, ((i / W) | 0) - H / 2]; if (e.prairie === 'ppn') pature.push(pt); else if (!e.prairie && !e.friche && (!e.c || e.p < 0.12)) nus.push(pt); }
       if (!e) continue;
       const cle = this.cleEtat(e);
       if (cle === c.cle && !force) continue;
       if (cle === c.cle) continue;
       const desc = Plantes.decrire(e);
+      if (e.b) { const d2 = Plantes.decrire(e.b); for (const pt of desc.parts) pt.bande = 0; for (const pt of d2.parts) { pt.bande = 1; desc.parts.push(pt); } }
       if (e.verrou) { const gris = K3.col('#a7a596'); desc.sol.lerp(gris, 0.5); for (const pt of desc.parts) pt.col = pt.col.clone().lerp(gris, 0.45); }
-      if (this.planches && e.propre) {
+      const fiss = e.sy >= 3 && (e.c ? e.p < 1 : e.b?.c && e.b.p < 1) && !e.paillage && !(e.neige > 0.3) ? (e.sy / 3) | 0 : 0;
+      if (e.planches && e.propre) {
         for (const pt of desc.parts) pt.y = (pt.y || 0) + 0.035;
-        desc.parts.unshift({ g: 'planche', d: 'planche', s: [1, 1, 1], col: desc.sol.clone() });
-        desc.solCase = K3.col(couleursSaison(ctx.doy, f.sec).h).clone().multiplyScalar(0.8);
+        desc.parts.unshift({ g: 'planches_m', d: 'planche', s: [1, 1, 1], col: desc.sol.clone(), sy: fiss ? 9 + fiss : 0 });
+        desc.solCase = desc.sol.clone().multiplyScalar(0.72);
+        if (e.serre) desc.parts.push({ g: 'arceaux', d: 'planche', s: [1, 1, 1], col: K3.col('#e8eef0') });
       }
       const ch = this.chunkDe(i);
       for (const pt of c.desc?.parts || []) this.salir(pt.g, ch);
@@ -325,6 +342,7 @@ const Rendu = {
       c.cle = cle; c.desc = desc;
       const sol = (desc.solCase || desc.sol).clone(); if (ctx.givre) sol.lerp(K3.col('#e6eef2'), 0.3);
       this.D.colorer(i, sol); this.solSale = true;
+      this.D.fissurer(i, fiss);
     }
     if (force) { Vie.jour(f, S.jour, f.meteo || {}, pature, nus); this.cloturer(pature); }
   },
@@ -355,34 +373,43 @@ const Rendu = {
   },
   // Champs voisins : teintes éteintes, piquets à ruban rouge et blanc sur le pourtour ; panneau à cadenas s'ils attendent un objectif
   majVerrous(f) {
-    const pl = this.pl, W = pl.w, H = pl.h, po = f.parcellesObjectif || {};
-    const voulu = new Map(); pl.unites.forEach((_, u) => { if (!f.parcelles[u]) voulu.set(u, po[u]); });
+    const pl = this.pl, W = pl.w, H = pl.h, po = parcellesAObjectif(f), actifs = new Set(objectifsActifs(f).map(o => o.id));
+    const voulu = new Map(); pl.unites.forEach((d, u) => { if (d.n && !f.parcelles[u]) voulu.set(u, actifs.has(po[u]) ? po[u] : null); });
     for (const [u, o] of this.verrous) if (!voulu.has(u)) { this.verrous.delete(u); this.anims.push({ o, t0: performance.now(), dur: 700, de: 1, a: 0, fin: () => this.scene.remove(o) }); }
     const K = K3, G = K.G, own = new Set(Object.keys(f.cases).map(k => { const [x, y] = k.split(',').map(Number); return y * W + x; }));
     for (const [u, id] of voulu) {
-      if (this.verrous.has(u)) continue;
-      const ob = id != null ? OBJ_PARCELLES.find(o => o.id === id) : null, ens = this.casesUnite(u), g = new T3.Group(), pieces = [];
-      // piquets blancs à tête rouge et ruban rouge et blanc
-      for (const sg of this.bordsDe(ens, 0.09)) {
-        const L = Math.hypot(sg.x1 - sg.x0, sg.y1 - sg.y0), n = Math.max(1, Math.round(L / 0.5)), ry = Math.atan2(-(sg.y1 - sg.y0), sg.x1 - sg.x0);
-        for (let k = 0; k <= n; k++) { const x = sg.x0 + (sg.x1 - sg.x0) * k / n - W / 2, z = sg.y0 + (sg.y1 - sg.y0) * k / n - H / 2; pieces.push(K.piece(G.boite(0.012, 0.12, 0.012), '#f4f1e8', [x, 0.06, z]), K.piece(G.boite(0.014, 0.025, 0.014), '#d8402a', [x, 0.125, z])); }
-        for (let k = 0; k < n * 2; k++) { const f0 = (k + 0.5) / (n * 2), x = sg.x0 + (sg.x1 - sg.x0) * f0 - W / 2, z = sg.y0 + (sg.y1 - sg.y0) * f0 - H / 2; pieces.push(K.piece(G.boite(L / (n * 2), 0.018, 0.003), k % 2 ? '#f4f1e8' : '#d8402a', [x, 0.1, z], [0, ry, 0])); }
+      let g = this.verrous.get(u);
+      if (!g) {
+        const pieces = []; g = new T3.Group();
+        // piquets blancs à tête rouge et ruban rouge et blanc
+        for (const sg of this.bordsDe(this.casesUnite(u), 0.09)) {
+          const L = Math.hypot(sg.x1 - sg.x0, sg.y1 - sg.y0), n = Math.max(1, Math.round(L / 0.5)), ry = Math.atan2(-(sg.y1 - sg.y0), sg.x1 - sg.x0);
+          for (let k = 0; k <= n; k++) { const x = sg.x0 + (sg.x1 - sg.x0) * k / n - W / 2, z = sg.y0 + (sg.y1 - sg.y0) * k / n - H / 2; pieces.push(K.piece(G.boite(0.012, 0.12, 0.012), '#f4f1e8', [x, 0.06, z]), K.piece(G.boite(0.014, 0.025, 0.014), '#d8402a', [x, 0.125, z])); }
+          for (let k = 0; k < n * 2; k++) { const f0 = (k + 0.5) / (n * 2), x = sg.x0 + (sg.x1 - sg.x0) * f0 - W / 2, z = sg.y0 + (sg.y1 - sg.y0) * f0 - H / 2; pieces.push(K.piece(G.boite(L / (n * 2), 0.018, 0.003), k % 2 ? '#f4f1e8' : '#d8402a', [x, 0.1, z], [0, ry, 0])); }
+        }
+        K.mesh(g, K.fusion(pieces), K.matV()).castShadow = false;
+        g.userData.obj = null;
+        this.sansOmbre(g); this.scene.add(g); this.verrous.set(u, g);
       }
-      K.mesh(g, K.fusion(pieces), K.matV()).castShadow = false;
-      g.userData.nom = { cle: 'parcelle:voisine-' + (u + 1), libelle: 'Champ voisin' };
-      this.scene.add(g); this.verrous.set(u, g);
-      if (!ob) { this.sansOmbre(g); continue; }
-      // panneau à cadenas, sur la case la plus proche de l'exploitation
-      let mieux = [...ens][0], dm = 1e9;
-      for (const i of ens) for (const j of own) { const d = Math.hypot(i % W - j % W, ((i / W) | 0) - ((j / W) | 0)); if (d < dm) { dm = d; mieux = i; } }
-      const tex = this.texPanneau(ob.court), pan = new T3.Group();
-      K.mesh(pan, G.cyl(0.012, 0.014, 0.3, 5), K.mat('#7a5a3a'), [0, 0.15, 0]);
-      K.mesh(pan, G.boite(0.34, 0.18, 0.02), K.mat('#8a6440'), [0, 0.33, 0]);
-      const face = new T3.Mesh(new T3.PlaneGeometry(0.32, 0.16), K.patcher(new T3.MeshStandardMaterial({ map: tex, roughness: 0.9 }))); face.position.set(0, 0.33, 0.011); pan.add(face);
-      pan.position.set(mieux % W + 0.5 - W / 2, 0.004, ((mieux / W) | 0) + 0.5 - H / 2); pan.rotation.y = this.cam.AZ; pan.scale.setScalar(1.5);
-      g.add(pan); this.sansOmbre(g);
-      g.userData.nom = { cle: 'parcelle:verrou-' + (u + 1), libelle: `Parcelle à débloquer · objectif : ${ob.txt}` };
+      if (g.userData.obj !== id) this.panneauVerrou(g, u, id != null ? OBJ_PARCELLES.find(o => o.id === id) : null, own);
     }
+  },
+  // Panneau à cadenas des trois objectifs visibles, écrit sur ses deux faces, sur la case la plus proche de l'exploitation
+  panneauVerrou(g, u, ob, own) {
+    const K = K3, G = K.G, W = this.pl.w, H = this.pl.h, ens = this.casesUnite(u);
+    if (g.userData.panneau) { g.remove(g.userData.panneau); g.userData.tex?.dispose(); g.userData.panneau = null; }
+    g.userData.obj = ob ? ob.id : null;
+    g.userData.nom = ob ? { cle: 'parcelle:verrou-' + (u + 1), libelle: `Parcelle à débloquer · objectif : ${ob.txt}` } : { cle: 'parcelle:voisine-' + (u + 1), libelle: 'Champ voisin' };
+    if (!ob) return;
+    let mieux = [...ens][0], dm = 1e9;
+    for (const i of ens) for (const j of own) { const d = Math.hypot(i % W - j % W, ((i / W) | 0) - ((j / W) | 0)); if (d < dm) { dm = d; mieux = i; } }
+    const tex = this.texPanneau(ob.court), pan = new T3.Group(), mat = K.patcher(new T3.MeshStandardMaterial({ map: tex, roughness: 0.9 }));
+    K.mesh(pan, G.cyl(0.012, 0.014, 0.3, 5), K.mat('#7a5a3a'), [0, 0.15, 0]);
+    K.mesh(pan, G.boite(0.34, 0.18, 0.02), K.mat('#8a6440'), [0, 0.33, 0]);
+    for (const cote of [1, -1]) { const face = new T3.Mesh(new T3.PlaneGeometry(0.32, 0.16), mat); face.position.set(0, 0.33, 0.011 * cote); if (cote < 0) face.rotation.y = Math.PI; pan.add(face); }
+    pan.position.set(mieux % W + 0.5 - W / 2, 0.004, ((mieux / W) | 0) + 0.5 - H / 2); pan.rotation.y = this.cam.AZ; pan.scale.setScalar(1.5);
+    g.add(pan); this.sansOmbre(pan);
+    g.userData.panneau = pan; g.userData.tex = tex;
   },
   texPanneau(txt) {
     const c = document.createElement('canvas'); c.width = 256; c.height = 128; const g = c.getContext('2d');
@@ -477,7 +504,10 @@ const Rendu = {
     p.sale = true;
   },
   _mats: new Map(),
-  matPlante(souple) { let m = this._mats.get(souple); if (!m) { m = K3.matV({ side: T3.DoubleSide, roughness: 0.85 }, this.reduit ? 0 : souple); this._mats.set(souple, m); } return m; },
+  symptomes: new Map(),   // parcelle → code d'alerte : 3 × eau + azote, de 0 (rien) à 2 (marqué), tenu à jour par Alertes.maj
+  matPlante(souple) { let m = this._mats.get(souple); if (!m) { m = K3.matV({ side: T3.DoubleSide, roughness: 0.85 }, this.reduit ? 0 : souple, true); this._mats.set(souple, m); } return m; },
+  matPlanche() { return (this._matPlanche ||= K3.fissurable(K3.matV({ side: T3.DoubleSide, roughness: 0.85 }, 0, true), true)); },
+  RETRAIT: 0.17,   // cases : largeur laissée nue entre la culture et une haie
   // Réécrit les instances d'un modèle dans un bloc
   reconstruire(p) {
     const W = this.pl.w, H = this.pl.h, cases = this.chunks[p.ch].cases, DISPO = Plantes.DISPO;
@@ -486,7 +516,7 @@ const Rendu = {
     if (n > p.cap) {
       if (p.im) { this.scene.remove(p.im); p.im.dispose(); }
       p.cap = Math.ceil(n * 1.4) + 8;
-      const im = new T3.InstancedMesh(Plantes.geo(p.g), this.matPlante(Plantes.SOUPLE[p.g] || 0), p.cap);
+      const im = new T3.InstancedMesh(Plantes.geo(p.g), p.g === 'planches_m' ? this.matPlanche() : this.matPlante(Plantes.SOUPLE[p.g] || 0), p.cap);
       im.instanceColor = new T3.InstancedBufferAttribute(new Float32Array(p.cap * 3), 3);
       im.castShadow = Plantes.OMBRE.has(p.g); im.receiveShadow = true; im.frustumCulled = false; im.userData.partage = true; im.userData.pool = true;
       this.scene.add(im); p.im = im;
@@ -496,7 +526,7 @@ const Rendu = {
     let o = 0;
     for (const i of cases) {
       const desc = this.cel[i].desc; if (!desc) continue;
-      const x = i % W, y = (i / W) | 0, x0 = x - W / 2, z0 = y - H / 2, cp = this.coupes.get(i), co = this.D.coinDe?.(i);
+      const x = i % W, y = (i / W) | 0, x0 = x - W / 2, z0 = y - H / 2, cp = this.coupes.get(i), co = this.D.coinDe?.(i), rt = this.D.retrait?.(i);
       for (const pt of desc.parts) {
         if (pt.g !== p.g) continue;
         const d = DISPO[pt.d], cont = d.m === 1, tilt = pt.tilt ?? 0.04, c = pt.col;
@@ -504,15 +534,22 @@ const Rendu = {
           const idx = r * d.m + k, h1 = hasard(x, y, idx * 3 + 1), h2 = hasard(x, y, idx * 3 + 2), h3 = hasard(x, y, idx * 3 + 3);
           if (pt.dens && h3 > pt.dens) continue;
           let px = x0 + (cont ? 0.5 : (k + 0.5 + (h1 - 0.5) * d.j) / d.m), pz = z0 + (r + 0.5 + (cont ? 0 : (h2 - 0.5) * d.j)) / d.n, lx = 1;
+          if (pt.bande != null && (Math.floor(clamp01(pz - z0) * 5.999) & 1) !== pt.bande) continue;   // cultures associées : bandes alternées le long des rangs
           if (co) {   // coin arrondi : rien au-delà de l'arc ; un rang continu s'arrête à l'arc
             const R = co.r - 0.06, dx = px + W / 2 - co.ox, dz = pz + H / 2 - co.oz;
             if (cont) { if (dz * co.sz > 0) { const lim = co.ox - W / 2 + co.sx * (Math.abs(dz) < R ? Math.sqrt(R * R - dz * dz) : 0), a = co.sx > 0 ? x0 : Math.max(x0, lim), b = co.sx > 0 ? Math.min(x0 + 1, lim) : x0 + 1; if (b < a + 0.03) continue; px = (a + b) / 2; lx = b - a; } }
             else if (dx * co.sx > 0 && dz * co.sz > 0 && Math.hypot(dx, dz) > R) continue;
           }
+          if (rt) {   // une haie sur ce bord : la culture s'arrête avant elle
+            const fx = px - x0, fz = pz - z0, M = this.RETRAIT;
+            if ((rt[0] && fz < M) || (rt[2] && fz > 1 - M)) continue;
+            if (cont) { const g = Math.max(px - lx / 2, x0 + (rt[3] ? M : 0)), d = Math.min(px + lx / 2, x0 + 1 - (rt[1] ? M : 0)); if (d < g + 0.03) continue; px = (g + d) / 2; lx = d - g; }
+            else if ((rt[3] && fx < M) || (rt[1] && fx > 1 - M)) continue;
+          }
           const ry = cont ? 0 : pt.rot != null ? pt.rot + (h1 - 0.5) * 0.35 : h3 * 6.2832, v = cont ? 1 : 0.86 + 0.28 * h2, vy = (cont ? 1 : 0.92 + 0.16 * h1) * (cp && cp.s * (px - cp.fx) < 0 ? 0.1 : 1);
           K3.matrice(M, o * 16, px, base + (pt.y || 0), pz, ry, cont ? 0 : (h1 - 0.5) * 2 * tilt, cont ? 0 : (h2 - 0.5) * 2 * tilt, pt.s[0] * v * lx, pt.s[1] * v * vy, pt.s[2] * v);
           const b = cont ? 1 : 0.9 + 0.2 * h1;
-          C[o * 3] = c.r * b; C[o * 3 + 1] = c.g * b; C[o * 3 + 2] = c.b * b; o++;
+          C[o * 3] = c.r * b + 2 * (pt.sy || 0); C[o * 3 + 1] = c.g * b; C[o * 3 + 2] = c.b * b; o++;
         }
       }
     }
@@ -523,7 +560,7 @@ const Rendu = {
   // ---------- Animation d'un champ : la machine passe rang par rang (semis ou récolte) ----------
   // cases : [[x, y], …] ; avant : Map 'x,y' → { c, p, v, pourri } pour la récolte. Rend [{ x, y, fin }] (ms depuis maintenant).
   // opts.livrer(kg) : récolte portée à la ferme par un tracteur et sa benne ; les tonnes ne comptent qu'à la livraison
-  transporte(machine) { return !!(this.gl && this.pl && !this.planches && this.D.ferme && ['moissonneuse', 'arracheuse'].includes(machine) && !this.reduit); },
+  transporte(machine) { return !!(this.gl && this.pl && !this.planches && this.D.ferme && ['moissonneuse', 'arracheuse', 'faucheuse', 'ensileuse'].includes(machine) && !this.reduit); },
   transportEnCours() { return this.passages.some(p => p.transport) || Machines.flotte.some(u => u.charge > 1 && !u.livre); },
   animerChamp(cases, type, machine, avant, retard = 0, opts = {}) {
     if (!this.gl || !this.pl) return cases.map(([x, y]) => ({ x, y, fin: retard }));
@@ -536,16 +573,19 @@ const Rendu = {
     const sortie = machine !== 'personne' && !this.planches && !!this.D.ferme && !this.reduit;
     const personne = machine === 'personne', v = this.reduit ? 40 : personne ? 2.6 : transport ? 1.7 : 4.2, avance = machine === 'moissonneuse' ? 0.05 : machine === 'semoir' || machine === 'charrue' ? -0.3 : 0;
     // la moisson commence par le rang qui longe la route ou le chemin le plus proche : la benne ne roule jamais dans le blé debout
-    const sens = transport ? this.sensRangs(cases) : 1;
-    const { pts, passe } = this.trajet(cases, personne ? 0.16 : 0.34, avance, sens);
-    const P = { transport };
+    const E = sortie ? this.entree(cases) : null, sens = E ? E.sens : transport ? this.sensRangs(cases) : 1;
+    const { pts, passe } = this.trajet(cases, personne ? 0.16 : 0.34, avance, sens, E);
+    const P = { transport, entree: E, apres: opts.apres || null };
     const sortie_ = passe.map(c => {
       const av = type === 'recolte' ? avant?.get(c.x + ',' + c.y) || null : null;
-      this.revel.set(c.y * W + c.x, sortie ? { jusque: Infinity, avant: av, passe: P, dPass: c.d, kg: av?.kg || 0, voisin: type === 'labour' } : { jusque: now + retard + c.d / v * 1000, avant: av, voisin: type === 'labour' });
+      if (!opts.sansVoile) {
+        const i = c.y * W + c.x, ap = opts.apres, lab = ap?.dCases ? { labourDe: ap, dLab: ap.dCases.get(i) ?? 0 } : null;
+        this.revel.set(i, Object.assign(sortie ? { jusque: Infinity, avant: av, passe: P, dPass: c.d, kg: av?.kg || 0, voisin: type === 'labour' } : { jusque: now + retard + c.d / v * 1000, avant: av, voisin: type === 'labour' }, { slots: opts.slots }, lab));
+      }
       return { x: c.x, y: c.y, d: c.d };
     });
     // la machine
-    const o = this.machine(machine); o.visible = false; o.userData.nom = { cle: 'machine:' + machine, libelle: { moissonneuse: 'Moissonneuse-batteuse', semoir: 'Tracteur et semoir', arracheuse: 'Tracteur et arracheuse', charrue: 'Tracteur et charrue', personne: 'Maraîcher' }[machine] || 'Machine' }; this.scene.add(o);
+    const o = this.machine(machine); o.visible = false; o.userData.nom = { cle: 'machine:' + machine, libelle: { moissonneuse: 'Moissonneuse-batteuse', semoir: 'Tracteur et semoir', arracheuse: 'Tracteur et arracheuse', faucheuse: 'Tracteur et faucheuse', ensileuse: 'Tracteur et ensileuse', charrue: 'Tracteur et charrue', personne: 'Maraîcher' }[machine] || 'Machine' }; this.scene.add(o);
     const L = Decor.longueur(pts);
     Object.assign(P, { o, pts: pts.map(([x, z]) => [x - W / 2, z - H / 2]), L, v, t0: now + retard, type: machine, recolte: type === 'recolte', derniere: 0, sortie, d: -1, reste: passe.length, sens });
     if (transport) Object.assign(P, { tremie: 0, livrer: opts.livrer });
@@ -554,20 +594,53 @@ const Rendu = {
     for (const c of sortie_) c.fin = retard + trajetMs + c.d / v * 1000;
     this.passages.push(P);
     this.majCases(F(), this.ctx || this.contexte(F()), false, cases.map(([x, y]) => y * W + x));
-    return sortie_.map(({ x, y, fin }) => ({ x, y, fin }));
+    if (type === 'labour') P.dCases = new Map(sortie_.map(c => [c.y * W + c.x, c.d]));
+    const res = sortie_.map(({ x, y, fin }) => ({ x, y, fin })); res.passage = P;
+    return res;
+  },
+  // Par où un engin entre dans un champ : le coin de départ des rangs ouvert sur une route ou un chemin, de préférence dans
+  // l'axe des rangs (nx, y sur le réseau), sinon par le côté. Rend { sens, cote, y, xe, nx, axial, xin, col, fin, approche, rangs }
+  // (xin, en cases, début du premier rang ; fin, approche, en monde : dernier point de route et points jusqu'au rang).
+  entree(cases) {
+    const pl = this.pl, W = pl.w, H = pl.h, wx = x => x + 0.5 - W / 2, wz = y => y + 0.5 - H / 2;
+    const rangs = new Map();
+    for (const [x, y] of cases) { const r = rangs.get(y) || { a: x, b: x + 1 }; r.a = Math.min(r.a, x); r.b = Math.max(r.b, x + 1); rangs.set(y, r); }
+    const ys = [...rangs.keys()].sort((a, b) => a - b), bout = Machines.bout(), cands = [];
+    for (const { sens, cote, y, xe, nx, a, b, axial, cote2, par } of Carte.entrees(pl, cases)) {
+      const zr = wz(y), col = cote > 0 ? a + 0.22 - W / 2 : b - 0.22 - W / 2;
+      let E;
+      if (par) {
+        // pas de route au coin : à travers le champ voisin et le trou de la haie, jusqu'au début du premier rang
+        const cr = par.at(-1), app = par.slice(1, -1).reverse().map(i => [wx(i % W), wz((i / W) | 0)]);
+        E = { sens, cote, y, xe, nx, axial: false, xin: cote > 0 ? a + 0.64 : b - 0.64, col, fin: [wx(cr % W), wz((cr / W) | 0)], approche: [...app, [col, zr]], retour: [...app].reverse() };
+      } else E = axial
+        ? { sens, cote, y, xe, nx, axial, xin: cote > 0 ? a - 0.12 : b + 0.12, col: wx(xe), fin: [wx(nx), zr], approche: [] }
+        : { sens, cote, y, xe, nx, axial, xin: cote > 0 ? a + 0.64 : b - 0.64, col, fin: [col, wz(y - sens)], approche: [[col, zr]] };
+      // on n'arrive pas à contresens du premier rang : ce serait un demi-tour dans le coin du champ
+      const ch = this.parLesRoutes(bout, E.fin), p = ch.at(-2) || bout, q = ch.at(-1), l = Math.hypot(q[0] - p[0], q[1] - p[1]) || 1;
+      const contre = !axial && !par && (q[0] - p[0]) / l * cote < -0.5 ? 4 : 0;
+      cands.push({ E, note: (par ? 10 + par.length / 4 : axial && cote2 ? 0 : axial ? 1 : 2) + contre + Decor.longueur(ch) / 200 });
+    }
+    if (!cands.length) return null;
+    const E = cands.sort((m, n) => m.note - n.note)[0].E;
+    E.rangs = rangs; E.ys = ys;
+    return E;
   },
   // Trajet en cases : chaque rang de bout en bout, demi-tour en demi-ellipse au-delà des deux bouts de rang (fournière)
-  trajet(cases, RX, avance, sens = 1) {
+  // E : entrée du champ (engin venu de la grange) ; sans elle, on commence et on finit 0,7 case hors du champ
+  trajet(cases, RX, avance, sens = 1, E = null) {
     const rangs = new Map();
     for (const [x, y] of cases) { if (!rangs.has(y)) rangs.set(y, []); rangs.get(y).push(x); }
     const ys = [...rangs.keys()].sort((a, b) => (a - b) * sens);
-    const R = ys.map((y, r) => { const xs = rangs.get(y).sort((a, b) => a - b); return { y, xs, a: xs[0], b: xs.at(-1) + 1, s: r % 2 ? -1 : 1 }; });
+    const R = ys.map((y, r) => { const xs = rangs.get(y).sort((a, b) => a - b); return { y, xs, a: xs[0], b: xs.at(-1) + 1, s: (r % 2 ? -1 : 1) * (E ? E.cote : 1) }; });
     const pts = [], passe = []; let L = 0;
     const ajout = (x, z) => { const p = pts.at(-1); if (p) L += Math.hypot(x - p[0], z - p[1]); pts.push([x, z]); };
     R.forEach((r, k) => {
       const z = r.y + 0.5, prev = R[k - 1], next = R[k + 1];
-      const xin = k === 0 ? (r.s > 0 ? r.a - 0.7 : r.b + 0.7) : (r.s > 0 ? Math.min(r.a, prev.a) : Math.max(r.b, prev.b));
-      const xout = !next ? (r.s > 0 ? r.b + 0.7 : r.a - 0.7) : (r.s > 0 ? Math.max(r.b, next.b) : Math.min(r.a, next.a));
+      const xin = k === 0 ? (E ? E.xin : r.s > 0 ? r.a - 0.7 : r.b + 0.7) : (r.s > 0 ? Math.min(r.a, prev.a) : Math.max(r.b, prev.b));
+      // dernier rang : on ne dépasse le champ que si le bout du rang donne sur une route ou un chemin
+      const finRang = !E ? 0.7 : 'rp'.includes(this.pl.types[r.y]?.[r.s > 0 ? r.b : r.a - 1] || '#') ? 0.3 : -0.05;
+      const xout = !next ? (r.s > 0 ? r.b + finRang : r.a - finRang) : (r.s > 0 ? Math.max(r.b, next.b) : Math.min(r.a, next.a));
       if (k === 0) ajout(xin, z);
       const L0 = L;
       for (const x of (r.s > 0 ? r.xs : [...r.xs].reverse())) passe.push({ x, y: r.y, d: Math.max(0, L0 + Math.abs(x + 0.5 - xin) - avance) });
@@ -605,12 +678,22 @@ const Rendu = {
     const cs = []; for (let j = b; j !== -1; j = prev.get(j)) cs.push(j); cs.reverse();
     let pts = cs.map(i => [i % W + 0.5 - W / 2, ((i / W) | 0) + 0.5 - H / 2]);
     if (pts.length > 2) pts = Decor.simplifier(pts, 0.6);
+    // pas de centre de case derrière soi : au départ comme à l'arrivée, ce serait un demi-tour sur la route
+    const recule = (u, v, w) => { const ax = v[0] - u[0], az = v[1] - u[1], bx = w[0] - v[0], bz = w[1] - v[1], la = Math.hypot(ax, az), lb = Math.hypot(bx, bz); return la > 1e-6 && lb > 1e-6 && (ax * bx + az * bz) / (la * lb) < -0.2; };
+    while (pts.length >= 2 && recule(de, pts[0], pts[1])) pts.shift();
+    while (pts.length >= 2 && recule(pts.at(-2), pts.at(-1), vers)) pts.pop();
+    if (pts.length === 1 && recule(de, pts[0], vers)) pts = [];
+    if (pts.length && Math.hypot(pts.at(-1)[0] - vers[0], pts.at(-1)[1] - vers[1]) < 0.05) pts.pop();
     return [de, ...pts, vers];
   },
   // Tout ce qui est encore en route (trémie, benne, cases pas encore fauchées) est livré d'un coup
   viderTransports() {
     for (const u of Machines.flotte) if (u.charge > 1 && u.source && !u.livre) { u.source.livrer(u.charge); u.charge = 0; }
     for (const p of this.passages) if (p.transport) { let kg = p.tremie; for (const rv of this.revel.values()) if (rv.passe === p) kg += rv.kg || 0; if (kg > 0) p.livrer(kg); p.tremie = 0; }
+  },
+  ecranDe(x, y, z) {
+    const r = this.cv.getBoundingClientRect(), v = new T3.Vector3(x, y, z).project(this.camera);
+    return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height };
   },
   centreFerme() {
     const r = this.cv.getBoundingClientRect();
@@ -661,6 +744,19 @@ const Rendu = {
       const corps = []; for (let i = 0; i < 3; i++) corps.push(K.piece(G.boite(0.12, 0.06, 0.02), '#9aa0a8', [-0.3 - i * 0.1, 0.05, 0.12 + i * 0.08], [0, 0.6, 0.3]), K.piece(G.cyl(0.006, 0.006, 0.12, 4), '#3a3a3a', [-0.3 - i * 0.1, 0.11, 0.12 + i * 0.08]));
       K.mesh(g, K.fusion([...tracteur('#d4672a'), K.piece(G.boite(0.36, 0.025, 0.025), '#3a4a6a', [-0.34, 0.16, 0.18], [0, 0.55, 0]), ...corps, ...roue(-0.5, 0.36, 0.05, 0.03)]), K.matV());
       g.userData.terre = true; g.add(Vie.ombre(0.26, 0.34));
+    } else if (type === 'faucheuse') {
+      // barre de coupe latérale, à droite du tracteur
+      const dents = Array.from({ length: 11 }, (_, i) => K.piece(G.boite(0.05, 0.006, 0.012), '#c8ccd0', [0.03, 0.035, 0.14 + i * 0.05]));
+      K.mesh(g, K.fusion([...tracteur('#2f6a9a'), K.piece(G.boite(0.05, 0.02, 0.62), '#9aa0a8', [0, 0.04, 0.44]), ...dents, K.piece(G.boite(0.2, 0.012, 0.02), '#4a4038', [-0.07, 0.09, 0.08], [0, 0.5, 0]), K.piece(G.cyl(0.03, 0.03, 0.012, 8), '#3a3a3a', [0, 0.03, 0.76], [Math.PI / 2, 0, 0])]), K.matV());
+      g.add(Vie.ombre(0.28, 0.4));
+    } else if (type === 'ensileuse') {
+      // ensileuse tractée, goulotte vers l'arrière
+      K.mesh(g, K.fusion([...tracteur('#c8552a'),
+        K.piece(G.boite(0.3, 0.16, 0.5), '#3a8a4a', [-0.34, 0.16, 0.08]), K.piece(G.boite(0.14, 0.1, 0.62), '#e2b62a', [-0.14, 0.09, 0.08]), K.piece(G.boite(0.2, 0.02, 0.06), '#4a4038', [-0.2, 0.2, 0]),
+        ...roue(-0.36, 0.33, 0.07, 0.04), ...roue(-0.36, -0.2, 0.07, 0.04),
+        K.piece(G.cyl(0.03, 0.03, 0.42, 6), '#2f7a3f', [-0.5, 0.42, 0.06], [0, 0, 0.75]), K.piece(G.cyl(0.03, 0.022, 0.12, 6), '#2f7a3f', [-0.68, 0.58, 0.06], [0, 0, 1.45]),
+      ]), K.matV());
+      g.add(Vie.ombre(0.34, 0.36));
     } else if (type === 'arracheuse') {
       K.mesh(g, K.fusion([...tracteur('#3f7a3a'),
         K.piece(G.boite(0.3, 0.1, 0.4), '#8a5a3a', [-0.36, 0.12, 0.05]), K.piece(G.boite(0.3, 0.02, 0.42), '#a87a4a', [-0.36, 0.18, 0.05]),
@@ -715,8 +811,8 @@ const Rendu = {
     p.o.visible = true; p.o.position.set(a.x, 0.004, a.z); p.o.rotation.y = -cap; p.o.scale.setScalar(Math.max(0.01, k));
     if (p.o.userData.rabatteur) p.o.userData.rabatteur.rotation.z = -t / 1000 * 5;
     // la barre de coupe (0,55 case devant le centre) couche les tiges une à une sur le rang en cours
-    if (p.recolte && p.type === 'moissonneuse' && Math.abs(Math.sin(cap)) < 0.2 && d < p.L) {
-      const sx = Math.sign(Math.cos(cap)), fx = a.x + Math.cos(cap) * 0.55, fz = a.z + Math.sin(cap) * 0.55, W = this.pl.w, H = this.pl.h;
+    if (p.recolte && ['moissonneuse', 'faucheuse', 'ensileuse'].includes(p.type) && Math.abs(Math.sin(cap)) < 0.2 && d < p.L) {
+      const sx = Math.sign(Math.cos(cap)), fx = a.x + Math.cos(cap) * (p.type === 'moissonneuse' ? 0.55 : 0.12), fz = a.z + Math.sin(cap) * 0.55, W = this.pl.w, H = this.pl.h;
       const tx = Math.floor(fx + W / 2), ty = Math.floor(fz + H / 2), i = ty * W + tx, rv = this.revel.get(i);
       if (tx >= 0 && tx < W && ty >= 0 && ty < H && rv && rv.avant) {
         this.coupes.set(i, { fx, s: sx });
@@ -728,7 +824,7 @@ const Rendu = {
     if (!this.reduit && t - p.derniere > 40 && k > 0.5) {
       p.derniere = t;
       const arriere = p.type === 'moissonneuse' ? 0.4 : p.type === 'personne' ? 0.05 : 0.38, cx = a.x - Math.cos(cap) * arriere, cz = a.z - Math.sin(cap) * arriere;
-      const n = p.type === 'personne' ? 1 : 3, cols = p.type === 'moissonneuse' ? ['#e8d08a', '#c8a860', '#f2e2a8'] : p.type === 'arracheuse' || p.type === 'charrue' ? ['#8a6440', '#6a4a2a'] : ['#b89870', '#d8c098'];
+      const n = p.type === 'personne' ? 1 : 3, cols = p.type === 'moissonneuse' ? ['#e8d08a', '#c8a860', '#f2e2a8'] : p.type === 'faucheuse' || p.type === 'ensileuse' ? ['#a8c060', '#c8d080', '#d8c88a'] : p.type === 'arracheuse' || p.type === 'charrue' ? ['#8a6440', '#6a4a2a'] : ['#b89870', '#d8c098'];
       for (let i = 0; i < n; i++) this.parts.push({ x: cx + (Math.random() - 0.5) * 0.3, y: p.type === 'moissonneuse' ? 0.45 : 0.08, z: cz + (Math.random() - 0.5) * 0.3, vx: -Math.cos(cap) * (0.3 + Math.random() * 0.5) + (Math.random() - 0.5) * 0.3, vy: 0.2 + Math.random() * 0.5, vz: -Math.sin(cap) * (0.3 + Math.random() * 0.5) + (Math.random() - 0.5) * 0.3, g: 1.4, vie: 0.8 + Math.random() * 0.6, age: 0, c: K3.col(cols[i % cols.length]) });
     }
   },
@@ -775,7 +871,7 @@ const Rendu = {
   // ---------- Calques de jeu : limite de la ferme, champs mûrs, survol, sélection ----------
   calques() {
     const mk = (c, o, dt = false, ro = 20) => { const m = new T3.Mesh(new T3.BufferGeometry(), new T3.MeshBasicMaterial({ color: K3.col(c), transparent: true, opacity: o, depthTest: dt, depthWrite: false })); m.renderOrder = ro; m.frustumCulled = false; this.scene.add(m); return m; };
-    this.cLimite = mk('#fade8c', 0.9, true, 3); this.cMurs = mk('#ffd65a', 0.6, true, 4); this.cSurvol = mk('#ffffff', 0.7); this.cSel = mk('#ffe27a', 0.95); this.cCase = mk('#ffffff', 0.14);
+    this.cLimite = mk('#fade8c', 0.9, true, 3); this.cMurs = mk('#ffd65a', 0.6, true, 4); this.cSurvol = mk('#ffffff', 0.7); this.cSel = mk('#ffe27a', 0.95); this.cCase = mk('#ffffff', 0.14); this.cGrille = mk('#ffffff', 0.5, false, 18); this.cChoix = mk('#ffe27a', 0.42, false, 19); this.cChoixB = mk('#ffe27a', 0.95);
     const pts = new T3.BufferGeometry(); pts.setAttribute('position', new T3.BufferAttribute(new Float32Array(600 * 3), 3)); pts.setAttribute('color', new T3.BufferAttribute(new Float32Array(600 * 3), 3));
     this.points = new T3.Points(pts, new T3.PointsMaterial({ size: 0.035, vertexColors: true, transparent: true, opacity: 0.95, depthWrite: false })); this.points.frustumCulled = false; this.scene.add(this.points);
     const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
@@ -802,12 +898,55 @@ const Rendu = {
     }
     const g = new T3.BufferGeometry(); g.setAttribute('position', new T3.Float32BufferAttribute(pos, 3)); return g;
   },
+  // Découpe en cours (jeu.js) : { cases, sel } pour une division, { voisines } pour une fusion
+  majDecoupe(W) {
+    const d = this.decoupe, cl = !d ? '' : d.voisines ? 'f' + [...d.voisines].join(',') : 'd' + d.u + '|' + [...d.sel].sort((a, b) => a - b).join(',');
+    if (cl === this.cleDecoupe) return;
+    this.cleDecoupe = cl;
+    const H = this.pl.h, nappe = (ens, y) => { const pos = []; for (const i of ens) { const x = i % W - W / 2, z = ((i / W) | 0) - H / 2; pos.push(x, y, z, x, y, z + 1, x + 1, y, z, x + 1, y, z, x, y, z + 1, x + 1, y, z + 1); } const g = new T3.BufferGeometry(); g.setAttribute('position', new T3.Float32BufferAttribute(pos, 3)); return g; };
+    const coller = gs => { const g = new T3.BufferGeometry(); g.setAttribute('position', new T3.Float32BufferAttribute(gs.flatMap(q => { const a = [...q.attributes.position.array]; q.dispose(); return a; }), 3)); return g; };
+    const choisis = d ? (d.voisines || d.sel) : new Set();
+    this.remplacer(this.cGrille, d?.cases ? coller([...d.cases].map(i => this.bordure(new Set([i]), 0.012, 0.058))) : new T3.BufferGeometry());
+    this.remplacer(this.cChoix, nappe(choisis, 0.06));
+    this.remplacer(this.cChoixB, choisis.size ? this.bordure(choisis, 0.05, 0.065) : new T3.BufferGeometry());
+  },
+  // Le découpage a changé : haies, bords du sol, contours et recul des plantes se recalculent sans toucher aux engins
+  replan() {
+    if (!this.gl || !this.pl) return;
+    this.D.replan?.();
+    this.cleLimite = ''; this.cleMurs = ''; this.cleSel = ''; this.cleDecoupe = null; this.uniteSurvol = null; this.solSale = true; this.ombreSale = true; this.jourVu = -1;
+    for (const p of this.pools.values()) p.sale = true;
+  },
+  // Un engin est-il à l'ouvrage (ou en route) sur l'une de ces cases ?
+  enTravail(ens) { for (const [i, rv] of this.revel) if (rv.passe && ens.has(i)) return true; return false; },
   casesUnite(u) { const pl = this.pl, s = new Set(); for (let i = 0; i < pl.unite.length; i++) if (pl.unite[i] === u) s.add(i); return s; },
   remplacer(m, g) { m.geometry.dispose(); m.geometry = g; },
+  // Bâches des tunnels : un seul maillage translucide, refait quand la liste des cases sous serre change
+  majSerres(f) {
+    const W = this.pl.w, H = this.pl.h, L = [];
+    for (const k in f.cases) if (MODES[f.cases[k].mode].serre) { const [x, y] = k.split(',').map(Number); L.push([x, y]); }
+    const cle = S.active + '|' + L.map(c => c[1] * W + c[0]).sort((a, b) => a - b).join(',');
+    if (cle === this.cleSerres) return;
+    this.cleSerres = cle;
+    if (this.serres) { this.scene.remove(this.serres); this.serres.geometry.dispose(); this.serres = null; }
+    if (!L.length) return;
+    const pos = [], R = 0.135, N = 8;
+    for (const [x, y] of L) for (let b = 0; b < 3; b++) {
+      const x0 = x - W / 2, x1 = x0 + 1, zc = y - H / 2 + (b + 0.5) / 3;
+      for (let a = 0; a < N; a++) {
+        const t0 = Math.PI * a / N, t1 = Math.PI * (a + 1) / N, z0 = zc + R * Math.cos(t0), z1 = zc + R * Math.cos(t1), h0 = 0.005 + R * 1.15 * Math.sin(t0), h1 = 0.005 + R * 1.15 * Math.sin(t1);
+        pos.push(x0, h0, z0, x1, h0, z0, x1, h1, z1, x0, h0, z0, x1, h1, z1, x0, h1, z1);
+      }
+    }
+    const g = new T3.BufferGeometry(); g.setAttribute('position', new T3.Float32BufferAttribute(pos, 3)); g.computeVertexNormals();
+    this.matSerre ??= new T3.MeshStandardMaterial({ color: '#f1f6f7', transparent: true, opacity: 0.42, roughness: 0.3, side: T3.DoubleSide, depthWrite: false });
+    this.serres = new T3.Mesh(g, this.matSerre); this.serres.userData.nom = { cle: 'serres', libelle: 'Tunnels de maraîchage' };
+    this.scene.add(this.serres);
+  },
   recenserMurs(f, t) {
     this.dernierMur = t; this.murs = []; this.unitesMures = new Set();
     const pl = this.pl;
-    for (const k in f.cases) { const c = f.cases[k]; if (c.cult && c.p >= 1) { const [x, y] = k.split(',').map(Number); this.murs.push([x, y]); this.unitesMures.add(pl.unite[y * pl.w + x]); } }
+    for (const k in f.cases) { const c = f.cases[k]; if (creneaux(c).some(s => s.cult && s.p >= 1)) { const [x, y] = k.split(',').map(Number); this.murs.push([x, y]); this.unitesMures.add(pl.unite[y * pl.w + x]); } }
   },
   majCalques(t, f) {
     const pl = this.pl, W = pl.w, lw = this.planches ? 0.06 : 0.045;
@@ -819,9 +958,9 @@ const Rendu = {
     if (cm !== this.cleMurs) {
       // contour posé à la hauteur des plantes mûres : visible au-dessus des épis, caché derrière la machine ou la ferme
       this.cleMurs = cm; const geos = [];
-      const H = { mais: 0.68, sorgho: 0.55, topi: 0.75, tournesol: 0.64, epi: 0.33, avoine: 0.33, colza: 0.45, lin: 0.26 };
+      const H = { mais: 0.68, sorgho: 0.55, topi: 0.75, tournesol: 0.64, epi: 0.33, avoine: 0.33, colza: 0.45, lin: 0.26, miscanthus: 1.05, chanvre: 0.85, moutarde: 0.5, lupin: 0.34, luzerne: 0.2, prairie: 0.22, chicoree: 0.2, poisprot: 0.16 };
       for (const u of this.unitesMures) {
-        const cs = this.casesUnite(u), i0 = [...cs][0], c = f.cases[(i0 % W) + ',' + ((i0 / W) | 0)], fo = c?.cult ? CULTURE[c.cult].forme : '';
+        const cs = this.casesUnite(u), i0 = [...cs][0], c = f.cases[(i0 % W) + ',' + ((i0 / W) | 0)], q = c && creneaux(c).find(s => s.cult && s.p >= 1), fo = q ? CULTURE[q.cult].forme : '';
         geos.push(this.bordure(cs, lw, (H[fo] ?? 0.16) + 0.02));
       }
       const pos = geos.flatMap(g => [...g.attributes.position.array]), g = new T3.BufferGeometry(); g.setAttribute('position', new T3.Float32BufferAttribute(pos, 3)); geos.forEach(x => x.dispose());
@@ -843,6 +982,7 @@ const Rendu = {
     // sélection
     const sel = this.selection, cs = sel ? (sel.type === 'parcelle' ? 'p' + sel.u : 'c' + sel.tx + ',' + sel.ty) : '';
     if (cs !== this.cleSel) { this.cleSel = cs; this.remplacer(this.cSel, !sel ? new T3.BufferGeometry() : this.bordure(sel.type === 'parcelle' ? this.casesUnite(sel.u) : new Set([sel.ty * W + sel.tx]), lw * 1.1, 0.065)); }
+    this.majDecoupe(W);
     // ondes de clic
     this.ondes = this.ondes.filter(o => { const a = (performance.now() - o.t0) / 420; if (a >= 1) { this.scene.remove(o.m); o.m.geometry.dispose(); o.m.material.dispose(); return false; } o.m.scale.setScalar(0.06 + a * 0.4); o.m.material.opacity = 0.8 * (1 - a); return true; });
   },
@@ -871,10 +1011,10 @@ const Rendu = {
   // ---------- Image ----------
   dessiner(t, dt) {
     if (!this.gl || !this.pl) return;
-    const f = F(), mode = MODES[f.mode], c = this.cam;
+    const f = F(), mode = MODES.gc, c = this.cam;
     c.tt = t / 1000;
     // structure (achat, changement de mode) : tout revoir ; nouveau jour : tout revoir aussi (stades, saison, météo)
-    const cs = `${S.active}|${f.mode}|${Object.keys(f.parcelles).length}|${f.irrigation ? 1 : 0}`;
+    const cs = `${S.active}|${Object.keys(f.parcelles).length}|${f.irrigation ? 1 : 0}`;
     if (cs !== this.cleStruct || this.jourVu !== S.jour) {
       const ctx = this.contexte(f), nouveauJour = this.jourVu !== S.jour;
       this.cleStruct = cs; this.jourVu = S.jour;
@@ -896,6 +1036,8 @@ const Rendu = {
     // voiles des machines qui se lèvent : la case prend son nouvel état quand la machine passe
     if (this.revel.size) {
       const now = performance.now(), fini = [];
+      // la charrue a passé sur cette case : les sillons apparaissent derrière elle, en attendant le semoir
+      for (const [i, rv] of this.revel) if (rv.labourDe && !rv.labVue && (rv.labourDe.d >= rv.dLab || !this.passages.includes(rv.labourDe))) { rv.labVue = true; fini.push(i); }
       for (const [i, rv] of this.revel) if (now >= rv.jusque || (rv.passe && (rv.passe.d >= rv.dPass || !this.passages.includes(rv.passe)))) {
         fini.push(i); this.revel.delete(i); this.coupes.delete(i);
         if (rv.passe) { if (rv.passe.transport) rv.passe.tremie += rv.kg || 0; rv.passe.reste--; }
@@ -905,7 +1047,7 @@ const Rendu = {
     if (this.solSale) { this.D.solFini(); this.solSale = false; }
     for (const p of this.pools.values()) if (p.sale) this.reconstruire(p);
     if (t - this.dernierMur > 250) this.recenserMurs(f, t);
-    this.majCalques(t, f);
+    this.majCalques(t, f); this.majSerres(f);
     this.majVerrous(f); this.animer(t);
     this.sansBlocage(() => this.animerPassages(t, dt)); this.sansBlocage(() => { Machines.image(t, dt); Machines.majPortes(dt); });
     this.irrigation(t, f, mode);

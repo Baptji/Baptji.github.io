@@ -370,3 +370,54 @@ h3 { margin: 14px 0 6px; font-size: .78rem; text-transform: uppercase; letter-sp
 .fin-fiche { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; }
 .arracher { padding: 7px 10px; border-radius: 6px; border: 2px solid var(--border); background: var(--surface); color: inherit; box-shadow: 0 2px 0 var(--border); cursor: pointer; }
 .arracher:hover { border-color: var(--muted); }
+
+/* Alertes au-dessus des parcelles (maquette M.2) */
+.alertes { position: absolute; inset: 0; z-index: 3; overflow: hidden; pointer-events: none; }
+.alerte { position: absolute; left: 0; top: 0; display: flex; align-items: flex-end; gap: 6px; width: max-content; will-change: transform; }
+.excl { position: relative; display: block; width: 22px; height: 36px; }
+.excl svg { display: block; width: 22px; height: 36px; transform-origin: 50% 100%; filter: drop-shadow(0 3px 2px rgba(30, 15, 0, .35)); animation: saut-alerte 1.15s cubic-bezier(.45, .05, .55, .95) infinite; }
+@keyframes saut-alerte { 0%, 100% { transform: translateY(0) scale(1.02, .97); } 12% { transform: translateY(-1px); } 50% { transform: translateY(-7px) scale(1, 1.01); } 88% { transform: translateY(-1px); } }
+.ombre-sol { position: absolute; left: 2px; bottom: -5px; width: 18px; height: 6px; border-radius: 50%; background: rgba(30, 15, 0, .35); animation: ombre-alerte 1.15s ease-in-out infinite; }
+@keyframes ombre-alerte { 50% { transform: scale(.85); opacity: .75; } }
+.jeton { display: grid; justify-items: center; gap: 2px; width: 58px; }
+.jeton svg { width: 48px; height: 48px; filter: drop-shadow(0 3px 3px rgba(30, 15, 0, .4)); animation: plane-alerte 3.2s ease-in-out infinite; }
+@keyframes plane-alerte { 50% { transform: translateY(-6px); } }
+.jeton b { padding: 1px 7px; border-radius: 999px; background: var(--verre); border: 1px solid var(--verre-bord); font-size: .84rem; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 2px 5px rgba(30, 15, 0, .3); }
+.jeton b.tout-perdu { color: #fff; background: #b0402a; border-color: #b0402a; }
+@media (prefers-reduced-motion: reduce) { .excl svg, .ombre-sol, .jeton svg { animation: none; } }
+
+/* Faillite : bandeau en verre au-dessus de la scène (maquette M.2) */
+.faillite { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); z-index: 6; display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 16px; border-radius: 12px; background: var(--verre); border: 1px solid var(--verre-bord); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 6px 22px rgba(30, 20, 10, .22); }
+.faillite[hidden] { display: none; }
+.barre-div { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 6; display: flex; align-items: center; gap: 12px; padding: 7px 8px 7px 16px; border-radius: 12px; background: var(--verre); border: 1px solid var(--verre-bord); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 6px 18px rgba(40, 24, 8, .28); font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 600; }
+.barre-div[hidden] { display: none; }
+.barre-div small { font-size: .86rem; font-weight: 500; color: var(--mauvais); }
+.bt-sec { padding: 6px 12px; border-radius: 6px; border: 2px solid var(--border); background: var(--surface); color: inherit; box-shadow: 0 2px 0 var(--border); cursor: pointer; }
+.decoupe-b { margin-top: 6px; }
+.icones { display: flex; justify-content: flex-end; gap: 6px; margin-top: 8px; }
+.ic { width: 32px; height: 32px; padding: 0; display: grid; place-items: center; border-radius: 5px; border: 2px solid var(--border); background: var(--surface); box-shadow: 0 2px 0 var(--border); color: var(--ink2); cursor: pointer; }
+.ic:hover:not(:disabled) { border-color: var(--muted); color: var(--ink); }
+.ic:disabled { opacity: .45; cursor: default; }
+.ic svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.faillite b { color: var(--mauvais); font-size: .95rem; letter-spacing: .02em; }
+.capturer { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 7px; border: 2px solid var(--accent); background: var(--accent-fond); color: inherit; font: inherit; font-weight: 700; cursor: pointer; }
+.capturer svg { width: 24px; height: 16px; flex: none; }
+.capturer:hover:not(:disabled) { filter: brightness(.97); }
+.capturer:disabled { cursor: default; opacity: .75; }
+.en-faillite .toast { top: 76px; }
+
+/* Fiche d'une parcelle : mode de culture et bilan (C.7) */
+.mode { margin-top: 8px; border-radius: 5px; border: 2px solid var(--border); background: var(--surface); box-shadow: 0 2px 0 var(--border); overflow: hidden; }
+.mode > button { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 10px; border: 0; background: none; color: inherit; cursor: pointer; font: inherit; }
+.mode > button:hover:not(:disabled) { background: var(--surface2); }
+.mode > button:disabled { color: var(--muted); cursor: default; }
+.mode > button i { font-style: normal; transition: transform .2s; }
+.mode.ouvert > button i { transform: rotate(180deg); }
+.mode ul { list-style: none; margin: 0; padding: 0 0 4px; border-top: 1px solid var(--border); }
+.mode li button { width: 100%; padding: 5px 10px; border: 0; background: none; color: inherit; text-align: left; cursor: pointer; font: inherit; }
+.mode li button:hover { background: var(--surface2); }
+.mode li button[aria-pressed="true"] { color: var(--accent); font-weight: 600; }
+.bilan-sol { width: 100%; border-collapse: collapse; font-size: .8rem; font-variant-numeric: tabular-nums; }
+.bilan-sol th { font-weight: 500; color: var(--muted); text-align: right; font-size: .72rem; padding: 0 0 2px 6px; }
+.bilan-sol td { padding: 1px 0; text-align: right; }
+.bilan-sol td:first-child { text-align: left; }

@@ -14,10 +14,10 @@ function niveauDe(e) { let n = 1; while (seuilNiveau(n + 1) <= e) n++; return n;
 
 // Ordre de découverte : la rotation de l'Artois d'abord (blé, orge, pomme de terre, betterave, pois)
 const ORDRE = {
-  champs: ['ble', 'orge', 'pdt', 'betsucre', 'pois', 'colza', 'feverole', 'avoine', 'lin', 'mais', 'epeautre', 'haricot', 'tournesol', 'carotte', 'seigle', 'lentille', 'oignon', 'triticale', 'soja', 'poischiche', 'sorgho', 'sarrasin', 'betterave', 'panais', 'haricotvert'],
+  champs: ['ble', 'orge', 'pdt', 'betsucre', 'pois', 'prairie', 'colza', 'feverole', 'miscanthus', 'avoine', 'luzerne', 'lin', 'escourgeon', 'mais', 'epeautre', 'bledur', 'haricot', 'tournesol', 'maisfourrage', 'carotte', 'poisprot', 'seigle', 'lentille', 'chanvre', 'oignon', 'triticale', 'linfibre', 'soja', 'moutarde', 'poischiche', 'sorgho', 'chicoree', 'sarrasin', 'betterave', 'lupin', 'panais', 'haricotvert'],
   planches: ['laitue', 'radis', 'carotte', 'pdt', 'haricotvert', 'courgette', 'tomate', 'poireau', 'epinard', 'betterave', 'oignon', 'chou', 'pois', 'navet', 'potiron', 'fraise', 'echalote', 'ail', 'choufleur', 'melon', 'panais', 'artichaut', 'topinambour'],
 };
-const ordreMode = mode => ORDRE[MODES[mode].echelle].filter(id => cultureAutorisee(mode, CULTURE[id]));
+const ordreMode = mode => ORDRE[MODES[mode].ordre].filter(id => cultureAutorisee(mode, CULTURE[id]));
 const nbDebloquees = e => 5 + 2 * (niveauDe(e) - 1);
 const culturesDebloquees = (mode, e = S.exp) => ordreMode(mode).slice(0, nbDebloquees(e));
 const estDebloquee = (mode, id) => culturesDebloquees(mode).includes(id);
@@ -35,6 +35,8 @@ const MARCHE = {
   pdt: [45, 7], betsucre: [10, 2], topinambour: [35, 5], carotte: [35, 6], panais: [35, 5], betterave: [35, 6], radis: [35, 0.25], navet: [35, 3], oignon: [35, 7], echalote: [35, 9], ail: [35, 9],
   laitue: [35, 0.2], epinard: [35, 0.15], poireau: [35, 5], chou: [35, 4], choufleur: [35, 0.5], artichaut: [35, 0.3],
   tomate: [30, 0.4], courgette: [30, 0.3], potiron: [30, 5], melon: [30, 0.3], fraise: [30, 0.07],
+  bledur: [25, 48], escourgeon: [25, 48], poisprot: [20, 30], lupin: [20, 30], moutarde: [25, 24], chicoree: [20, 2], chanvre: [20, 24], linfibre: [25, 24],
+  maisfourrage: [15, 12], prairie: [15, 12], luzerne: [15, 12], miscanthus: [15, 24],
 };
 // Suite pseudo-aléatoire reproductible : même partie, même année, même culture, même prix
 function suiteDe(texte) {
@@ -73,6 +75,7 @@ const Meca = {
   ajouterLot(f, c, kg, route) {
     const fin = S.jour + this.dureeGarde(c), L = f.lots[c.id] ??= [], m = L.find(l => l.fin === fin && !l.route === !route);
     if (m) m.kg += kg; else L.push(route ? { kg, fin, route } : { kg, fin });
+    (f.produits ??= {})[c.id] = 1;
   },
   arrivee(f, c) {
     const encore = (attente.parC[c.id]?.kg || 0) > 0.5;
@@ -90,7 +93,7 @@ const Meca = {
     const c = CULTURE[id], t = kg / 1000, val = Math.round(t * prixAnnee(c).p), g = gainExp(c, t), L = f.lots[id];
     for (let r = kg; r > 1e-6 && L.length;) { const q = Math.min(r, L[0].kg); L[0].kg -= q; r -= q; if (L[0].kg <= 1e-6) L.shift(); }
     if (!L.length) delete f.lots[id];
-    S.argent += val; S.exp += g; S.annee.exp += g;
+    S.argent += val; S.exp += g; S.annee.exp += g; f.ventes = (f.ventes || 0) + val;
     if (S.guide < 5) S.guide = 5;
     return { val, g };
   },
@@ -131,7 +134,7 @@ const Meca = {
     if (n > S.niveauVu) { for (let k = S.niveauVu + 1; k <= n; k++) this.annoncerNiveau(k); S.niveauVu = n; }
   },
   annoncerNiveau(n) {
-    const f = F(), neuves = nouveautesNiveau(f.mode, n).map(id => CULTURE[id]);
+    const f = F(), neuves = [...new Set([...new Set(Object.values(f.cases).map(t => t.mode))].flatMap(m => nouveautesNiveau(m, n)))].map(id => CULTURE[id]);
     this.bandeau(`Niveau ${n}`, neuves.length ? `Nouvelles cultures : ${neuves.map(c => c.nom.toLowerCase()).join(' et ')}` : 'Toutes les cultures sont déjà ouvertes.', neuves);
     ongletSale = true;
   },
@@ -190,7 +193,7 @@ const Meca = {
     let cible = null, txt = '';
     if (S.guide === 1) {
       const f = F();
-      const libre = Object.keys(f.cases).find(k => !f.cases[k].cult);
+      const libre = Object.keys(f.cases).find(k => !creneaux(f.cases[k]).some(s => s.cult));
       if (libre) { const [x, y] = libre.split(',').map(Number), p = Rendu.centre(x, y); this.placer(el, p.x, p.y - 10, 'Cliquez un champ, puis Semer'); return; }
       S.guide = 2;
     }

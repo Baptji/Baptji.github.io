@@ -13,8 +13,8 @@ window.VERSIONS = {
   "date": "2026-10-25T18:45:23+01:00"
  },
  "squid-ferme": {
-  "version": 8,
-  "date": "2026-11-08T12:48:05+01:00"
+  "version": 9,
+  "date": "2026-11-08T21:41:50+01:00"
  },
  "concentration": {
   "version": 1,
