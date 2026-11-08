@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Squid Ferme</title>
 <meta name="description" content="Jeu de ferme sur le vrai climat de France depuis 1959 : rendements, énergie et état du sol selon la manière de cultiver.">
-<link rel="stylesheet" href="style.css?v=20261108113640">
+<link rel="stylesheet" href="style.css?v=20261108124805">
 </head>
 <body>
 <header class="entete">
@@ -16,17 +16,14 @@
   </div>
   <button id="niveau" class="niveau" style="--avance:0">
     <span class="anneau"><svg viewBox="0 0 36 36" aria-hidden="true"><circle class="piste" cx="18" cy="18" r="15.5"/><circle class="arc" cx="18" cy="18" r="15.5" pathLength="100"/></svg><span class="niv">1</span></span>
-    <span class="etoiles"><span class="or">★</span><b>0</b></span>
+    <span class="exp"><b>0</b> d’exp.</span>
   </button>
-  <span id="date" class="date"></span>
-  <span id="heure" class="heure" title="Heure de la journée de travail (6 h à 21 h)"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.2"/><line id="aiguille" x1="10" y1="10" x2="10" y2="4.6"/><circle class="axe" cx="10" cy="10" r="1.4"/></svg><b id="heure-txt"></b></span>
-  <div id="meteo" class="meteo">
-    <canvas id="icone-meteo" width="24" height="24"></canvas>
-    <span id="temp"></span>
-    <span id="pluie" class="pluie"></span>
-    <canvas id="spark" class="spark" aria-label="Pluie et températures des 60 derniers jours"></canvas>
+  <div id="meteo" class="indic meteo" aria-label="Le jour">
+    <b id="date" class="date"></b>
+    <span><span id="heure" class="heure" title="Heure de la journée de travail (6 h à 21 h)"><b id="heure-txt"></b></span><canvas id="icone-meteo" width="24" height="24"></canvas><em id="temp"></em><span id="pluie" class="pluie"></span></span>
   </div>
-  <div id="saison" class="saison" role="img"></div>
+  <div class="frise"><div class="mois"><b id="mois"></b></div><div id="saison" class="saison" role="img"></div></div>
+  <div class="indic" aria-label="L’année"><b id="an-jour"></b><span><em id="an-pluie"></em><span>depuis le 1er janvier</span></span></div>
   <div id="vitesses" class="vitesses" role="group" aria-label="Vitesse du temps">
     <button data-vitesse="0" title="Pause (barre d’espace)">❚❚</button>
     <button data-vitesse="1">×1</button>
@@ -34,39 +31,28 @@
     <button data-vitesse="10">×10</button>
     <button data-vitesse="30">×30</button>
   </div>
-  <span id="argent" class="argent" title="Trésorerie (prix fixes)"></span>
+  <span id="argent" class="argent" title="Trésorerie"></span>
 </header>
 
 <main class="jeu">
   <section class="champ">
     <div id="defile" class="defile"><canvas id="ecran"></canvas>
-      <aside id="recoltes" class="recoltes verre vide" aria-label="Récoltes de la ferme"><h2>Récoltes</h2><ol></ol><p class="rien">Rien de rentré cette année.</p><p class="total"><span>Énergie alimentaire</span><b></b></p></aside>
     </div>
     <div id="toast" class="toast" role="status"></div>
     <div id="bandeau" class="bandeau" role="status" hidden></div>
     <div id="bilan" class="bilan" role="status" hidden></div>
-    <div id="outils" class="outils" role="group" aria-label="Outils">
-      <button data-outil="semer">Semer : <b id="nom-semence"></b></button>
-      <button data-action-outil="recolter">Récolter tout</button>
-      <button data-outil="arracher">Arracher</button>
-      <span class="separateur"></span>
-      <button data-action-outil="irrigation"></button>
-      <button data-action-outil="ferti"></button>
-    </div>
-    <ol id="journal" class="journal"></ol>
+    <aside id="volante" class="volante" hidden></aside>
   </section>
 
   <aside class="panneau">
     <nav id="onglets" class="onglets" role="tablist">
-      <button role="tab" data-onglet="commandes">Commandes<span class="pastille" hidden></span></button>
+      <button role="tab" data-onglet="objectifs">Objectifs</button>
       <button role="tab" data-onglet="semences">Semences</button>
-      <button role="tab" data-onglet="production">Production</button>
-      <button role="tab" data-onglet="sol">Sol</button>
-      <button role="tab" data-onglet="ferme">Ferme</button>
+      <button role="tab" data-onglet="recolte">Récolte</button>
+      <button role="tab" data-onglet="parcelles">Parcelles</button>
       <span id="indicateur" class="indicateur" aria-hidden="true"></span>
     </nav>
     <div id="vue" class="vue"></div>
-    <div id="info" class="info"></div>
   </aside>
 </main>
 
@@ -88,24 +74,24 @@
 <canvas id="effets" class="effets"></canvas>
 
 <script src="js/three.min.js"></script>
-<script src="donnees/regions.js?v=20261108113640"></script>
-<script src="donnees/lieux.js?v=20261108113640"></script>
-<script src="js/carte.js?v=20261108113640"></script>
-<script src="js/donnees.js?v=20261108113640"></script>
-<script src="js/climat.js?v=20261108113640"></script>
-<script src="js/agronomie.js?v=20261108113640"></script>
-<script src="js/dessin.js?v=20261108113640"></script>
-<script src="js/trois.js?v=20261108113640"></script>
-<script src="js/plantes.js?v=20261108113640"></script>
-<script src="js/decor.js?v=20261108113640"></script>
-<script src="js/ciel.js?v=20261108113640"></script>
-<script src="js/flotte.js?v=20261108113640"></script>
-<script src="js/machines.js?v=20261108113640"></script>
-<script src="js/vie.js?v=20261108113640"></script>
-<script src="js/rendu.js?v=20261108113640"></script>
-<script src="js/animations.js?v=20261108113640"></script>
-<script src="js/mecaniques.js?v=20261108113640"></script>
-<script src="js/interface.js?v=20261108113640"></script>
-<script src="js/jeu.js?v=20261108113640"></script>
+<script src="donnees/regions.js?v=20261108124805"></script>
+<script src="donnees/lieux.js?v=20261108124805"></script>
+<script src="js/carte.js?v=20261108124805"></script>
+<script src="js/donnees.js?v=20261108124805"></script>
+<script src="js/climat.js?v=20261108124805"></script>
+<script src="js/agronomie.js?v=20261108124805"></script>
+<script src="js/dessin.js?v=20261108124805"></script>
+<script src="js/trois.js?v=20261108124805"></script>
+<script src="js/plantes.js?v=20261108124805"></script>
+<script src="js/decor.js?v=20261108124805"></script>
+<script src="js/ciel.js?v=20261108124805"></script>
+<script src="js/flotte.js?v=20261108124805"></script>
+<script src="js/machines.js?v=20261108124805"></script>
+<script src="js/vie.js?v=20261108124805"></script>
+<script src="js/rendu.js?v=20261108124805"></script>
+<script src="js/animations.js?v=20261108124805"></script>
+<script src="js/mecaniques.js?v=20261108124805"></script>
+<script src="js/interface.js?v=20261108124805"></script>
+<script src="js/jeu.js?v=20261108124805"></script>
 </body>
 </html>

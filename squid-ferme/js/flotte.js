@@ -63,7 +63,8 @@ const Flotte = (() => {
   function conduite(tr, o = {}) {
     return { tr, s: 0, v: 0, pause: 0, fini: tr.L < 1e-6, vmax: o.vmax || 1, acc: o.acc || 1, frein: o.frein || 2, alat: o.alat || 1, tempo: o.tempo == null ? 0.6 : o.tempo, passes: new Set(), but: Infinity };
   }
-  function conduire(c, dt, gene = Infinity) {
+  // force : le veilleur a jugé l'engin bloqué, il passe outre les arrêts (cédez, porte) comme les gênes
+  function conduire(c, dt, gene = Infinity, force = false) {
     const tr = c.tr; if (c.fini) { c.v = 0; return; }
     if (c.pause > 0) { c.pause -= dt; c.v = 0; return; }
     const b = c.frein, s = c.s; let stop = null;
@@ -72,7 +73,7 @@ const Flotte = (() => {
       if (c.passes.has(a) || a.s < s - 1e-6) continue;
       if (a.rebrousse) { stop = a; break; }
       if (a.s - s > portee) continue;
-      if (a.tant()) { stop = a; break; }
+      if (!force && a.tant()) { stop = a; break; }
       if (a.s - s < 0.25) { c.passes.add(a); a.quand?.(); }      // la voie était libre au moment de s'engager
     }
     const fin = Math.min(stop.s, c.but);
@@ -89,6 +90,21 @@ const Flotte = (() => {
       c.s = stop.s; c.v = 0; c.passes.add(stop);
       if (stop.s >= tr.L - 1e-6) c.fini = true; else c.pause = c.tempo;
     }
+  }
+  // ---------- Veilleur : aucun engin ne reste immobile ----------
+  // À l'horloge réelle, quelle que soit la vitesse du jeu. v : mémoire propre à l'engin ({} au départ), x, y : sa position.
+  // Rend vrai quand il faut passer outre : sans bouger depuis IMMOBILE ms, l'engin ignore les gênes et les verrous, traverse
+  // ce qui le bloque, et reprend une conduite normale après DEGAGE cases. Le temps passé en arrière-plan (onglet caché) ne compte pas.
+  const IMMOBILE = 4000, DEGAGE = 2.5;
+  function veiller(v, x, y) {
+    const now = performance.now();
+    if (v.t == null) { Object.assign(v, { x, y, t: now, vu: now, force: false, fait: 0 }); return false; }
+    if (now - v.vu > 1000) v.t += now - v.vu;
+    v.vu = now;
+    const d = Math.hypot(x - v.x, y - v.y);
+    if (d > 0.03) { if (v.force && (v.fait += d) > DEGAGE) v.force = false; v.x = x; v.y = y; v.t = now; }
+    else if (!v.force && now - v.t >= IMMOBILE) { v.force = true; v.fait = 0; v.t = now; }
+    return v.force;
   }
   // ---------- Ce qui roule s'inscrit pour que chacun garde ses distances ----------
   const mobiles = new Map();
@@ -114,13 +130,14 @@ const Flotte = (() => {
     for (const m of mobiles.values()) { if (m.id === sauf || (genre && m.genre !== genre)) continue; for (const bx of m.boites()) if (Math.hypot(bx.x - pt[0], bx.y - pt[1]) < r) return true; }
     return false;
   }
-  // Décale une ligne brisée vers la droite du sens de marche (voie de droite) ; les extrémités restent en place
+  // Décale une ligne brisée vers la droite du sens de marche (voie de droite ; off : valeur, ou fonction du point) ; les extrémités restent en place
   function aDroite(pts, off) {
     if (pts.length < 3) return pts;
     return pts.map((p, i) => {
       if (i === 0 || i === pts.length - 1) return p;
       const a = pts[i - 1], b = pts[i + 1], dx = b[0] - a[0], dz = b[1] - a[1], l = Math.hypot(dx, dz) || 1;
-      return [p[0] - dz / l * off, p[1] + dx / l * off, p[2]];
+      const d = typeof off === 'function' ? off(p) : off;
+      return [p[0] - dz / l * d, p[1] + dx / l * d, p[2]];
     });
   }
   // Abscisse (s) du point du trajet le plus proche de pt, sur les droites
@@ -131,5 +148,5 @@ const Flotte = (() => {
       if (!best || d < best.d) best = { d, s: e.s0 + u }; }
     return best ? best.s : 0;
   }
-  return { trace, conduite, conduire, inscrire, desinscrire, devant, presDe, aDroite, abscisse, mobiles };
+  return { trace, conduite, conduire, veiller, inscrire, desinscrire, devant, presDe, aDroite, abscisse, mobiles };
 })();

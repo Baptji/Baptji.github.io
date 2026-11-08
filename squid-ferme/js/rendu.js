@@ -45,7 +45,7 @@ const Rendu = {
     this.viderTransports();
     for (const p of this.passages) { this.scene.remove(p.o); if (p.id) Flotte.desinscrire(p.id); }
     if (this.cloture) { this.scene.remove(this.cloture); this.cloture = null; } this.clePature = ''; this.coupes = new Map();
-    for (const o of this.talus?.values() || []) this.scene.remove(o); this.talus = new Map(); this.cleExpl = '';
+    for (const a of this.halos || []) this.scene.remove(a.g); this.halos = [];
     for (const o of this.verrous?.values() || []) this.scene.remove(o); this.verrous = new Map(); this.anims = [];
     this.pools.clear(); this.passages = []; this.revel.clear(); this.parts = []; this.ondes.forEach(o => this.scene.remove(o.m)); this.ondes = [];
     this.echelle = mode.echelle; this.planches = mode.echelle === 'planches';
@@ -292,7 +292,7 @@ const Rendu = {
         arbres: mode.arbres && y % 2 === 0 ? ageArbres(f, S.jour) : null });
     }
     const v = this.voisinDe(f, u, S.jour);
-    base.verrou = !!(f.parcellesObjectif && f.parcellesObjectif[u] != null && !f.parcelles[u]);
+    base.verrou = true;   // tout champ voisin est grisé, à vendre comme à objectif
     if (v.type === 'culture') return Object.assign(base, { c: v.p !== null ? v.c : null, p: v.p ?? 0, mur: 0, chaume: v.p === null ? v.chaume : 0, paille: v.c.famille === 'poacée' && v.c.forme !== 'mais', labour: v.p === null && !v.chaume, mo: 2.2, sec: f.sec * 0.6 });
     if (v.type === 'prairie') return Object.assign(base, { prairie: ['PPH', 'SPH', 'SPL'].includes(v.code) ? 'ppn' : 'fauche', sec: f.sec * 0.6 });
     return Object.assign(base, { friche: true, sec: f.sec * 0.6 });
@@ -353,46 +353,25 @@ const Rendu = {
     const x = i % this.pl.w, y = (i / this.pl.w) | 0;
     return dans(x + co.sx, y) || dans(x, y + co.sz) || dans(x + co.sx, y + co.sz) ? null : co;
   },
-  // Talus gazonné couronné de piquets et de deux rangs de fil, le long du bord de l'exploitation ; il monte et descend en douceur
-  majExploitation(f, anime) {
-    const W = this.pl.w, H = this.pl.h, ens = new Set(Object.keys(f.cases).map(k => { const [x, y] = k.split(',').map(Number); return y * W + x; }));
-    const cle = [...ens].sort((a, b) => a - b).join(',');
-    if (cle === this.cleExpl) return;
-    this.cleExpl = cle;
-    const K = K3, G = K.G, segs = this.bordsDe(ens, 0.11), neufs = new Map(segs.map(s => [s.cle, s]));
-    for (const [k, o] of this.talus) if (!neufs.has(k)) { this.talus.delete(k); if (anime) this.anims.push({ o, t0: performance.now(), dur: 900, de: 1, a: 0, fin: () => this.scene.remove(o) }); else this.scene.remove(o); }
-    if (!this.geoTalus) { const sh = new T3.Shape(); sh.moveTo(-0.11, 0); sh.lineTo(-0.055, 0.07); sh.lineTo(0.055, 0.07); sh.lineTo(0.11, 0); sh.closePath(); const g = new T3.ExtrudeGeometry(sh, { depth: 1, bevelEnabled: false }); g.rotateY(Math.PI / 2); g.translate(-0.5, 0, 0); this.geoTalus = g; this.matTalus = K.mat('#7fae52'); }
-    let n = 0;
-    for (const sg of segs) {
-      if (this.talus.has(sg.cle)) continue;
-      const L = Math.hypot(sg.x1 - sg.x0, sg.y1 - sg.y0), o = new T3.Group();
-      const t = new T3.Mesh(this.geoTalus, this.matTalus); t.scale.x = L; t.castShadow = false; t.receiveShadow = true; o.add(t);
-      const pieces = [], np = Math.max(1, Math.round(L / 0.45));
-      for (let k = 0; k <= np; k++) pieces.push(K.piece(G.cyl(0.009, 0.012, 0.13, 5), '#7a5a3a', [-L / 2 + L * k / np, 0.135, 0], [0, k * 1.3, 0]));
-      [0.15, 0.185].forEach(h => pieces.push(K.piece(G.boite(L, 0.004, 0.004), '#707070', [0, h, 0])));
-      const c = K.mesh(o, K.fusion(pieces), K.matV()); c.castShadow = false;
-      o.position.set((sg.x0 + sg.x1) / 2 - W / 2, 0.004, (sg.y0 + sg.y1) / 2 - H / 2); o.rotation.y = Math.atan2(-(sg.y1 - sg.y0), sg.x1 - sg.x0);
-      o.userData.nom = { cle: 'bordure:talus', libelle: 'Talus de l’exploitation (clôturé)' };
-      this.scene.add(o); this.talus.set(sg.cle, o);
-      if (anime) { o.scale.y = 0.001; this.anims.push({ o, t0: performance.now() + 700 + (n++ % 12) * 60, dur: 800, de: 0, a: 1 }); }
-    }
-  },
-  // Parcelles à débloquer par un objectif : teintes éteintes, piquets à ruban sur le pourtour, panneau à cadenas
+  // Champs voisins : teintes éteintes, piquets à ruban rouge et blanc sur le pourtour ; panneau à cadenas s'ils attendent un objectif
   majVerrous(f) {
     const pl = this.pl, W = pl.w, H = pl.h, po = f.parcellesObjectif || {};
-    const voulu = new Map(Object.entries(po).filter(([u]) => !f.parcelles[u]).map(([u, id]) => [+u, id]));
+    const voulu = new Map(); pl.unites.forEach((_, u) => { if (!f.parcelles[u]) voulu.set(u, po[u]); });
     for (const [u, o] of this.verrous) if (!voulu.has(u)) { this.verrous.delete(u); this.anims.push({ o, t0: performance.now(), dur: 700, de: 1, a: 0, fin: () => this.scene.remove(o) }); }
     const K = K3, G = K.G, own = new Set(Object.keys(f.cases).map(k => { const [x, y] = k.split(',').map(Number); return y * W + x; }));
     for (const [u, id] of voulu) {
       if (this.verrous.has(u)) continue;
-      const ob = (typeof OBJ_PARCELLES !== 'undefined' ? OBJ_PARCELLES : []).find(o => o.id === id) || { court: '?', txt: '' }, ens = this.casesUnite(u), g = new T3.Group(), pieces = [];
+      const ob = id != null ? OBJ_PARCELLES.find(o => o.id === id) : null, ens = this.casesUnite(u), g = new T3.Group(), pieces = [];
       // piquets blancs à tête rouge et ruban rouge et blanc
-      for (const sg of this.bordsDe(ens, 0.05)) {
+      for (const sg of this.bordsDe(ens, 0.09)) {
         const L = Math.hypot(sg.x1 - sg.x0, sg.y1 - sg.y0), n = Math.max(1, Math.round(L / 0.5)), ry = Math.atan2(-(sg.y1 - sg.y0), sg.x1 - sg.x0);
         for (let k = 0; k <= n; k++) { const x = sg.x0 + (sg.x1 - sg.x0) * k / n - W / 2, z = sg.y0 + (sg.y1 - sg.y0) * k / n - H / 2; pieces.push(K.piece(G.boite(0.012, 0.12, 0.012), '#f4f1e8', [x, 0.06, z]), K.piece(G.boite(0.014, 0.025, 0.014), '#d8402a', [x, 0.125, z])); }
         for (let k = 0; k < n * 2; k++) { const f0 = (k + 0.5) / (n * 2), x = sg.x0 + (sg.x1 - sg.x0) * f0 - W / 2, z = sg.y0 + (sg.y1 - sg.y0) * f0 - H / 2; pieces.push(K.piece(G.boite(L / (n * 2), 0.018, 0.003), k % 2 ? '#f4f1e8' : '#d8402a', [x, 0.1, z], [0, ry, 0])); }
       }
       K.mesh(g, K.fusion(pieces), K.matV()).castShadow = false;
+      g.userData.nom = { cle: 'parcelle:voisine-' + (u + 1), libelle: 'Champ voisin' };
+      this.scene.add(g); this.verrous.set(u, g);
+      if (!ob) { this.sansOmbre(g); continue; }
       // panneau à cadenas, sur la case la plus proche de l'exploitation
       let mieux = [...ens][0], dm = 1e9;
       for (const i of ens) for (const j of own) { const d = Math.hypot(i % W - j % W, ((i / W) | 0) - ((j / W) | 0)); if (d < dm) { dm = d; mieux = i; } }
@@ -403,7 +382,6 @@ const Rendu = {
       pan.position.set(mieux % W + 0.5 - W / 2, 0.004, ((mieux / W) | 0) + 0.5 - H / 2); pan.rotation.y = this.cam.AZ; pan.scale.setScalar(1.5);
       g.add(pan); this.sansOmbre(g);
       g.userData.nom = { cle: 'parcelle:verrou-' + (u + 1), libelle: `Parcelle à débloquer · objectif : ${ob.txt}` };
-      this.scene.add(g); this.verrous.set(u, g);
     }
   },
   texPanneau(txt) {
@@ -417,15 +395,34 @@ const Rendu = {
     if (l2) { g.fillText(l1, 96, 46); g.fillText(l2, 96, 84); } else g.fillText(l1, 96, 64);
     const t = new T3.CanvasTexture(c); t.encoding = T3.sRGBEncoding; t.anisotropy = 4; return t;
   },
-  // Un champ rejoint l'exploitation : le talus s'abaisse et se reforme plus loin, la charrue laboure, une clôture neuve se pose
+  // Un champ rejoint l'exploitation : ses rubans tombent, un halo le désigne, la charrue laboure
   integrer(u) {
     if (!this.gl || !this.pl) return;
     const W = this.pl.w, cases = [...this.casesUnite(u)].map(i => [i % W, (i / W) | 0]);
-    this.majExploitation(F(), true); this.majVerrous(F());
+    this.majVerrous(F()); this.halo(u);
     if (!this.planches) this.animerChamp(cases, 'labour', 'charrue', null, 1500);
+  },
+  // Halo du champ qui vient d'être débloqué : nappe dorée et rideau de lumière sur le pourtour, trois pulsations
+  halo(u) {
+    const W = this.pl.w, H = this.pl.h, ens = this.casesUnite(u), g = new T3.Group(), plein = [], mur = [], uv = [];
+    if (!this.texHalo) { const c = document.createElement('canvas'); c.width = 4; c.height = 64; const x = c.getContext('2d'), d = x.createLinearGradient(0, 0, 0, 64); d.addColorStop(0, 'rgba(255,225,130,0)'); d.addColorStop(1, 'rgba(255,225,130,1)'); x.fillStyle = d; x.fillRect(0, 0, 4, 64); this.texHalo = new T3.CanvasTexture(c); }
+    for (const i of ens) { const x = i % W - W / 2, z = ((i / W) | 0) - H / 2, y = 0.05; plein.push(x, y, z, x, y, z + 1, x + 1, y, z, x + 1, y, z, x, y, z + 1, x + 1, y, z + 1); }
+    for (const sg of this.bordsDe(ens, 0)) { const [a, b, c, d, y1] = [sg.x0 - W / 2, sg.y0 - H / 2, sg.x1 - W / 2, sg.y1 - H / 2, 0.75]; mur.push(a, 0, b, c, 0, d, a, y1, b, c, 0, d, c, y1, d, a, y1, b); uv.push(0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1); }
+    const geo = pos => { const q = new T3.BufferGeometry(); q.setAttribute('position', new T3.Float32BufferAttribute(pos, 3)); return q; };
+    const mNappe = new T3.MeshBasicMaterial({ color: '#ffdf85', transparent: true, opacity: 0, depthWrite: false, depthTest: false, blending: T3.AdditiveBlending, side: T3.DoubleSide });
+    const gm = geo(mur); gm.setAttribute('uv', new T3.Float32BufferAttribute(uv, 2));
+    const mMur = new T3.MeshBasicMaterial({ map: this.texHalo, transparent: true, opacity: 0, depthWrite: false, blending: T3.AdditiveBlending, side: T3.DoubleSide });
+    const n = new T3.Mesh(geo(plein), mNappe), m = new T3.Mesh(gm, mMur); n.renderOrder = 28; m.renderOrder = 29; g.add(n, m); this.scene.add(g);
+    (this.halos ||= []).push({ g, n, m, t0: performance.now(), dur: this.reduit ? 1500 : 4200 });
   },
   animer(t) {
     const now = performance.now();
+    this.halos = (this.halos || []).filter(a => {
+      const k = (now - a.t0) / a.dur;
+      if (k >= 1) { this.scene.remove(a.g); a.n.geometry.dispose(); a.m.geometry.dispose(); a.n.material.dispose(); a.m.material.dispose(); return false; }
+      const v = Math.min(1, k * 10) * Math.min(1, (1 - k) * 4) * (0.68 + 0.32 * Math.cos(k * Math.PI * 6)); a.n.material.opacity = v * 0.5; a.m.material.opacity = v; return true;
+    });
+    for (const m of Flotte.mobiles.values()) if (m.genre === 'machine') for (const b of m.boites()) this.D?.degager?.(b.x, b.y, b.cap, b.l);
     this.anims = this.anims.filter(a => {
       const k = Math.max(0, Math.min(1, (now - a.t0) / a.dur)), e = k * k * (3 - 2 * k), v = a.de + (a.a - a.de) * e;
       a.o.scale.y = Math.max(0.001, v); a.o.position.y = 0.004 - (1 - v) * 0.02;
@@ -526,7 +523,7 @@ const Rendu = {
   // ---------- Animation d'un champ : la machine passe rang par rang (semis ou récolte) ----------
   // cases : [[x, y], …] ; avant : Map 'x,y' → { c, p, v, pourri } pour la récolte. Rend [{ x, y, fin }] (ms depuis maintenant).
   // opts.livrer(kg) : récolte portée à la ferme par un tracteur et sa benne ; les tonnes ne comptent qu'à la livraison
-  transporte(machine) { return !!(this.gl && this.pl && !this.planches && this.D.ferme && machine === 'moissonneuse' && !this.reduit); },
+  transporte(machine) { return !!(this.gl && this.pl && !this.planches && this.D.ferme && ['moissonneuse', 'arracheuse'].includes(machine) && !this.reduit); },
   transportEnCours() { return this.passages.some(p => p.transport) || Machines.flotte.some(u => u.charge > 1 && !u.livre); },
   animerChamp(cases, type, machine, avant, retard = 0, opts = {}) {
     if (!this.gl || !this.pl) return cases.map(([x, y]) => ({ x, y, fin: retard }));
@@ -683,13 +680,19 @@ const Rendu = {
     this.sansOmbre(g);
     return g;
   },
+  // Une erreur dans la conduite d'un engin ne doit jamais arrêter le jeu
+  sansBlocage(f) { try { f(); } catch (e) { if (!this.erreurVue) { this.erreurVue = true; console.error(e); } } },
   animerPassages(t, dt) {
     const now = performance.now(), s = Math.min(0.05, dt / 1000);
     this.passages = this.passages.filter(p => {
       if (p.sortie) {
         // sortie de la grange, tâche au champ (avance pilotée, arrêts trémie pleine), retour à la grange
         const range = Machines.avancerMachine(p, t, s, () => {
-          const pleine = p.transport && p.tremie >= Machines.TREMIE, dMax = p.transport && (p.reste > 0 || p.tremie >= 1) ? p.L - 0.25 : p.L;
+          // sans benne pour la vider depuis quelques secondes, la machine ne reste pas plantée : trémie pleine elle poursuit, au bout du champ elle rentre vider elle-même
+          if (p.transport && !p.autonome && Flotte.veiller(p.veilleTache ??= {}, p.d, p.tremie / 300)) { if (p.d >= p.L - 0.3) p.autonome = true; else p.sansAttendre = true; p.veilleTache = null; }
+          if (p.sansAttendre && p.tremie < Machines.TREMIE * 0.7) p.sansAttendre = false;
+          if (p.sansAttendre && p.d >= p.L - 0.3) p.autonome = true;
+          const pleine = p.transport && !p.autonome && !p.sansAttendre && p.tremie >= Machines.TREMIE, dMax = p.transport && !p.autonome && (p.reste > 0 || p.tremie >= 1) ? p.L - 0.25 : p.L;
           if (!pleine) p.d = Math.min(dMax, Math.max(0, p.d) + p.v * s);
           this.poserAuChamp(p, t, p.d, 1);
           return p.d >= p.L - 1e-6;
@@ -769,17 +772,16 @@ const Rendu = {
     this.ondes.push({ m, t0: performance.now() });
   },
 
-  // ---------- Calques de jeu : limite de la ferme, champs mûrs, survol, sélection, trouvaille ----------
+  // ---------- Calques de jeu : limite de la ferme, champs mûrs, survol, sélection ----------
   calques() {
     const mk = (c, o, dt = false, ro = 20) => { const m = new T3.Mesh(new T3.BufferGeometry(), new T3.MeshBasicMaterial({ color: K3.col(c), transparent: true, opacity: o, depthTest: dt, depthWrite: false })); m.renderOrder = ro; m.frustumCulled = false; this.scene.add(m); return m; };
-    this.cLimite = mk('#fade8c', 0.9, true, 3); this.cLimite.visible = false; this.cMurs = mk('#ffd65a', 0.6, true, 4); this.cSurvol = mk('#ffffff', 0.7); this.cSel = mk('#ffe27a', 0.95); this.cCase = mk('#ffffff', 0.14);
+    this.cLimite = mk('#fade8c', 0.9, true, 3); this.cMurs = mk('#ffd65a', 0.6, true, 4); this.cSurvol = mk('#ffffff', 0.7); this.cSel = mk('#ffe27a', 0.95); this.cCase = mk('#ffffff', 0.14);
     const pts = new T3.BufferGeometry(); pts.setAttribute('position', new T3.BufferAttribute(new Float32Array(600 * 3), 3)); pts.setAttribute('color', new T3.BufferAttribute(new Float32Array(600 * 3), 3));
     this.points = new T3.Points(pts, new T3.PointsMaterial({ size: 0.035, vertexColors: true, transparent: true, opacity: 0.95, depthWrite: false })); this.points.frustumCulled = false; this.scene.add(this.points);
     const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
     const rg = g.createRadialGradient(32, 32, 0, 32, 32, 32); rg.addColorStop(0, 'rgba(255,252,230,1)'); rg.addColorStop(0.25, 'rgba(255,240,170,.7)'); rg.addColorStop(1, 'rgba(255,240,170,0)');
     g.fillStyle = rg; g.fillRect(0, 0, 64, 64); g.fillStyle = '#fffbe8'; g.fillRect(30, 4, 4, 56); g.fillRect(4, 30, 56, 4);
     this.texEclat = new T3.CanvasTexture(c); this.eclats = [];
-    this.etoileTr = new T3.Sprite(new T3.SpriteMaterial({ map: this.texEclat, transparent: true, depthTest: false, depthWrite: false })); this.etoileTr.renderOrder = 31; this.etoileTr.visible = false; this.scene.add(this.etoileTr);
   },
   // Bandes le long des bords d'un ensemble de cases (à l'intérieur), largeur lw
   bordure(ens, lw, y) {
@@ -811,7 +813,7 @@ const Rendu = {
     const pl = this.pl, W = pl.w, lw = this.planches ? 0.06 : 0.045;
     // liseré doré autour des champs possédés
     const cl = S.active + '|' + Object.keys(f.cases).length;
-    if (cl !== this.cleLimite) { this.cleLimite = cl; const s = new Set(Object.keys(f.cases).map(k => { const [x, y] = k.split(',').map(Number); return y * W + x; })); this.remplacer(this.cLimite, this.bordure(s, lw * 0.8, 0.04)); }
+    if (cl !== this.cleLimite) { this.cleLimite = cl; const s = new Set(Object.keys(f.cases).map(k => { const [x, y] = k.split(',').map(Number); return y * W + x; })); this.remplacer(this.cLimite, this.bordure(s, lw * 1.5, 0.04)); }
     // champs mûrs : contour qui palpite et étincelles
     const cm = [...this.unitesMures].sort().join(',');
     if (cm !== this.cleMurs) {
@@ -841,10 +843,6 @@ const Rendu = {
     // sélection
     const sel = this.selection, cs = sel ? (sel.type === 'parcelle' ? 'p' + sel.u : 'c' + sel.tx + ',' + sel.ty) : '';
     if (cs !== this.cleSel) { this.cleSel = cs; this.remplacer(this.cSel, !sel ? new T3.BufferGeometry() : this.bordure(sel.type === 'parcelle' ? this.casesUnite(sel.u) : new Set([sel.ty * W + sel.tx]), lw * 1.1, 0.065)); }
-    // trouvaille à ramasser
-    const tr = S.trouvaille, ici = tr && tr.ferme === f.id;
-    this.etoileTr.visible = !!ici;
-    if (ici) { const bond = Math.abs(Math.sin(t / 300)) * 0.12; this.etoileTr.position.set(tr.x + 0.5 - W / 2, 0.32 + bond, tr.y + 0.5 - pl.h / 2); this.etoileTr.scale.setScalar(0.3 + 0.05 * Math.sin(t / 150)); }
     // ondes de clic
     this.ondes = this.ondes.filter(o => { const a = (performance.now() - o.t0) / 420; if (a >= 1) { this.scene.remove(o.m); o.m.geometry.dispose(); o.m.material.dispose(); return false; } o.m.scale.setScalar(0.06 + a * 0.4); o.m.material.opacity = 0.8 * (1 - a); return true; });
   },
@@ -908,9 +906,8 @@ const Rendu = {
     for (const p of this.pools.values()) if (p.sale) this.reconstruire(p);
     if (t - this.dernierMur > 250) this.recenserMurs(f, t);
     this.majCalques(t, f);
-    this.majExploitation(f, false); this.majVerrous(f); this.animer(t);
-    this.animerPassages(t, dt);
-    Machines.image(t, dt); Machines.majPortes(dt);
+    this.majVerrous(f); this.animer(t);
+    this.sansBlocage(() => this.animerPassages(t, dt)); this.sansBlocage(() => { Machines.image(t, dt); Machines.majPortes(dt); });
     this.irrigation(t, f, mode);
     this.animerParticules(dt);
     const v = this.v || this.vent(S.jour, f.meteo || { pluie: 0 });

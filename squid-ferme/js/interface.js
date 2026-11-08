@@ -1,8 +1,7 @@
 'use strict';
-/* Interface autour de la vue 3D : frise des saisons au bout de la barre du haut (les quatre saisons à leur durée réelle,
-   la saison en cours en pleine couleur, un curseur à la date du jour) et panneau « Récoltes <année> » posé sur la vue,
-   qui liste ce qui est rentré à la grange cette année, culture par culture, du plus lourd au plus léger.
-   Les quantités ne montent qu'à l'arrivée à la ferme : ce qui roule encore (benne, caisses en vol) n'est pas compté. */
+/* Interface autour de la vue 3D : frise des saisons au centre de la barre du haut (hiver, printemps, été, automne, hiver,
+   à leur durée réelle du 1er janvier au 31 décembre, les cinq dessins toujours visibles, un curseur à la date du jour et
+   le mois écrit au-dessus de lui). */
 
 // ---------- Saisons (dates astronomiques) ----------
 const Saison = (() => {
@@ -44,19 +43,25 @@ const Saison = (() => {
   // Printemps au 20 mars, été au 21 juin, automne au 22 septembre, hiver au 21 décembre
   const cle = (mois, jour) => { const j = (mois - 1) * 100 + jour; return j >= 220 && j < 521 ? 'printemps' : j >= 521 && j < 822 ? 'ete' : j >= 822 && j < 1121 ? 'automne' : 'hiver'; };
   const J = (a, m, d) => Date.UTC(a, m, d) / 864e5;
+  // Frise du 1er janvier au 31 décembre : hiver (jusqu'au 19 mars), printemps, été, automne, hiver (dès le 21 décembre)
   function annee(d) {
-    const x = J(d.an, d.mois - 1, d.jour), a = x >= J(d.an, 2, 20) ? d.an : d.an - 1;
-    const b = [J(a, 2, 20), J(a, 5, 21), J(a, 8, 22), J(a, 11, 21), J(a + 1, 2, 20)];
-    return { durees: ORDRE.map((k, i) => b[i + 1] - b[i]), position: (x - b[0] + 0.5) / (b[4] - b[0]), cle: cle(d.mois, d.jour) };
+    const x = J(d.an, d.mois - 1, d.jour), a = J(d.an, 0, 1), fin = J(d.an + 1, 0, 1);
+    const b = [a, J(d.an, 2, 20), J(d.an, 5, 21), J(d.an, 8, 22), J(d.an, 11, 21), fin];
+    return { durees: [0, 1, 2, 3, 4].map(i => b[i + 1] - b[i]), position: (x - a + 0.5) / (fin - a), cle: cle(d.mois, d.jour) };
   }
+  const MOIS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+  const SEGS = ['hiver', 'printemps', 'ete', 'automne', 'hiver'];
   return {
     // d : { an, mois, jour } (dateDe)
     maj(d) {
       const el = document.getElementById('saison'); if (!el) return;
       const f = annee(d);
-      if (!el.querySelector('.seg')) el.innerHTML = ORDRE.map(k => `<span class="seg" data-s="${k}"><svg viewBox="-50 0 250 40" preserveAspectRatio="xMaxYMid slice" aria-hidden="true">${DESSINS[k]}</svg><b>${NOMS[k]}</b></span>`).join('') + '<i class="curseur"></i>';
-      el.querySelectorAll('.seg').forEach((s, i) => { s.style.flexGrow = f.durees[i]; s.classList.toggle('en-cours', s.dataset.s === f.cle); });
-      el.querySelector('.curseur').style.left = (f.position * 100).toFixed(2) + '%';
+      if (!el.querySelector('.seg')) el.innerHTML = SEGS.map((k, i) => `<span class="seg" data-s="${k}"><svg viewBox="-50 0 250 40" preserveAspectRatio="xMaxYMid slice" aria-hidden="true">${DESSINS[k].replace(/sf-ciel-(\w)/g, `sf-ciel-$1${i}`)}</svg></span>`).join('') + '<i class="curseur"></i>';
+      el.querySelectorAll('.seg').forEach((s, i) => { s.style.flexGrow = f.durees[i]; });
+      const pos = (f.position * 100).toFixed(2) + '%';
+      el.querySelector('.curseur').style.left = pos;
+      const m = document.getElementById('mois');
+      if (m) { m.textContent = MOIS[d.mois - 1]; m.style.left = Math.max(8, Math.min(92, f.position * 100)).toFixed(2) + '%'; }
       el.dataset.saison = f.cle; el.setAttribute('aria-label', 'Saison : ' + NOMS[f.cle]);
     },
     cle, NOMS,
@@ -69,46 +74,3 @@ function teinteProduit(c) {
   const m = c.coul.m || c.coul.c, n = parseInt(m.slice(1), 16), l = (0.3 * (n >> 16) + 0.59 * ((n >> 8) & 255) + 0.11 * (n & 255)) / 255;
   return l > 0.78 ? c.coul.c || c.coul.f : m;
 }
-const Recoltes = {
-  an: null, ferme: null, lignes: new Map(),
-  // kg et kcal rentrés cette année par culture, moins ce qui roule encore (enRoute : id → { kg, kcal })
-  donnees(f, an, enRoute) {
-    const r = f.stats.recAn?.[an] || {};
-    return Object.entries(r).map(([id, q]) => ({ id, kg: Math.max(0, q.kg - (enRoute[id]?.kg || 0)), kcal: Math.max(0, q.kcal - (enRoute[id]?.kcal || 0)) }))
-      .filter(l => l.kg > 0.5).sort((a, b) => b.kg - a.kg);
-  },
-  maj(f, an, enRoute, eclat) {
-    const el = document.getElementById('recoltes'); if (!el) return;
-    const ol = el.querySelector('ol'), L = this.donnees(f, an, enRoute);
-    if (this.an !== an || this.ferme !== f) { this.an = an; this.ferme = f; ol.innerHTML = ''; this.lignes.clear(); }
-    for (const l of L) if (!this.lignes.has(l.id)) {
-      const c = CULTURE[l.id], li = document.createElement('li');
-      li.innerHTML = `<span class="pt" style="background:${teinteProduit(c)}"></span><span class="nom">${c.nom}</span><b class="q"></b><span class="e"></span><span class="barre"><i style="background:${teinteProduit(c)}"></i></span>`;
-      ol.appendChild(li); this.lignes.set(l.id, li);
-    }
-    const max = Math.max(1, ...L.map(l => l.kg));
-    for (const l of L) {
-      const li = this.lignes.get(l.id);
-      Compteur.animer(li.querySelector('.q'), l.kg, masse, 600);
-      li.querySelector('.e').textContent = nf(l.kcal / 1e6, l.kcal < 1e7 ? 1 : 0) + ' Mkcal';
-      li.querySelector('.barre i').style.width = (l.kg / max * 100).toFixed(1) + '%';
-    }
-    el.querySelector('.total b').textContent = nf(L.reduce((s, l) => s + l.kcal, 0) / 1e6, 0) + ' Mkcal';
-    el.classList.toggle('vide', !L.length);
-    // retri animé : chaque ligne glisse de son ancienne place vers la nouvelle
-    const avant = new Map([...this.lignes].map(([id, li]) => [id, li.getBoundingClientRect().top]));
-    for (const l of L) ol.appendChild(this.lignes.get(l.id));
-    if (!Anim.reduit) for (const l of L) { const li = this.lignes.get(l.id), dy = avant.get(l.id) - li.getBoundingClientRect().top; if (Math.abs(dy) > 0.5) li.animate([{ transform: `translateY(${dy}px)` }, { transform: 'none' }], { duration: 520, easing: 'cubic-bezier(.2,.8,.3,1)' }); }
-    if (eclat && this.lignes.get(eclat) && !Anim.reduit) this.lignes.get(eclat).animate([{ background: 'rgba(224,179,58,.34)' }, { background: 'rgba(224,179,58,0)' }], { duration: 900, easing: 'ease-out' });
-  },
-  // Ligne d'une culture (créée vide si elle n'existe pas encore) : c'est là que la caisse vole
-  cible(id) {
-    const el = document.getElementById('recoltes'); if (!el) return document.body;
-    if (!this.lignes.has(id)) {
-      const c = CULTURE[id], li = document.createElement('li');
-      li.innerHTML = `<span class="pt" style="background:${teinteProduit(c)}"></span><span class="nom">${c.nom}</span><b class="q">0 kg</b><span class="e"></span><span class="barre"><i style="background:${teinteProduit(c)}"></i></span>`;
-      el.querySelector('ol').appendChild(li); this.lignes.set(id, li); el.classList.remove('vide');
-    }
-    return this.lignes.get(id).querySelector('.q');
-  },
-};

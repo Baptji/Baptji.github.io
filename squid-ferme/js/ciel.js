@@ -47,13 +47,16 @@ const Ciel = {
 
   // Une fois par jour de jeu : soleil, couverture, brume, couleurs du ciel
   jour(j, m, f, reduit) {
-    if (this.jourVu === j) return false;
-    this.jourVu = j;
+    const cle = j + (typeof S !== 'undefined' && S && S.vitesse >= 10 ? 0.5 : 0);
+    if (this.jourVu === cle) return false;
+    this.jourVu = cle;
     const K = K3, d = dateDe(j), eau = m.pluie + m.neige, doy = d.doy;
     const e = this.etat;
-    e.eau = eau; e.neige = m.neige > 0.3; e.couvert = eau > 1; e.orage = m.pluie >= 15 && m.tmax >= 21;
-    e.brume = (d.mois >= 10 || d.mois <= 3) && m.tmax - m.tmin < 4 && eau < 1;
-    e.nuages = e.couvert ? 0 : Math.round(hasard(j, 3, 3) * 4);
+    // ×10 et ×30 : ciel constamment clair (pas de pluie, de nuages ni de brume qui clignotent d'un jour à l'autre)
+    const clair = (typeof S !== 'undefined' && S && S.vitesse >= 10);
+    e.eau = clair ? 0 : eau; e.neige = !clair && m.neige > 0.3; e.couvert = !clair && eau > 1; e.orage = !clair && m.pluie >= 15 && m.tmax >= 21;
+    e.brume = !clair && (d.mois >= 10 || d.mois <= 3) && m.tmax - m.tmin < 4 && eau < 1;
+    e.nuages = clair || e.couvert ? 0 : Math.round(hasard(j, 3, 3) * 4);
     // hauteur du soleil selon la saison (Artois, vers 11 h solaires)
     const saison = Math.cos((doy - 172) / 365 * Math.PI * 2), el = (36 + 22 * saison) * Math.PI / 180, az = 0.75;
     this.soleil.position.set(-Math.sin(az) * Math.cos(el) * 40, Math.sin(el) * 40, Math.cos(az) * Math.cos(el) * 40);

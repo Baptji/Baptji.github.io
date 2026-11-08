@@ -309,7 +309,18 @@ const Decor = (() => {
     bloc(PX0 - 0.006, PX0, 0, CH, PZ - CW / 2, PZ + CW / 2, mNoir, 2.6, gp);
     [[PZ - CW / 2 - 0.04, PZ - CW / 2], [PZ + CW / 2, PZ + CW / 2 + 0.04]].forEach(([a, b]) => bloc(PX0 - 0.012, PX0, 0, CH + 0.05, a, b, mPie, 2.6, gp));
     bloc(PX0 - 0.012, PX0, CH, CH + 0.05, PZ - CW / 2, PZ + CW / 2, mPie, 2.6, gp);
-    bloc(PX1, PX1 + 0.9, 0, 0.007, PZ - 0.62, PZ + 0.62, K.mat('#d9bc84'), 7).castShadow = false;   // terre battue devant la porte
+    // Terre battue devant la porte (08/11 : « trop carré ») : aire irrégulière qui s'évase contre le mur et se resserre sur le
+    // chemin, bordée d'un voile de terre mêlée d'herbe (transparent : il prend la couleur de la saison)
+    const aire = (marge, phase) => {
+      const N = 26, bord = [], lg = 1.02 + marge, pli = (u, k) => (Math.sin(u * 11 + phase + k) + Math.sin(u * 23 + phase * 2 + k * 3) * 0.6 + (hasard(Math.round(u * N) * 3 + k + phase) - 0.5) * 1.1) * 0.032;
+      const large = u => 0.13 + marge * 0.7 + (0.55 + marge * 0.4) * Math.pow(1 - u, 1.5);
+      for (let i = 0; i <= N; i++) { const u = i / N; bord.push([PX1 + 0.004 + u * lg, PZ + large(u) + pli(u, 1)]); }
+      for (let i = N; i >= 0; i--) { const u = i / N; bord.push([PX1 + 0.004 + u * lg, PZ - large(u) - pli(u, 5)]); }
+      const sh = new T3.Shape(); bord.forEach(([x, z], i) => i ? sh.lineTo(x, z) : sh.moveTo(x, z)); sh.closePath();
+      const geo = new T3.ShapeGeometry(sh); geo.rotateX(Math.PI / 2); return geo;
+    };
+    const voile = K.mesh(gp, aire(0.09, 2.3), K.mat('#c8ac74', { transparent: true, opacity: 0.5, depthWrite: false, side: T3.DoubleSide }), [0, 0.005, 0]); voile.castShadow = false; voile.receiveShadow = true;
+    const battue = K.mesh(gp, aire(0, 0.7), K.mat('#d9bc84', { side: T3.DoubleSide }), [0, 0.007, 0]); battue.castShadow = false; battue.receiveShadow = true;
     const mVan = K.matV();
     function vantail(w, haut, ep, rot, dehors) {
       const sh = new T3.Shape(), N = 12; sh.moveTo(0, 0); sh.lineTo(0, haut(0));
@@ -330,7 +341,7 @@ const Decor = (() => {
     // Circulation dans la ferme (repère de la ferme) : on entre par la grange, on vide sur l'aire à cul dans la porte de cour,
     // on fait le tour de la cour et on sort par le porche (sens unique). Les machines se rangent dans la grange ; les tracteurs dans la cour.
     A.voies = {
-      dehors: [PX1 + 1.35, PZ], seuil: [PX1 + 0.35, PZ], abri: [X1 - 0.45, PZ], cour: [PX0 - 0.25, PZ], vide: [0.12, PZ],
+      porte: [PX1 + 0.012, PZ], dehors: [PX1 + 1.35, PZ], seuil: [PX1 + 0.35, PZ], abri: [X1 - 0.45, PZ], cour: [PX0 - 0.25, PZ], vide: [0.12, PZ],
       tour: [[-0.55, PZ, 0.3], [-0.85, -0.25, 0.3], [-0.85, 0.55, 0.3], [-0.45, 0.88, 0.3], [0, 1.2, 0.25]], porche: [0, 1.62], sortie: [0, 2.35],
       places: [[0.86, -0.1], [0.52, -0.1], [0.18, -0.1]], rangee: 0.86,
     };
@@ -455,7 +466,7 @@ const Decor = (() => {
     });
     D.colorer = (i, c) => { for (let k = 0; k < 4; k++) col.set([c.r, c.g, c.b], i * 12 + k * 3); for (const j of suite.get(i) || []) col.set([c.r, c.g, c.b], j * 3); };
     D.solFini = () => { aC.needsUpdate = true; };
-    const larg = planches ? { r: 0.62, p: 0.3 } : { r: 0.3, p: 0.16 };
+    const larg = planches ? { r: 0.74, p: 0.36 } : { r: 0.44, p: 0.22 };
     const mR = K.matT(tx.route, { roughness: 0.95, flatShading: false }), mC = K.matT(tx.chemin, { roughness: 1, flatShading: false });
     D.routes.forEach((r, i) => { const m = new T3.Mesh(ruban(r.pts, larg.r, 0.012), mR); m.receiveShadow = true; m.userData.nom = { cle: 'route:' + (i + 1), libelle: 'Route ' + (i + 1) }; g.add(m); });
     D.chemins.forEach((c, i) => { const m = new T3.Mesh(ruban(c.pts, larg.p, 0.009), mC); m.receiveShadow = true; m.userData.nom = { cle: 'chemin:' + (i + 1), libelle: 'Chemin de terre ' + (i + 1) }; g.add(m); });
@@ -508,15 +519,49 @@ const Decor = (() => {
         for (let k = 0; k < nb; k++) { const px = h(s + k * 1.7), pz = h(s + k * 2.3); if (t !== 'h' && Math.abs(px - 0.5) < 0.3 && Math.abs(pz - 0.5) < 0.3) continue; touffes.push({ x: cx + px, z: cz + pz, s: 0.8 + h(s + k) * 0.7, r: k }); }
       } else if (t === 'e') for (let k = 0; k < 3; k++) roseaux.push({ x: cx + h(s + k), z: cz + h(s + k + 0.3), r: h(s + k * 2) });
     }
+    // Haies entre les champs (08/11, film) : continues le long des rangs ; en bout de rang, simples bouquets aux angles de case
+    // pour laisser passer les machines, qui tournent au-delà du champ. Un arbre de temps en temps. Ce qu'un engin rencontre
+    // malgré tout sur son axe s'ouvre à son passage (D.degager).
+    const haies = new Map(), noter = (e, x, z) => { const k = Math.floor(z + H / 2) * W + Math.floor(x + W / 2); if (!haies.has(k)) haies.set(k, []); haies.get(k).push(e); };
+    const typeC = (x, y) => x >= 0 && y >= 0 && x < W && y < H ? pl.types[y][x] : '#', uniteC = (x, y) => x >= 0 && y >= 0 && x < W && y < H ? pl.unite[y * W + x] : -9;
+    const presFerme = (x, y) => { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (typeC(x + i, y + j) === 'm') return true; return false; };
+    const limite = (x, y, x2, y2) => {   // la limite sépare deux champs, ou un champ d'un pré libre loin de la ferme
+      const c1 = typeC(x, y) === 'c' && uniteC(x, y) >= 0, c2 = typeC(x2, y2) === 'c' && uniteC(x2, y2) >= 0;
+      if (c1 && c2) return uniteC(x, y) !== uniteC(x2, y2);
+      const [cx, cy] = c1 ? [x2, y2] : [x, y]; return (c1 || c2) && typeC(cx, cy) === 'h' && !presFerme(cx, cy);
+    };
+    const buissonHaie = (px, pz, enZ, s, n) => { const b = { x: px, z: pz, s: (1.05 + h(s + 1) * 0.4) * (0.85 + 0.25 * Math.sin(n * 0.7 + s)), rot: (enZ ? Math.PI / 2 : 0) + (h(s + 2) - 0.5) * 0.5, sl: 1.1 + h(s + 3) * 0.3 }; noter({ b: buissons.length }, px, pz); buissons.push(b); };
+    if (!planches) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const s = y * 131 + x * 37, X = wx(pl, x), Z = wz(pl, y);
+      if (y + 1 < H && limite(x, y, x, y + 1) && h(s + 0.1) > 0.04) for (let k = 0; k < 3; k++) { const a = (k + 0.25 + h(s + k * 3) * 0.5) / 3; buissonHaie(X + a, Z + 1 + (h(s + k * 5) - 0.5) * 0.05, false, s + k * 11, x * 3 + k); }
+      if (x + 1 < W && limite(x, y, x + 1, y)) for (const a of [0.03, 0.2, 0.8, 0.97]) buissonHaie(X + 1 + (h(s + a * 9) - 0.5) * 0.05, Z + a + (h(s + a * 13) - 0.5) * 0.05, true, s + a * 17, y * 3);
+      const hori = y + 1 < H && limite(x, y, x, y + 1), vert = x + 1 < W && limite(x, y, x + 1, y);
+      if ((hori || vert) && h(s + 0.77) < 0.2) {
+        const a = { x: hori ? X + 0.2 + h(s + 7) * 0.6 : X + 1, z: hori ? Z + 1 : Z + (h(s + 7) < 0.5 ? 0.04 : 0.96), s: 0.62 + h(s + 8) * 0.3, r: h(s + 9) * 6, t: 'limite' };
+        noter({ a: arbres.length, tronc: true }, a.x, a.z); arbres.push(a);
+      }
+    }
     const mArbre = K.matV({}, 0.04), mH = K.matV({}, 0.05), mT = K.matV({ side: T3.DoubleSide }, 0.8);
     D.troncs = K.inst(g, GA.tronc, K.matV(), arbres.length); D.houppiers = K.inst(g, GA.houppier, mArbre, arbres.length);
     D.troncs.userData.arbres = D.houppiers.userData.arbres = arbres;
     arbres.forEach((a, i) => { K.poser(D.troncs, i, [a.x, 0, a.z], [0, a.r, 0], a.s); K.poser(D.houppiers, i, [a.x, 0, a.z], [0, a.r, 0], a.s, '#4f8f3f'); });
     D.buissons = K.inst(g, GA.buisson, mH, buissons.length); D.buissons.userData.buissons = buissons; D.buissonsPos = buissons;
-    buissons.forEach((b, i) => K.poser(D.buissons, i, [b.x, 0, b.z], [0, i, 0], [b.s, b.s * (0.9 + h(i) * 0.3), b.s], '#3a7a36'));
+    buissons.forEach((b, i) => K.poser(D.buissons, i, [b.x, 0, b.z], [0, b.rot ?? i, 0], [b.s * (b.sl || 1), b.s * (0.9 + h(i) * 0.3), b.s], '#3a7a36'));
     D.touffes = K.inst(g, GA.touffe, mT, touffes.length, false);
     touffes.forEach((t, i) => K.poser(D.touffes, i, [t.x, 0, t.z], [0, t.r, 0], t.s, '#6aa84a'));
     if (roseaux.length) { const ro = K.inst(g, GA.roseau, K.matV({}, 0.5), roseaux.length); roseaux.forEach((r, i) => K.poser(ro, i, [r.x, 0, r.z], [(r.r - 0.5) * 0.3, 0, 0])); }
+    // Un engin qui roule ouvre la haie sur son axe, pour de bon : les buissons s'effacent, les arbres ne cèdent que si leur tronc est sur la trace
+    const VIDE = new T3.Matrix4().makeScale(0, 0, 0), sur = (e, x, z, c, sn, l, lat) => { const dx = e.x - x, dz = e.z - z, lon = dx * c + dz * sn, la = -dx * sn + dz * c; return Math.abs(la) < lat && lon > -l && lon < l + 0.35; };
+    D.nbHaies = [...haies.values()].reduce((a, l) => a + l.length, 0);
+    D.degager = (x, z, cap, l) => {
+      if (!haies.size) return;
+      const c = Math.cos(cap), sn = Math.sin(cap), cx = Math.floor(x + W / 2), cy = Math.floor(z + H / 2);
+      for (let j = cy - 1; j <= cy + 1; j++) for (let i = cx - 1; i <= cx + 1; i++) for (const e of haies.get(j * W + i) || []) {
+        if (e.ouvert) continue;
+        if (e.b != null && sur(buissons[e.b], x, z, c, sn, l, 0.12)) { e.ouvert = true; D.buissons.setMatrixAt(e.b, VIDE); D.buissons.instanceMatrix.needsUpdate = true; }
+        else if (e.a != null && sur(arbres[e.a], x, z, c, sn, l, 0.07)) { e.ouvert = true; for (const m of [D.troncs, D.houppiers]) { m.setMatrixAt(e.a, VIDE); m.instanceMatrix.needsUpdate = true; } }
+      }
+    };
     D.arbres = arbres; D.nbBuissons = buissons.length; D.nbTouffes = touffes.length;
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (pl.types[y][x] === 'e') {
       const m = new T3.Mesh(G.boite(1, 0.02, 1), K.mat('#4f8fc4', { roughness: 0.15, metalness: 0.1, flatShading: false })); m.position.set(wx(pl, x) + 0.5, 0.0, wz(pl, y) + 0.5); m.receiveShadow = true; m.userData.nom = { cle: `eau:${x}-${y}`, libelle: 'Mare' }; g.add(m);
@@ -598,7 +643,7 @@ const Decor = (() => {
       // chemin de terre devant la porte charretière, jusqu'à la route ou au chemin le plus proche
       const L = (q, y = 0) => fg.localToWorld(new T3.Vector3(q[0], y, q[1])), sw = L(A.voies.seuil), dw = L(A.voies.dehors), dg = new T3.Vector3().subVectors(dw, sw).normalize();
       const pg = [[sw.x, sw.z], [dw.x, dw.z], ...versReseau([dw.x, dw.z], dg)];
-      const ag = new T3.Mesh(ruban(chaikin(pg), 0.2 * s, 0.0095), K.matT(tx.chemin, { roughness: 1, flatShading: false })); ag.receiveShadow = true; ag.userData.nom = { cle: 'batiment:allee-grange', libelle: 'Ferme · chemin de la grange' }; g.add(ag);
+      const pa = L(A.voies.porte), ag = new T3.Mesh(ruban(chaikin([[pa.x, pa.z], ...pg]), 0.2 * s, 0.0095),   /* dessiné jusqu'à la porte ; les machines suivent pg */ K.matT(tx.chemin, { roughness: 1, flatShading: false })); ag.receiveShadow = true; ag.userData.nom = { cle: 'batiment:allee-grange', libelle: 'Ferme · chemin de la grange' }; g.add(ag);
       D.alleeGrange = pg;
     }
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {

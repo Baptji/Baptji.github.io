@@ -1,6 +1,6 @@
 'use strict';
-/* Calque d'effets au-dessus de la page (fixe, transparent aux clics) : caisses et étoiles qui volent jusqu'aux
-   compteurs, pièces, confettis, textes qui montent. Ne redessine que lorsque quelque chose est en vol.
+/* Calque d'effets au-dessus de la page (fixe, transparent aux clics) : expérience et pièces qui volent jusqu'aux
+   compteurs, confettis, textes qui montent. Ne redessine que lorsque quelque chose est en vol.
    Plus bas : les nombres de l'interface qui défilent jusqu'à leur nouvelle valeur. */
 
 const Anim = {
@@ -22,12 +22,10 @@ const Anim = {
     return s;
   },
   spriteCaisse(c) { return this.spr('c' + c.id, 38, 34, g => caisse(g, 1, 3, c)); },
-  spriteEtoile() { return this.spr('etoile', 11, 11, g => etoile(g, 0, 0, true)); },
   spritePiece() {
     return this.spr('piece', 9, 9, g => { disque(g, 4, 4, 4, '#b8861a'); disque(g, 4, 4, 3, '#f2c240'); R(g, 4, 2, 1, 5, '#c8961e'); P(g, 2, 2, '#fff2b0'); });
   },
-  spriteTrouvaille(id) { return this.spr('t' + id, 16, 16, g => trouvailleIcone(g, 0, 0, id)); },
-  // Pixels d'écran par pixel d'art : comme le champ, ou un peu plus pour les étoiles
+  // Pixels d'écran par pixel d'art : comme le champ, ou un peu plus pour les pièces
   get ps() { return Math.max(1, Rendu.k || this.dpr); },
 
   // ---------- Effets ----------
@@ -37,24 +35,29 @@ const Anim = {
     if (document.hidden || this.reduit) { this.enRetard++; setTimeout(() => { this.enRetard--; o.arrivee?.(); }, o.retard || 0); return; }
     this.effets.push({ type: 'vol', echelle: 1, duree: 1200, ...o, t0: performance.now() + (o.retard || 0), fait: false });
   },
-  caisse(de, c, vers, retard, arrivee) { this.vol({ sprite: this.spriteCaisse(c), de, vers, retard, arrivee, echelle: 1, duree: 1250 }); },
-  etoiles(de, n, vers, retard, arrivee) {
-    for (let i = 0; i < n; i++) this.vol({ sprite: this.spriteEtoile(), de, vers, retard: (retard || 0) + i * 170, echelle: 3, duree: 1500, tourne: true, ecart: (i - (n - 1) / 2) * 30, arrivee: i === n - 1 ? arrivee : null, eclat: true });
+  // « +3 d'expérience » qui vole jusqu'au niveau
+  experience(de, n, vers, arrivee) {
+    const txt = `+${nf(n)} d’expérience`, d = this.dpr, s = document.createElement('canvas'), police = `700 ${Math.round(15 * d)}px -apple-system, system-ui, sans-serif`;
+    let g = s.getContext('2d'); g.font = police;
+    s.width = Math.ceil(g.measureText(txt).width + 10 * d); s.height = Math.ceil(26 * d);
+    g = s.getContext('2d'); g.font = police; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round';
+    g.lineWidth = 4 * d; g.strokeStyle = 'rgba(43,33,24,.85)'; g.strokeText(txt, s.width / 2, s.height / 2);
+    g.fillStyle = '#ffe08a'; g.fillText(txt, s.width / 2, s.height / 2);
+    this.vol({ sprite: s, net: true, de, vers, arrivee, duree: 1300 });
   },
   pieces(de, vers, n, retard, arrivee) {
     for (let i = 0; i < n; i++) this.vol({ sprite: this.spritePiece(), de, vers, retard: (retard || 0) + i * 60, echelle: 2, duree: 900 + Math.random() * 300, ecart: (Math.random() - 0.5) * 60, arrivee: i === n - 1 ? arrivee : null });
   },
-  trouvaille(de, id, vers, arrivee) { this.vol({ sprite: this.spriteTrouvaille(id), de, vers, echelle: 3, duree: 1600, arrivee, eclat: true }); },
-  texte(de, txt, coul, retard) {
+  texte(de, txt, coul, retard, sprite) {
     if (document.hidden || this.reduit) return;
-    this.effets.push({ type: 'texte', de, txt, coul: coul || '#fff3c4', t0: performance.now() + (retard || 0), duree: 1300 });
+    this.effets.push({ type: 'texte', de, txt, coul: coul || '#fff3c4', sprite, t0: performance.now() + (retard || 0), duree: sprite ? 2000 : 1300 });
   },
-  confettis(x, y, n = 60) {
+  confettis(x, y, n = 60, petits = false) {
     if (this.reduit) return;
     const t0 = performance.now(), cols = ['#f2c230', '#e85a3a', '#5aa848', '#4a8ad8', '#f6f2ea', '#c868c8'];
     for (let i = 0; i < n; i++) {
-      const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.4, v = 160 + Math.random() * 260;
-      this.effets.push({ type: 'confetti', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, col: cols[i % cols.length], t0: t0 + Math.random() * 120, duree: 1400 + Math.random() * 900, ph: Math.random() * 6 });
+      const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.4, v = (petits ? 50 : 160) + Math.random() * (petits ? 130 : 260);
+      this.effets.push({ type: 'confetti', petits, x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, col: cols[i % cols.length], t0: t0 + Math.random() * 120, duree: 1400 + Math.random() * 900, ph: Math.random() * 6 });
     }
   },
 
@@ -77,18 +80,19 @@ const Anim = {
         g.font = `700 ${Math.round(15 * this.dpr)}px -apple-system, system-ui, sans-serif`; g.textAlign = 'center';
         g.lineWidth = 4 * this.dpr; g.strokeStyle = 'rgba(43,33,24,.85)'; g.strokeText(e.txt, p.x * this.dpr, (p.y - 18 - u * 34) * this.dpr);
         g.fillStyle = e.coul; g.fillText(e.txt, p.x * this.dpr, (p.y - 18 - u * 34) * this.dpr);
+        if (e.sprite) { const h = 26 * this.dpr, w = h * e.sprite.width / e.sprite.height, x = p.x * this.dpr - g.measureText(e.txt).width / 2 - w - 6 * this.dpr; g.drawImage(e.sprite, Math.round(x), Math.round((p.y - 18 - u * 34) * this.dpr - h * 0.72), w, h); }
         g.globalAlpha = 1;
       } else if (e.type === 'confetti') {
         const s = ms / 1000, x = e.x + e.vx * s * (1 - a * 0.4), y = e.y + e.vy * s + 380 * s * s, w = Math.abs(Math.cos(ms / 120 + e.ph));
         g.globalAlpha = a > 0.75 ? (1 - a) * 4 : 1; g.fillStyle = e.col;
-        g.fillRect(Math.round(x * this.dpr), Math.round(y * this.dpr), Math.max(1, Math.round(6 * w * this.dpr)), Math.round(4 * this.dpr));
+        g.fillRect(Math.round(x * this.dpr), Math.round(y * this.dpr), Math.max(1, Math.round((e.petits ? 3.5 : 6) * w * this.dpr)), Math.round((e.petits ? 2.5 : 4) * this.dpr));
         g.globalAlpha = 1;
       }
       return true;
     });
   },
   dessinerVol(g, e, ms, a) {
-    const ps = this.ps * e.echelle, dpr = this.dpr, p0 = typeof e.de === 'function' ? e.de() : e.de;
+    const ps = e.net ? 1 : this.ps * e.echelle, dpr = this.dpr, p0 = typeof e.de === 'function' ? e.de() : e.de;
     let x = p0.x, y = p0.y, sc, rot = 0;
     const pop = 280, flotte = 480;
     if (ms < pop) { const u = ms / pop; sc = u < 0.7 ? u / 0.7 * 1.25 : 1.25 - (u - 0.7) / 0.3 * 0.25; y -= u * 14; x += (e.ecart || 0) * u; }
@@ -110,6 +114,7 @@ const Anim = {
       g.globalAlpha = 1;
     }
     g.save(); g.translate(Math.round(x * dpr), Math.round(y * dpr)); if (rot) g.rotate(rot);
+    g.imageSmoothingEnabled = !!e.net;
     g.drawImage(e.sprite, Math.round(-w / 2), Math.round(-h / 2), Math.round(w), Math.round(h));
     g.restore();
   },

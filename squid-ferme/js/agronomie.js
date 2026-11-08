@@ -175,7 +175,6 @@ function recolter(f, t, j) {
   pc.kg += kg; pc.kcal += kcal; pc.ha += mode.caseHa; pc.dernier = r.ha;
   const pa = s.parAn[an] ??= { kg: 0, kcal: 0 };
   pa.kg += kg; pa.kcal += kcal;
-  S.argent += kg * c.prix;
   // Résidus laissés au sol, azote rendu par les légumineuses
   t.mo += c.cat === 'Céréales' ? (c.id === 'mais' || c.id === 'sorgho' ? 0.029 : 0.020) : c.cat === 'Oléagineux' ? 0.014 : c.leg && c.kcal > 300 ? 0.012 : 0.007;   // k1 0,15-0,20 [10]
   if (c.leg) t.nmin += 35;

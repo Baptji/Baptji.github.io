@@ -245,7 +245,7 @@ const Vie = {
     // êtres de passage
     this.etres = this.etres.filter(e => {
       if (e.type === 'trafic') {
-        const pose = e.tr.pose(e.s), libre = Flotte.devant(e.id, { x: pose.x, y: pose.y, cap: pose.cap }, e.L, e.W, 3, (m, dc) => Math.cos(dc) > -0.3);
+        const pose = e.tr.pose(e.s), libre = Flotte.veiller(e.veille ??= {}, e.x, e.y) ? Infinity : Flotte.devant(e.id, { x: pose.x, y: pose.y, cap: pose.cap }, e.L, e.W, 3, (m, dc) => Math.cos(dc) > -0.3);
         e.v = Math.min(e.v + 1.2 * s, e.v0, Math.sqrt(2 * 3.5 * Math.max(0, libre - 0.14)));
         e.s += e.v * s; const p = e.tr.pose(e.s);
         e.x = p.x; e.y = p.y; e.cap = p.cap; e.o.visible = true; e.o.position.set(p.x, 0.012, p.y); e.o.rotation.y = -p.cap;
@@ -255,7 +255,7 @@ const Vie = {
       if (e.type === 'voiture' || e.type === 'camion') {
         e.d += e.v * s;
         if (e.d < 0) { e.o.visible = false; return true; }
-        const p = Decor.surLigne(e.pts, e.d, e.voie ?? 0.07); e.o.visible = true;
+        const p = Decor.surLigne(e.pts, e.d, e.voie ?? Rendu.D.larg.r * 0.25); e.o.visible = true;
         e.o.position.set(p.x, 0.012, p.z); e.o.rotation.y = -p.cap;
         if (p.fini) { this.groupe.remove(e.o); return false; }
         return true;
@@ -274,6 +274,19 @@ const Vie = {
       return true;
     });
   },
+  // De carrefour en carrefour jusqu'au bord du plateau : rend les points à suivre depuis la case « de », ou null s'il n'y a pas d'issue
+  auCarrefour(routes, vus, de, n = 0) {
+    if (n > 8) return null;
+    const issues = routes.filter(r => !vus.has(r) && (r.debut === de || r.fin === de)).sort(() => Math.random() - 0.5);
+    for (const r of issues) {
+      const endroit = r.debut === de, pts = endroit ? r.pts : [...r.pts].reverse(), bord = r.auBord[endroit ? 1 : 0];
+      if (bord) return pts;
+      vus.add(r);
+      const s = this.auCarrefour(routes, vus, endroit ? r.fin : r.debut, n + 1);
+      if (s) return [...pts, ...s.slice(1)];
+    }
+    return null;
+  },
   naitre(t, ctx) {
     const P = this.prochain, D = this.D, pl = this.pl, W = pl.w, H = pl.h, mois = ctx.mois;
     // Trafic de 1960 sur les routes qui sortent du plateau : trois véhicules au plus, dans les deux sens, voie de droite,
@@ -287,10 +300,13 @@ const Vie = {
         let pts = sens ? r.pts : [...r.pts].reverse();
         const dehors = (a, b) => { const l = Math.hypot(a[0] - b[0], a[1] - b[1]) || 1; return [a[0] + (a[0] - b[0]) / l * 0.7, a[1] + (a[1] - b[1]) / l * 0.7]; };
         const [b0, b1] = sens ? r.auBord : [r.auBord[1], r.auBord[0]];
-        if (b0) pts = [dehors(pts[0], pts[1]), ...pts]; if (b1) pts = [...pts, dehors(pts.at(-1), pts.at(-2))];
+        // une route qui s'arrête à un carrefour : le véhicule tourne ou continue tout droit jusqu'à ressortir du plateau
+        const suite = b1 ? [] : this.auCarrefour(D.routes, new Set([r]), sens ? r.fin : r.debut);
+        if (suite) pts = [...pts, ...suite.slice(1)];
+        if (b0) pts = [dehors(pts[0], pts[1]), ...pts]; if (suite && pts.at(-1)) pts = [...pts, dehors(pts.at(-1), pts.at(-2))];
         pts = Flotte.aDroite(pts, D.larg.r * 0.28);
         const M = this.modeles(), m = this.tirer(M);
-        if (!Flotte.presDe(pts[0], m.L + 1.0)) {
+        if (suite && !Flotte.presDe(pts[0], m.L + 1.0)) {
           const o = new T3.Group(), id = 'trafic-' + (++this.num); K3.mesh(o, m.geo, this.matTrafic).castShadow = false;
           const om = this.ombre(m.W + 0.02, m.L + 0.04); om.material = this.mOmbreBord(); o.add(om); o.visible = false; this.groupe.add(o);
           o.userData.nom = { cle: 'vehicule:' + id, libelle: m.nom };

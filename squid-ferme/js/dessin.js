@@ -612,32 +612,6 @@ function caisse(g, x, y, c) {
 }
 
 // Étoile dorée (11 × 11)
-function etoile(g, x, y, plein) {
-  const o = plein ? '#f2b630' : '#8a7a5a', c = plein ? '#ffd860' : '#b8a888', s = plein ? '#c8861a' : '#6a5a40';
-  const lignes = ['.....o.....', '....oco....', '....oco....', 'oooocccoooo', '.occcccccso', '..occcccso.', '...occcso..', '..occsccso.', '..ocso.oso.', '.oso....oso', '.oo......oo'];
-  lignes.forEach((l, j) => { for (let i = 0; i < 11; i++) { const ch = l[i]; if (ch !== '.') P(g, x + i, y + j, ch === 'o' ? s : ch === 's' ? o : c); } });
-  if (plein) { P(g, x + 4, y + 4, '#fff6c8'); P(g, x + 5, y + 3, '#fff6c8'); }
-}
-
-// ---------- Trouvailles (16 × 16) ----------
-function trouvailleIcone(g, x, y, id) {
-  switch (id) {
-    case 'silex': ellipse(g, x + 8, y + 9, 5, 6, '#5a5a62'); for (let i = 0; i < 5; i++) ligne(g, x + 4 + i * 2, y + 4, x + 5 + i * 2, y + 14, '#7a7a84'); P(g, x + 6, y + 5, '#b8b8c4'); break;
-    case 'tesson': R(g, x + 3, y + 5, 10, 7, '#b8683a'); R(g, x + 3, y + 5, 10, 2, '#d88a5a'); for (let i = 0; i < 4; i++) P(g, x + 4 + i * 2, y + 9, '#7a3a1a'); P(g, x + 12, y + 11, '#8a4a2a'); break;
-    case 'tegula': R(g, x + 2, y + 4, 12, 9, '#c0603a'); R(g, x + 2, y + 4, 2, 9, '#a04a2a'); R(g, x + 12, y + 4, 2, 9, '#a04a2a'); R(g, x + 4, y + 4, 8, 1, '#e08a5a'); break;
-    case 'monnaie': disque(g, x + 8, y + 8, 6, '#b08a3a'); disque(g, x + 8, y + 8, 4, '#d8b860'); R(g, x + 7, y + 5, 3, 6, '#a07a2a'); P(g, x + 6, y + 5, '#fff0b0'); break;
-    case 'fibule': ligne(g, x + 3, y + 11, x + 13, y + 5, '#7a8a5a'); disque(g, x + 4, y + 11, 2, '#9aaa6a'); ligne(g, x + 5, y + 12, x + 13, y + 7, '#5a6a3a'); P(g, x + 3, y + 10, '#c8d898'); break;
-    case 'liard': disque(g, x + 8, y + 8, 6, '#8a6a4a'); disque(g, x + 8, y + 8, 5, '#a8865a'); R(g, x + 6, y + 6, 5, 1, '#6a4a2a'); R(g, x + 6, y + 9, 5, 1, '#6a4a2a'); P(g, x + 5, y + 5, '#d8b88a'); break;
-    case 'cle': disque(g, x + 4, y + 8, 3, '#5a4a3a'); disque(g, x + 4, y + 8, 1, '#c8b89a'); R(g, x + 7, y + 7, 8, 2, '#5a4a3a'); R(g, x + 12, y + 9, 1, 3, '#5a4a3a'); R(g, x + 14, y + 9, 1, 2, '#5a4a3a'); break;
-    case 'de': R(g, x + 5, y + 4, 6, 9, '#c8c8d0'); ellipse(g, x + 8, y + 4, 3, 2, '#d8d8e0'); for (let i = 0; i < 3; i++) for (let j = 0; j < 4; j++) P(g, x + 6 + i * 2, y + 6 + j * 2, '#8a8a96'); break;
-    case 'pipe': R(g, x + 2, y + 6, 9, 2, '#e8e0d0'); R(g, x + 10, y + 4, 4, 7, '#e8e0d0'); R(g, x + 11, y + 4, 2, 2, '#5a4a3a'); P(g, x + 2, y + 6, '#c8c0b0'); break;
-    case 'fer': for (let a = 0; a < 14; a++) { const ang = Math.PI * (0.1 + a / 13 * 1.8); P(g, x + 8 + Math.round(Math.cos(ang) * 6), y + 7 - Math.round(Math.sin(ang) * 6), '#6a6a72'); P(g, x + 8 + Math.round(Math.cos(ang) * 5), y + 7 - Math.round(Math.sin(ang) * 5), '#4a4a52'); } break;
-    case 'bille': disque(g, x + 8, y + 9, 4, '#b8744a'); P(g, x + 6, y + 7, '#e8b08a'); P(g, x + 7, y + 7, '#d89a70'); break;
-    case 'bouton': disque(g, x + 8, y + 8, 5, '#a88a3a'); disque(g, x + 8, y + 8, 3, '#c8a850'); P(g, x + 7, y + 6, '#fff0b0'); P(g, x + 8, y + 9, '#7a5a1a'); P(g, x + 9, y + 8, '#7a5a1a'); break;
-    default: disque(g, x + 8, y + 8, 5, '#888');
-  }
-}
-
 // ---------- Paysage réel : routes, chemins, eau, bois, haies, toits ----------
 function voisinType(pl, x, y, types) { const t = x < 0 || y < 0 || x >= pl.w || y >= pl.h ? null : pl.types[y][x]; return t !== null && types.includes(t); }
 // Route (14 px) ou chemin (9 px) qui rejoint les cases voisines du même réseau, sur un fond d'herbe

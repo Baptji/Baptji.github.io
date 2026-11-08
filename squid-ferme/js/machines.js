@@ -5,10 +5,11 @@
    grange. Pour le grain, trois tracteurs et bennes se relaient : ils attendent en file au bord du champ, le premier roule
    à côté de la moissonneuse et reçoit le grain en marche ; benne pleine, il rentre par la grange, vide sur l'aire à cul dans
    la porte de cour (seule la livraison compte), fait le tour de la cour et ressort par le porche (sens unique).
-   Moisson finie, chacun se gare dans la cour, dans l'ordre d'arrivée. Un seul véhicule à la fois à la porte et au vidage. */
+   Moisson finie, chacun se gare dans la cour, dans l'ordre d'arrivée. Un seul véhicule à la fois à la porte et au vidage,
+   sauf si le veilleur (Flotte.veiller) juge un engin bloqué : il passe alors outre, les verrous sont libérés de force. */
 
 const Machines = {
-  R: null, flotte: [], zone: null, portes: 0, n: 0,
+  R: null, flotte: [], zone: null, zoneT: 0, portes: 0, n: 0,
   CONDUITE: { vmax: 1.6, acc: 1.2, frein: 2.6, alat: 1.0, tempo: 0.5 },
   TREMIE: 10000, BENNE: 6500,
 
@@ -29,7 +30,8 @@ const Machines = {
   // Par les routes et les chemins, voie de droite ; « de » et « vers » sont des points du monde
   routes(de, vers) {
     const p = this.R.parLesRoutes(de, vers);
-    return Flotte.aDroite(p, 0.07);
+    const R = this.R, pl = R.pl, D = R.D, surRoute = q => pl.types[Math.floor(q[1] + pl.h / 2)]?.[Math.floor(q[0] + pl.w / 2)] === 'r';
+    return Flotte.aDroite(p, q => surRoute(q) ? D.larg.r * 0.25 : D.larg.p * 0.3);
   },
   // Sortie de la grange : marche arrière jusqu'à la terre battue, demi-tour, chemin de la grange jusqu'à la route
   sortieGrange() {
@@ -43,7 +45,9 @@ const Machines = {
   // prennent qu'un véhicule à la fois)
   avantBout(route) { const b = route.at(-1), a = route.at(-2) || b, l = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1, k = Math.min(0.35, l * 0.5) / l; return [b[0] - (b[0] - a[0]) * k, b[1] - (b[1] - a[1]) * k]; },
   // Prendre la porte (un seul à la fois) ; libre : personne d'autre ne la tient
-  prendre(id) { if (!this.zone || this.zone === id) { this.zone = id; return true; } return false; },
+  prendre(id) { if (!this.zone || this.zone === id) { if (this.zone !== id) this.zoneT = performance.now(); this.zone = id; return true; } return false; },
+  // Le veilleur d'un engin qui roule : bloqué, il passe outre et la porte est libérée de force
+  veiller(o, id, x, z) { const avant = o.veille?.force, f = Flotte.veiller(o.veille ??= {}, x, z); if (f && !avant && this.zone && this.zone !== id) this.zone = null; return f; },
   rendre(id) { if (this.zone === id) this.zone = null; },
   routeLibre(pt, id) { return !Flotte.presDe(pt, 1.3, 'trafic', id); },
 
@@ -59,7 +63,8 @@ const Machines = {
         cedez: [{ pt: this.bout(), tant: () => !this.routeLibre(this.bout(), id) }] },
     ];
     Object.assign(P, { id, phase: 'attente', aller: Flotte.trace(allerTr), c: null, quitte: false });
-    P.sRendre = Flotte.abscisse(P.aller, this.bout()) + 0.5;
+    // la porte est rendue dès le demi-tour fini : les suivants s'engagent sans attendre que celui-ci ait gagné la route
+    P.sRendre = Flotte.trace([allerTr[0]]).L + 1.6;
     P.c = Flotte.conduite(P.aller, this.CONDUITE);
     // l'encombrement de la machine, pour que les autres gardent leurs distances
     const larg = P.type === 'moissonneuse' ? 0.52 : P.type === 'semoir' ? 0.46 : 0.3;
@@ -77,17 +82,23 @@ const Machines = {
   // Une machine au travail : sortie, tâche (P.d avancé par l'appelant), retour. Rend vrai quand elle est rangée.
   avancerMachine(P, t, s, tache) {
     const R = this.R, now = performance.now();
-    if (P.phase === 'attente') { if (now < P.t0) { P.o.visible = false; return false; } P.phase = 'aller'; }
+    if (P.phase === 'attente') { if (now < P.t0 || !this.prendre(P.id)) { P.o.visible = false; return false; } P.phase = 'aller'; }   // on attend son tour rangé dans la grange
     if (P.phase === 'aller' || P.phase === 'retour') {
-      const gene = Flotte.devant(P.id, { x: P.o.position.x, y: P.o.position.z, cap: -P.o.rotation.y }, 0.45, 0.25, 2.5, (m, dc) => Math.cos(dc) > 0.3);
-      Flotte.conduire(P.c, s, gene);
+      // on regarde dans le sens de la marche : en marche arrière, c'est derrière soi
+      const av = P.c.tr.pose(P.c.s), force = this.veiller(P, P.id, av.x, av.y);
+      const gene = force ? Infinity : Flotte.devant(P.id, { x: av.x, y: av.y, cap: av.cap + (av.recul ? Math.PI : 0) }, 0.45, 0.25, 2.5, (m, dc) => Math.cos(dc) > 0.3);
+      Flotte.conduire(P.c, s, gene, force);
       const p = P.c.tr.pose(P.c.s);
       P.o.visible = true; P.o.scale.setScalar(1); P.o.position.set(p.x, 0.004, p.y); P.o.rotation.y = -p.cap;
       // la porte est rendue quand la machine est bien sortie, ou rangée
       if (P.phase === 'aller' && P.c.s > P.sRendre) this.rendre(P.id);
       if (P.c.fini) {
-        if (P.phase === 'aller') { P.phase = 'tache'; P.d = 0; }
-        else { this.rendre(P.id); Flotte.desinscrire(P.id); P.o.visible = false; return true; }
+        if (P.phase === 'aller') { this.rendre(P.id); P.phase = 'tache'; P.d = 0; }
+        else {
+          this.rendre(P.id); Flotte.desinscrire(P.id); P.o.visible = false;
+          if (P.transport && P.tremie >= 1) { P.livrer(P.tremie); P.tremie = 0; }   // rentrée seule : elle vide sa trémie à la ferme
+          return true;
+        }
       }
       return false;
     }
@@ -137,8 +148,9 @@ const Machines = {
   rouler(u, s) {
     // les tracteurs garés ne gênent pas : les trajets de la cour les contournent
     const gares = new Set(this.flotte.filter(x => x.etat === 'cour').map(x => x.id));
-    const gene = Flotte.devant(u.id, { x: u.x, y: u.z, cap: u.cap }, 0.2, 0.14, 2.5, (m, dc) => !gares.has(m.id) && (Math.cos(dc) > 0.5 || (m.genre === 'machine' && Math.cos(dc) > -0.5)));
-    Flotte.conduire(u.c, s, gene); const p = u.c.tr.pose(u.c.s); u.x = p.x; u.z = p.y; u.cap = p.cap; return u.c.fini;
+    const force = this.veiller(u, u.id, u.x, u.z);
+    const gene = force ? Infinity : Flotte.devant(u.id, { x: u.x, y: u.z, cap: u.cap }, 0.2, 0.14, 2.5, (m, dc) => !gares.has(m.id) && (Math.cos(dc) > 0.5 || (m.genre === 'machine' && Math.cos(dc) > -0.5)));
+    Flotte.conduire(u.c, s, gene, force); const p = u.c.tr.pose(u.c.s); u.x = p.x; u.z = p.y; u.cap = p.cap; return u.c.fini;
   },
   partir(u, troncons, etat) { u.c = Flotte.conduite(Flotte.trace(troncons), { vmax: 3.2, acc: 1.8, frein: 3.4, alat: 1.2, tempo: 0.4 }); u.etat = etat; },
   // Sortie de la cour par le porche, puis l'allée du porche et les routes ; « vers » : point du monde
@@ -168,20 +180,22 @@ const Machines = {
     P.fileP = [0, 1, 2].map(k => { const q = tr.pose(Math.max(0, tr.L - 0.2 - k * 0.75)); return [q.x, q.y]; });
     return P.fileP;
   },
-  // Le passage de récolte servi par la flotte (le plus ancien qui travaille encore)
-  servi() { return this.R.passages.find(p => p.transport && ['aller', 'tache'].includes(p.phase) && !p.finRecolte); },
+  // Les récoltes en cours que la flotte peut servir
+  actifs() { return this.R.passages.filter(p => p.transport && ['aller', 'tache'].includes(p.phase) && !p.finRecolte && !p.autonome); },
+  affectes(P) { return this.flotte.filter(x => x.source === P && x.etat !== 'cour').length; },
+  // La récolte la moins bien servie (la plus ancienne à égalité) : plusieurs champs à la fois ont chacun leur tracteur
+  servi() { let m = null, n = Infinity; for (const p of this.actifs()) { const k = this.affectes(p); if (k < n) { n = k; m = p; } } return m; },
 
   image(t, dt) {
     const R = this.R, s = Math.min(0.05, dt / 1000);
     if (!this.flotte.length) return;
-    const P = this.servi(), V = this.V();
-    // file d'attente : ordre d'arrivée
-    const enFile = this.flotte.filter(u => u.etat === 'file').sort((a, b) => a.arrivee - b.arrivee);
-    const accompagne = this.flotte.find(u => u.etat === 'accompagne');
+    const V = this.V();
+    if (this.zone && performance.now() - this.zoneT > 15000) this.zone = null;      // une porte n'est jamais tenue indéfiniment
     for (const u of this.flotte) {
       if (u.etat === 'cour') {
-        if (P && P.phase !== 'attente') {
-          const dep = this.flotte.filter(x => x.etat !== 'cour').length;            // un à la fois : ils sortent l'un derrière l'autre
+        const P = this.servi();
+        if (P) {
+          const dep = this.affectes(P);                                             // un à la fois : ils sortent l'un derrière l'autre
           if (!this.flotte.some(x => x.etat === 'sortie' && x.c.s < 1.4)) {
             const f = this.file(P), px = V.places[u.place][0];
             if (u.depart?.P !== P || u.depart.k !== dep) u.depart = { P, k: dep, tr: [this.parLePorche([[u.x, u.z], this.L([px, -0.38, 0.22]), this.L([px - 0.28, V.vide[1], 0.22])], f[Math.min(2, dep)], u.id)] };
@@ -194,9 +208,16 @@ const Machines = {
       } else if (u.etat === 'sortie' || u.etat === 'retour') {
         if (this.rouler(u, s)) { u.etat = 'file'; u.arrivee = t; }
       } else if (u.etat === 'file') {
-        const fini = !P;
-        if (fini) { this.partir(u, this.rentrer(u), 'rentrer'); continue; }
-        if (!accompagne && enFile[0] === u && P.phase === 'tache') { u.etat = 'accompagne'; u.source = P; }
+        // sa récolte est finie : il va servir la suivante, ou il rentre
+        if (!this.actifs().includes(u.source)) {
+          const N = this.servi();
+          if (N) { const q = this.file(N)[Math.min(2, this.affectes(N))]; u.source = N; this.partir(u, [{ pts: this.routes([u.x, u.z], q), r: 0.35 }], 'retour'); }
+          else this.partir(u, this.rentrer(u), 'rentrer');
+          continue;
+        }
+        // file d'attente de chaque champ : ordre d'arrivée
+        const P = u.source, avant = this.flotte.filter(x => x.etat === 'file' && x.source === P).sort((a, b) => a.arrivee - b.arrivee)[0];
+        if (avant === u && P.phase === 'tache' && !this.flotte.some(x => x.etat === 'accompagne' && x.source === P)) u.etat = 'accompagne';
       } else if (u.etat === 'accompagne') this.accompagner(u, s);
       else if (u.etat === 'livre') {
         if (this.rouler(u, s)) { u.etat = 'vide'; u.pause = 0; u.livre = false; }
@@ -238,7 +259,7 @@ const Machines = {
   // À côté de la moissonneuse, dans le rang déjà fauché, sous la vis de vidange
   accompagner(u, s) {
     const P = u.source, R = this.R;
-    if (!P || !R.passages.includes(P) || P.phase !== 'tache') { this.partir(u, this.versVidage(u), u.charge > 1 ? 'livre' : 'livre'); return; }
+    if (!P || !R.passages.includes(P) || P.phase !== 'tache' || P.autonome) { this.partir(u, this.versVidage(u), u.charge > 1 ? 'livre' : 'livre'); return; }
     const a = Decor.surLigne(P.pts, Math.min(P.d, P.L)), b = Decor.surLigne(P.pts, Math.min(P.L, P.d + 0.12)), cap = Math.atan2(b.z - a.z, b.x - a.x), droit = Math.abs(Math.sin(cap)) < 0.2;
     const cible = [a.x + 0.4 * Math.cos(cap), a.z - P.sens * 0.72 + 0.4 * Math.sin(cap)], d = Math.hypot(cible[0] - u.x, cible[1] - u.z);
     const versCap = (c, k) => { let e = c - u.cap; e = Math.atan2(Math.sin(e), Math.cos(e)); u.cap += e * k; };

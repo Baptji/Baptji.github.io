@@ -8,7 +8,7 @@
    gel     : température minimale qui abîme la culture ; chaud : maximale qui échaude la floraison et le remplissage.
    npt     : azote absorbé par tonne récoltée (kg N/t) ; leg : légumineuse qui fixe l'azote de l'air.
    semis   : mois de semis ou de plantation ; cycle : durée indicative (jours).
-   prix    : prix fixe au producteur (€/kg) ; graine : semences ou plants (€/ha).
+   prix    : prix moyen au producteur (€/kg), tiré chaque année autour de cette valeur (mecaniques.js) ; graine : semences ou plants (€/ha).
    prod    : dessin du produit sur les caisses. forme, coul : dessin de la plante. */
 const CULTURES = [
   // Céréales

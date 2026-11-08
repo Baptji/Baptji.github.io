@@ -1,39 +1,27 @@
 'use strict';
 /* Squid Ferme : état, temps, actions du joueur, interface.
    Dessin du champ : rendu.js ; vie autour de la ferme : vie.js ; effets : animations.js ;
-   progression (étoiles, niveaux, commandes, trouvailles, bilan, premiers pas) : mecaniques.js. */
+   progression et marché (expérience, niveaux, stock, vente, bilan, premiers pas) : mecaniques.js. */
 
 // ---------- Monde ----------
 // Un lieu tiré d'une graine (js/carte.js) : grille « champs » de 50 m ou « planches » de 10 m selon le mode.
 const NOMS_MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 const MOIS_COURT = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
-const CLE = 'squid-ferme-5';                     // changer ce numéro remet toutes les parties à zéro (les clés précédentes sont effacées au chargement)
+const CLE = 'squid-ferme-6';                     // changer ce numéro remet toutes les parties à zéro (les clés précédentes sont effacées au chargement)
 const JOUR_MS = 5000;                               // durée d'un jour à la vitesse ×1
 const PRIX_TERRE_HA = { champs: 9000, planches: 60000 };   // € par hectare (terres de l'Artois ≈ 9 000 €/ha)
-const FAMILLE_ECHELLE = { champs: ['gc', 'acs', 'agro'], planches: ['mar'] };
 const DEBUT = () => indexJour(1959, 59);            // 1er mars 1959 : les semis de printemps commencent
 
-const OBJECTIFS = [
-  { id: 'recolte', txt: 'Faire une première récolte', ok: () => total().recoltes > 0 },
-  { id: 't100', txt: 'Récolter 100 tonnes', ok: () => total().kg >= 1e5 },
-  { id: 'p100', txt: 'Nourrir 100 personnes pendant un an', ok: () => total().kcal >= 100 * BESOIN_KCAL * 365 },
-  { id: 'record', txt: 'Dépasser le rendement moyen français sur une culture', ok: () => S.fermes.some(f => Object.entries(f.stats.parCulture).some(([id, p]) => p.dernier >= CULTURE[id].rdt)) },
-  { id: 'mo', txt: 'Faire gagner un demi-point de matière organique à une ferme', ok: () => S.fermes.some(f => etatSol(f).mo - f.moDepart >= 0.5) },
-  { id: 'pleine', txt: 'Acheter toutes les parcelles d’une ferme : une nouvelle ferme se débloque', ok: () => S.fermes.some(pleine) },
-  { id: 'p1000', txt: 'Nourrir 1 000 personnes pendant un an', ok: () => total().kcal >= 1000 * BESOIN_KCAL * 365 },
-  { id: 'an2150', txt: 'Tenir jusqu’en 2150', ok: () => dateDe(S.jour).an >= 2150 },
-];
-
-// Champs voisins qui ne s'obtiennent que par un objectif (les autres s'achètent) : ils rejoignent l'exploitation quand l'objectif est atteint
+// Objectifs : chacun fait entrer un champ voisin dans l'exploitation (répartis par parcellesAObjectif) ; une fois atteint, il le reste
 const OBJ_PARCELLES = [
-  { id: 'recolte', court: '1re récolte', txt: 'Faire une première récolte', ok: () => !!S.objectifs.recolte },
-  { id: 't100', court: '100 tonnes', txt: 'Récolter 100 tonnes', ok: () => !!S.objectifs.t100 },
-  { id: 'niv3', court: 'Niveau 3', txt: 'Atteindre le niveau 3', ok: () => niveauDe(S.etoiles || 0) >= 3 },
-  { id: 'p100', court: '100 personnes', txt: 'Nourrir 100 personnes pendant un an', ok: () => !!S.objectifs.p100 },
-  { id: 'record', court: 'Record', txt: 'Dépasser le rendement moyen français sur une culture', ok: () => !!S.objectifs.record },
-  { id: 'niv5', court: 'Niveau 5', txt: 'Atteindre le niveau 5', ok: () => niveauDe(S.etoiles || 0) >= 5 },
-  { id: 'mo', court: 'MO + 0,5', txt: 'Faire gagner un demi-point de matière organique à une ferme', ok: () => !!S.objectifs.mo },
-  { id: 'p1000', court: '1 000 personnes', txt: 'Nourrir 1 000 personnes pendant un an', ok: () => !!S.objectifs.p1000 },
+  { id: 'recolte', court: '1re récolte', txt: 'Faire une première récolte', ok: () => total().recoltes > 0 },
+  { id: 't100', court: '100 tonnes', txt: 'Récolter 100 tonnes', ok: () => total().kg >= 1e5 },
+  { id: 'niv3', court: 'Niveau 3', txt: 'Atteindre le niveau 3', ok: () => niveauDe(S.exp) >= 3 },
+  { id: 'p100', court: '100 personnes', txt: 'Nourrir 100 personnes pendant un an', ok: () => total().kcal >= 100 * BESOIN_KCAL * 365 },
+  { id: 'record', court: 'Record', txt: 'Dépasser le rendement moyen français sur une culture', ok: () => S.fermes.some(f => Object.entries(f.stats.parCulture).some(([id, p]) => p.dernier >= CULTURE[id].rdt)) },
+  { id: 'niv5', court: 'Niveau 5', txt: 'Atteindre le niveau 5', ok: () => niveauDe(S.exp) >= 5 },
+  { id: 'mo', court: 'MO + 0,5', txt: 'Faire gagner un demi-point de matière organique à une ferme', ok: () => S.fermes.some(f => etatSol(f).mo - f.moDepart >= 0.5) },
+  { id: 'p1000', court: '1 000 personnes', txt: 'Nourrir 1 000 personnes pendant un an', ok: () => total().kcal >= 1000 * BESOIN_KCAL * 365 },
 ];
 let S = null;
 const F = () => S.fermes[S.active];
@@ -56,9 +44,9 @@ const lieu = f => LIEUX[f.lieu];
 // Le lieu d'une graine dans une région : fabriqué une fois, rangé avec les autres lieux
 function lieuDe(region, graine) { const L = Carte.generer(graine, region); LIEUX[L.id] = L; return L.id; }
 const majuscule = s => s.replace(/^./, m => m.toUpperCase());
-// « à » et « de » devant un nom de lieu-dit : au Tertre, aux Noyers, à la Motte ; du Tertre, des Noyers, de la Motte
-const aLieu = n => n.replace(/^Le /, 'au ').replace(/^Les /, 'aux ').replace(/^La /, 'à la ').replace(/^(?!au |aux |à la )/, 'à ');
-const deLieu = n => n.replace(/^Le /, 'du ').replace(/^Les /, 'des ').replace(/^La /, 'de la ').replace(/^(?!du |des |de la )/, 'de ');
+// « de pommes de terre », « d'orge » : la culture après une quantité
+const PLURIEL = { pdt: 'pommes de terre', pois: 'petits pois', haricot: 'haricots secs', lentille: 'lentilles', poischiche: 'pois chiches', feverole: 'féveroles', haricotvert: 'haricots verts', betsucre: 'betteraves sucrières', betterave: 'betteraves rouges', topinambour: 'topinambours', carotte: 'carottes', panais: 'panais', radis: 'radis', navet: 'navets', oignon: 'oignons', echalote: 'échalotes', tournesol: 'tournesol' };
+const deCulture = c => { const n = PLURIEL[c.id] || c.nom.toLowerCase(); return (/^[aeiouyàâéèêh]/.test(n) && !/^haricot/.test(n) ? 'd’' : 'de ') + n; };
 function texteDate(j = S.jour) { const d = dateDe(j); return `${d.jour === 1 ? '1er' : d.jour} ${NOMS_MOIS[d.mois - 1]} ${d.an}`; }
 function plages(ms) {
   const s = [...ms].sort((a, b) => a - b), out = [];
@@ -102,19 +90,18 @@ function debloquerParcelles() {
   for (const f of S.fermes) {
     for (const [u, id] of Object.entries(parcellesAObjectif(f))) {
       const o = OBJ_PARCELLES.find(x => x.id === id);
-      if (f.parcelles[u] || !o || !o.ok()) continue;
+      if (f.parcelles[u] || !o || !S.objectifs[o.id]) continue;
       ajouterParcelle(f, +u);
-      noter(`Champ de ${surfaceTexte(surfaceUnite(f, +u))} débloqué : « ${o.txt} ».`);
       if (f === F() && !document.hidden && install.hidden) {
         Rendu.integrer(+u);
         Meca.bandeau('Champ débloqué', `${surfaceTexte(surfaceUnite(f, +u))} · ${o.txt}`);
-        const c = centreDe(casesDe(planDe(f), +u))(); Anim.confettis(c.x, c.y, 50);
+        const c = centreDe(casesDe(planDe(f), +u))(); Anim.confettis(c.x, c.y, 70, true);
       }
     }
   }
 }
 function ajouterParcelle(f, u) {
-  f.parcelles[u] = true;
+  f.parcelles[u] = Object.keys(f.parcelles).length + 1;   // son numéro : l'ordre d'entrée dans l'exploitation
   for (const [x, y] of casesDe(planDe(f), u)) f.cases[cle(x, y)] = nouvelleCase(f);
 }
 // Les champs les plus proches de la ferme, jusqu'à la surface de départ
@@ -155,7 +142,7 @@ function voisin(f, u, j) {
 function creerFerme(lieuId, mode) {
   const L = LIEUX[lieuId];
   const f = nouvelleFerme(L.climat, mode, S.jour);
-  Object.assign(f, { lieu: lieuId, graine: L.graine, histo: [], neigeSol: 0, climatAn: {}, sec: 0 });
+  Object.assign(f, { lieu: lieuId, graine: L.graine, histo: [], neigeSol: 0, climatAn: {}, sec: 0, lots: {} });
   if (mode !== 'gc') f.modeAvant = 'gc';            // en 1959, la terre sort d'une culture classique : transition
   S.fermes.push(f); S.active = S.fermes.length - 1;
   for (const u of champsDeDepart(f)) ajouterParcelle(f, u);
@@ -163,29 +150,25 @@ function creerFerme(lieuId, mode) {
   f.moDepart = etatSol(f).mo;
   const ha = Object.keys(f.cases).length * MODES[mode].caseHa;
   S.argent += mode === 'mar' ? 4000 : ha * 900;
-  noter(`Installation ${aLieu(L.nom)} (${L.pays}, graine ${L.graine}, ${MODES[mode].nom.toLowerCase()}) sur ${surfaceTexte(ha)}, le ${texteDate()}.`);
   return f;
 }
 const surfaceTexte = ha => ha >= 1 ? nf(ha, ha < 10 ? 1 : 0) + ' ha' : nf(ha * 10000) + ' m²';
 function sauver() { if (!S) return; try { localStorage.setItem(CLE, JSON.stringify(S)); } catch (e) { /* stockage indisponible */ } }
 function charger() {
   try {
-    for (const k of ['squid-ferme-3', 'squid-ferme-4']) localStorage.removeItem(k);   // parties des clés précédentes : on repart de zéro
+    for (const k of ['squid-ferme-3', 'squid-ferme-4', 'squid-ferme-5']) localStorage.removeItem(k);   // parties des clés précédentes : on repart de zéro
     const t = localStorage.getItem(CLE);
     if (t) {
       const s = JSON.parse(t);
-      if (s.v === 5 && s.fermes?.length && s.fermes.every(f => f.graine)) {
+      if (s.v === 6 && s.fermes?.length && s.fermes.every(f => f.graine)) {
         for (const f of s.fermes) f.lieu = lieuDe(f.region, f.graine);
+        // Irrigation et engrais se décident maintenant champ par champ ; les parcelles reçoivent leur numéro
+        for (const f of s.fermes) { let n = 0; for (const u in f.parcelles) if (f.parcelles[u] === true) f.parcelles[u] = ++n; f.irrigation = false; f.ferti = 'moderee'; }
         S = s; Meca.completer(S); return true;
       }
     }
   } catch (e) { /* partie neuve */ }
   return false;
-}
-function noter(txt) {
-  S.journal.unshift({ d: texteDate(), txt });
-  S.journal.length = Math.min(S.journal.length, 60);
-  majJournal(true);
 }
 
 // ---------- Temps ----------
@@ -204,14 +187,10 @@ function unJour() {
     const murAvant = active && Object.values(f.cases).some(c => c.cult && c.p >= 1);
     const ev = journeeFerme(f, S.jour, m);
     if (active && ev.murs.size) {
-      noter(`Prêt à récolter : ${nom(ev.murs)}.`);
       // le temps ralentit quand une récolte arrive, pour ne pas la manquer
       if (!murAvant && S.vitesse > 3) { S.vitesse = 1; toast(`${majuscule(nom(ev.murs))} : c’est mûr, le temps ralentit.`); }
       if (S.guide === 2) S.guide = 3;
     }
-    f.dernier ??= {};
-    for (const id of ev.geles) if (!(S.jour - (f.dernier['g' + id] ?? -99) < 15)) { f.dernier['g' + id] = S.jour; if (active) noter(`Gel (${nf(m.tmin, 1)} °C) : ${CULTURE[id].nom.toLowerCase()} touché.`); }
-    for (const id of ev.echaudes) if (!(S.jour - (f.dernier['c' + id] ?? -99) < 15)) { f.dernier['c' + id] = S.jour; if (active) noter(`Coup de chaleur (${nf(m.tmax, 0)} °C) : ${CULTURE[id].nom.toLowerCase()} échaudé.`); }
     // Récolte automatique, champ par champ, avant que la culture ne se perde
     const pl = planDe(f), aRecolter = new Map();
     for (const k in f.cases) {
@@ -227,16 +206,15 @@ function unJour() {
     if (MODES[f.mode].arbres && ageArbres(f, S.jour) >= 50) {
       const ha = Object.keys(f.cases).length * MODES[f.mode].caseHa, bois = ha * 0.5 * 50;
       f.stats.bois += bois; f.arbresDepuis = S.jour;
-      noter(`Coupe des arbres ${deLieu(lieu(f).nom)} : ${nf(bois)} t de bois d’œuvre. On replante.`);
     }
     // Sécheresse visible : réserve moyenne du sol
     const sol = etatSol(f); f.sec = d.mois >= 5 && d.mois <= 10 ? clamp((0.42 - sol.r / sol.ru) / 0.3, 0, 1) : 0;
   });
   Meca.unJour();
-  // Coup de pouce : sans culture en terre ni de quoi acheter des semences, la coopérative avance de quoi repartir (une fois par an)
-  if (d.jour === 1 && S.argent < 1000 && S.avanceAn !== d.an && !Object.values(F().cases).some(c => c.cult)) {
+  // Coup de pouce : sans culture en terre, sans rien à vendre ni de quoi acheter des semences, la coopérative avance de quoi repartir (une fois par an)
+  if (d.jour === 1 && S.argent < 1000 && S.avanceAn !== d.an && !Object.values(F().cases).some(c => c.cult) && !Object.keys(F().lots).length) {
     S.avanceAn = d.an; S.argent += 2500;
-    noter('La coopérative vous avance 2 500 € de semences.'); toast('La coopérative vous avance 2 500 € de semences.');
+    toast('La coopérative vous avance 2 500 € de semences.');
   }
   if (d.an !== avant.an) {
     for (const f of S.fermes) { const s = etatSol(f); f.solAns.push({ an: avant.an, mo: +s.mo.toFixed(3), ru: Math.round(s.ru), vdt: Math.round(s.vdt) }); }
@@ -254,7 +232,7 @@ function machinePour(f, c, type) {
 }
 function messageVerrou(f, id) {
   const i = ordreMode(f.mode).indexOf(id);
-  return i < 0 ? `${CULTURE[id].nom} ne se cultive pas dans ce mode.` : `${CULTURE[id].nom} : au niveau ${Math.max(2, Math.ceil((i - 4) / 2) + 1)}. Récoltez pour gagner des étoiles.`;
+  return i < 0 ? `${CULTURE[id].nom} ne se cultive pas dans ce mode.` : `${CULTURE[id].nom} : au niveau ${Math.max(2, Math.ceil((i - 4) / 2) + 1)}. Vendez vos récoltes pour gagner de l’expérience.`;
 }
 // Un clic sème tout le champ : un tracteur et son semoir passent rang par rang
 function semerChamp(f, u, id) {
@@ -267,7 +245,7 @@ function semerChamp(f, u, id) {
   const semees = [];
   for (const [x, y] of libres) { if (S.argent < c.graine * mode.caseHa) break; semer(f, f.cases[cle(x, y)], c); semees.push([x, y]); }
   if (!semees.length) return false;
-  if (f === F()) { Rendu.animerChamp(semees, 'semis', machinePour(f, c, 'semis'), null); Meca.tirerTrouvaille(f, semees); }
+  if (f === F()) Rendu.animerChamp(semees, 'semis', machinePour(f, c, 'semis'), null);
   if (S.guide < 2) S.guide = 2;
   return true;
 }
@@ -283,7 +261,7 @@ function semerCase(f, k, id, bavard, tx, ty) {
   if (S.guide < 2) S.guide = 2;
   return true;
 }
-// Récolte d'un champ : la machine passe, les caisses volent jusqu'au compteur (ou à la commande), les étoiles montent
+// Récolte d'un champ : la machine passe, la récolte rejoint le stock de la ferme à son arrivée
 function recolterChamp(f, u, seulement, retard = 0) {
   const pl = planDe(f), cases = (seulement || casesDe(pl, u)).filter(([x, y]) => { const c = f.cases[cle(x, y)]; return c?.cult && c.p >= 1; });
   if (!cases.length) return 0;
@@ -298,59 +276,33 @@ function recolterChamp(f, u, seulement, retard = 0) {
     const gr = groupes.get(r.c.id) || { c: r.c, kg: 0, kcal: 0, ha: 0, n: 0 };
     gr.kg += r.kg; gr.kcal += r.kcal; gr.ha += r.ha; gr.n++; groupes.set(r.c.id, gr);
   }
-  const an = dateDe(S.jour).an, rec = ((f.stats.recAn ??= {})[an] ??= {});
-  for (const gr of groupes.values()) { const q = rec[gr.c.id] ??= { kg: 0, kcal: 0 }; q.kg += gr.kg; q.kcal += gr.kcal; }
-  let etoiles = 0, kgTot = 0, premieres = 0;
-  const servies = new Set();
+  const an = dateDe(S.jour).an, rec = ((f.stats.recAn ??= {})[an] ??= {}), caseHa = MODES[f.mode].caseHa;
+  let kgTot = 0;
   for (const gr of groupes.values()) {
-    const n = Meca.noterRecolte(gr.c, gr.ha / gr.n); if (!premieres) premieres = n;
-    etoiles += n; kgTot += gr.kg;
-    for (const id of Meca.versCommandes(gr.c.id, gr.kg)) servies.add(id);
+    const q = rec[gr.c.id] ??= { kg: 0, kcal: 0, ha: 0 };
+    q.kg += gr.kg; q.kcal += gr.kcal; q.ha += gr.n * caseHa;
+    Meca.noterRecolte(gr.c, gr.ha / gr.n); Meca.ajouterLot(f, gr.c, gr.kg, visible);
+    kgTot += gr.kg;
   }
-  if (!visible) { Meca.majNiveau(false); majProduction(false); if (onglet === 'commandes') ongletSale = true; return recs.length; }
-  // la caisse vole vers la commande servie (onglet ouvert) ou vers la ligne du produit dans le panneau des récoltes
-  const cible = id => () => {
-    if (onglet === 'commandes') for (const s of servies) { const el = document.querySelector(`[data-commande="${s}"]`); if (el) return el; }
-    return Recoltes.cible(id);
-  };
-  const machine = machinePour(f, recs[0].r.c, 'recolte');
+  recolteChangee();
+  if (!visible) return recs.length;
+  const machine = machinePour(f, recs[0].r.c, 'recolte'), c = recs[0].r.c;
   if (Rendu.transporte(machine)) {
     // le grain part dans la trémie puis dans la benne : les tonnes ne comptent qu'à la livraison à la ferme
-    const kcalTot = recs.reduce((s, o) => s + o.r.kcal, 0), kcalKg = kgTot ? kcalTot / kgTot : 0, c = recs[0].r.c, vers = cible(c.id);
+    const kcalTot = recs.reduce((s, o) => s + o.r.kcal, 0), kcalKg = kgTot ? kcalTot / kgTot : 0;
     enAttente(c.id, kgTot, kcalTot);
     const livrer = kg => {
-      Anim.caisse(() => Rendu.centreFerme(), c, vers, 0, null);
-      Anim.caisse(() => Rendu.centreFerme(), c, vers, 160, () => {
-        enAttente(c.id, -kg, -kg * kcalKg); majProduction(true, c.id);
-        const el = vers(); if (el.dataset?.commande) Compteur.rebond(el);
-      });
+      if (kg >= 50) Anim.texte(() => { const p = Rendu.centreFerme(); return { x: p.x, y: p.y - 54 }; }, `+${masse(kg)} ${deCulture(c)}`, '#ffe08a', 0, Anim.spriteCaisse(c));
+      enAttente(c.id, -kg, -kg * kcalKg); Meca.arrivee(f, c); recolteChangee();
     };
-    const fins = Rendu.animerChamp(cases, 'recolte', machine, avant, retard, { livrer });
-    const finTout = fins.at(-1).fin, centre = centreDe(cases);
-    Meca.envoyerEtoiles(etoiles, centre, finTout + 150);
-    Anim.texte(centre, `${masse(kgTot)}  ${'★'.repeat(premieres)}`, '#ffe08a', finTout);
-    Meca.tirerTrouvaille(f, cases);
-    setTimeout(() => { if (onglet === 'commandes') ongletSale = true; }, finTout + 1400);
-    majProduction(false);
+    Rendu.animerChamp(cases, 'recolte', machine, avant, retard, { livrer });
     return recs.length;
   }
-  const fins = Rendu.animerChamp(cases, 'recolte', machine, avant, retard);
-  const par = Math.max(1, Math.ceil(recs.length / 14));     // pas plus de 14 caisses par champ
-  for (let i = 0; i < recs.length; i += par) {
-    const lot = recs.slice(i, i + par), kg = lot.reduce((s, o) => s + o.r.kg, 0), kcal = lot.reduce((s, o) => s + o.r.kcal, 0);
-    const fin = fins[Math.min(fins.length - 1, i + par - 1)].fin, { x, y } = lot[0], id = lot[0].r.c.id, vers = cible(id);
-    enAttente(id, kg, kcal);
-    Anim.caisse(() => Rendu.centre(x, y), lot[0].r.c, vers, fin, () => {
-      enAttente(id, -kg, -kcal); majProduction(true, id);
-      const el = vers(); if (el.dataset?.commande) Compteur.rebond(el);
-    });
-  }
-  const finTout = fins.at(-1).fin, centre = centreDe(cases);
-  Meca.envoyerEtoiles(etoiles, centre, finTout + 150);
-  Anim.texte(centre, `${masse(kgTot)}  ${'★'.repeat(premieres)}`, '#ffe08a', finTout);
-  Meca.tirerTrouvaille(f, cases);
-  setTimeout(() => { if (onglet === 'commandes') ongletSale = true; }, finTout + 1400);
-  majProduction(false);
+  // à la main (planches) : la récolte est à la grange quand le dernier geste est fini
+  const finTout = Rendu.animerChamp(cases, 'recolte', machine, avant, retard).at(-1).fin;
+  for (const gr of groupes.values()) enAttente(gr.c.id, gr.kg, gr.kcal);
+  Anim.texte(centreDe(cases), `+${masse(kgTot)} ${deCulture(c)}`, '#ffe08a', finTout, Anim.spriteCaisse(c));
+  setTimeout(() => { for (const gr of groupes.values()) { enAttente(gr.c.id, -gr.kg, -gr.kcal); Meca.arrivee(f, gr.c); } recolteChangee(); }, finTout);
   return recs.length;
 }
 function recolterTout() {
@@ -362,7 +314,7 @@ function recolterTout() {
   if (S.guide === 3) S.guide = 4;
   apresAction(true);
 }
-function arracher(f, k) { const t = f.cases[k]; if (!t.cult) return false; Object.assign(t, { cult: null, p: 0, dj: 0, mur: 0 }); return true; }
+function arracher(f, t) { if (!t.cult) return false; Object.assign(t, { cult: null, p: 0, dj: 0, mur: 0 }); return true; }
 function acheter(u) {
   const f = F(), prix = prixParcelle(f, u);
   if (!achetable(f, u)) { const o = OBJ_PARCELLES.find(x => x.id === parcellesAObjectif(f)[u]); if (o) toast(`Ce champ se débloque avec un objectif : ${o.txt.toLowerCase()}.`); return; }
@@ -371,27 +323,19 @@ function acheter(u) {
   ajouterParcelle(f, u);
   Rendu.integrer(u);
   const centre = centreDe(casesDe(planDe(f), u))();
-  Anim.confettis(centre.x, centre.y, 45); Anim.texte(centre, 'Champ acheté', '#ffe08a');
-  noter(`Champ de ${surfaceTexte(surfaceUnite(f, u))} acheté : vous cultivez ${surfaceTexte(Object.keys(f.cases).length * MODES[f.mode].caseHa)}.`);
+  Anim.confettis(centre.x, centre.y, 70, true); Anim.texte(centre, 'Champ acheté', '#ffe08a');
   selectionner(null);
   apresAction(true);
-}
-function changerMode(nouveau) {
-  const f = F(), ancien = f.mode;
-  f.modeAvant = ancien; f.mode = nouveau; f.modeDepuis = S.jour;
-  if (MODES[nouveau].arbres) f.arbresDepuis = S.jour;
-  noter(`Conversion vers ${MODES[nouveau].nom.toLowerCase()} : ${MODES[nouveau].transition.ans} an${MODES[nouveau].transition.ans > 1 ? 's' : ''} de transition.`);
-  outilParDefaut(); apresAction(true);
 }
 
 // ---------- Champ : souris et doigt ----------
 const ecran = document.getElementById('ecran');
 Rendu.init(ecran);
-let outil = { t: 'semer', id: 'ble' }, selection = null;
+let outil = { id: 'ble' }, selection = null;   // outil : la semence choisie dans l'onglet Semences
 const attente = { kg: 0, kcal: 0, parC: {} };
-function selectionner(s) { selection = s; Rendu.selection = s; }
+function selectionner(s) { selection = s; Rendu.selection = s; majVolante(); }
 
-// Curseurs en pixels : sac de graines, faucille, pièce pour acheter
+// Curseur en pixels : la pièce pour acheter
 const CURSEURS = (() => {
   const fab = (dessin, hx, hy) => {
     const c = document.createElement('canvas'); c.width = c.height = 16; dessin(c.getContext('2d'));
@@ -400,11 +344,6 @@ const CURSEURS = (() => {
     return `-webkit-image-set(url(${d.toDataURL()}) 2x) ${hx} ${hy}, pointer`;
   };
   return {
-    sac: fab(g => { ellipse(g, 8, 10, 6, 5, '#3a2414'); ellipse(g, 8, 10, 5, 4, '#c8a06a'); R(g, 6, 2, 5, 4, '#3a2414'); R(g, 7, 3, 3, 3, '#c8a06a'); R(g, 5, 6, 7, 1, '#7a4a2a'); P(g, 6, 9, '#e8c890'); P(g, 7, 8, '#e8c890'); P(g, 2, 15, '#d8b878'); P(g, 13, 14, '#d8b878'); }, 8, 8),
-    faucille: fab(g => {
-      for (let i = 0; i < 20; i++) { const a = Math.PI * (0.05 + i / 19 * 1.05); P(g, 9 + Math.round(Math.cos(a) * 6), 7 - Math.round(Math.sin(a) * 6), '#3a3a40'); P(g, 9 + Math.round(Math.cos(a) * 5), 7 - Math.round(Math.sin(a) * 5), '#e0e4e8'); }
-      ligne(g, 9, 8, 13, 13, '#5a3a1a'); ligne(g, 10, 8, 14, 13, '#9a6a3a');
-    }, 3, 7),
     piece: fab(g => { disque(g, 8, 8, 6, '#7a5a10'); disque(g, 8, 8, 5, '#f2c240'); disque(g, 7, 7, 3, '#f8d870'); R(g, 7, 5, 1, 6, '#b8861a'); R(g, 6, 6, 4, 1, '#b8861a'); R(g, 6, 9, 4, 1, '#b8861a'); }, 8, 8),
   };
 })();
@@ -412,41 +351,32 @@ let curseur = '';
 function majCurseur(tx, ty) {
   const f = F(), p = parcelleDe(tx, ty);
   let c = 'default';
-  if (trouvailleIci(tx, ty) || surLaFerme(tx, ty)) c = 'pointer';
-  else if (p && f.parcelles[p.u]) {
-    const cs = f.cases[cle(tx, ty)];
-    c = cs?.cult && cs.p >= 1 ? CURSEURS.faucille : outil.t === 'semer' && !cs?.cult ? CURSEURS.sac : outil.t === 'arracher' && cs?.cult ? 'crosshair' : 'pointer';
-  } else if (p) c = CURSEURS.piece;
+  if (surLaFerme(tx, ty)) c = 'pointer';
+  else if (p && f.parcelles[p.u]) c = 'pointer';
+  else if (p) c = CURSEURS.piece;
   if (c === 'default') c = 'grab';
   if (c !== curseur || ecran.style.cursor !== c) { curseur = c; ecran.style.cursor = c; }
 }
 
 let peinture = false, derniere = null, depart = null;
 const surLaFerme = (tx, ty) => { const pl = planDe(F()); return typeCase(pl, tx, ty) === 'm' || (MODES[F().mode].echelle === 'planches' && typeCase(pl, tx, ty) === 'b'); };
-const trouvailleIci = (tx, ty) => !!S.trouvaille && S.trouvaille.ferme === F().id && S.trouvaille.x === tx && S.trouvaille.y === ty;
+// Option + glisser : sème la semence choisie
 function appliquer(tx, ty, premier) {
   const f = F(), p = parcelleDe(tx, ty);
-  if (premier && trouvailleIci(tx, ty)) { Meca.ramasser(); return false; }
-  if (surLaFerme(tx, ty)) { if (premier) ouvrirOnglet('production'); return false; }
-  if (!p) return false;
-  if (!f.parcelles[p.u]) {
-    if (premier) { selectionner({ type: 'parcelle', u: p.u }); majInfo(); }
-    return false;
-  }
-  const k = cle(tx, ty), t = f.cases[k];
-  let fait = false;
-  if (t.cult && t.p >= 1) { fait = recolterChamp(f, p.u) > 0; if (fait && S.guide === 3) S.guide = 4; }
-  else if (outil.t === 'semer') {
-    if (MODES[f.mode].echelle === 'champs' && premier) fait = semerChamp(f, p.u, outil.id);
-    else fait = semerCase(f, k, outil.id, premier, tx, ty);
-  } else if (outil.t === 'arracher') fait = arracher(f, k);
-  if (premier) selectionner({ type: 'case', tx, ty });
-  if (fait) apresAction(false); else majInfo();
+  if (surLaFerme(tx, ty) || !p || !f.parcelles[p.u]) return false;
+  const fait = MODES[f.mode].echelle === 'champs' && premier ? semerChamp(f, p.u, outil.id) : semerCase(f, cle(tx, ty), outil.id, premier, tx, ty);
+  if (fait) apresAction(false);
   return fait;
 }
-// Le plateau est en 3D (rendu.js) : glisser fait tourner la vue, un clic sans glisser agit sur la case visée
+// Un clic ouvre la fenêtre du champ ; un clic sur la ferme ouvre la récolte
+function cliquerCarte(tx, ty) {
+  if (surLaFerme(tx, ty)) { ouvrirOnglet('recolte'); return; }
+  const p = parcelleDe(tx, ty);
+  if (p) selectionner({ type: 'parcelle', u: p.u });
+}
+// Le plateau est en 3D (rendu.js) : glisser fait tourner la vue, un clic sans glisser désigne le champ visé
 // (lancer de rayon jusqu'au sol), Option + glisser sème case par case.
-Rendu.quandClic = s => { Rendu.onde(s.px, s.py); appliquer(s.tx, s.ty, true); };
+Rendu.quandClic = s => { Rendu.onde(s.px, s.py); cliquerCarte(s.tx, s.ty); };
 Rendu.quandPeint = (s, e, premier) => {
   if (premier) { Rendu.onde(s.px, s.py); peinture = true; derniere = cle(s.tx, s.ty); appliquer(s.tx, s.ty, true); return; }
   if (!peinture || cle(s.tx, s.ty) === derniere) return;
@@ -468,40 +398,35 @@ function blocSol(f, t) {
     + `<span>Azote minéral</span>${barre(t.nmin, 120, '#6fb85a')}<span>${nf(t.nmin)} kg N/ha</span>`
     + `<span>Vie du sol</span>${barre(t.vdt, 100, '#c08a52')}<span>vers ${nf(t.vdt)}/100 · MO ${nf(t.mo, 1)} %</span></div>`;
 }
-const etoilesTexte = n => `<span class="or">${'★'.repeat(n)}</span><span class="eteinte">${'★'.repeat(3 - n)}</span>`;
-function descriptionCase(f, t, long) {
-  const ru = ruMax(f, t);
-  const eau = `Eau du sol ${nf(t.r)} / ${nf(ru)} mm`;
-  if (!t.cult) return `<b>${MODES[f.mode].couvert ? 'Couvert végétal' : 'Terre nue'}</b>${long ? `<br>${eau}<br>Matière organique ${nf(t.mo, 2)} %` : ''}${t.fam ? `<br>Précédent : ${t.fam}` : ''}${long ? '' : blocSol(f, t)}`;
-  const c = CULTURE[t.cult], r = rendement(f, t, S.jour), mode = MODES[f.mode];
-  const etat = t.p >= 1 ? (t.mur > 12 ? '<span class="mauvais">Trop mûr, se perd</span>' : '<span class="bon">Mûr : cliquez pour récolter</span>')
+function descriptionCase(f, t) {
+  if (!t.cult) return `<b>${MODES[f.mode].couvert ? 'Couvert végétal' : 'Terre nue'}</b>${t.fam ? `<br>Précédent : ${t.fam}` : ''}${blocSol(f, t)}`;
+  const c = CULTURE[t.cult], r = rendement(f, t, S.jour);
+  const etat = t.p >= 1 ? (t.mur > 12 ? '<span class="mauvais">Trop mûr, se perd</span>' : '<span class="bon">Mûr</span>')
     : `Développement ${nf(t.p * 100)} % (${nf(t.dj)} / ${nf(c.dj)} °C·j)`;
-  if (t.p < 0.15) return `<b>${c.nom}</b><br>${etat}<br>${long ? 'Semé il y a peu : le rendement se dessine après la levée.' : `Référence ${chiffres(c.rdt, c)}`}${long ? `<br>${eau}<br>Azote minéral ${nf(t.nmin)} kg/ha · matière organique ${nf(t.mo, 2)} %` : blocSol(f, t)}`;
-  let html = `<b>${c.nom}</b> ${etoilesTexte(etoilesRecolte(r.ha / c.rdt))}<br>${etat}<br>Prévu ≈ <b>${nf(r.ha * 10, 0)} q/ha</b> · ${nf(r.ha * c.kcal / 100, 1)} Mkcal/ha${long ? `, soit ${masse(r.ha * 1000 * mode.caseHa)} sur la case` : ''}`;
+  if (t.p < 0.15) return `<b>${c.nom}</b><br>${etat}<br>Référence ${chiffres(c.rdt, c)}${blocSol(f, t)}`;
+  let html = `<b>${c.nom}</b><br>${etat}<br>Prévu ≈ <b>${nf(r.ha * 10, 0)} q/ha</b> · ${nf(r.ha * c.kcal / 100, 1)} Mkcal/ha`;
   const freins = [['eau', r.eau], ['azote', r.azote], ['gel', r.gel], ['chaleur', r.chaleur], ['ombre des arbres', r.ombre], ['transition', r.trans]].filter(([, v]) => v < 0.97);
   if (freins.length) html += `<br><span class="mauvais">Pertes : ${freins.map(([n, v]) => `${n} −${nf((1 - v) * 100)} %`).join(', ')}</span>`;
   if (t.rot < 1) html += '<br><span class="mauvais">Même famille qu’avant : −12 %</span>';
   if (t.rot > 1) html += '<br><span class="bon">Après une légumineuse : +5 %</span>';
-  if (long) html += `<br>${eau}<br>Azote minéral ${nf(t.nmin)} kg/ha · matière organique ${nf(t.mo, 2)} %`;
-  else html += blocSol(f, t);
-  return html;
+  return html + blocSol(f, t);
 }
 const NOM_RPG = { prairie: 'prairie', friche: 'friche ou bande enherbée' };
-function descriptionVoisin(f, u) {
+function ligneVoisin(f, u) {
   const v = voisin(f, u, S.jour);
   const quoi = v.type === 'culture' ? v.c.nom.toLowerCase() : NOM_RPG[v.type];
   const quand = lieu(f).genere ? '' : v.reel ? `déclaré à la PAC en ${v.an}` : v.an ? `assolement de ${v.an} à la PAC` : '';
-  return `<b>Champ voisin · ${surfaceTexte(surfaceUnite(f, u))}</b><br>${majuscule(quoi)}${quand ? ` <span class="discret">(${quand})</span>` : ''}${v.type === 'culture' ? `<br>${chiffres(v.c.rdt, v.c)} <span class="discret">(moyenne)</span>` : ''}`;
+  return `${majuscule(quoi)}${quand ? ` <span class="discret">(${quand})</span>` : ''}${v.type === 'culture' ? `<br>${chiffres(v.c.rdt, v.c)} <span class="discret">(moyenne)</span>` : ''}`;
 }
+const descriptionVoisin = (f, u) => `<b>Champ voisin · ${surfaceTexte(surfaceUnite(f, u))}</b><br>${ligneVoisin(f, u)}`;
 function majBulle(e, tx, ty) {
   // la bulle ne nomme que les cultures et les bêtes : rien sur la ferme, les routes, les chemins, les bois ou les haies
   const f = F(), p = parcelleDe(tx, ty), bete = Rendu.animalSous(e);
   let html = '';
   if (window.SF3D && SF3D.modeCommentaire) { const h = Rendu.objetSous(e.clientX, e.clientY); html = h ? `<b>${Rendu.nommer(h).libelle}</b>` : ''; }
   else if (bete) html = `<b>${bete[0]}</b><br>${bete[1]}`;
-  else if (trouvailleIci(tx, ty)) html = '<b>Quelque chose brille</b><br>Cliquez pour ramasser.';
   else if (surLaFerme(tx, ty)) html = '';
-  else if (p && f.parcelles[p.u]) html = descriptionCase(f, f.cases[cle(tx, ty)], false);
+  else if (p && f.parcelles[p.u]) html = descriptionCase(f, f.cases[cle(tx, ty)]);
   else if (p) { const o = OBJ_PARCELLES.find(x => x.id === parcellesAObjectif(f)[p.u]); html = `${descriptionVoisin(f, p.u)}<br>${o ? `À débloquer : ${o.court}` : `À vendre : ${euros(prixParcelle(f, p.u))}`}`; }
   if (!html) { bulle.hidden = true; return; }
   bulle.innerHTML = html; bulle.hidden = false;
@@ -509,27 +434,104 @@ function majBulle(e, tx, ty) {
   bulle.style.top = Math.min(e.clientY + 16, innerHeight - bulle.offsetHeight - 8) + 'px';
 }
 
-const info = document.getElementById('info');
-function majInfo() {
-  const f = F();
-  if (selection?.type === 'parcelle' && !f.parcelles[selection.u] && parcellesAObjectif(f)[selection.u] != null) {
-    const o = OBJ_PARCELLES.find(x => x.id === parcellesAObjectif(f)[selection.u]);
-    info.innerHTML = `<h3>Champ à débloquer</h3><p>${descriptionVoisin(f, selection.u)}</p><p class="ligne2">Il rejoint votre exploitation quand cet objectif est atteint : <b>${o.txt.toLowerCase()}</b>.</p>`;
-  } else if (selection?.type === 'parcelle' && !f.parcelles[selection.u]) {
-    const u = selection.u, prix = prixParcelle(f, u), un = planDe(f).unites[u], nomCode = code => { const c = RPG_CULTURE[code]; return c ? CULTURE[c].nom.toLowerCase() : RPG_HERBE.includes(code) ? 'prairie' : 'autre'; };
-    const histo = un.rot ? (new Set(un.rot).size > 1 ? un.rot.map(nomCode).join(' → ') : '') : Object.entries(un.rpg).map(([an, code]) => `${an} ${nomCode(code)}`).join(' · ');
-    info.innerHTML = `<h3>Champ à acheter</h3><p>${descriptionVoisin(f, u)}</p>
-      ${histo ? `<p class="ligne2">${un.rot ? 'Rotation du voisin' : 'Cultures déclarées'} : ${histo}</p>` : ''}
-      <button class="principal" data-action="acheter" ${S.argent < prix ? 'disabled' : ''}>Acheter pour ${euros(prix)}</button>`;
-  } else if (selection?.type === 'case' && f.cases[cle(selection.tx, selection.ty)]) {
-    info.innerHTML = `<h3>Case de ${surfaceTexte(MODES[f.mode].caseHa)}</h3><p>${descriptionCase(f, f.cases[cle(selection.tx, selection.ty)], true)}</p>`;
-  } else {
-    info.innerHTML = `<p class="discret">${lieu(f).nom} (${lieu(f).pays}). Cliquez un champ voisin pour voir ce que le voisin y cultive, ou une de vos cases pour son eau et ce qui freine son rendement.</p>`;
-  }
+// ---------- Fiche d'une parcelle : fenêtre volante et onglet Parcelles ----------
+const volante = document.getElementById('volante');
+// Un champ résumé : moyennes de ses cases, culture majoritaire
+function etatParcelle(f, u) {
+  const cases = casesDe(planDe(f), u).map(([x, y]) => f.cases[cle(x, y)]).filter(Boolean);
+  const moy = (L, g) => L.reduce((s, t) => s + g(t), 0) / (L.length || 1), compte = {};
+  for (const t of cases) if (t.cult) compte[t.cult] = (compte[t.cult] || 0) + 1;
+  const id = Object.keys(compte).sort((a, b) => compte[b] - compte[a])[0], c = id ? CULTURE[id] : null, en = cases.filter(t => t.cult === id);
+  return { cases, c, ha: surfaceUnite(f, u), num: f.parcelles[u], ru: moy(cases, t => ruMax(f, t)), eau: moy(cases, t => t.r), azote: moy(cases, t => t.nmin), vers: moy(cases, t => t.vdt), mo: moy(cases, t => t.mo),
+    dj: moy(en, t => t.dj), vern: en.every(t => t.vern), pretes: cases.filter(t => t.cult && t.p >= 1).length,
+    stress: moy(en, t => { const m = 0.5 * ruMax(f, t); return t.r >= m ? 0 : 100 * (1 - clamp(t.r / m, 0, 1)); }) };   // le Ks de FAO 56 du moteur (agronomie.js)
 }
-info.addEventListener('click', e => {
-  if (e.target.closest('[data-action="acheter"]') && selection?.type === 'parcelle') acheter(selection.u);
-});
+function pastille(e) {
+  if (!e.c) return { cls: 'nu', txt: 'Terre nue' };
+  if (e.pretes) return { cls: 'pret', txt: 'Prête' };
+  if (e.stress >= 50) return { cls: 'mal', txt: 'Sécheresse' };
+  if (e.stress >= 20) return { cls: 'moyen', txt: 'Stress léger' };
+  return { cls: 'bien', txt: 'Sans stress' };
+}
+// Date de maturité : on rejoue les degrés-jours restants (même calcul que journeeFerme, vernalisation comprise) sur la météo
+// des dix dernières années, à partir du même jour du calendrier. Avant 1969, on complète avec les années suivantes, faute de passé.
+const ANS_PREVISION = 10;
+function joursDeMaturite(f, c, dj0, vern0, jour = S.jour) {
+  const { an, doy } = dateDe(jour), ans = [], sorties = [];
+  for (let y = an - 1; y >= 1959 && ans.length < ANS_PREVISION; y--) ans.push(y);
+  for (let y = an + 1; ans.length < ANS_PREVISION; y++) ans.push(y);
+  for (const y of ans) {
+    const j0 = indexJour(y, doy);
+    let dj = dj0, vern = vern0;
+    for (let d = 1; d <= 430; d++) {
+      const m = Climat.jour(f.region, j0 + d), mois = dateDe(j0 + d).mois;
+      dj += Math.max(0, Math.min((m.tmin + m.tmax) / 2, 30) - c.tb);
+      if (c.hiver) { if (mois >= 2 && mois <= 6) vern = true; if (!vern) dj = Math.min(dj, c.dj * 0.5); }
+      if (dj >= c.dj) { sorties.push(jour + d); break; }
+    }
+  }
+  return sorties.sort((a, b) => a - b);
+}
+// Huit années sur dix : on écarte la plus précoce et la plus tardive
+function intervalleRecolte(L) {
+  if (L.length < ANS_PREVISION * 0.6) return null;
+  const iv = [L[Math.round(0.15 * (L.length - 1))], L[Math.round(0.85 * (L.length - 1))]];
+  return iv[1] - iv[0] > 45 ? null : iv;       // semis tardif : selon l'année, la maturité passe de l'automne au printemps
+}
+function textePrevision(iv) {
+  if (!iv) return 'Récolte incertaine cette année';
+  const J = j => { const d = dateDe(j); return { txt: d.jour === 1 ? '1er' : String(d.jour), mois: NOMS_MOIS[d.mois - 1] }; }, a = J(iv[0]), b = J(iv[1]);
+  if (iv[0] === iv[1]) return `Récolte prévue vers le ${a.txt} ${a.mois}`;
+  return `Récolte prévue entre le ${a.txt}${a.mois === b.mois ? '' : ' ' + a.mois} et le ${b.txt} ${b.mois}`;
+}
+const mesure = (nom, part, val, c) => `<div class="mesure"><span>${nom}</span><i class="barre" style="--c:${c}"><i style="width:${Math.round(clamp(part, 0, 100))}%"></i></i><small>${val}</small></div>`;
+function corpsFiche(f, u, e) {
+  const c = e.c, mode = MODES[f.mode];
+  const sol = '<h4>Sol</h4>' + mesure('Eau', e.eau / e.ru * 100, `${nf(e.eau)} / ${nf(e.ru)} mm`, 'var(--humide)') + mesure('Azote', e.azote / 1.2, `${nf(e.azote)} kg/ha`, 'var(--accent)')
+    + mesure('Vers de terre', e.vers, `${nf(e.vers)} /100`, 'var(--or)') + mesure('Matière organique', e.mo * 25, `${nf(e.mo, 1)} %`, 'var(--sec)');
+  const act = `<div class="actions"><button data-p="irriguer" data-u="${u}"${mode.irrigation && e.eau < e.ru - 1 ? '' : ' disabled'}>Irriguer · 25 mm</button><button data-p="apport" data-u="${u}"${mode.fertilisation.startsWith('minéral') ? '' : ' disabled'}>Apport · 40 kg N</button><button class="large2" data-p="fumier" data-u="${u}">Fumier ou compost · 30 t/ha</button></div>`;
+  if (!c) return `<div class="fiche">${sol}${act}<div class="prevue"><button class="recolter" data-p="semer" data-u="${u}">Semer : ${CULTURE[outil.id].nom}</button></div></div>`;
+  const prev = e.pretes ? '' : `<p>${textePrevision(intervalleRecolte(joursDeMaturite(f, c, e.dj, e.vern)))}</p>`;
+  return `<div class="fiche">${sol}<h4>${c.nom}</h4>${mesure('Degrés-jours', e.dj / c.dj * 100, `${nf(Math.min(e.dj, c.dj))} / ${nf(c.dj)} °C·j`, 'var(--accent)')}${mesure('Stress hydrique', e.stress, e.stress >= 50 ? 'fort' : e.stress >= 20 ? 'léger' : 'aucun', e.stress >= 50 ? 'var(--mauvais)' : e.stress >= 20 ? 'var(--sec)' : 'var(--bon)')}
+    ${act}<div class="prevue">${prev}<div class="fin-fiche"><button class="recolter" data-p="recolter" data-u="${u}"${e.pretes ? '' : ' disabled'}>Récolter</button><button class="arracher" data-p="arracher" data-u="${u}">Arracher</button></div></div></div>`;
+}
+const enteteVolante = (titre, sous) => `<header><b>${titre}</b><span>${sous}</span><button class="fermer" data-fermer="1" aria-label="Fermer">×</button></header>`;
+function ficheVoisin(f, u) {
+  const o = OBJ_PARCELLES.find(x => x.id === parcellesAObjectif(f)[u]), prix = prixParcelle(f, u), un = planDe(f).unites[u];
+  const nomCode = code => { const c = RPG_CULTURE[code]; return c ? CULTURE[c].nom.toLowerCase() : RPG_HERBE.includes(code) ? 'prairie' : 'autre'; };
+  const histo = un.rot ? (new Set(un.rot).size > 1 ? un.rot.map(nomCode).join(' → ') : '') : Object.entries(un.rpg).map(([an, code]) => `${an} ${nomCode(code)}`).join(' · ');
+  return `<div class="fiche"><p>${ligneVoisin(f, u)}</p>${histo ? `<p class="ligne2">${un.rot ? 'Rotation du voisin' : 'Cultures déclarées'} : ${histo}</p>` : ''}
+    ${o ? `<p class="ligne2">Il rejoint votre exploitation quand cet objectif est atteint : <b>${o.txt.toLowerCase()}</b>.</p>` : `<div class="prevue"><button class="recolter" data-action="acheter" ${S.argent < prix ? 'disabled' : ''}>Acheter pour ${euros(prix)}</button></div>`}</div>`;
+}
+function majVolante() {
+  if (!selection || !S) { volante.hidden = true; return; }
+  const f = F(), u = selection.u, haut = volante.scrollTop;
+  if (f.parcelles[u]) {
+    const e = etatParcelle(f, u);
+    volante.innerHTML = enteteVolante(`Parcelle ${e.num}`, `${e.c ? e.c.nom : 'Terre nue'} · ${surfaceTexte(e.ha)}`) + corpsFiche(f, u, e);
+  } else volante.innerHTML = enteteVolante('Champ voisin', surfaceTexte(surfaceUnite(f, u))) + ficheVoisin(f, u);
+  volante.hidden = false; volante.scrollTop = haut;
+}
+// Doses par clic. Tarifs du moteur (agronomie.js) : engrais 1,2 €/kg N, fumier 400 €/ha ; un fumier à 30 t/ha : +0,07 point de matière organique, ≈ 25 kg d'azote disponible
+function agir(quoi, u) {
+  const f = F(), ha = surfaceUnite(f, u), cases = casesDe(planDe(f), u).map(([x, y]) => f.cases[cle(x, y)]).filter(Boolean);
+  const payer = eur => { if (S.argent < eur) { toast(`Il vous faut ${euros(eur)}.`); return false; } S.argent -= eur; return true; };
+  if (quoi === 'irriguer') { for (const t of cases) t.r = Math.min(ruMax(f, t), t.r + 25); f.stats.eau += 250 * ha; }
+  else if (quoi === 'apport') { if (!payer(48 * ha)) return; for (const t of cases) t.nmin += 40; }
+  else if (quoi === 'fumier') { if (!payer(400 * ha)) return; for (const t of cases) { t.mo += 0.07; t.nmin += 25; t.vdt = Math.min(100, t.vdt + 5); t.fum = 25; } }
+  else if (quoi === 'semer') { if (!semerChamp(f, u, outil.id)) return; }
+  else if (quoi === 'recolter') { if (!recolterChamp(f, u)) return; if (S.guide === 3) S.guide = 4; }
+  else if (quoi === 'arracher') { for (const t of cases) arracher(f, t); Rendu.jourVu = -1; }
+  apresAction(true);
+}
+function commandeParcelle(ev) {
+  const b = ev.target.closest('button'); if (!b || b.disabled) return false;
+  if (b.dataset.fermer) { selectionner(null); return true; }
+  if (b.dataset.action === 'acheter' && selection) { acheter(selection.u); return true; }
+  if (b.dataset.p) { agir(b.dataset.p, +b.dataset.u); return true; }
+  return false;
+}
+volante.addEventListener('click', commandeParcelle);
 
 let toastMinuteur = 0;
 function toast(txt) {
@@ -540,45 +542,40 @@ function toast(txt) {
 
 // ---------- Barre du haut ----------
 const iconeMet = document.getElementById('icone-meteo').getContext('2d');
-const spark = document.getElementById('spark'), gs = spark.getContext('2d');
 let dateVue = '';
 function majEntete() {
   const f = F(), m = f.meteo, el = document.getElementById('date'), txt = texteDate();
   if (txt !== dateVue) {
     const nouvelAn = dateVue && dateVue.slice(-4) !== txt.slice(-4);
     dateVue = txt; el.textContent = txt; if (S.vitesse > 0 && S.vitesse <= 3) Compteur.rebond(el, 'tourne');
-    Saison.maj(dateDe(S.jour)); if (nouvelAn) majProduction(false);
+    Saison.maj(dateDe(S.jour)); if (nouvelAn) recolteChangee();
   }
-  document.getElementById('ferme-nom').textContent = `Ferme ${S.active + 1} · ${MODES[f.mode].court}`;
+  document.getElementById('ferme-nom').textContent = `Ferme ${S.active + 1}`;
   Compteur.animer(document.getElementById('argent'), S.argent, euros, 500);
   if (m) {
-    document.getElementById('temp').innerHTML = `<b>${nf((m.tmax + m.tmin) / 2, 1)} °C</b>`;
+    document.getElementById('temp').textContent = `${nf((m.tmax + m.tmin) / 2, 1)} °C`;
     document.getElementById('pluie').textContent = m.neige > 0.3 ? `${nf(m.neige, m.neige < 10 ? 1 : 0)} mm de neige` : `${nf(m.pluie, m.pluie < 10 ? 1 : 0)} mm`;
     document.getElementById('meteo').title = m.futur ? 'Temps simulé (après les dernières mesures SAFRAN)' : 'Temps mesuré (SAFRAN, Météo-France)';
     document.getElementById('meteo').classList.toggle('futur', m.futur);
   }
-  dessinerSpark(f);
+  majAnnee(f);
   for (const b of document.querySelectorAll('[data-vitesse]')) b.setAttribute('aria-pressed', String(+b.dataset.vitesse === S.vitesse));
 }
-// 60 derniers jours : pluie en barres, températures max et min en courbes
-function dessinerSpark(f) {
-  const w = spark.width = Math.round(100 * devicePixelRatio), h = spark.height = Math.round(30 * devicePixelRatio);
-  gs.clearRect(0, 0, w, h);
-  const hs = f.histo, n = 60, bw = w / n;
-  gs.fillStyle = '#7fb6e8';
-  hs.forEach((d, i) => { const ph = Math.min(h, d[2] / 30 * h); gs.fillRect(i * bw, h - ph, Math.max(1, bw - 1), ph); });
-  const y = v => h - (v + 10) / 50 * h;
-  for (const [idx, col] of [[1, '#ffb070'], [0, '#bfe0ff']]) {
-    gs.strokeStyle = col; gs.lineWidth = devicePixelRatio; gs.beginPath();
-    hs.forEach((d, i) => { const px = i * bw + bw / 2, py = y(d[idx]); i ? gs.lineTo(px, py) : gs.moveTo(px, py); });
-    gs.stroke();
-  }
+// Indicateur de l'année : jour de l'année et pluie cumulée depuis le 1er janvier (recalculée au changement d'année, de ferme ou de partie)
+let cumulPluie = null;
+function majAnnee(f) {
+  const d = dateDe(S.jour), m = f.meteo; if (!m) return;
+  if (!cumulPluie || cumulPluie.f !== f || cumulPluie.j > S.jour || cumulPluie.an !== d.an) {
+    let mm = 0; for (let j = S.jour - d.doy; j < S.jour; j++) { const x = Climat.jour(f.region, j); mm += x.pluie + x.neige; }
+    cumulPluie = { f, an: d.an, j: S.jour, mm };
+  } else while (cumulPluie.j < S.jour) { const x = Climat.jour(f.region, cumulPluie.j); cumulPluie.mm += x.pluie + x.neige; cumulPluie.j++; }
+  const long = dateDe(S.jour - d.doy + 365).an === d.an ? 366 : 365;
+  document.getElementById('an-jour').textContent = `Jour ${d.doy + 1} sur ${long}`;
+  document.getElementById('an-pluie').textContent = `${nf(cumulPluie.mm + m.pluie + m.neige)} mm`;
 }
-// Panneau « Récoltes » : ce qui est rentré à la grange cette année (ce qui roule encore n'est pas compté)
-function majProduction(pulse, id) {
-  if (!S || !S.fermes.length) return;
-  Recoltes.maj(F(), dateDe(S.jour).an, attente.parC, pulse ? id : null);
-}
+// L'onglet Récolte se redessine quand le stock change
+function recolteChangee() { if (onglet === 'recolte') ongletSale = true; }
+// Ce qui roule encore vers la ferme : pas encore compté ni vendable
 function enAttente(id, kg, kcal) {
   attente.kg += kg; attente.kcal += kcal;
   const q = attente.parC[id] ??= { kg: 0, kcal: 0 }; q.kg += kg; q.kcal += kcal;
@@ -593,77 +590,54 @@ document.getElementById('vitesses').addEventListener('click', e => { const b = e
 document.addEventListener('keydown', e => {
   if (e.code === 'Space' && !e.target.closest('input, textarea, button')) { e.preventDefault(); regler(S.vitesse ? 0 : 1); }
 });
-document.getElementById('niveau').addEventListener('click', () => ouvrirOnglet('commandes'));
+document.getElementById('niveau').addEventListener('click', () => ouvrirOnglet('objectifs'));
 
 // Choix de la ferme
 const menuFermes = document.getElementById('menu-fermes');
 document.getElementById('choix-ferme').addEventListener('click', () => {
   const peutCreer = S.fermes.every(pleine);
   menuFermes.innerHTML = S.fermes.map((f, i) => `<button data-ferme="${i}" ${i === S.active ? 'aria-current="true"' : ''}>Ferme ${i + 1} · ${MODES[f.mode].court}<span>${masse(f.stats.kg)}</span></button>`).join('')
-    + `<button data-ferme="nouvelle" ${peutCreer ? '' : 'disabled'}>Nouvelle ferme${peutCreer ? '' : '<span>quand toutes les parcelles sont achetées</span>'}</button>`;
+    + `<button data-ferme="nouvelle" ${peutCreer ? '' : 'disabled'}>Nouvelle ferme${peutCreer ? '' : '<span>quand toutes les parcelles sont achetées</span>'}</button>`
+    + '<button data-ferme="recommencer">Recommencer une partie</button>';
   menuFermes.hidden = !menuFermes.hidden;
 });
 menuFermes.addEventListener('click', e => {
   const b = e.target.closest('[data-ferme]'); if (!b || b.disabled) return;
   menuFermes.hidden = true;
   if (b.dataset.ferme === 'nouvelle') { ouvrirInstallation(); return; }
-  S.active = +b.dataset.ferme; selectionner(null); Rendu.preparer(); outilParDefaut(); apresAction(true); majProduction(false);
+  if (b.dataset.ferme === 'recommencer') {
+    if (!confirm('Recommencer une partie ? Toutes les fermes seront perdues.')) return;
+    try { localStorage.removeItem(CLE); } catch (er) { /* rien */ }
+    selectionner(null); S = null; ouvrirInstallation(); return;
+  }
+  S.active = +b.dataset.ferme; selectionner(null); Rendu.preparer(); outilParDefaut(); apresAction(true);
 });
 document.addEventListener('click', e => { if (!e.target.closest('#menu-fermes, #choix-ferme')) menuFermes.hidden = true; });
 
-// ---------- Outils ----------
-// Semence par défaut : celle d'une commande qui se sème ce mois-ci, sinon une culture ouverte qui se sème maintenant
+// ---------- Semence ----------
+// Semence par défaut : une culture ouverte qui se sème maintenant
 function outilParDefaut() {
   const f = F(), dispo = culturesDebloquees(f.mode), mois = dateDe(S.jour).mois, semable = id => CULTURE[id].semis.includes(mois);
   if (!dispo.includes(outil.id) || !semable(outil.id)) {
-    const commande = S.commandes.map(o => o.c).find(id => dispo.includes(id) && semable(id));
-    outil = { t: 'semer', id: commande || dispo.find(semable) || (dispo.includes(outil.id) ? outil.id : dispo[0]) };
+    outil = { id: dispo.find(semable) || (dispo.includes(outil.id) ? outil.id : dispo[0]) };
   }
-  majOutils();
 }
 function choisirSemence(id) {
   const c = CULTURE[id], mois = dateDe(S.jour).mois;
-  outil = { t: 'semer', id }; majOutils(); Compteur.rebond(document.querySelector('[data-outil="semer"]'));
-  toast(c.semis.includes(mois) ? `${c.nom} : cliquez un de vos champs pour semer.` : `${c.nom} : semis en ${plages(c.semis)}, avancez le temps jusque-là.`);
+  outil = { id }; majVolante();
+  toast(c.semis.includes(mois) ? `${c.nom} : cliquez un de vos champs, puis Semer.` : `${c.nom} : semis en ${plages(c.semis)}, avancez le temps jusque-là.`);
 }
-function majOutils() {
-  const f = F(), mode = MODES[f.mode];
-  document.getElementById('nom-semence').textContent = CULTURE[outil.id].nom;
-  for (const b of document.querySelectorAll('[data-outil]')) b.setAttribute('aria-pressed', String(b.dataset.outil === outil.t));
-  const irr = document.querySelector('[data-action-outil="irrigation"]');
-  irr.disabled = !mode.irrigation;
-  irr.innerHTML = mode.irrigation ? `Irrigation : <b>${f.irrigation ? 'oui' : 'non'}</b>` : 'Pas d’irrigation';
-  irr.setAttribute('aria-pressed', String(!!(f.irrigation && mode.irrigation)));
-  document.querySelector('[data-action-outil="ferti"]').innerHTML = `${mode.fertilisation === 'fumier' ? 'Fumier' : mode.fertilisation === 'compost' ? 'Compost' : 'Engrais'} : <b>${{ aucune: 'aucun', moderee: 'modéré', forte: 'fort' }[f.ferti]}</b>`;
-}
-document.getElementById('outils').addEventListener('click', e => {
-  const b = e.target.closest('button'); if (!b) return;
-  if (b.dataset.outil) { outil = { ...outil, t: b.dataset.outil }; if (outil.t === 'semer') ouvrirOnglet('semences'); }
-  const a = b.dataset.actionOutil, f = F();
-  if (a === 'recolter') recolterTout();
-  if (a === 'irrigation' && MODES[f.mode].irrigation) f.irrigation = !f.irrigation;
-  if (a === 'ferti') f.ferti = { aucune: 'moderee', moderee: 'forte', forte: 'aucune' }[f.ferti];
-  Compteur.rebond(b, 'appui');
-  majOutils(); if (onglet === 'ferme') majOnglet();
-});
-
-function majJournal(neuf) {
-  const ol = document.getElementById('journal'); if (!ol || !S) return;
-  ol.innerHTML = S.journal.slice(0, 4).map((n, i) => `<li${neuf && i === 0 ? ' class="neuf"' : ''}><span>${n.d}</span> ${n.txt}</li>`).join('');
-}
-
 // ---------- Onglets ----------
 const vue = document.getElementById('vue');
-let onglet = 'commandes', seulementSemables = true, ongletSale = true;
+let onglet = 'objectifs', seulementSemables = true, ongletSale = true, carnetOuvert = false, vuePressee = false, parcelleOuverte = null;
 function ouvrirOnglet(nom) {
   const change = onglet !== nom;
-  onglet = nom; ongletSale = true;
+  onglet = nom; ongletSale = true; if (change) carnetOuvert = false;
   for (const b of document.querySelectorAll('[data-onglet]')) b.setAttribute('aria-selected', String(b.dataset.onglet === nom));
   placerIndicateur();
-  if (nom === 'commandes') Meca.nouvelles = 0;
-  majBadge();
   majOnglet();
-  if (change) Compteur.rebond(vue, 'apparait');
+  // l'apparition ne se joue qu'au changement d'onglet : un redessin (stock qui arrive) ne fait pas clignoter la liste
+  if (change) { Compteur.rebond(vue, 'apparait'); clearTimeout(ouvrirOnglet.fin); ouvrirOnglet.fin = setTimeout(() => vue.classList.remove('apparait'), 600); }
 }
 function placerIndicateur() {
   const b = document.querySelector(`[data-onglet="${onglet}"]`), ind = document.getElementById('indicateur');
@@ -678,38 +652,6 @@ function icone(cv, c) {
   dessinerPlante(g, 0, 6, c, STADE_ICONE[c.forme] ?? 1, 1, 0, false);
 }
 
-function graphiqueAnnees(cv, f) {
-  const g = cv.getContext('2d'), w = cv.width = Math.round(cv.clientWidth * devicePixelRatio), h = cv.height = Math.round(150 * devicePixelRatio);
-  const css = getComputedStyle(document.documentElement), enc = css.getPropertyValue('--muted').trim(), or = css.getPropertyValue('--or').trim(), ciel = css.getPropertyValue('--ciel').trim();
-  const an1 = dateDe(S.jour).an, an0 = Math.max(an1 - 39, 1959);
-  const ans = []; for (let a = an0; a <= an1; a++) ans.push(a);
-  const maxK = Math.max(1, ...ans.map(a => f.stats.parAn[a]?.kcal || 0)), maxP = Math.max(400, ...ans.map(a => f.climatAn[a]?.pluie || 0));
-  const G = 34 * devicePixelRatio, B = 16 * devicePixelRatio, bw = (w - G) / ans.length;
-  g.font = `${10 * devicePixelRatio}px system-ui, sans-serif`; g.fillStyle = enc;
-  g.fillText(energie(maxK), 0, 10 * devicePixelRatio);
-  ans.forEach((a, i) => {
-    const k = f.stats.parAn[a]?.kcal || 0, bh = k / maxK * (h - B - 14 * devicePixelRatio);
-    g.fillStyle = or; g.fillRect(G + i * bw + 1, h - B - bh, Math.max(1, bw - 2), bh);
-    if (a % 10 === 0 || (i === 0 && a % 10 < 7)) { g.fillStyle = enc; g.fillText(a, G + i * bw, h - 3 * devicePixelRatio); }
-  });
-  g.strokeStyle = ciel; g.lineWidth = 1.5 * devicePixelRatio; g.beginPath();
-  ans.forEach((a, i) => { const p = f.climatAn[a]?.pluie; if (p == null) return; const x = G + i * bw + bw / 2, y = h - B - p / maxP * (h - B - 14 * devicePixelRatio); i && f.climatAn[a - 1] ? g.lineTo(x, y) : g.moveTo(x, y); });
-  g.stroke();
-}
-function graphiqueSol(cv, f) {
-  const g = cv.getContext('2d'), w = cv.width = Math.round(cv.clientWidth * devicePixelRatio), h = cv.height = Math.round(120 * devicePixelRatio);
-  const css = getComputedStyle(document.documentElement), enc = css.getPropertyValue('--muted').trim(), terreC = css.getPropertyValue('--terre').trim();
-  const pts = [...f.solAns, { an: dateDe(S.jour).an, mo: etatSol(f).mo }];
-  if (pts.length < 2) { g.fillStyle = enc; g.font = `${11 * devicePixelRatio}px system-ui`; g.fillText('La courbe apparaît après la première année.', 4, h / 2); return; }
-  const min = Math.min(...pts.map(p => p.mo)) - 0.2, max = Math.max(...pts.map(p => p.mo)) + 0.2;
-  const X = i => 30 * devicePixelRatio + i / (pts.length - 1) * (w - 34 * devicePixelRatio), Y = v => 6 * devicePixelRatio + (max - v) / (max - min) * (h - 22 * devicePixelRatio);
-  g.font = `${10 * devicePixelRatio}px system-ui`; g.fillStyle = enc;
-  g.fillText(nf(max, 1) + ' %', 0, Y(max) + 8 * devicePixelRatio); g.fillText(nf(min, 1) + ' %', 0, Y(min));
-  g.fillText(pts[0].an, X(0), h - 2); g.textAlign = 'right'; g.fillText(pts.at(-1).an, w, h - 2); g.textAlign = 'left';
-  g.strokeStyle = terreC; g.lineWidth = 2 * devicePixelRatio; g.beginPath();
-  pts.forEach((p, i) => i ? g.lineTo(X(i), Y(p.mo)) : g.moveTo(X(i), Y(p.mo))); g.stroke();
-}
-
 function carteSemence(c, mode, mois, maxK, verrou) {
   const k = kcalParHa(c), ouvert = c.semis.includes(mois), i = ordreMode(F().mode).indexOf(c.id), niv = Math.max(2, Math.ceil((i - 4) / 2) + 1);
   return `<button class="carte${outil.id === c.id ? ' choisie' : ''}${ouvert ? '' : ' fermee'}${verrou ? ' verrou' : ''}" data-semence="${c.id}">
@@ -722,7 +664,10 @@ function carteSemence(c, mode, mois, maxK, verrou) {
     </span></button>`;
 }
 const ONGLETS = {
-  commandes: () => Meca.vue(),
+  objectifs: () => '<h3>Objectifs</h3>' + OBJ_PARCELLES.map(o => {
+    const fait = S.objectifs[o.id];
+    return `<div class="objectif${fait ? ' fait' : ''}"><span class="boite">${fait ? '✓' : ''}</span><p>${o.txt}</p><small>${fait ? 'champ débloqué' : 'débloque un champ'}</small></div>`;
+  }).join(''),
   semences() {
     const f = F(), mode = MODES[f.mode], mois = dateDe(S.jour).mois;
     const ouvertes = culturesDebloquees(f.mode).map(id => CULTURE[id]);
@@ -736,89 +681,56 @@ const ONGLETS = {
       html += `<h3>${cat}</h3><div class="cartes">${liste.map(c => carteSemence(c, mode, mois, maxK, false)).join('')}</div>`;
     }
     if (rien) html += `<p class="vide">Rien de ce que vous cultivez ne se sème en ${NOMS_MOIS[mois - 1]}. Décochez la case pour tout voir, ou avancez le temps.</p>`;
-    const bientot = ordreMode(f.mode).slice(nbDebloquees(S.etoiles), nbDebloquees(S.etoiles) + 2).map(id => CULTURE[id]);
+    const bientot = ordreMode(f.mode).slice(nbDebloquees(S.exp), nbDebloquees(S.exp) + 2).map(id => CULTURE[id]);
     if (bientot.length) html += `<h3>Bientôt</h3><div class="cartes">${bientot.map(c => carteSemence(c, mode, mois, maxK, true)).join('')}</div>`;
     return html;
   },
-  production() {
-    const f = F(), s = f.stats, p = personnesAn(s.kcal);
-    let html = `<div class="chiffres">
-      <div><b>${masse(s.kg)}</b><span>récoltées</span></div>
-      <div><b>${energie(s.kcal)}</b><span>d’énergie</span></div>
-      <div><b>${nf(p, p < 10 ? 1 : 0)}</b><span>personnes nourries un an</span></div></div>
-      <h3>Énergie récoltée par année <span class="legende-pluie">et pluie de l’année</span></h3>
-      <canvas class="graphique" id="graph-annees"></canvas>`;
-    const ids = Object.keys(s.parCulture);
-    if (ids.length) {
-      html += `<h3>Par culture</h3><div class="defile-tableau"><table class="tableau"><thead><tr><th>Culture</th><th>Récolté</th><th>Dernier</th><th>France</th><th>Énergie</th></tr></thead><tbody>`;
-      for (const id of ids.sort((a, b) => s.parCulture[b].kcal - s.parCulture[a].kcal)) {
-        const c = CULTURE[id], q = s.parCulture[id], ecart = q.dernier / c.rdt;
-        html += `<tr><td>${c.nom}</td><td>${masse(q.kg)}</td><td class="${ecart >= 1 ? 'bon' : ecart < 0.75 ? 'mauvais' : ''}">${nf(q.dernier, q.dernier < 10 ? 1 : 0)} t/ha</td><td class="discret">${nf(c.rdt, c.rdt < 10 ? 1 : 0)}</td><td>${energie(q.kcal)}</td></tr>`;
-      }
-      html += '</tbody></table></div>';
-    } else html += '<p class="vide">Aucune récolte encore.</p>';
-    if (s.bois) html += `<p class="ligne2">Bois d’œuvre récolté : ${nf(s.bois)} t.</p>`;
-    html += `<h3>Comparer les cultures</h3><div class="defile-tableau"><table class="tableau"><thead><tr><th>Culture</th><th>t/ha</th><th>kcal/100 g</th><th>Mkcal/ha</th></tr></thead><tbody>`;
-    const max = Math.max(...CULTURES.map(kcalParHa));
-    for (const c of [...CULTURES].sort((a, b) => kcalParHa(b) - kcalParHa(a))) {
-      html += `<tr class="${cultureAutorisee(f.mode, c) ? '' : 'hors-mode'}"><td>${c.nom}</td><td>${nf(c.rdt, c.rdt < 10 ? 1 : 0)}</td><td>${c.kcal}</td><td><span class="mini-jauge" style="--p:${(kcalParHa(c) / max * 100).toFixed(0)}%"></span>${nf(kcalParHa(c) / 1e6, 1)}</td></tr>`;
-    }
-    return html + `</tbody></table></div><p class="source">Rendements moyens en France (Agreste, références maraîchères) et énergie CIQUAL (ANSES), arrondis. Grisé : hors de ce mode.</p>`;
+  recolte() {
+    if (carnetOuvert) return carnet();
+    const f = F(), s = f.stats, ids = culturesEnGrange(f).sort((a, b) => vendable(f, b) - vendable(f, a));
+    const enGrange = ids.reduce((t, id) => t + vendable(f, id) * CULTURE[id].kcal * 10, 0);
+    return `<div class="tuiles"><div class="tuile"><b>${masse(Math.max(0, s.kg - attente.kg))}</b><span>récoltées au total</span></div><div class="tuile"><b>${energie(Math.max(0, s.kcal - attente.kcal))}</b><span>d’énergie au total</span></div></div>
+      <h3 class="titre-stock">Stock et vente <small>${energie(enGrange)} en grange</small></h3>`
+      + (ids.length ? ids.map(id => {
+        const c = CULTURE[id], kg = vendable(f, id), t = kg / 1000, P = prixAnnee(c), pc = Math.round(P.e * 100), g = Meca.resteGarde(f, id);
+        return `<div class="vente"><div class="haut"><span class="nom"><i class="pt" style="background:${teinteProduit(c)}"></i>${c.nom}</span><b>${masse(kg)}</b></div>
+          <div class="bas"><span class="ligne2">${nf(s.parCulture[id].dernier, 2)} t/ha · <span class="garde${g.court ? ' court' : ''}" data-g="${id}">${g.txt}</span></span><span class="prix">${nf(P.p)} €/t<i class="${pc >= 0 ? 'plus' : 'moins'}">${pc >= 0 ? '+' : '−'}${Math.abs(pc)} %</i></span></div>
+          <button class="vendre" data-vendre="${id}">Vendre pour ${euros(t * P.p)}<span>+${nf(gainExp(c, t))} d’exp.</span></button></div>`;
+      }).join('') : '<p class="rien">Rien en grange pour le moment.</p>')
+      + '<button class="lien" data-carnet="1">Carnet de la ferme <span aria-hidden="true">›</span></button>';
   },
-  sol() {
-    const f = F(), s = etatSol(f), r = region(f), part = clamp(s.r / s.ru, 0, 1);
-    return `<h3>Eau dans le sol aujourd’hui</h3>
-      <div class="barre-eau"><span style="--part:${part.toFixed(3)}"></span></div>
-      <p class="ligne2">${nf(s.r)} mm sur ${nf(s.ru)} mm de réserve utile${part < 0.5 ? ' : <span class="mauvais">les cultures manquent d’eau</span>' : ''}</p>
-      <div class="chiffres sol">
-        <div><b>${nf(s.mo, 2)} %</b><span>matière organique (départ ${nf(f.moDepart, 2)} %)</span></div>
-        <div><b>${nf(s.vdt)}</b><span>vers de terre, sur 100</span></div>
-        <div><b>${nf(s.nmin)}</b><span>kg d’azote minéral par ha</span></div>
-        <div><b>${nf(s.erosion, 1)} mm</b><span>de réserve perdus par l’érosion</span></div></div>
-      <h3>Matière organique au fil des ans</h3>
-      <canvas class="graphique" id="graph-sol"></canvas>
-      <p class="ligne2">Sol de départ : ${r.sol}, ${r.ru} mm de réserve utile, ${nf(r.mo, 1)} % de matière organique.</p>
-      <p class="discret">Le labour et le sol nu font baisser la matière organique ; couverts, résidus, fumier, compost et arbres la font remonter. Plus elle est haute, plus le sol libère d’azote et retient d’eau.</p>`;
-  },
-  ferme() {
-    const f = F(), mode = MODES[f.mode], r = region(f), j = S.jour;
-    const tr = mode.transition, ans = (j - f.modeDepuis) / 365, enTransition = f.modeAvant && ans < tr.ans;
-    let html = `<h3>${r.nom} · ${r.ville}</h3>
-      <p class="ligne2">${r.sol} · ${r.ru} mm de réserve utile · ${nf(r.tRef, 1)} °C et ${nf(r.pRef)} mm par an en 1961-1990 · réchauffement depuis 1960 : ${r.pente60 < 0 ? '−' : '+'}${nf(Math.abs(r.pente60 * 10), 2)} °C par décennie</p>
-      <h3>${mode.nom}</h3><p>${mode.texte}</p>`;
-    if (enTransition) html += `<p class="mauvais">Transition en cours : encore ${nf(tr.ans - ans, 1)} an(s), rendement −${nf(tr.perte * (1 - ans / tr.ans) * 100)} %.</p>`;
-    if (mode.arbres) { const age = ageArbres(f, j); html += `<p class="ligne2">Arbres de ${nf(age, 0)} ans · bois sur pied ≈ ${nf(Object.keys(f.cases).length * mode.caseHa * 0.5 * age)} t · coupe à 50 ans.</p>`; }
-    html += `<h3>Eau et fertilisation</h3>
-      <p class="ligne2">${mode.irrigation ? `Irrigation ${mode.irrigation === 'goutte' ? 'au goutte-à-goutte' : 'par enrouleur'} : ${f.irrigation ? 'en marche' : 'arrêtée'} · ${nf(f.stats.eau)} m³ utilisés depuis le début.` : 'Pas d’irrigation dans ce mode.'}</p>
-      <div class="boutons">
-        ${mode.irrigation ? `<button data-action="irrigation">${f.irrigation ? 'Arrêter l’irrigation' : 'Irriguer'}</button>` : ''}
-        ${['aucune', 'moderee', 'forte'].map(v => `<button data-action="ferti" data-v="${v}" aria-pressed="${f.ferti === v}">${{ aucune: 'Sans apport', moderee: 'Apport modéré', forte: 'Apport fort' }[v]}</button>`).join('')}
-      </div>`;
-    const autres = FAMILLE_ECHELLE[mode.echelle].filter(m => m !== f.mode);
-    if (autres.length) html += `<h3>Changer de mode</h3><div class="modes-mini">${autres.map(m => `<button data-action="mode" data-mode="${m}"><b>${MODES[m].nom}</b><span>${MODES[m].transition.ans} an${MODES[m].transition.ans > 1 ? 's' : ''} de transition</span></button>`).join('')}</div>`;
-    html += `<p class="source">Prix fixes, pour l’ordre de grandeur. Trésorerie : ${euros(S.argent)}.</p>
-      <button data-action="nouvelle" class="discret-bouton">Recommencer une partie</button>`;
-    return html;
+  parcelles() {
+    const f = F(), us = Object.keys(f.parcelles).map(Number).sort((a, b) => f.parcelles[a] - f.parcelles[b]), etats = us.map(u => etatParcelle(f, u));
+    const n = etats.filter(e => e.pretes).length;
+    return (n ? `<button class="tout" data-tout="1">Récolter tout · ${n} parcelle${n > 1 ? 's' : ''}</button>` : '') + us.map((u, i) => {
+      const e = etats[i], p = pastille(e), ouverte = parcelleOuverte === u;
+      return `<div class="parcelle"><button data-ouvre="${u}" aria-expanded="${ouverte}"><b>Parcelle ${e.num}</b><span>${e.c ? e.c.nom : '—'} · ${surfaceTexte(e.ha)}</span><i class="etat ${p.cls}">${p.txt}</i></button>${ouverte ? corpsFiche(f, u, e) : ''}</div>`;
+    }).join('');
   },
 };
 
-const partsVues = new Map();
+// Carnet de la ferme : total produit par culture, puis les récoltes année par année
+function carnet() {
+  const s = F().stats, ids = Object.keys(s.parCulture).sort((a, b) => s.parCulture[b].kg - s.parCulture[a].kg);
+  let html = '<button class="retour" data-carnet="0">‹ Récolte</button><h3>Total produit par la ferme</h3>';
+  if (!ids.length) return html + '<p class="rien">Aucune récolte encore.</p>';
+  html += '<div class="defile-tableau"><table class="tableau"><thead><tr><th>Culture</th><th>Récolté</th><th>Dernier</th><th>France</th><th>Énergie</th></tr></thead><tbody>';
+  for (const id of ids) {
+    const c = CULTURE[id], q = s.parCulture[id], ecart = q.dernier / c.rdt;
+    html += `<tr><td>${c.nom}</td><td>${masse(q.kg)}</td><td class="${ecart >= 1 ? 'bon' : ecart < 0.75 ? 'mauvais' : ''}">${nf(q.dernier, q.dernier < 10 ? 1 : 0)} t/ha</td><td class="discret">${nf(c.rdt, c.rdt < 10 ? 1 : 0)}</td><td>${energie(q.kcal)}</td></tr>`;
+  }
+  html += '</tbody></table></div><h3>Récoltes, année par année</h3><div class="defile-tableau"><table class="tableau"><thead><tr><th>Récolte</th><th>Surface</th><th>Rendement</th><th>Tonnes</th></tr></thead><tbody>';
+  for (const an of Object.keys(s.recAn || {}).sort((a, b) => b - a)) {
+    const L = Object.entries(s.recAn[an]).sort((a, b) => b[1].kg - a[1].kg);
+    for (const [id, q] of L) html += `<tr><td>${an} · ${CULTURE[id].nom}</td><td>${surfaceTexte(q.ha)}</td><td>${nf(q.kg / 1000 / q.ha, 1)} t/ha</td><td>${masse(q.kg)}</td></tr>`;
+  }
+  return html + '</tbody></table></div>';
+}
+
 function majOnglet() {
   const haut = vue.scrollTop;
   vue.innerHTML = ONGLETS[onglet]();
   for (const cv of vue.querySelectorAll('canvas[data-icone]')) icone(cv, CULTURE[cv.dataset.icone]);
-  if (onglet === 'commandes') {
-    Meca.apresVue(vue);
-    // chaque barre d'avancement repart de sa valeur précédente et glisse jusqu'à la nouvelle
-    for (const el of vue.querySelectorAll('[data-commande]')) {
-      const barre = el.querySelector('.barre > span'), id = el.dataset.commande, neuve = barre.style.getPropertyValue('--part'), vieille = partsVues.get(id);
-      if (vieille != null && vieille !== neuve) { barre.style.setProperty('--part', vieille); void barre.offsetWidth; barre.style.setProperty('--part', neuve); }
-      else if (vieille == null) el.classList.add('arrivee');
-      partsVues.set(id, neuve);
-    }
-  }
-  if (onglet === 'production') graphiqueAnnees(document.getElementById('graph-annees'), F());
-  if (onglet === 'sol') graphiqueSol(document.getElementById('graph-sol'), F());
   vue.scrollTop = haut;
   ongletSale = false;
 }
@@ -828,38 +740,34 @@ vue.addEventListener('click', e => {
     if (s.classList.contains('verrou')) { toast(messageVerrou(F(), s.dataset.semence)); Compteur.rebond(s, 'non'); return; }
     choisirSemence(s.dataset.semence); majOnglet(); return;
   }
-  const a = e.target.closest('[data-action]'), cmd = e.target.closest('[data-commande]');
-  if (a?.dataset.action === 'livrer' && cmd) { cmd.classList.add('livree'); Meca.livrer(cmd.dataset.commande, a); setTimeout(() => majOnglet(), 750); return; }
-  if (a?.dataset.action === 'refuser' && cmd) { cmd.classList.add('refusee'); setTimeout(() => { Meca.refuser(cmd.dataset.commande); majOnglet(); }, 280); return; }
-  if (cmd && !a) { const o = S.commandes.find(x => x.id === cmd.dataset.commande); if (o) { choisirSemence(o.c); Meca.avancerGuide(0); Compteur.rebond(cmd); } return; }
-  if (!a) return;
-  const f = F();
-  if (a.dataset.action === 'irrigation') { f.irrigation = !f.irrigation; majOutils(); majOnglet(); }
-  else if (a.dataset.action === 'ferti') { f.ferti = a.dataset.v; majOutils(); majOnglet(); }
-  else if (a.dataset.action === 'mode') changerMode(a.dataset.mode);
-  else if (a.dataset.action === 'nouvelle' && confirm('Recommencer une partie ? Toutes les fermes seront perdues.')) {
-    try { localStorage.removeItem(CLE); } catch (er) { /* rien */ }
-    S = null; ouvrirInstallation();
-  }
+  const v = e.target.closest('[data-vendre]');
+  if (v) { Meca.vendreTout(v.dataset.vendre, v); majOnglet(); return; }
+  const cn = e.target.closest('[data-carnet]');
+  if (cn) { carnetOuvert = cn.dataset.carnet === '1'; vue.scrollTop = 0; majOnglet(); return; }
+  const o = e.target.closest('[data-ouvre]');
+  if (o) { parcelleOuverte = parcelleOuverte === +o.dataset.ouvre ? null : +o.dataset.ouvre; majOnglet(); return; }
+  if (e.target.closest('[data-tout]')) { recolterTout(); return; }
+  commandeParcelle(e);
 });
+// Pas de redessin entre l'appui et le relâchement : le clic sur « Vendre » se perdrait
+for (const el of [vue, volante]) el.addEventListener('pointerdown', () => { vuePressee = true; });
+addEventListener('pointerup', () => { vuePressee = false; });
+addEventListener('pointercancel', () => { vuePressee = false; });
 vue.addEventListener('change', e => { if (e.target.matches('[data-action="filtre"]')) { seulementSemables = e.target.checked; majOnglet(); } });
 
 function apresAction(structure) {
   verifierObjectifs();
-  majEntete(); majInfo(); majOutils();
+  majEntete(); majVolante();
   if (structure || onglet !== 'semences') majOnglet();
 }
-// Chaque objectif atteint rapporte trois étoiles
+// Un objectif atteint le reste, et fait entrer son champ dans l'exploitation
 function verifierObjectifs() {
-  if (S?.fermes.length) debloquerParcelles();
-  for (const o of OBJECTIFS) {
+  for (const o of OBJ_PARCELLES) {
     if (S.objectifs[o.id] || !o.ok()) continue;
     S.objectifs[o.id] = true;
-    noter(`Objectif atteint : ${o.txt.toLowerCase()}.`);
-    const r = ecran.getBoundingClientRect();
-    Meca.gagner(3, { x: r.left + r.width / 2, y: r.top + r.height / 3 });
-    if (onglet === 'commandes') ongletSale = true;
+    if (onglet === 'objectifs') ongletSale = true;
   }
+  debloquerParcelles();
 }
 
 // ---------- Installation : région, graine, manière de cultiver ----------
@@ -907,41 +815,44 @@ function ouvrirInstallation() {
   }
   majInstallation();
 }
-// Chiffres du lieu en jauges à six niveaux, dessin repris de Squid Food (demande du 07/11) : six segments égaux,
-// le niveau du lieu plein, les autres pâles, une pastille à la valeur. Niveaux = sextiles des régions du jeu
-// (mêmes données SAFRAN, même période) : chaque niveau regroupe un sixième des régions de France.
-// Une seule couleur par jauge, qui garde son sens partout : bleu pour l'eau, rouge pour le chaud.
+// Chiffres du lieu en jauges à six segments (demande du 08/11) : barre entièrement colorée, texte neutre.
+// Température et réchauffement : bleu foncé, bleu, vert, jaune, orange, rouge (du froid au chaud) ; pluie et réserve du sol :
+// rouge, orange, jaune, vert, bleu, bleu foncé. La moyenne française est dans le segment vert (gi) et repérée par un trait.
+// Les segments se répartissent de part et d'autre du vert entre le 2e et le 98e centile des régions du jeu (mêmes données SAFRAN).
 const signe = v => v < 0 ? '−' : '+';
+const COULEURS_CHAUD = ['b1', 'b2', 'v', 'j', 'o', 'r'], COULEURS_EAU = ['r', 'o', 'j', 'v', 'b2', 'b1'];
 const JAUGES_LIEU = [
-  { k: 'tRef', nom: 'Température moyenne annuelle', teinte: 'chaud', unite: v => `${nf(v, 1)} °C`, sous: '1961-1990',
-    niveaux: ['Très froid', 'Froid', 'Frais', 'Doux', 'Chaud', 'Très chaud'],
+  { k: 'tRef', nom: 'Température moyenne annuelle', cl: COULEURS_CHAUD, gi: 2, unite: v => `${nf(v, 1)} °C`, sous: '1961-1990',
+    niveaux: ['Très froid', 'Froid', 'Moyen', 'Doux', 'Chaud', 'Très chaud'],
     ecart: d => `${nf(Math.abs(d), 1)} °C de ${d < 0 ? 'moins' : 'plus'} que la moyenne française` },
-  { k: 'pRef', nom: 'Pluie', teinte: 'eau', unite: v => `${nf(v)} mm`, sous: 'par an, 1961-1990',
-    niveaux: ['Très sec', 'Sec', 'Assez sec', 'Assez arrosé', 'Arrosé', 'Très arrosé'],
-    ecart: (d, moy) => `${nf(Math.abs(d) / moy * 100)} % de ${d < 0 ? 'moins' : 'plus'} que la moyenne française` },
-  { k: 'ru', nom: 'Réserve utile du sol', teinte: 'eau', unite: v => `${nf(v)} mm`, sous: '',
-    niveaux: ['Très faible', 'Faible', 'Assez faible', 'Assez bonne', 'Bonne', 'Très bonne'],
-    ecart: d => `${nf(Math.abs(d))} mm de ${d < 0 ? 'moins' : 'plus'} que la moyenne française` },
-  { k: 'pente60', f: 10, nom: 'Réchauffement', teinte: 'chaud', unite: v => `${signe(v)}${nf(Math.abs(v), 2)} °C`, sous: 'par décennie depuis 1960',
-    niveaux: ['Très lent', 'Lent', 'Assez lent', 'Assez rapide', 'Rapide', 'Très rapide'],
+  { k: 'pente60', f: 10, nom: 'Réchauffement', cl: COULEURS_CHAUD, gi: 2, unite: v => `${signe(v)}${nf(Math.abs(v), 2)} °C`, sous: 'par décennie depuis 1960',
+    niveaux: ['Très lent', 'Lent', 'Moyen', 'Assez rapide', 'Rapide', 'Très rapide'],
     ecart: d => `${d < 0 ? 'plus lent' : 'plus rapide'} que la moyenne française (${signe(d)}${nf(Math.abs(d), 2)} °C)` },
+  { k: 'pRef', nom: 'Pluie', cl: COULEURS_EAU, gi: 3, unite: v => `${nf(v)} mm`, sous: 'par an, 1961-1990',
+    niveaux: ['Très sec', 'Sec', 'Assez sec', 'Moyen', 'Arrosé', 'Très arrosé'],
+    ecart: (d, moy) => `${nf(Math.abs(d) / moy * 100)} % de ${d < 0 ? 'moins' : 'plus'} que la moyenne française` },
+  { k: 'ru', nom: 'Réserve utile du sol', cl: COULEURS_EAU, gi: 3, unite: v => `${nf(v)} mm`, sous: '',
+    niveaux: ['Très faible', 'Faible', 'Assez faible', 'Moyenne', 'Bonne', 'Très bonne'],
+    ecart: d => `${nf(Math.abs(d))} mm de ${d < 0 ? 'moins' : 'plus'} que la moyenne française` },
 ];
 const statsJauge = {};
 function jaugeLieu(q, r) {
   if (!statsJauge[q.k]) {
     const v = REGIONS_JOUABLES.map(x => x[q.k] * (q.f || 1)).sort((a, b) => a - b), c = p => v[Math.round(p * (v.length - 1))];
-    // bornes : du 2e centile aux 5 sextiles puis au 98e centile (les extrêmes isolés n'écrasent pas l'échelle)
-    statsJauge[q.k] = { moy: v.reduce((a, b) => a + b, 0) / v.length, bornes: [0.02, 1 / 6, 2 / 6, 3 / 6, 4 / 6, 5 / 6, 0.98].map(c) };
+    const moy = v.reduce((a, b) => a + b, 0) / v.length, lo = c(0.02), hi = c(0.98), w = 0.08 * (hi - lo), gi = q.gi, b = [lo];
+    for (let i = 1; i <= gi; i++) b.push(lo + (moy - w - lo) * i / gi);
+    for (let i = 1; i <= 5 - gi; i++) b.push(moy + w + (hi - moy - w) * i / (5 - gi));
+    b.splice(gi + 1, 0, moy + w); b.pop(); b[6] = hi;
+    statsJauge[q.k] = { moy, bornes: b };
   }
-  const s = statsJauge[q.k], b = s.bornes, val = r[q.k] * (q.f || 1), d = val - s.moy;
-  const n = Math.min(5, b.slice(1, 6).filter(x => val > x).length);
-  const pos = Math.max(0, Math.min(1, (n + Math.max(0, Math.min(1, (val - b[n]) / ((b[n + 1] - b[n]) || 1)))) / 6));
-  const proche = Math.abs(d) < 0.12 * (d < 0 ? s.moy - b[0] : b[6] - s.moy);
-  const segs = [0, 1, 2, 3, 4, 5].map(k => `<i class="s${k}${k === n ? ' actif' : ''}"></i>`).join('');
-  return `<div class="jauge-lieu ${q.teinte}">
+  const s = statsJauge[q.k], b = s.bornes, d = r[q.k] * (q.f || 1) - s.moy, val = r[q.k] * (q.f || 1);
+  const place = x => { const n = Math.min(5, b.slice(1, 6).filter(y => x > y).length); return [n, Math.max(0, Math.min(1, (n + Math.max(0, Math.min(1, (x - b[n]) / ((b[n + 1] - b[n]) || 1)))) / 6))]; };
+  const [n, pos] = place(val), posMoy = place(s.moy)[1];
+  const segs = q.cl.map(c => `<i class="c-${c}"></i>`).join('');
+  return `<div class="jauge-lieu">
     <p><span>${q.nom}</span><b>${q.unite(val)}</b><em>${q.niveaux[n]}</em></p>
-    <i class="barre6" style="--pos:${(pos * 100).toFixed(1)}%">${segs}<i class="pastille"></i></i>
-    <small>${q.sous ? q.sous + ' · ' : ''}${proche ? 'dans la moyenne française' : q.ecart(d, s.moy)}</small></div>`;
+    <i class="barre6" style="--pos:${(pos * 100).toFixed(1)}%;--moy:${(posMoy * 100).toFixed(1)}%">${segs}<i class="repere"></i><i class="pastille"></i></i>
+    <small>${q.sous ? q.sous + ' · ' : ''}${n === q.gi ? 'dans la moyenne française' : q.ecart(d, s.moy)}</small></div>`;
 }
 function majInstallation() {
   const r = REGIONS.find(x => x.id === choixRegion), id = lieuDe(choixRegion, choixGraine), L = LIEUX[id], m = MODES[choixMode], pl = L[m.echelle];
@@ -961,19 +872,18 @@ $i('install-go').addEventListener('click', async () => {
   bouton.disabled = true; bouton.textContent = 'Chargement du climat…';
   try { await Climat.charger(choixRegion); } catch (e) { toast(e.message); bouton.disabled = false; majInstallation(); return; }
   const neuve = !S;
-  if (neuve) { S = { v: 5, jour: DEBUT(), vitesse: 1, argent: 0, fermes: [], active: 0, objectifs: {}, journal: [] }; Meca.completer(S); S.guide = 0; S.prochaineCommande = S.jour + 18; }
+  if (neuve) { S = { v: 6, jour: DEBUT(), vitesse: 1, argent: 0, fermes: [], active: 0, objectifs: {} }; Meca.completer(S); }
   const f = creerFerme(lieuDe(choixRegion, choixGraine), choixMode);
   f.meteo = Climat.jour(f.region, S.jour);
-  if (neuve) for (let i = 0; i < 2; i++) { const o = Meca.nouvelleCommande(); if (o) S.commandes.push(o); }
   install.hidden = true; bouton.disabled = false;
   selectionner(null);
-  if (S.commandes[0]) outil = { t: 'semer', id: S.commandes[0].c };
   demarrer();
 });
 
 // ---------- Boucle ----------
 let dernier = performance.now(), cumul = 0, jourAffiche = -1, enRoute = false, dernierRendu = 0, dernierLent = 0, derniereSauvegarde = 0;
 function boucle(t) {
+  requestAnimationFrame(boucle);        // d'abord : quoi qu'il arrive dans la suite, l'image d'après aura lieu
   const dt = Math.min(250, t - dernier); dernier = t;
   if (S && install.hidden && S.fermes.length) {
     if (S.vitesse > 0) {
@@ -987,38 +897,36 @@ function boucle(t) {
     if (S.jour !== jourAffiche) {
       jourAffiche = S.jour;
       verifierObjectifs(); majEntete();
-      if (selection?.type === 'case') majInfo();
-      const vivant = ['sol', 'ferme', 'production', 'commandes'].includes(onglet) && S.jour % 4 === 0 && !vue.matches(':hover');
-      if ((ongletSale || vivant) && !peinture) majOnglet();
-    } else if (ongletSale && !peinture) majOnglet();
+      if (selection && !vuePressee) majVolante();
+      const vivant = onglet === 'parcelles' && (S.vitesse <= 3 || S.jour % 4 === 0);
+      if (onglet === 'recolte' && !carnetOuvert) for (const el of vue.querySelectorAll('[data-g]')) { const f = F(), id = el.dataset.g; if (!f.lots[id]) continue; const g = Meca.resteGarde(f, id); el.textContent = g.txt; el.classList.toggle('court', g.court); }
+      if ((ongletSale || vivant) && !peinture && !vuePressee) majOnglet();
+    } else if (ongletSale && !peinture && !vuePressee) majOnglet();
     if (t - dernierLent > 150) {
       dernierLent = t;
       iconeMeteo(iconeMet, F().meteo || { tmin: 5, tmax: 12, pluie: 0, neige: 0 }, t);
       Meca.guide();
-      document.querySelector('[data-action-outil="recolter"]').classList.toggle('pret', Rendu.murs.length > 0);
     }
     if (t - derniereSauvegarde > 20000) { derniereSauvegarde = t; sauver(); }
     // plus rien en vol : les compteurs affichés rejoignent les vrais (au cas où une arrivée se serait perdue)
-    if (!Anim.effets.length && !Anim.enRetard && !Rendu.transportEnCours() && (attente.kg || attente.kcal || Meca.attente.etoiles)) { attente.kg = attente.kcal = 0; attente.parC = {}; Meca.attente.etoiles = 0; majProduction(false); Meca.majNiveau(false); }
+    if (!Anim.effets.length && !Anim.enRetard && !Rendu.transportEnCours() && (attente.kg || attente.kcal || Meca.attente.exp)) { attente.kg = attente.kcal = 0; attente.parC = {}; Meca.attente.exp = 0; recolteChangee(); Meca.majNiveau(false); }
     // 60 images par seconde quand quelque chose bouge vite (geste, machine, effet), 20 au calme : le Mac reste frais
     const vif = Rendu.revel.size || Rendu.parts.length || Rendu.ondes.length || Anim.effets.length || Rendu.bouge();
     if (vif || t - dernierRendu > (Rendu.calme() ? 48 : 30)) { Rendu.dessiner(t, t - dernierRendu); dernierRendu = t; }
     Anim.dessiner(t);
   }
-  requestAnimationFrame(boucle);
 }
-// Horloge de la barre du haut : chaque jour de jeu déroule la journée de travail, de 6 h à 21 h (aiguille des heures, cadran de 12 h)
-let heureVue = -1, angleVu = -1;
+// Horloge de la barre du haut : chaque jour de jeu déroule la journée de travail, de 6 h à 21 h (heure écrite)
+let heureVue = -1;
 function majHeure(part) {
-  const h = 6 + 15 * Math.max(0, Math.min(1, part)), a = Math.round((h % 12) * 30);
-  if (a !== angleVu) { angleVu = a; $i('aiguille').setAttribute('transform', `rotate(${a} 10 10)`); }
+  const h = 6 + 15 * Math.max(0, Math.min(1, part));
   if (Math.floor(h) !== heureVue) { heureVue = Math.floor(h); $i('heure-txt').textContent = `${heureVue} h`; }
 }
 function demarrer() {
   Rendu.preparer();
   outilParDefaut();
-  majEntete(); majOutils(); majJournal(false); majInfo(); majProduction(false); Meca.majNiveau(false); majBadge(); majHeure(0);
-  ouvrirOnglet('commandes');
+  majEntete(); Meca.majNiveau(false); majHeure(0);
+  ouvrirOnglet('objectifs');
   if (!enRoute) { enRoute = true; requestAnimationFrame(boucle); }
 }
 
