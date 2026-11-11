@@ -14,11 +14,11 @@ window.VERSIONS = {
  },
  "squid-ferme": {
   "version": 9,
-  "date": "2026-11-08T21:41:50+01:00"
+  "date": "2026-11-08T21:41:51+01:00"
  },
  "concentration": {
-  "version": 1,
-  "date": "2026-10-30T09:46:32+01:00"
+  "version": 2,
+  "date": "2026-11-11T15:30:17+01:00"
  },
  "profils-sol": {
   "version": 4,
