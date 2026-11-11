@@ -17,8 +17,8 @@ window.VERSIONS = {
   "date": "2026-11-08T21:41:51+01:00"
  },
  "concentration": {
-  "version": 2,
-  "date": "2026-11-11T15:30:17+01:00"
+  "version": 3,
+  "date": "2026-11-11T15:35:09+01:00"
  },
  "profils-sol": {
   "version": 4,

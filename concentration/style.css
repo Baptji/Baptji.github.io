@@ -1,12 +1,11 @@
-/* Concentration, version web. Une scène plein écran (une journée qui passe pendant le minuteur), une pastille en
-   haut de l'écran et une fenêtre flottante. Couleurs de l'icône : indigo de nuit, jaune du soleil.
+/* Concentration, version web. Une scène plein écran (l'aube qui se lève pendant le minuteur) et une pastille en
+   haut de l'écran. Couleurs de l'icône : indigo de nuit, jaune du soleil.
    Tout ce qui bouge en continu ne touche qu'à transform et opacity, et avance au pas d'une seule horloge à 12 images
    par seconde (scene.js) : à 60 images par seconde, la page tenait la moitié d'un cœur du processeur. */
 :root {
   --or: #ffd15c; --indigo: #231c66;
   --encre2: rgba(255, 255, 255, .66); --encre3: rgba(255, 255, 255, .42);
   --verre: rgba(255, 255, 255, .075); --verre-bord: rgba(255, 255, 255, .15);
-  --yh: 66vh;
   --arrondi: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   color-scheme: dark;
 }
@@ -17,111 +16,9 @@ body { margin: 0; overflow: hidden; background: #07061c; color: #fff; -webkit-fo
 button { font: inherit; color: inherit; cursor: pointer; }
 button:focus-visible, input:focus-visible { outline: 2px solid var(--or); outline-offset: 3px; }
 
-/* ——— la scène ——— */
-#scene { position: fixed; inset: 0; overflow: hidden; --r: 36px; --sx: 0px; --sy: 120vh; --eclat: 0; --eclat-reflet: 0;
-  --c-haut: #07061c; --c-milieu: #15123f; --c-horizon: #2a2266; --c-soleil: #ff8f5a; --c-halo: #3a2d7a;
-  --c-mer-haut: #1b1650; --c-mer-bas: #07061a; --c-nuage: #2b2560; }
-#scene > *, .mer > * { position: absolute; }
-#scene.fige *, #scene.fige *::before, #scene.fige *::after { transition: none !important; }
-.ciel { inset: 0; background: linear-gradient(to bottom, var(--c-haut) 0, var(--c-milieu) calc(var(--yh) * .62), var(--c-horizon) var(--yh)); }
-.etoiles { left: 0; top: 0; width: 100%; height: var(--yh); }
-.etoiles canvas { position: absolute; inset: 0; }
-.etoiles .e1 { animation: scintille 5.2s ease-in-out infinite alternate; }
-.etoiles .e2 { animation: scintille 7.9s ease-in-out -3s infinite alternate; }
-@keyframes scintille { to { opacity: .28; } }
-
-/* la lune (en croissant) : levée pendant l'attente, couchée pendant le minuteur */
-.lune { left: 0; top: 0; width: calc(var(--r) * 1.6); height: calc(var(--r) * 1.6); margin: calc(var(--r) * -.8) 0 0 calc(var(--r) * -.8);
-  border-radius: 50%; box-shadow: inset calc(var(--r) * -.42) calc(var(--r) * .1) 0 0 #f1edff, 0 0 calc(var(--r) * 1.4) rgba(190, 180, 255, .16);
-  transform: translate(var(--lx), var(--ly)); transition: transform 2.6s cubic-bezier(.45, 0, .2, 1), opacity 2s ease; }
-#scene.lune-couchee .lune { transform: translate(var(--lx), calc(var(--yh) + var(--r) * 1.4)); opacity: 0; }
-
-/* la course du soleil : un point par minute, dorés une fois franchis */
-.course { left: 0; top: 0; overflow: visible; }
-.course circle { fill: rgba(255, 255, 255, .32); transform-box: fill-box; transform-origin: center;
-  animation: point-apparait .6s cubic-bezier(.3, 1.6, .5, 1) backwards; animation-delay: var(--retard); transition: fill 1.2s ease, opacity 1s ease; }
-.course circle.passe { fill: var(--c-soleil); animation: point-franchi 1.1s ease-out; }
-.course.efface circle { opacity: 0; }
-@keyframes point-apparait { from { transform: scale(0); opacity: 0; } }
-@keyframes point-franchi { 0% { transform: scale(1); } 30% { transform: scale(2.6); } 100% { transform: scale(1); } }
-
-.halo { left: 0; top: 0; width: calc(var(--r) * 18); height: calc(var(--r) * 18); margin: calc(var(--r) * -9) 0 0 calc(var(--r) * -9);
-  border-radius: 50%; pointer-events: none;
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--c-halo) 58%, transparent), color-mix(in srgb, var(--c-halo) 16%, transparent) 42%, transparent);
-  transform: translate(var(--sx), var(--sy)); opacity: var(--eclat); }
-.soleil { left: 0; top: 0; width: calc(var(--r) * 2); height: calc(var(--r) * 2); margin: calc(var(--r) * -1) 0 0 calc(var(--r) * -1); border-radius: 50%;
-  background: radial-gradient(circle at 50% 40%, #fffbea 0, color-mix(in srgb, var(--c-soleil) 70%, #fffbea) 38%, var(--c-soleil) 74%);
-  box-shadow: 0 0 calc(var(--r) * .45) color-mix(in srgb, var(--c-soleil) 75%, transparent), 0 0 calc(var(--r) * 1.5) color-mix(in srgb, var(--c-soleil) 30%, transparent);
-  transform: translate(var(--sx), var(--sy)); opacity: 0; transition: opacity 1s ease; }
-#scene.actif .soleil { opacity: 1; }
-#scene:not(.actif) .halo, #scene:not(.actif) .du-soleil { transition: opacity 1.2s ease; }
-/* des anneaux partent du soleil, lentement, comme sur l'icône */
-.soleil::before, .soleil::after { content: ""; position: absolute; inset: -6%; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--c-soleil) 55%, transparent);
-  opacity: 0; animation: rayonne 6s cubic-bezier(.2, .6, .35, 1) infinite; }
-.soleil::after { animation-delay: -3s; }
-@keyframes rayonne { 0% { transform: scale(1); opacity: .7; } 100% { transform: scale(2.4); opacity: 0; } }
-
-/* des nuages plats qui dérivent */
-.nuages { inset: 0; }
-.nuages i { position: absolute; left: 0; display: block; width: calc(var(--r) * 3.6); height: calc(var(--r) * .8); border-radius: 999px;
-  background: var(--c-nuage); opacity: .42; animation: derive 260s linear infinite; }
-.nuages i::before, .nuages i::after { content: ""; position: absolute; border-radius: 50%; background: inherit; }
-.nuages i::before { width: 46%; height: 150%; left: 14%; bottom: 30%; }
-.nuages i::after { width: 34%; height: 110%; left: 46%; bottom: 36%; }
-.nuages .n1 { top: 21%; animation-delay: -70s; }
-.nuages .n2 { top: 36%; width: calc(var(--r) * 2.6); height: calc(var(--r) * .6); opacity: .3; animation-duration: 330s; animation-delay: -250s; }
-.nuages .n3 { top: 13%; width: calc(var(--r) * 2); height: calc(var(--r) * .5); opacity: .26; animation-duration: 400s; animation-delay: -120s; }
-@keyframes derive { from { transform: translateX(-30vw); } to { transform: translateX(120vw); } }
-
-/* la mer : elle cache le soleil couché ; reflets, houle, ondes de la fin */
-.mer { left: 0; right: 0; top: var(--yh); bottom: 0; overflow: hidden; background: linear-gradient(var(--c-mer-haut), var(--c-mer-bas)); }
-.mer::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .26), transparent); }
-.reflet { left: 0; top: 0; width: 0; height: 100%; }
-.reflet i { position: absolute; left: 0; display: block; height: 3px; border-radius: 3px; --o: 1;
-  animation: miroite 2.8s ease-in-out infinite alternate; }
-.du-soleil { transform: translateX(var(--sx)); opacity: var(--eclat-reflet); }
-.du-soleil i { background: var(--c-soleil); }
-.de-la-lune { transform: translateX(var(--lx)); opacity: .5; transition: opacity 2s ease; }
-.de-la-lune i { background: #e6e1ff; height: 2px; }
-.de-la-lune i:nth-child(1) { width: calc(var(--r) * .7); }
-.de-la-lune i:nth-child(2) { width: calc(var(--r) * 1.1); }
-.de-la-lune i:nth-child(3) { width: calc(var(--r) * .5); }
-.de-la-lune i:nth-child(4) { width: calc(var(--r) * 1.3); }
-.de-la-lune i:nth-child(5) { width: calc(var(--r) * .8); }
-#scene.lune-couchee .de-la-lune { opacity: 0; }
-.reflet i:nth-child(1) { top: 5px; width: calc(var(--r) * 1.3); --o: .95; animation-duration: 2.3s; }
-.reflet i:nth-child(2) { top: 13px; width: calc(var(--r) * 1.7); --o: .85; animation-duration: 3.1s; animation-delay: -1s; }
-.reflet i:nth-child(3) { top: 23px; width: calc(var(--r) * 1.2); --o: .75; animation-duration: 2.6s; animation-delay: -.4s; }
-.reflet i:nth-child(4) { top: 36px; width: calc(var(--r) * 2); --o: .6; animation-duration: 3.5s; animation-delay: -2s; }
-.reflet i:nth-child(5) { top: 52px; width: calc(var(--r) * 1.4); --o: .5; animation-duration: 2.9s; animation-delay: -1.5s; }
-.reflet i:nth-child(6) { top: 71px; width: calc(var(--r) * 2.3); --o: .38; animation-duration: 3.8s; animation-delay: -.7s; }
-.reflet i:nth-child(7) { top: 94px; width: calc(var(--r) * 1.6); --o: .26; animation-duration: 3.2s; animation-delay: -2.4s; }
-@keyframes miroite { from { transform: translateX(-50%) scaleX(.5); opacity: calc(var(--o) * .45); } to { transform: translateX(-50%) scaleX(1.12); opacity: var(--o); } }
-.vagues { inset: 0; }
-.vagues i { position: absolute; left: 0; display: block; height: 1.5px; width: 36vw; border-radius: 2px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .13), transparent); animation: houle 44s linear infinite; }
-.vagues i:nth-child(1) { top: 12%; width: 22vw; animation-duration: 70s; animation-delay: -20s; }
-.vagues i:nth-child(2) { top: 31%; animation-duration: 52s; animation-delay: -41s; }
-.vagues i:nth-child(3) { top: 54%; width: 44vw; animation-duration: 40s; animation-delay: -9s; }
-.vagues i:nth-child(4) { top: 79%; width: 52vw; animation-duration: 33s; animation-delay: -27s; }
-@keyframes houle { from { transform: translateX(-55vw); } to { transform: translateX(105vw); } }
-.ondes { left: 0; top: 0; transform: translateX(var(--fx)); }
-.ondes i { position: absolute; left: 0; top: 0; display: block; width: calc(var(--r) * 7); height: calc(var(--r) * 1.5);
-  margin: calc(var(--r) * -.75) 0 0 calc(var(--r) * -3.5); border-radius: 50%; border: 2px solid color-mix(in srgb, var(--c-soleil) 70%, white); opacity: 0; }
-#scene.ondes-actives .ondes i { animation: onde 4.2s cubic-bezier(.15, .6, .35, 1) infinite; }
-#scene.ondes-actives .ondes i:nth-child(2) { animation-delay: 1.05s; }
-#scene.ondes-actives .ondes i:nth-child(3) { animation-delay: 2.1s; }
-#scene.ondes-actives .ondes i:nth-child(4) { animation-delay: 3.15s; }
-@keyframes onde { 0% { transform: scale(.12); opacity: .95; } 100% { transform: scale(3.4); opacity: 0; } }
-
-/* le fond « Aube » : une toile par-dessus la mer, qui se cache une fois le fondu fini */
-#scene .aube { inset: 0; width: 100%; height: 100%; opacity: 0; visibility: hidden; transition: opacity .8s ease, visibility 0s .8s; }
-#scene.fond-aube .aube { opacity: 1; visibility: visible; transition: opacity .8s ease; }
-#scene.fond-aube > :not(.aube) { visibility: hidden; transition: visibility 0s .8s; }
-
-/* les animations sans fin du décor : suspendues, scene.js les fait avancer à 12 images par seconde */
-#scene.au-pas .etoiles canvas, #scene.au-pas .soleil::before, #scene.au-pas .soleil::after, #scene.au-pas .nuages i,
-#scene.au-pas .reflet i, #scene.au-pas .vagues i, #scene.au-pas .ondes i { animation-play-state: paused; }
+/* ——— la scène : l'aube, peinte sur une toile (scene.js, aube.js) ——— */
+#scene { position: fixed; inset: 0; overflow: hidden; }
+#scene .aube { position: absolute; inset: 0; width: 100%; height: 100%; }
 
 /* ——— les chiffres dessinés et la petite montre ——— */
 .traits { fill: none; stroke: currentColor; stroke-width: 12; stroke-linecap: round; stroke-linejoin: round; }
@@ -174,20 +71,11 @@ h1 { margin: 0; font: 650 32px/1.1 var(--arrondi); letter-spacing: -.02em; }
 #curseur::-moz-range-thumb { width: 20px; height: 20px; border: 0; border-radius: 50%; background: #fff; box-shadow: 0 2px 10px rgba(0, 0, 0, .45); }
 #lancer { border: 0; border-radius: 999px; padding: 7px 17px; background: var(--or); color: var(--indigo); font-weight: 700; font-size: 13px;
   box-shadow: 0 6px 18px -6px rgba(255, 196, 70, .7); transition: transform .25s cubic-bezier(.3, 1.6, .5, 1), filter .2s; }
-/* le choix du fond, discret, sous les durées */
-.fonds { display: flex; gap: 2px; padding: 4px; border-radius: 999px; border: 1px solid var(--verre-bord); background: var(--verre);
-  -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4);
-  animation: monte .7s cubic-bezier(.2, .9, .3, 1) .6s backwards; }
-.fonds button { border: 0; background: none; padding: 6px 15px; border-radius: 999px; font-size: 12px; font-weight: 600; color: var(--encre2);
-  transition: background .25s, color .25s; }
-.fonds button:hover { color: #fff; }
-.fonds button[aria-checked="true"] { background: rgba(255, 255, 255, .16); color: #fff; }
 #lancer:hover { transform: translateY(-1px); filter: brightness(1.05); }
 #lancer:active { transform: scale(.96); }
 
 /* ——— la pastille, en haut de l'écran ——— */
-.pastille, #video { position: fixed; top: max(14px, env(safe-area-inset-top)); left: 50%; width: 236px; height: 52px; margin-left: -118px; }
-#video { opacity: 0; pointer-events: none; z-index: 1; }
+.pastille { position: fixed; top: max(14px, env(safe-area-inset-top)); left: 50%; width: 236px; height: 52px; margin-left: -118px; }
 .pastille { z-index: 5; display: flex; align-items: center; gap: 10px; padding: 0 9px 0 10px; border-radius: 26px;
   background: linear-gradient(135deg, #4a3fe0, #261e8c); border: 1px solid rgba(255, 255, 255, .16);
   box-shadow: 0 14px 34px -8px rgba(6, 4, 30, .6), inset 0 1px 0 rgba(255, 255, 255, .13);
@@ -210,7 +98,7 @@ body[data-etat="course"] .pastille { transform: none; opacity: 1; pointer-events
 .pastille.en-pause .i-lecture { display: block; }
 
 /* ——— la fin ——— */
-#fin { position: fixed; left: 0; right: 0; top: 0; height: var(--yh, 66vh); z-index: 4; display: flex; flex-direction: column; align-items: center; justify-content: center;
+#fin { position: fixed; inset: 0 0 8vh; z-index: 4; display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 12px; padding: 0 16px; text-align: center; opacity: 0; visibility: hidden; transition: opacity .5s ease, visibility 0s .5s; }
 body[data-etat="fin"] #fin { opacity: 1; visibility: visible; transition: opacity .8s ease .4s; }
 .coche { width: 84px; height: 84px; margin-bottom: 6px; overflow: visible; }
@@ -234,9 +122,7 @@ body[data-etat="fin"] #fin .aide { animation-delay: 1.4s; }
   h1 { font-size: 28px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .etoiles canvas, .soleil::before, .soleil::after, .nuages i, .reflet i, .vagues i, #scene.ondes-actives .ondes i { animation: none; }
-  .reflet i { transform: translateX(-50%); opacity: var(--o); }
-  .duree, #choix header, .autre, .fonds, body[data-etat="fin"] #fin h2, body[data-etat="fin"] #fin p { animation: none; }
+  .duree, #choix header, .autre, body[data-etat="fin"] #fin h2, body[data-etat="fin"] #fin p { animation: none; }
 }
 
 /* ——— l'app de bureau (js/bureau.js) : pendant le minuteur, la fenêtre entière est la pastille ——— */

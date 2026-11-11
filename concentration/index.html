@@ -8,29 +8,12 @@
 <meta name="description" content="Un minuteur pour se mettre au travail.">
 <link rel="icon" href="favicon.png">
 <link rel="apple-touch-icon" href="icone.png">
-<link rel="stylesheet" href="style.css?v=20261111153017">
+<link rel="stylesheet" href="style.css?v=20261111153509">
 </head>
 <body data-etat="choix">
 
-<!-- Le fond : une journée qui passe pendant le minuteur. Le soleil se lève à gauche au départ, culmine à mi-parcours
-     et se couche à droite à la fin ; un point par minute marque sa course. Entre deux minuteurs, c'est la nuit. -->
-<div id="scene" aria-hidden="true">
-  <div class="ciel"></div>
-  <div class="etoiles"><canvas class="e1"></canvas><canvas class="e2"></canvas></div>
-  <div class="lune"></div>
-  <svg class="course"></svg>
-  <div class="halo"></div>
-  <div class="soleil"></div>
-  <div class="nuages"><i class="n1"></i><i class="n2"></i><i class="n3"></i></div>
-  <div class="mer">
-    <div class="reflet du-soleil"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-    <div class="reflet de-la-lune"><i></i><i></i><i></i><i></i><i></i></div>
-    <div class="vagues"><i></i><i></i><i></i><i></i></div>
-    <div class="ondes"><i></i><i></i><i></i><i></i></div>
-  </div>
-  <!-- L'autre fond, « Aube » : le jour monte par le bas pendant le minuteur (js/aube.js). -->
-  <canvas class="aube"></canvas>
-</div>
+<!-- Le fond : l'aube. Pendant le minuteur, le jour monte par le bas ; à la fin, la nuit retombe (js/scene.js). -->
+<div id="scene" aria-hidden="true"><canvas class="aube"></canvas></div>
 
 <!-- L'écran d'accueil : sept durées, rien d'autre. Une seule décision à prendre. -->
 <main id="choix">
@@ -43,7 +26,7 @@
       <circle class="axe" cx="20" cy="22" r="2.4"/>
     </svg>
     <h1>Concentration</h1>
-    <p class="consigne">Choisissez une durée.<span class="si-flottant"><br>Le minuteur reste visible par-dessus vos fenêtres.</span></p>
+    <p class="consigne">Choisissez une durée.</p>
   </header>
 
   <div class="durees">
@@ -68,10 +51,6 @@
     </div>
   </div>
 
-  <div class="fonds" role="radiogroup" aria-label="Fond">
-    <button role="radio" aria-checked="true" data-fond="mer">Mer</button>
-    <button role="radio" aria-checked="false" data-fond="aube">Aube</button>
-  </div>
 </main>
 
 <!-- Pendant le minuteur : la pastille, en haut de l'écran. -->
@@ -95,11 +74,7 @@
   </span>
 </div>
 
-<!-- La vidéo de la pastille, pour la fenêtre flottante (Picture in Picture) : un compte à rebours de 2 heures
-     calculé d'avance (tools/video-pastille.swift), qu'on lit à partir du bon instant. Invisible dans la page. -->
-<video id="video" muted playsinline preload="metadata" disableremoteplayback src="pastille.mp4" aria-hidden="true" tabindex="-1"></video>
-
-<!-- La fin : le soleil s'est couché, la nuit tombe, des ondes partent sur l'eau. -->
+<!-- La fin : des ondes partent de la coche, la nuit retombe. -->
 <div id="fin" role="alert">
   <svg class="coche" viewBox="0 0 92 92" aria-hidden="true"><circle cx="46" cy="46" r="44"/><path d="M27 47.5 40 60 66 33" pathLength="1"/></svg>
   <h2>C'est terminé</h2>
@@ -107,6 +82,6 @@
   <p class="aide">Cliquez ou appuyez sur une touche pour fermer</p>
 </div>
 
-<script type="module" src="js/app.js?v=20261111153017"></script>
+<script type="module" src="js/app.js?v=20261111153509"></script>
 </body>
 </html>
