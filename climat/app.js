@@ -1302,7 +1302,7 @@ function afficherPartie() {
   const cartes = partieActive === CARTES;
   if (cartes && !cartesDiv.firstElementChild) {
     const f = document.createElement("iframe");
-    f.src = "cartes/index.html?v=4";
+    f.src = "cartes/index.html?v=5";
     f.title = CARTES.libelle;
     cartesDiv.appendChild(f);
   }

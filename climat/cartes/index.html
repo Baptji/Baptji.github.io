@@ -140,17 +140,46 @@ function quantile(arr,q){const a=arr.filter(Number.isFinite).sort((x,y)=>x-y);re
 function classe(v,b){let i=0;while(i<b.length&&v>=b[i])i++;return i}
 const moy=a=>{let s=0,n=0;for(const v of a)if(Number.isFinite(v)){s+=v;n++}return n?s/n:NaN};
 
-function bornesSeq(vals){
-  const lo=quantile(vals,.02),hi=quantile(vals,.98);
-  const step=pasJoli(Math.max((hi-lo)/10,0.1));
-  const b0=Math.ceil(lo/step)*step,out=[];
-  for(let i=0;i<9;i++)out.push(+(b0+i*step).toFixed(6));
-  return {b:out,d:dec(step)};
+// ---- échelles fixes : une par indicateur, la même pour toutes les cartes, tous les mois et
+// la grille — 10 °C, ou un écart de +1 °C, a partout la même couleur. Seule l'année d'un total
+// (pluie, ETP, jours…) a la sienne : 800 mm par an ne se compare pas à 60 mm par mois.
+function rvb(h){return [1,3,5].map(k=>parseInt(h.slice(k,k+2),16))}
+// `creuse` : pour les écarts, la couleur monte plus vite près de zéro (les décennies, qui
+// s'écartent peu, restent lisibles sans que les mois extrêmes sortent de l'échelle)
+function interpole(pal,n,creuse){
+  const c=pal.map(rvb);
+  return Array.from({length:n},(_,j)=>{let u=n<2?0:j/(n-1);
+    if(creuse){const x=2*u-1;u=(Math.sign(x)*Math.pow(Math.abs(x),.6)+1)/2}
+    const t=u*(c.length-1),k=Math.min(c.length-2,Math.floor(t)),f=t-k;
+    return '#'+c[k].map((v,q)=>Math.round(v+(c[k+1][q]-v)*f).toString(16).padStart(2,'0')).join('')});
 }
-function bornesDiv(lists){
-  const abs=[];lists.forEach(l=>l.forEach(v=>{if(Number.isFinite(v))abs.push(Math.abs(v))}));
-  const s=pasJoli(Math.max(quantile(abs,.95)/3,0.1));
-  return {b:[-3*s,-2*s,-s,-.4*s,.4*s,s,2*s,3*s],d:dec(s*.4)};
+function pasRond(x){const p=Math.pow(10,Math.floor(Math.log10(x)));for(const m of[1,2,5,10])if(m*p>=x)return m*p;return 10*p}
+const echelles={};
+function echelle(I,arr,p){
+  const info=R.indicateurs[I.code],an=p===13&&info.agr==='somme';
+  const cle=I.code+(an?'|an':'');
+  if(echelles[cle])return echelles[cle];
+  const ps=an?[13]:info.annee&&info.agr!=='somme'?[1,2,3,4,5,6,7,8,9,10,11,12,13]:[1,2,3,4,5,6,7,8,9,10,11,12];
+  const vals=[],abs=[];
+  for(const q of ps){
+    const N=carte(arr,q,0);
+    for(let t=0;t<8;t++){const C=t?carte(arr,q,t):N;
+      for(let i=0;i<NC;i+=3){if(!Number.isFinite(C[i]))continue;vals.push(C[i]);
+        if(t){const e=ecartDe(I,C[i],N[i]);if(Number.isFinite(e))abs.push(Math.abs(e))}}}
+  }
+  // valeurs : un pas rond (1, 2, 5…), une quinzaine de classes entre les extrêmes
+  const lo=quantile(vals,.003),hi=quantile(vals,.997),b=[];
+  let pas=1;{const e=Math.pow(10,Math.floor(Math.log10(Math.max((hi-lo)/15,0.01))));let mieux=1e9;
+    for(const m of[1,2,5,10,20])if(Math.abs((hi-lo)/(m*e)-15)<mieux){mieux=Math.abs((hi-lo)/(m*e)-15);pas=m*e}}
+  for(let v=Math.ceil(lo/pas)*pas;v<hi-1e-9;v+=pas)b.push(+v.toFixed(6));
+  // écarts : zéro au milieu, un pas rond tel que les décennies s'étalent sur quatre classes
+  // de chaque côté ; les mois les plus extrêmes vont jusqu'à sept
+  const s=pasRond(Math.max(quantile(abs,.98)/4,0.1)),be=[];
+  for(let k=-6;k<=6;k++)be.push(+(k*s).toFixed(6));
+  return echelles[cle]={
+    val:{b,d:dec(pas),couls:interpole(I.pal,b.length+1)},
+    ec:{b:be,d:dec(s),couls:interpole(I.div,be.length+1,true),signe:true},
+  };
 }
 
 // une carte se dessine à la taille où elle est affichée, en pixels de l'écran
@@ -187,12 +216,15 @@ function survol(cv,lire){
   });
   cv.addEventListener('mouseleave',()=>bulle.hidden=true);
 }
-function legende(bar,ticks,bornes,couls,d,signeOn){
-  const n=couls.length,pas=bornes.length>8?2:1,etroit=bar.clientWidth&&bar.clientWidth<200;
-  bar.innerHTML=couls.map(c=>`<span style="background:${c}"></span>`).join('');
-  // une échelle étroite n'a la place que pour ses deux bouts
-  const montre=signeOn?(i=>(etroit?[0,7]:[0,2,5,7]).includes(i)):(i=>i%(etroit?pas*2:pas)===0);
-  ticks.innerHTML=bornes.map((v,i)=>!montre(i)?'':`<span style="left:${(i+1)/n*100}%">${signeOn?signe(v,d):fmtN(v,d)}</span>`).join('');
+function legende(bar,ticks,E){
+  const n=E.couls.length,nb=E.b.length,etroit=bar.clientWidth&&bar.clientWidth<200;
+  bar.innerHTML=E.couls.map(c=>`<span style="background:${c}"></span>`).join('');
+  // pas plus de six chiffres (deux sur une échelle étroite) ; le zéro des écarts toujours
+  // les chiffres tombent sur des multiples ronds du pas (0, 4, 8… ou 0, 10, 20…)
+  const max=etroit?2:7,pas=E.b.length>1?E.b[1]-E.b[0]:1;
+  let k=1;for(const m of[1,2,5,10,20,50])if(E.b.filter(v=>Math.abs(v/(m*pas)-Math.round(v/(m*pas)))<1e-6).length<=max){k=m;break}
+  if(etroit)k=Math.max(k,Math.ceil(nb/2));
+  ticks.innerHTML=E.b.map((v,i)=>Math.abs(v/(k*pas)-Math.round(v/(k*pas)))>1e-6?'':`<span style="left:${(i+1)/n*100}%">${E.signe?signe(v,E.d):fmtN(v,E.d)}</span>`).join('');
 }
 
 // les données arrivent en scripts (d/*.js) : la page s'ouvre aussi en fichier local
@@ -275,19 +307,18 @@ async function rendre(){
   document.querySelectorAll('#bMode button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===etat.mode));
   const arr=await donnees(I.code);
   if(I!==etat.indic||p!==etat.p)return;
-  const N=carte(arr,p,0),mN=moy(N),dN=decU(I),sq=bornesSeq(N),ecart=etat.mode==='ecart';
+  const N=carte(arr,p,0),mN=moy(N),dN=decU(I),ech=echelle(I,arr,p),sq=ech.val,dv=ech.ec,ecart=etat.mode==='ecart';
   const nomMois=p===13?'année':MOIS_LONG[p-1];
 
   // décennies
   decs.forEach(v=>{v.val=carte(arr,p,v.t);v.ec=ecarts(I,v.val,N);v.titre.textContent=nomPeriode(v.t,p)});
-  const dv=bornesDiv(decs.map(v=>v.ec)),legD=document.getElementById('legD');
+  const legD=document.getElementById('legD');
   decs.forEach(v=>{
     const m=moy(v.val);
-    if(ecart){dessine(v.cv,v.ec,dv.b,I.div);v.lab.textContent=Number.isFinite(m)?txtEcart(I,I.ec==='pct'?(m/mN-1)*100:m-mN):''}
-    else{dessine(v.cv,v.val,sq.b,I.pal);v.lab.textContent=Number.isFinite(m)?fmtN(m,dN)+' '+I.u:''}
+    if(ecart){dessine(v.cv,v.ec,dv.b,dv.couls);v.lab.textContent=Number.isFinite(m)?txtEcart(I,I.ec==='pct'?(m/mN-1)*100:m-mN):''}
+    else{dessine(v.cv,v.val,sq.b,sq.couls);v.lab.textContent=Number.isFinite(m)?fmtN(m,dN)+' '+I.u:''}
   });
-  if(ecart)legende(legD.querySelector('.bar'),legD.querySelector('.ticks'),dv.b,I.div,dv.d,true);
-  else legende(legD.querySelector('.bar'),legD.querySelector('.ticks'),sq.b,I.pal,sq.d,false);
+  legende(legD.querySelector('.bar'),legD.querySelector('.ticks'),ecart?dv:sq);
 
   // grande carte
   let val=N,titre='Normale 1991-2020, '+nomMois;
@@ -304,11 +335,11 @@ async function rendre(){
   document.getElementById('gTitre').textContent=I.nom+' — '+titre;
   document.getElementById('gVal').textContent=!Number.isFinite(m)?'':montreEcart?txtEcart(I,I.ec==='pct'?(m/mN-1)*100:m-mN):fmtN(m,dN)+' '+I.u;
   if(montreEcart){
-    const d=bornesDiv([ecG]);dessine(cvG,ecG,d.b,I.div);
-    legende(document.getElementById('barG'),document.getElementById('ticksG'),d.b,I.div,d.d,true);
+    dessine(cvG,ecG,dv.b,dv.couls);
+    legende(document.getElementById('barG'),document.getElementById('ticksG'),dv);
   }else{
-    dessine(cvG,val,sq.b,I.pal);
-    legende(document.getElementById('barG'),document.getElementById('ticksG'),sq.b,I.pal,sq.d,false);
+    dessine(cvG,val,sq.b,sq.couls);
+    legende(document.getElementById('barG'),document.getElementById('ticksG'),sq);
   }
   rendreCalendrier(arr);
 }
@@ -332,8 +363,7 @@ async function rendreCalendrier(arr){
     nationaux={code:I.code,e};
   }
   const E=nationaux.e;
-  const ecs=k=>Object.entries(E).filter(([c])=>(c%100===13)===k).map(([,x])=>x.ec);
-  const dv=bornesDiv([ecs(false)]),dv13=annee?bornesDiv([ecs(true)]):dv;
+  const dv=echelle(I,arr,1).ec,dv13=annee?echelle(I,arr,13).ec:dv;
   const n=aF-a0+1,sel=etat.vue&&etat.vue.a;
   // la grille tient dans la hauteur de la grande carte
   cal.style.setProperty('--rh',Math.max(5,Math.min(14,Math.floor((calHauteur-18)/n)-1))+'px');
@@ -344,7 +374,7 @@ async function rendreCalendrier(arr){
     for(let m=1;m<=13;m++){
       if(m===13){if(!annee)continue;h+='<span></span>'}
       const x=E[a*100+m];
-      h+=x?`<i class="${a===sel&&m===etat.p?'sel':''}" data-a="${a}" data-m="${m}" style="background:${I.div[classe(x.ec,(m===13?dv13:dv).b)]}" title="${m===13?a:MOIS_LONG[m-1]+' '+a} : ${fmtN(x.v,decU(I))} ${I.u} (${txtEcart(I,x.ec)})"></i>`:'<i class="vide"></i>';
+      h+=x?`<i class="${a===sel&&m===etat.p?'sel':''}" data-a="${a}" data-m="${m}" style="background:${(m===13?dv13:dv).couls[classe(x.ec,(m===13?dv13:dv).b)]}" title="${m===13?a:MOIS_LONG[m-1]+' '+a} : ${fmtN(x.v,decU(I))} ${I.u} (${txtEcart(I,x.ec)})"></i>`:'<i class="vide"></i>';
     }
   }
   cal.innerHTML=h;cal.hidden=false;
