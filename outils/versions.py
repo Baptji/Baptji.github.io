@@ -13,11 +13,18 @@ def git(*a): return subprocess.run(["git", "-C", str(SITE), *a], capture_output=
 apps = re.findall(r'data-app="([^"]+)"', (SITE / "index.html").read_text())
 publies = set(sys.argv[1:]) or {a for a in apps if git("diff", "--cached", "--name-only", "--", a).strip()}
 maintenant = datetime.datetime.now().astimezone().isoformat(timespec="seconds")
+# numéros fixés à la main : (version à ce commit, commit) ; on compte ensuite les publications suivantes
+FIXES = {"climat": (3, "da241b9")}
 versions = {}
 for a in apps:
     dates = git("log", "--format=%aI", "--", a).split()
-    if a in publies: dates.insert(0, maintenant)
-    if dates: versions[a] = {"version": len(dates), "date": dates[0]}
+    n = len(dates)
+    if a in FIXES:
+        v, c = FIXES[a]
+        n = v + len(git("log", "--format=%aI", f"{c}..HEAD", "--", a).split())
+        if not dates: dates = [git("log", "-1", "--format=%aI", c).strip()]
+    if a in publies: dates.insert(0, maintenant); n += 1
+    if dates: versions[a] = {"version": n, "date": dates[0]}
 (SITE / "versions.js").write_text("// Écrit par outils/versions.py à chaque publication : ne pas modifier à la main.\nwindow.VERSIONS = "
                                   + json.dumps(versions, ensure_ascii=False, indent=1) + ";\n")
 for a, v in sorted(versions.items(), key=lambda x: x[1]["date"], reverse=True): print(f"{a:12} v{v['version']:<3} {v['date'][:10]}")

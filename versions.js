@@ -10,7 +10,7 @@ window.VERSIONS = {
  },
  "climat": {
   "version": 3,
-  "date": "2026-11-21T16:08:31+00:00"
+  "date": "2026-11-21T16:05:58Z"
  },
  "squid-ferme": {
   "version": 9,
