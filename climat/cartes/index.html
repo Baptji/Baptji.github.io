@@ -96,7 +96,8 @@ canvas{display:block}
 <script>
 const PAL={
   pluie:['#efe3c2','#d9e6bd','#b3dbb6','#84c8b9','#5bb2c3','#3f95c0','#3176b0','#2a5a9c','#2d3f85','#2a1350'],
-  temp:['#2c4a8c','#3f78b5','#73a9cf','#b4d4e0','#eae6c8','#f5c97a','#ee9a4f','#da6337','#b5352a','#7d1d2a'],
+  // au-delà du rouge, on passe progressivement aux violets : les mois les plus chauds restent lisibles
+  temp:['#2c4a8c','#3f78b5','#73a9cf','#b4d4e0','#eae6c8','#f5c97a','#ee9a4f','#da6337','#b5352a','#7d1d2a','#7a1f50','#6c2a7c','#6a43a6','#8566c8'],
   chaud:['#f7f1e3','#f6dfb4','#f2c27f','#ec9f57','#e07a3f','#cc5534','#b03a30','#8e2630','#6a1a2c','#45122a'],
   gel:['#f4f6f8','#dfe9f2','#c2d8ea','#a1c3e0','#7eaad4','#5c8fc6','#4373b3','#33599b','#28427f','#1d2c5e'],
   soleil:['#5b6478','#7a8091','#9c9a98','#bcb08f','#d6c27e','#e9cf68','#f4d24e','#f7c533','#f2ab1f','#e48a10'],
@@ -168,6 +169,15 @@ function echelle(I,arr,p){
         if(t){const e=ecartDe(I,C[i],N[i]);if(Number.isFinite(e))abs.push(Math.abs(e))}}}
   }
   // valeurs : un pas rond (1, 2, 5…), une quinzaine de classes entre les extrêmes
+  // températures : une seule échelle pour les trois (minimale, moyenne, maximale), de −10 à
+  // 36 °C par pas de 2 — 10 °C a la même couleur sur les trois, et l'été garde ses nuances
+  if(I.pal===PAL.temp){
+    const b=[];for(let v=-10;v<=36;v+=2)b.push(v);
+    const s=pasRond(Math.max(quantile(abs,.98)/4,0.1)),be=[];
+    for(let k=-6;k<=6;k++)be.push(+(k*s).toFixed(6));
+    return echelles[cle]={val:{b,d:0,couls:interpole(I.pal,b.length+1)},
+      ec:{b:be,d:dec(s),couls:interpole(I.div,be.length+1,true),signe:true}};
+  }
   const lo=quantile(vals,.003),hi=quantile(vals,.997),b=[];
   let pas=1;{const e=Math.pow(10,Math.floor(Math.log10(Math.max((hi-lo)/15,0.01))));let mieux=1e9;
     for(const m of[1,2,5,10,20])if(Math.abs((hi-lo)/(m*e)-15)<mieux){mieux=Math.abs((hi-lo)/(m*e)-15);pas=m*e}}
