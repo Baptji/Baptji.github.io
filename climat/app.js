@@ -1257,7 +1257,8 @@ const PRESENTATION = { id: "presentation", libelle: "Présentation" };
 // au premier passage seulement : ses données pèsent lourd.
 const CARTES = { id: "cartes", libelle: "Cartes de France" };
 const cartesDiv = document.getElementById("cartes");
-let partieActive = PRESENTATION;
+// accueil : les cartes de France, tant qu'aucune maille n'est choisie
+let partieActive = CARTES;
 let ongletActif = ONGLETS[0];   // la dernière variable ouverte : les figures la gardent
 
 for (const o of [PRESENTATION, ...ONGLETS, CARTES]) {
@@ -1277,8 +1278,12 @@ for (const o of [PRESENTATION, ...ONGLETS, CARTES]) {
 if (location.protocol !== "file:") {
   fetch("cartes/d/base.js", { method: "HEAD" })
     .then((r) => { if (!r.ok) throw new Error(); })
-    .catch(() => { ongletsEl.querySelector('[data-partie="cartes"]').hidden = true; });
+    .catch(() => {
+      ongletsEl.querySelector('[data-partie="cartes"]').hidden = true;
+      if (partieActive === CARTES) ouvrirPartie(PRESENTATION);
+    });
 }
+afficherPartie();
 
 function ouvrirPartie(o) {
   partieActive = o;
