@@ -155,6 +155,12 @@ function interpole(pal,n,creuse){
     return '#'+c[k].map((v,q)=>Math.round(v+(c[k+1][q]-v)*f).toString(16).padStart(2,'0')).join('')});
 }
 function pasRond(x){const p=Math.pow(10,Math.floor(Math.log10(x)));for(const m of[1,2,5,10])if(m*p>=x)return m*p;return 10*p}
+// une couleur choisie à la main par tranche de 2 °C (25 tranches de −10 à 36 °C) : au-dessus de
+// 20 °C, chaque marche change de teinte ET de clarté (rouge, rouge sombre, magenta, pourpre,
+// violet, lavande), sinon les étés se confondent
+const TEMP_COULS=['#1b2a5e','#23397a','#2c4a8c','#345f9f','#3f78b5','#5a91c3','#73a9cf','#93bfd8','#b4d4e0',
+  '#d0dfd6','#eae6c8','#f2d9a0','#f5c97a','#f2b264','#ee9a4f','#e47e43',
+  '#da6337','#c4402b','#9e2427','#b0256a','#7e1f7a','#5c2a95','#7a55c2','#a58ce0','#cdbff2'];
 const echelles={};
 function echelle(I,arr,p){
   const info=R.indicateurs[I.code],an=p===13&&info.agr==='somme';
@@ -175,7 +181,7 @@ function echelle(I,arr,p){
     const b=[];for(let v=-10;v<=36;v+=2)b.push(v);
     const s=pasRond(Math.max(quantile(abs,.98)/4,0.1)),be=[];
     for(let k=-6;k<=6;k++)be.push(+(k*s).toFixed(6));
-    return echelles[cle]={val:{b,d:0,couls:interpole(I.pal,b.length+1)},
+    return echelles[cle]={val:{b,d:0,couls:TEMP_COULS},
       ec:{b:be,d:dec(s),couls:interpole(I.div,be.length+1,true),signe:true}};
   }
   const lo=quantile(vals,.003),hi=quantile(vals,.997),b=[];
