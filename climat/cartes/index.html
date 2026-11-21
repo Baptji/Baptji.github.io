@@ -191,9 +191,10 @@ function survol(cv,lire){
   cv.addEventListener('mouseleave',()=>bulle.hidden=true);
 }
 function legende(bar,ticks,bornes,couls,d,signeOn){
-  const n=couls.length,pas=bornes.length>8?2:1;
+  const n=couls.length,pas=bornes.length>8?2:1,etroit=bar.clientWidth&&bar.clientWidth<200;
   bar.innerHTML=couls.map(c=>`<span style="background:${c}"></span>`).join('');
-  const montre=signeOn?(i=>[0,2,5,7].includes(i)):(i=>i%pas===0);
+  // une échelle étroite n'a la place que pour ses deux bouts
+  const montre=signeOn?(i=>(etroit?[0,7]:[0,2,5,7]).includes(i)):(i=>i%(etroit?pas*2:pas)===0);
   ticks.innerHTML=bornes.map((v,i)=>!montre(i)?'':`<span style="left:${(i+1)/n*100}%">${signeOn?signe(v,d):fmtN(v,d)}</span>`).join('');
 }
 

@@ -263,14 +263,14 @@ footer a { color: inherit; text-underline-offset: 3px; }
   <article class="app travaux" data-app="climat" aria-labelledby="climat" style="--teinte:#2f6fd1">
     <div class="media revele">
       <div class="cadre">
-        <div class="ecran"><img src="medias/climat.jpg" alt="Une maille de 8 km en Loir-et-Cher : température, pluie et évapotranspiration de 1960 à aujourd'hui" width="1280" height="720" decoding="async"></div>
+        <div class="ecran"><img src="medias/climat.jpg?v=3" alt="Les cartes de France : température moyenne, normale 1991-2020, décennies et calendrier des mois depuis 1958" width="1280" height="720" decoding="async"></div>
         <p class="chantier">En travaux</p>
       </div>
     </div>
     <div class="texte">
       <img class="icone revele" style="--d:1" src="medias/climat-icone.png" alt="" width="48" height="48">
       <h2 class="revele" style="--d:2" id="climat"><a class="lien" href="climat/">Climat<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9.5M8.5 4l4 4-4 4"/></svg></a></h2>
-      <p class="desc revele" style="--d:3">Le climat de chaque lieu, jour par jour depuis 1959.</p>
+      <p class="desc revele" style="--d:3">Le climat de la France depuis 1958, mois par mois et lieu par lieu.</p>
       <p class="maj revele" style="--d:4"></p>
     </div>
   </article>
@@ -365,7 +365,7 @@ footer a { color: inherit; text-underline-offset: 3px; }
   <p><a href="https://creativecommons.org/licenses/by-nc/4.0/deed.fr" rel="license">Licence CC BY-NC 4.0</a></p>
 </footer>
 
-<script src="versions.js"></script>
+<script>document.write('<script src="versions.js?'+Date.now()+'"><\/script>')</script><!-- jamais pris dans le cache : c'est lui qui dit la version -->
 <script>
 (function () {
   // classées de la dernière mise à jour à la plus ancienne (versions.js, écrit à chaque publication), avant la première apparition
