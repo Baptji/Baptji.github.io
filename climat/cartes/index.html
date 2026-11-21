@@ -5,22 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cartes de France</title>
 <style>
-/* Cartes de France, accueil de l'app Climat. Tout tient dans la fenêtre : les choix en haut,
-   la grande carte à gauche, les huit périodes en vignettes à droite, et le calendrier des
-   mois couché en bas. La grande carte montre ce qu'on a cliqué (une vignette ou un mois). */
+/* Cartes de France, accueil de l'app Climat. Premier écran : les choix en haut (ils restent en
+   haut quand on descend), la normale en grand avec la grille des mois à côté (un clic sur une
+   case met ce mois en grand). En descendant : les sept décennies côte à côte. */
 :root{
   --bg:#f9f9f7; --fg:#0b0b0b; --muted:#52514e; --line:#e1e0d9; --accent:#256abf;
   --sans:system-ui,-apple-system,"Segoe UI",sans-serif; --mono:ui-monospace,Menlo,monospace;
 }
 @media (prefers-color-scheme:dark){:root{
   --bg:#0d0d0d; --fg:#ffffff; --muted:#c3c2b7; --line:#2c2c2a; --accent:#6da7ec; color-scheme:dark}}
-html,body{margin:0;height:100%}
-body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px;line-height:1.4;overflow:hidden}
-.page{height:100%;box-sizing:border-box;padding:2px 4px 6px;display:flex;flex-direction:column;gap:10px}
-.barre{display:flex;flex-direction:column;gap:6px}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px;line-height:1.4}
+.page{padding:0 4px 24px;display:flex;flex-direction:column}
+.barre{position:sticky;top:0;z-index:3;background:var(--bg);display:flex;flex-direction:column;gap:6px;padding:2px 0 10px}
 .ligne{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;justify-content:space-between}
 .puces{display:flex;flex-wrap:wrap;gap:4px}
-.puces button,.bascule button{font:inherit;font-size:.8rem;background:transparent;color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:3px 9px;cursor:pointer}
+.puces button,.bascule button,.retour{font:inherit;font-size:.8rem;background:transparent;color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:3px 9px;cursor:pointer}
 .puces button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .puces button:disabled{opacity:.35;cursor:default}
 .bascule{display:inline-flex}
@@ -28,13 +28,15 @@ body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px
 .bascule button:first-child{border-radius:6px 0 0 6px}
 .bascule button:last-child{border-radius:0 6px 6px 0;border-left:0}
 .bascule button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.retour[hidden]{display:none}
 button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 
-.corps{flex:1;min-height:0;display:flex;gap:18px}
+.haut{display:flex;gap:22px;align-items:flex-start}
 .grand{display:flex;flex-direction:column;gap:4px;flex:0 0 auto}
-.tete{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.tete{display:flex;align-items:baseline;gap:10px}
 .tete b{font-weight:600;font-size:.95rem}
 .tete span{font-family:var(--mono);font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tete .retour{margin-left:auto}
 .cadre{position:relative}
 canvas{display:block}
 .legend{display:flex;flex-direction:column;gap:3px;font-family:var(--mono);font-size:.7rem;color:var(--muted)}
@@ -43,38 +45,30 @@ canvas{display:block}
 .ticks{position:relative;height:1.2em;font-variant-numeric:tabular-nums}
 .ticks span{position:absolute;transform:translateX(-50%);white-space:nowrap}
 
-.vignettes{flex:1;min-width:0;display:grid;gap:10px;align-content:start}
-.vig{display:flex;flex-direction:column;gap:2px;cursor:pointer;border-radius:6px;padding:4px;margin:-4px}
-.vig:hover{background:color-mix(in srgb,var(--fg) 5%,transparent)}
-.vig[aria-pressed="true"]{outline:1.5px solid var(--fg)}
-.vig .t{display:flex;justify-content:space-between;align-items:baseline;gap:6px;font-size:.78rem}
-.vig .t b{font-weight:600}
-.vleg{align-self:center;padding:0 6px}
-.vig .t span{font-family:var(--mono);font-size:.72rem;color:var(--muted);font-variant-numeric:tabular-nums}
-
-.calend{display:grid;gap:1px;font-family:var(--mono);font-size:.62rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.calend{flex:1;min-width:0;max-width:340px;display:grid;column-gap:1px;row-gap:1px;font-family:var(--mono);font-size:.62rem;color:var(--muted);font-variant-numeric:tabular-nums;align-content:start}
 .calend[hidden]{display:none}
-.calend i{display:block;height:10px;cursor:pointer}
+.calend i{display:block;height:var(--rh,9px);cursor:pointer}
 .calend i.vide{cursor:default}
 .calend i.sel{outline:2px solid var(--fg);position:relative;z-index:1}
-.calend .m{line-height:10px;font-size:.58rem;padding-right:4px;text-align:right}
-.calend .an{position:relative;height:1.1em}
-.calend .an span{position:absolute;left:0;white-space:nowrap}
-.calend .sep{height:3px}
+.calend .an{line-height:var(--rh,9px);height:var(--rh,9px);overflow:visible;white-space:nowrap}
+.calend .t{text-align:center;padding-bottom:3px}
+
+.decennies{margin-top:28px;display:flex;flex-direction:column;gap:10px}
+.rang{display:grid;gap:12px}
+.dec{display:flex;flex-direction:column;gap:2px;min-width:0}
+.dec .t{display:flex;justify-content:space-between;align-items:baseline;gap:4px;font-size:.78rem}
+.dec .t b{font-weight:600}
+.dec .t span{font-family:var(--mono);font-size:.72rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.decennies .legend{max-width:420px}
 .bulle{position:absolute;pointer-events:none;background:var(--fg);color:var(--bg);font-family:var(--mono);font-size:.72rem;padding:3px 6px;border-radius:4px;white-space:nowrap;transform:translate(-50%,-130%);z-index:2}
 .bulle[hidden]{display:none}
 
-/* fenêtre étroite : on empile et on laisse défiler */
-@media (max-width:760px){
-  body{overflow:auto}
-  .page{height:auto}
-  .corps{flex-direction:column}
-}
+@media (max-width:760px){.haut{flex-direction:column}.calend{max-width:none;width:100%}}
 </style>
 </head>
 <body>
 <div class="page">
-  <div class="barre">
+  <div class="barre" id="barre">
     <div class="puces" id="pIndic" role="group" aria-label="Indicateur"></div>
     <div class="ligne">
       <div class="puces" id="pMois" role="group" aria-label="Mois"></div>
@@ -84,16 +78,19 @@ canvas{display:block}
     </div>
   </div>
 
-  <div class="corps" id="corps">
-    <div class="grand" id="grand">
-      <div class="tete"><b id="gTitre"></b><span id="gVal"></span></div>
+  <section class="haut" id="haut">
+    <div class="grand">
+      <div class="tete"><b id="gTitre"></b><span id="gVal"></span><button class="retour" id="retour" hidden>← Normale</button></div>
       <div class="cadre"><canvas id="cvG"></canvas></div>
       <div class="legend"><div class="bar" id="barG"></div><div class="ticks" id="ticksG"></div></div>
     </div>
-    <div class="vignettes" id="vignettes"></div>
-  </div>
+    <div class="calend" id="calend" hidden></div>
+  </section>
 
-  <div class="calend" id="calend" hidden></div>
+  <section class="decennies">
+    <div class="rang" id="rang"></div>
+    <div class="legend" id="legD"><div class="bar"></div><div class="ticks"></div></div>
+  </section>
 </div>
 
 <script>
@@ -129,8 +126,8 @@ const MOIS_LONG=['janvier','février','mars','avril','mai','juin','juillet','ao�
 
 let cells,R,K,lonMin,lonMax,latMin,latMax,NC,RATIO;
 const cache={},cacheM={},attente={},attenteM={};
-// vue : ce que montre la grande carte — une période (0 = normale, 1..7 = décennies) ou un mois précis
-let etat={indic:INDICS[0],p:13,mode:'ecart',vue:{t:0}};
+// vue : null = la normale en grand, {a} = le mois p de l'année a
+let etat={indic:INDICS[0],p:13,mode:'ecart',vue:null};
 try{const s=JSON.parse(localStorage.getItem('climat-mois')||'null');if(s){etat.indic=INDICS.find(i=>i.code===s.c)||etat.indic;etat.p=s.p||13;etat.mode=s.m||'ecart'}}catch(e){}
 
 const fmtN=(x,d)=>x.toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d});
@@ -231,45 +228,44 @@ const ecartDe=(I,v,n)=>I.ec==='pct'?(n>0?(v/n-1)*100:NaN):v-n;
 function ecarts(I,val,N){const e=new Float32Array(NC);for(let i=0;i<NC;i++)e[i]=ecartDe(I,val[i],N[i]);return e}
 const nomPeriode=(t,p)=>{const[a,b]=R.tranches[t];return t===0?`${a}-${b}`:`${a}-${String(t===R.tranches.length-1?(R.indicateurs[etat.indic.code].fin[p-1]||b):b).slice(2)}`};
 
-// ---- la grande carte et les vignettes
+// ---- la grande carte : la normale, ou le mois cliqué dans la grille
 const cvG=document.getElementById('cvG');
 let vueG=null,ecG=null;
 survol(cvG,i=>{const I=etat.indic;if(!vueG||!Number.isFinite(vueG[i]))return null;
   const t=fmtN(vueG[i],decU(I))+' '+I.u;
   return ecG&&Number.isFinite(ecG[i])?t+'  ('+txtEcart(I,ecG[i])+')':t});
-let vigs=[];
-function construitVignettes(){
-  const g=document.getElementById('vignettes');g.innerHTML='';
-  vigs=R.tranches.map((_,t)=>{
-    const fig=document.createElement('div');fig.className='vig';fig.setAttribute('role','button');fig.tabIndex=0;
+document.getElementById('retour').onclick=()=>{etat.vue=null;rendre()};
+
+// ---- les décennies, côte à côte
+let decs=[];
+function construitDecennies(){
+  const g=document.getElementById('rang');g.innerHTML='';
+  decs=R.tranches.slice(1).map((_,k)=>{
+    const t=k+1,fig=document.createElement('div');fig.className='dec';
     fig.innerHTML=`<div class="t"><b></b><span></span></div><div class="cadre"><canvas></canvas></div>`;
     g.appendChild(fig);
-    const v={fig,cv:fig.querySelector('canvas'),titre:fig.querySelector('.t b'),lab:fig.querySelector('.t span'),val:null,ec:null};
-    survol(v.cv,i=>{const I=etat.indic,x=t>0&&etat.mode==='ecart'?v.ec:v.val;if(!x||!Number.isFinite(x[i]))return null;
-      return t>0&&etat.mode==='ecart'?txtEcart(I,x[i]):fmtN(x[i],decU(I))+' '+I.u});
-    const choisir=()=>{etat.vue={t};rendre()};
-    fig.addEventListener('click',choisir);
-    fig.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choisir()}});
+    const v={t,cv:fig.querySelector('canvas'),titre:fig.querySelector('.t b'),lab:fig.querySelector('.t span'),val:null,ec:null};
+    survol(v.cv,i=>{const I=etat.indic,x=etat.mode==='ecart'?v.ec:v.val;if(!x||!Number.isFinite(x[i]))return null;
+      return etat.mode==='ecart'?txtEcart(I,x[i]):fmtN(x[i],decU(I))+' '+I.u});
     return v;
   });
-  // l'échelle des écarts, commune aux décennies, dans la case qui reste
-  const leg=document.createElement('div');leg.className='legend vleg';leg.id='vleg';
-  leg.innerHTML='<div class="bar"></div><div class="ticks"></div>';g.appendChild(leg);
 }
 
-// les tailles : la grande carte prend la hauteur libre, les vignettes le reste de la largeur
+// les tailles : la grande carte prend toute la hauteur du premier écran, la grille des mois
+// la place qui reste à côté ; les décennies se partagent la largeur, sur une ligne
+const LARG_CAL=300;
 function mise(){
-  const corps=document.getElementById('corps'),W=corps.clientWidth,H=corps.clientHeight;
-  const etroit=window.innerWidth<=760;
-  const hG=etroit?Math.min(W/RATIO,520):Math.max(120,Math.min(H-56,W*.56/RATIO));
+  const W=document.getElementById('haut').clientWidth,etroit=window.innerWidth<=760;
+  const libre=window.innerHeight-document.getElementById('barre').offsetHeight-62;
+  const hG=etroit?Math.min(W/RATIO,560):Math.max(200,Math.min(libre,(W-LARG_CAL-22)/RATIO));
   taille(cvG,hG);
-  const reste=etroit?W:W-hG*RATIO-18,haut=etroit?1e4:H,n=vigs.length+1,gap=10,lab=20;
-  let best={h:0,c:2};
-  for(let c=2;c<=4;c++){const r=Math.ceil(n/c),h=Math.min((reste-(c-1)*gap)/c/RATIO,(haut-r*lab-(r-1)*gap)/r);if(h>best.h)best={h,c}}
-  document.getElementById('vignettes').style.gridTemplateColumns=`repeat(${best.c},max-content)`;
-  vigs.forEach(v=>taille(v.cv,Math.max(40,best.h)));
-  document.getElementById('vleg').style.width=Math.max(40,best.h)*RATIO+'px';
+  const n=decs.length,par=etroit?2:n,gap=12;
+  document.getElementById('rang').style.gridTemplateColumns=`repeat(${par},minmax(0,1fr))`;
+  const w=(W-(par-1)*gap)/par;
+  decs.forEach(v=>taille(v.cv,w/RATIO));
+  calHauteur=hG+30;
 }
+let calHauteur=600;
 
 async function rendre(){
   const I=etat.indic,p=etat.p;
@@ -280,41 +276,35 @@ async function rendre(){
   const arr=await donnees(I.code);
   if(I!==etat.indic||p!==etat.p)return;
   const N=carte(arr,p,0),mN=moy(N),dN=decU(I),sq=bornesSeq(N),ecart=etat.mode==='ecart';
+  const nomMois=p===13?'année':MOIS_LONG[p-1];
 
-  // vignettes : la normale toujours en valeurs, les décennies en écart ou en valeurs
-  vigs.forEach((v,t)=>{
-    v.val=carte(arr,p,t);v.ec=t?ecarts(I,v.val,N):null;
-    v.titre.textContent=nomPeriode(t,p);
-    v.fig.setAttribute('aria-pressed',etat.vue.a===undefined&&etat.vue.t===t);
-  });
-  const dv=bornesDiv(vigs.slice(1).map(v=>v.ec));
-  vigs.forEach((v,t)=>{
+  // décennies
+  decs.forEach(v=>{v.val=carte(arr,p,v.t);v.ec=ecarts(I,v.val,N);v.titre.textContent=nomPeriode(v.t,p)});
+  const dv=bornesDiv(decs.map(v=>v.ec)),legD=document.getElementById('legD');
+  decs.forEach(v=>{
     const m=moy(v.val);
-    if(t===0||!ecart){dessine(v.cv,v.val,sq.b,I.pal);v.lab.textContent=Number.isFinite(m)?fmtN(m,dN)+' '+I.u:''}
-    else{dessine(v.cv,v.ec,dv.b,I.div);v.lab.textContent=Number.isFinite(m)?txtEcart(I,I.ec==='pct'?(m/mN-1)*100:m-mN):''}
+    if(ecart){dessine(v.cv,v.ec,dv.b,I.div);v.lab.textContent=Number.isFinite(m)?txtEcart(I,I.ec==='pct'?(m/mN-1)*100:m-mN):''}
+    else{dessine(v.cv,v.val,sq.b,I.pal);v.lab.textContent=Number.isFinite(m)?fmtN(m,dN)+' '+I.u:''}
   });
-
-  const vleg=document.getElementById('vleg');
-  vleg.style.visibility=ecart?'':'hidden';
-  if(ecart)legende(vleg.querySelector('.bar'),vleg.querySelector('.ticks'),dv.b,I.div,dv.d,true);
+  if(ecart)legende(legD.querySelector('.bar'),legD.querySelector('.ticks'),dv.b,I.div,dv.d,true);
+  else legende(legD.querySelector('.bar'),legD.querySelector('.ticks'),sq.b,I.pal,sq.d,false);
 
   // grande carte
-  const nomMois=p===13?'année':MOIS_LONG[p-1];
-  let val,titre;
-  if(etat.vue.a!==undefined){
+  let val=N,titre='Normale 1991-2020, '+nomMois;
+  if(etat.vue){
     const M=await donneesMois(I.code);
     if(I!==etat.indic||p!==etat.p)return;
-    if(M){val=carteMois(M,etat.vue.a,p);titre=(p===13?'Année ':MOIS_LONG[p-1].replace(/^./,c=>c.toUpperCase())+' ')+etat.vue.a}
-    else etat.vue={t:0};
+    if(M){val=carteMois(M,etat.vue.a,p);titre=(p===13?'année ':MOIS_LONG[p-1]+' ')+etat.vue.a}
+    else etat.vue=null;
   }
-  if(etat.vue.a===undefined){val=vigs[etat.vue.t].val;titre=(etat.vue.t===0?'Normale ':'')+nomPeriode(etat.vue.t,p)+', '+nomMois}
-  const montreEcart=ecart&&!(etat.vue.a===undefined&&etat.vue.t===0);
-  vueG=val;ecG=etat.vue.a===undefined&&etat.vue.t===0?null:ecarts(I,val,N);
+  const mois=!!etat.vue,montreEcart=ecart&&mois;
+  document.getElementById('retour').hidden=!mois;
+  vueG=val;ecG=mois?ecarts(I,val,N):null;
   const m=moy(val);
   document.getElementById('gTitre').textContent=I.nom+' — '+titre;
   document.getElementById('gVal').textContent=!Number.isFinite(m)?'':montreEcart?txtEcart(I,I.ec==='pct'?(m/mN-1)*100:m-mN):fmtN(m,dN)+' '+I.u;
   if(montreEcart){
-    const d=etat.vue.a===undefined?dv:bornesDiv([ecG]);dessine(cvG,ecG,d.b,I.div);
+    const d=bornesDiv([ecG]);dessine(cvG,ecG,d.b,I.div);
     legende(document.getElementById('barG'),document.getElementById('ticksG'),d.b,I.div,d.d,true);
   }else{
     dessine(cvG,val,sq.b,I.pal);
@@ -323,8 +313,9 @@ async function rendre(){
   rendreCalendrier(arr);
 }
 
-// ---- calendrier couché : une colonne par année, une ligne par mois (et l'année en bas),
-// coloré par l'écart national à la normale du mois ; un clic ouvre ce mois en grand
+// ---- grille des mois : une ligne par année, une colonne par mois (et l'année à part),
+// coloriée par l'écart national à la normale du mois ; un clic met ce mois en grand,
+// un second clic sur la même case ramène la normale
 let nationaux=null;
 async function rendreCalendrier(arr){
   const I=etat.indic,M=await donneesMois(I.code),cal=document.getElementById('calend');
@@ -343,22 +334,23 @@ async function rendreCalendrier(arr){
   const E=nationaux.e;
   const ecs=k=>Object.entries(E).filter(([c])=>(c%100===13)===k).map(([,x])=>x.ec);
   const dv=bornesDiv([ecs(false)]),dv13=annee?bornesDiv([ecs(true)]):dv;
-  const n=aF-a0+1,sel=etat.vue.a;
-  cal.style.gridTemplateColumns=`2.2em repeat(${n},minmax(0,1fr))`;
-  let h='';
-  const lignes=annee?[1,2,3,4,5,6,7,8,9,10,11,12,0,13]:[1,2,3,4,5,6,7,8,9,10,11,12];
-  for(const m of lignes){
-    if(m===0){h+=`<span class="sep" style="grid-column:1/-1"></span>`;continue}
-    h+=`<span class="m">${m===13?'An':MOIS[m-1][0]}</span>`;
-    for(let a=a0;a<=aF;a++){
+  const n=aF-a0+1,sel=etat.vue&&etat.vue.a;
+  // la grille tient dans la hauteur de la grande carte
+  cal.style.setProperty('--rh',Math.max(5,Math.min(14,Math.floor((calHauteur-18)/n)-1))+'px');
+  cal.style.gridTemplateColumns=`2.6em repeat(12,minmax(0,1fr))`+(annee?' 6px minmax(0,1.3fr)':'');
+  let h='<span></span>'+MOIS.slice(0,12).map(m=>`<span class="t">${m[0]}</span>`).join('')+(annee?'<span></span><span class="t">An</span>':'');
+  for(let a=a0;a<=aF;a++){
+    h+=`<span class="an">${a%5===0||a===a0?a:''}</span>`;
+    for(let m=1;m<=13;m++){
+      if(m===13){if(!annee)continue;h+='<span></span>'}
       const x=E[a*100+m];
-      h+=x?`<i class="${a===sel&&m===etat.p?'sel':''}" data-a="${a}" data-m="${m}" style="background:${I.div[classe(x.ec,(m===13?dv13:dv).b)]}" title="${m===13?a:MOIS_LONG[m-1]+' '+a} : ${fmtN(x.v,decU(I))} ${I.u} (${txtEcart(I,x.ec)})"></i>`:`<i class="vide"></i>`;
+      h+=x?`<i class="${a===sel&&m===etat.p?'sel':''}" data-a="${a}" data-m="${m}" style="background:${I.div[classe(x.ec,(m===13?dv13:dv).b)]}" title="${m===13?a:MOIS_LONG[m-1]+' '+a} : ${fmtN(x.v,decU(I))} ${I.u} (${txtEcart(I,x.ec)})"></i>`:'<i class="vide"></i>';
     }
   }
-  h+='<span></span>';
-  for(let a=a0;a<=aF;a++)h+=`<span class="an">${a%10===0?`<span>${a}</span>`:''}</span>`;
   cal.innerHTML=h;cal.hidden=false;
-  cal.onclick=e=>{const t=e.target.closest('i[data-a]');if(!t)return;etat.vue={a:+t.dataset.a};etat.p=+t.dataset.m;rendre()};
+  cal.onclick=e=>{const t=e.target.closest('i[data-a]');if(!t)return;
+    const a=+t.dataset.a,m=+t.dataset.m;
+    etat.vue=sel===a&&etat.p===m?null:{a};etat.p=m;rendre()};
 }
 
 (async()=>{
@@ -375,10 +367,13 @@ async function rendreCalendrier(arr){
   MOIS.forEach((m,k)=>{const b=document.createElement('button');b.textContent=m;b.dataset.p=k+1;b.onclick=()=>{etat.p=k+1;rendre()};pM.appendChild(b)});
   document.querySelectorAll('#bMode button').forEach(b=>b.onclick=()=>{etat.mode=b.dataset.mode;rendre()});
   if(etat.p===13&&!R.indicateurs[etat.indic.code].annee)etat.p=7;
-  construitVignettes();
+  construitDecennies();
   mise();
-  let minuteur=null;
-  new ResizeObserver(()=>{clearTimeout(minuteur);minuteur=setTimeout(()=>{mise();rendre()},80)}).observe(document.getElementById('corps'));
+  let minuteur=null,larg=0,haut=0;
+  window.addEventListener('resize',()=>{
+    if(window.innerWidth===larg&&window.innerHeight===haut)return;
+    larg=window.innerWidth;haut=window.innerHeight;
+    clearTimeout(minuteur);minuteur=setTimeout(()=>{mise();rendre()},80)});
   rendre();
 })();
 </script>
