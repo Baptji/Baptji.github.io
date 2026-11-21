@@ -1095,6 +1095,115 @@ function joursPeriode(hote, cfg, dispo) {
   return { largeur: W };
 }
 
+// ------------------------------------------- réserve d'eau d'une année hydrologique
+
+/**
+ * Le réservoir jour par jour, du 1ᵉʳ septembre au 31 août : au-dessus de zéro l'eau en
+ * réserve (bleu), en dessous le déficit accumulé depuis que le réservoir est à sec
+ * (rouge). Une pluie qui remet de l'eau ramène la colonne au-dessus de zéro : c'est le
+ * répit, et le déficit suivant repart de zéro.
+ *
+ * `cfg` : { debut: Date, jours: [{ p, etp, stock, deficit } | null], plafond }
+ */
+function reserveEau(hote, cfg, dispo) {
+  hote.textContent = "";
+  bulleCache();
+  const n = cfg.jours.length;
+  const connus = cfg.jours.filter(Boolean);
+  if (!connus.length) {
+    hote.innerHTML = `<p class="muted">Aucune donnée sur cette année.</p>`;
+    return { largeur: 0 };
+  }
+  const valeur = (j) => (j.deficit > 0 ? -j.deficit : j.stock);
+  const M = { g: 46, d: 14, h: 30, b: 24 };
+  const HP = 230;
+  const H = M.h + HP + M.b;
+  const pas = Math.min((Math.max(340, dispo) - M.g - M.d) / n, 4);
+  const W = M.g + pas * n + M.d;
+  const x = (i) => M.g + pas * i;
+
+  // le pas se règle sur la plus grande des deux amplitudes, réserve ou déficit : régler
+  // sur la réserve seule entasse les graduations quand le déficit descend loin
+  const vals = connus.map(valeur);
+  const vMin = Math.min(0, ...vals), vMax = Math.max(...vals, cfg.plafond || 0, 1);
+  const g = graduations(Math.max(vMax, -vMin));
+  const pasG = g[1] - g[0];
+  const ticks = [];
+  for (let k = Math.floor(vMin / pasG - 1e-9); k <= Math.ceil(vMax / pasG - 1e-9); k++) ticks.push(k * pasG);
+  const bas = ticks[0], haut = ticks[ticks.length - 1];
+  const y = (v) => M.h + HP - ((v - bas) / (haut - bas)) * HP;
+  const dec = decimalesPas(ticks[1] - ticks[0]);
+
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img",
+                          "aria-label": "Réserve d'eau et déficit jour par jour" }, hote);
+  for (const v of ticks) {
+    el("line", { x1: M.g, x2: W - M.d, y1: y(v), y2: y(v),
+                 stroke: v === 0 ? "var(--axe)" : "var(--grille)", "stroke-width": 1 }, svg);
+    el("text", { x: M.g - 8, y: y(v) + 4, "text-anchor": "end", class: "g-tick" }, svg)
+      .textContent = v < 0 ? `−${nf(-v, dec)}` : nf(v, dec);
+  }
+  el("text", { x: M.g, y: M.h - 14, class: "g-titre-axe" }, svg)
+    .textContent = "Réserve / déficit cumulé (mm)";
+
+  const date = (i) => new Date(cfg.debut.getTime() + i * 86400000);
+  for (let i = 0; i < n; i++) {
+    const d = date(i);
+    if (d.getUTCDate() !== 1) continue;
+    if (i > 0) {
+      el("line", { x1: x(i), x2: x(i), y1: M.h, y2: M.h + HP,
+                   stroke: "var(--grille)", "stroke-width": 1 }, svg);
+    }
+    el("text", { x: x(i) + 2, y: M.h + HP + 16, "text-anchor": "start", class: "g-tick" }, svg)
+      .textContent = pas * 30 < 34 ? MOIS[d.getUTCMonth()][0] : MOIS[d.getUTCMonth()].toLowerCase();
+  }
+
+  // une colonne par jour, sans espace : la suite des jours se lit comme une surface
+  const zero = y(0);
+  for (let i = 0; i < n; i++) {
+    const j = cfg.jours[i];
+    if (!j) continue;
+    const v = valeur(j);
+    if (v === 0) continue;
+    el("rect", { x: x(i), width: pas + 0.3, y: Math.min(y(v), zero), height: Math.abs(y(v) - zero),
+                 fill: v > 0 ? "var(--serie-pluie)" : "var(--div-chaud-2)",
+                 "pointer-events": "none" }, svg);
+  }
+
+  if (cfg.plafond) {
+    el("line", { x1: M.g, x2: W - M.d, y1: y(cfg.plafond), y2: y(cfg.plafond),
+                 stroke: "var(--encre-2)", "stroke-width": 1, "stroke-dasharray": "4 3",
+                 "pointer-events": "none" }, svg);
+  }
+
+  const surbrillance = el("rect", { y: M.h, height: HP, width: pas, fill: "var(--survol)",
+                                    "pointer-events": "none", visibility: "hidden" }, svg);
+  const zone = el("rect", { x: M.g, y: M.h, width: pas * n, height: HP, fill: "transparent" }, svg);
+  zone.addEventListener("mousemove", (ev) => {
+    const px = ev.clientX - svg.getBoundingClientRect().left;
+    const i = Math.max(0, Math.min(n - 1, Math.floor((px - M.g) / pas)));
+    surbrillance.setAttribute("x", x(i));
+    surbrillance.setAttribute("visibility", "visible");
+    const j = cfg.jours[i];
+    const titre = date(i).toLocaleDateString("fr-FR",
+      { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+    bulleAffiche(svg, x(i) + pas / 2, j ? y(valeur(j)) : zero,
+      `<strong>${titre}</strong>` +
+      (!j
+        ? `<div class="bulle-note">pas de données</div>`
+        : ligne("Précipitations", `${nf(j.p, 1)} mm`, "var(--serie-pluie)") +
+          ligne("ETP", `${nf(j.etp, 1)} mm`, "var(--serie-etp)") +
+          (j.deficit > 0
+            ? ligne("Déficit cumulé", `${nf(j.deficit, 1)} mm`, "var(--div-chaud-2)")
+            : ligne("En réserve", `${nf(j.stock, 1)} mm`, "var(--serie-pluie)"))));
+  });
+  zone.addEventListener("mouseleave", () => {
+    surbrillance.setAttribute("visibility", "hidden");
+    bulleCache();
+  });
+
+  return { largeur: W };
+}
+
 // --------------------------------------------- frise des années (présentation)
 
 /**
@@ -1220,5 +1329,5 @@ function frise(hote, rangs, dispo, auClic) {
 }
 
 global.Graphiques = { precipitationsMensuelles, profilMensuel, anneeJourParJour,
-                      cumulsAnnuels, comptesAnnuels, joursPeriode, frise, MOIS, nf };
+                      cumulsAnnuels, comptesAnnuels, joursPeriode, reserveEau, frise, MOIS, nf };
 })(window);

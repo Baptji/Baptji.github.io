@@ -84,6 +84,8 @@
       </section>
     </div>
 
+    <div id="cartes" hidden></div>
+
     <div id="charts" hidden>
       <section class="figure">
         <div class="figure-tete">
@@ -164,6 +166,30 @@
         <details class="tableau">
           <summary>Voir le tableau</summary>
           <div id="table-annuel-bis"></div>
+        </details>
+      </section>
+
+      <!-- onglet Évapotranspiration : la réserve d'eau jour par jour depuis le 1ᵉʳ
+           septembre, et les périodes où elle est à sec -->
+      <section class="figure" id="carte-reserve" hidden>
+        <h3>Jours en déficit par année hydrologique</h3>
+        <p class="muted" id="sous-titre-reserve"></p>
+        <div class="pastilles" id="reglage-reserve"></div>
+        <div id="fig-reserve-annees" class="figure-corps"></div>
+        <div class="figure-tete sous-figure">
+          <h3 id="titre-reserve-annee"></h3>
+          <div class="tete-outils">
+            <div class="annee-nav">
+              <button id="reserve-prec" type="button" title="Année précédente" aria-label="Année précédente">‹</button>
+              <span id="reserve-libelle"></span>
+              <button id="reserve-suiv" type="button" title="Année suivante" aria-label="Année suivante">›</button>
+            </div>
+          </div>
+        </div>
+        <div id="fig-reserve-jours" class="figure-corps"></div>
+        <details class="tableau" open>
+          <summary>Périodes de déficit</summary>
+          <div id="table-reserve"></div>
         </details>
       </section>
 

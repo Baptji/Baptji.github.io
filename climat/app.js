@@ -38,6 +38,8 @@ const sousTitreJoursPluie = document.getElementById("sous-titre-jours-pluie");
 const tableJoursPluie = document.getElementById("table-jours-pluie");
 const reglagePluieSeuil = document.getElementById("reglage-pluie-seuil");
 const reglagePluiePeriode = document.getElementById("reglage-pluie-periode");
+const carteReserve = document.getElementById("carte-reserve");
+const reglageReserve = document.getElementById("reglage-reserve");
 const echelleAnnuel = document.getElementById("echelle-annuel");
 const statusEl = document.getElementById("status");
 const chartsDiv = document.getElementById("charts");
@@ -223,6 +225,8 @@ function selectCell(poly) {
   poly.setStyle({ color: "#D9534F", weight: 1.6, fillOpacity: 0.4 });
 
   currentCell = poly.cellData;
+  // un clic sur la carte depuis les cartes de France ramène à la maille choisie
+  if (partieActive === CARTES) ouvrirPartie(PRESENTATION);
   attenteEl.hidden = true;
   selectionEl.hidden = false;
   afficherTitre();
@@ -913,6 +917,70 @@ function joursDeLaPeriode(annee) {
   return { debut, jours };
 }
 
+// ---------- réserve d'eau : les périodes de déficit de l'année hydrologique ----------
+// Un réservoir vide le 1ᵉʳ septembre. Chaque jour la pluie et la neige le remplissent,
+// l'ETP le vide. Tant qu'il reste de l'eau, la demande est couverte ; à sec, ce que l'ETP
+// réclame en plus s'accumule en déficit, jusqu'à ce qu'une pluie remette de l'eau dans
+// le réservoir : le déficit repart de zéro, et les jours couverts par cette pluie sont
+// le répit. Le plafond est ce que le sol peut tenir : au-delà, l'eau s'écoule et n'est
+// plus disponible plus tard (sans plafond, tout l'hiver est mis en réserve pour l'été).
+const reserveEau = { plafond: null, annee: null };   // plafond en mm ; annee = début
+const PLAFONDS_RESERVE = [null, 50, 100, 150, 200];
+const libelleHydro = (a) => `${a}–${String(a + 1).slice(2)}`;
+
+/** Par année hydrologique (désignée par l'année du 1ᵉʳ septembre) : la réserve ou le
+ *  déficit de chaque jour, les périodes de déficit et leurs totaux. */
+function bilanReserve(rows, plafond) {
+  const groupes = new Map();
+  for (const r of rows) {
+    const p = r.PRELIQ_Q + r.PRENEI_Q, e = r.ETP_Q;
+    if (isNaN(p) || isNaN(e)) continue;
+    const a = r.month >= 9 ? r.year : r.year - 1;
+    let g = groupes.get(a);
+    if (!g) {
+      const debut = Date.UTC(a, 8, 1);
+      const n = Math.round((Date.UTC(a + 1, 8, 1) - debut) / 86400000);
+      groupes.set(a, (g = { debut: new Date(debut), jours: Array(n).fill(null) }));
+    }
+    const i = Math.round((Date.UTC(r.year, r.month - 1, r.day) - g.debut) / 86400000);
+    g.jours[i] = { p, etp: e };
+  }
+  const annees = [...groupes.keys()].sort((a, b) => a - b);
+  const parAn = annees.map((a) => {
+    const g = groupes.get(a);
+    let stock = 0, deficit = 0, mesures = 0, joursDeficit = 0, manque = 0;
+    const periodes = [];
+    let enCours = null;
+    const clore = () => { if (enCours) { periodes.push(enCours); enCours = null; } };
+    g.jours.forEach((j, i) => {
+      // un jour manquant coupe la période : on ne sait pas ce qu'il a fait
+      if (!j) { clore(); return; }
+      mesures++;
+      const s = stock + j.p - j.etp;
+      if (s >= 0) {
+        stock = plafond === null ? s : Math.min(plafond, s);
+        deficit = 0;
+        clore();
+      } else {
+        // à sec : la pluie du jour et ce qui restait n'ont pas suffi
+        stock = 0;
+        deficit += -s;
+        manque += -s;
+        joursDeficit++;
+        if (!enCours) enCours = { debut: i, fin: i, manque: 0 };
+        enCours.fin = i;
+        enCours.manque = deficit;
+      }
+      j.stock = stock;
+      j.deficit = deficit;
+    });
+    clore();
+    return { annee: a, debut: g.debut, jours: g.jours, periodes, mesures,
+             attendus: g.jours.length, joursDeficit, manque };
+  });
+  return { annees, parAn };
+}
+
 // ---------- les onglets ----------
 // Un onglet = une variable = deux figures (le profil des douze mois, puis l'année par
 // année) et un tableau. L'onglet « Pluie » garde la figure combinée pluie + ETP.
@@ -1097,6 +1165,7 @@ const ONGLETS = [
     optionsAnnuelBis: { titreAxe: "P − ETP (mm)", unite: "mm", nomValeur: "Bilan" },
     divergentBis: -1,
     motsEcartBis: ["bilan plus déficitaire", "bilan plus excédentaire"],
+    reserve: true,
   },
   {
     id: "humidex",
@@ -1183,27 +1252,40 @@ function manteau() {
 // La présentation n'est pas un onglet de variable : elle n'a que les chiffres de base
 // et la frise. On l'ouvre d'office à chaque lancement.
 const PRESENTATION = { id: "presentation", libelle: "Présentation" };
+// Les cartes de la France entière, mois par mois : elles ne dépendent d'aucune maille,
+// on les ouvre donc aussi avant d'en avoir choisi une. Page à part (cartes/), chargée
+// au premier passage seulement : ses données pèsent lourd.
+const CARTES = { id: "cartes", libelle: "Cartes de France" };
+const cartesDiv = document.getElementById("cartes");
 let partieActive = PRESENTATION;
 let ongletActif = ONGLETS[0];   // la dernière variable ouverte : les figures la gardent
 
-for (const o of [PRESENTATION, ...ONGLETS]) {
+for (const o of [PRESENTATION, ...ONGLETS, CARTES]) {
   const b = document.createElement("button");
   b.type = "button";
   b.textContent = o.libelle;
   b.dataset.partie = o.id;
-  if (o === ONGLETS[0]) b.classList.add("separe");
+  if (o === ONGLETS[0] || o === CARTES) b.classList.add("separe");
   b.setAttribute("role", "tab");
   b.setAttribute("aria-selected", String(o === partieActive));
   b.addEventListener("click", () => ouvrirPartie(o));
   ongletsEl.appendChild(b);
 }
 
+// une copie du site sans le dossier des cartes (trop lourd, ou pas publiable) n'en
+// montre pas l'entrée : un cadre vide ne dirait rien
+if (location.protocol !== "file:") {
+  fetch("cartes/d/base.js", { method: "HEAD" })
+    .then((r) => { if (!r.ok) throw new Error(); })
+    .catch(() => { ongletsEl.querySelector('[data-partie="cartes"]').hidden = true; });
+}
+
 function ouvrirPartie(o) {
   partieActive = o;
-  if (o !== PRESENTATION) ongletActif = o;
+  if (o !== PRESENTATION && o !== CARTES) ongletActif = o;
   for (const b of ongletsEl.children) b.setAttribute("aria-selected", String(b.dataset.partie === o.id));
-  if (!lignes) return;
   afficherPartie();
+  if (!lignes || o === CARTES) return;
   dessiner();
   document.getElementById("bas").scrollTop = 0;
 }
@@ -1212,8 +1294,18 @@ function ouvrirPartie(o) {
  *  AVANT de dessiner : les figures se calent sur la largeur mesurée, et un conteneur
  *  `hidden` mesure zéro. */
 function afficherPartie() {
-  presentationDiv.hidden = partieActive !== PRESENTATION;
-  chartsDiv.hidden = partieActive === PRESENTATION;
+  const cartes = partieActive === CARTES;
+  if (cartes && !cartesDiv.firstElementChild) {
+    const f = document.createElement("iframe");
+    f.src = "cartes/index.html";
+    f.title = CARTES.libelle;
+    cartesDiv.appendChild(f);
+  }
+  cartesDiv.hidden = !cartes;
+  attenteEl.hidden = cartes || !!currentCell;
+  selectionEl.hidden = cartes || !currentCell;
+  presentationDiv.hidden = cartes || !lignes || partieActive !== PRESENTATION;
+  chartsDiv.hidden = cartes || !lignes || partieActive === PRESENTATION;
 }
 
 // ---------- le panneau d'une année ----------
@@ -2015,6 +2107,12 @@ function dessiner() {
     dessinerJoursPluie();
   }
 
+  carteReserve.hidden = !o.reserve;
+  if (o.reserve) {
+    construireReglageReserve();
+    dessinerReserve();
+  }
+
   carteAnnuelBis.hidden = !(o.annuelBis || o.comptes);
   reglageSeuil.hidden = !o.comptes;
   if (o.comptes) {
@@ -2220,6 +2318,105 @@ function changerAnneePluie(delta) {
   if (j === i) return;
   pluiePeriode.annee = anneesPluie[j];
   dessinerJoursPluie();
+}
+
+// ---------- la réserve d'eau (onglet Évapotranspiration) ----------
+function construireReglageReserve() {
+  if (reglageReserve.dataset.pret) return;
+  reglageReserve.dataset.pret = "1";
+  const s = document.createElement("span");
+  s.className = "intitule";
+  s.textContent = "Réserve maximale";
+  reglageReserve.appendChild(s);
+  for (const v of PLAFONDS_RESERVE) {
+    const b = pastille(v === null ? "sans limite" : `${v} mm`, v === reserveEau.plafond, null, () => {
+      reserveEau.plafond = v;
+      for (const autre of reglageReserve.querySelectorAll(".pastille")) {
+        autre.setAttribute("aria-pressed", String(autre === b));
+      }
+      dessinerReserve();
+    });
+    reglageReserve.appendChild(b);
+  }
+  const changer = (delta) => {
+    const i = anneesReserve.indexOf(reserveEau.annee);
+    const j = Math.max(0, Math.min(anneesReserve.length - 1, i + delta));
+    if (j === i) return;
+    reserveEau.annee = anneesReserve[j];
+    dessinerReserve();
+  };
+  document.getElementById("reserve-prec").addEventListener("click", () => changer(-1));
+  document.getElementById("reserve-suiv").addEventListener("click", () => changer(+1));
+}
+
+let anneesReserve = [];
+function dessinerReserve() {
+  if (!ongletActif.reserve || !lignes) return;
+  const dispo = document.getElementById("bas").clientWidth - MARGE_CARTE;
+  const { annees, parAn } = bilanReserve(lignes, reserveEau.plafond);
+  anneesReserve = annees;
+  if (!annees.includes(reserveEau.annee)) {
+    reserveEau.annee = annees.length ? annees[annees.length - 1] : null;
+  }
+  const iChoisie = annees.indexOf(reserveEau.annee);
+  const fmt = (d, opts) => d.toLocaleDateString("fr-FR", { timeZone: "UTC", ...opts });
+
+  document.getElementById("sous-titre-reserve").textContent =
+    "Réserve vide au 1ᵉʳ septembre, remplie par les précipitations, vidée par l'ETP. " +
+    "En déficit quand elle est à sec, jusqu'à la pluie suivante.";
+
+  const rendu = Graphiques.comptesAnnuels(document.getElementById("fig-reserve-annees"), {
+    annees,
+    jours: parAn.map((a) => a.mesures),
+    attendus: parAn.map((a) => a.attendus),
+    serie: { nom: "Jours en déficit", valeurs: parAn.map((a) => a.joursDeficit),
+             solide: "var(--div-chaud-2)" },
+  }, dispo, {
+    titreAxe: "Nombre de jours", unite: "j",
+    selection: iChoisie,
+    libelle: (a) => libelleHydro(a),
+    libelleLong: (a) => `1ᵉʳ septembre ${a} – 31 août ${a + 1}`,
+    texteIncomplet: "année en cours",
+    auClic: (i) => { reserveEau.annee = annees[i]; dessinerReserve(); },
+  });
+
+  document.getElementById("reserve-libelle").textContent =
+    reserveEau.annee === null ? "—" : libelleHydro(reserveEau.annee);
+  document.getElementById("reserve-prec").disabled = iChoisie <= 0;
+  document.getElementById("reserve-suiv").disabled = iChoisie < 0 || iChoisie >= annees.length - 1;
+
+  const titre = document.getElementById("titre-reserve-annee");
+  const fig = document.getElementById("fig-reserve-jours");
+  const table = document.getElementById("table-reserve");
+  let largeurDetail = 0;
+  if (iChoisie < 0) {
+    titre.textContent = "";
+    fig.innerHTML = "";
+    table.innerHTML = "";
+  } else {
+    const an = parAn[iChoisie];
+    const np = an.periodes.length;
+    titre.textContent = `${libelleHydro(an.annee)} : ${nf(an.joursDeficit)} jour` +
+      `${an.joursDeficit > 1 ? "s" : ""} en déficit` +
+      (np ? `, ${nf(np)} période${np > 1 ? "s" : ""}, ${nf(an.manque)} mm de manque` : "");
+    largeurDetail = Graphiques.reserveEau(fig, {
+      debut: an.debut, jours: an.jours, plafond: reserveEau.plafond,
+    }, dispo).largeur;
+
+    const date = (i) => new Date(an.debut.getTime() + i * 86400000);
+    const court = (i) => fmt(date(i), { day: "numeric", month: "short" });
+    table.innerHTML = np
+      ? tableau(["Du", "Au", "Jours", "Manque cumulé", "Répit ensuite"],
+          an.periodes.map((p, k) => {
+            const suivante = an.periodes[k + 1];
+            return [court(p.debut), court(p.fin), nf(p.fin - p.debut + 1),
+                    `${nf(p.manque, p.manque < 10 ? 1 : 0)} mm`,
+                    suivante ? `${nf(suivante.debut - p.fin - 1)} j` : ""];
+          }), true)
+      : `<p class="muted">Aucun jour en déficit cette année.</p>`;
+  }
+  const largeur = Math.max(rendu && rendu.largeur || 0, largeurDetail);
+  carteReserve.style.width = largeur ? `${largeur + MARGE_CARTE}px` : "";
 }
 
 /**
