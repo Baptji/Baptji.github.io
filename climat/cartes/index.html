@@ -1,0 +1,364 @@
+<meta charset="utf-8">
+<title>Cartes de France</title>
+<style>
+/* Cartes de France, dans l'app Climat (copie de agroclimat-mois/page). Mise en page : une colonne ; choix de l'indicateur et du mois, la normale en grand, puis les décennies en grille */
+:root{
+  --bg:#f9f9f7; --fg:#0b0b0b; --muted:#52514e; --line:#e1e0d9; --accent:#256abf;
+  --sans:system-ui,-apple-system,"Segoe UI",sans-serif; --mono:ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0d0d0d; --fg:#ffffff; --muted:#c3c2b7; --line:#2c2c2a; --accent:#6da7ec; color-scheme:dark}}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.5}
+.page{max-width:1080px;margin:0 auto;padding-block:6px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:32px}
+h1{font-size:1.9rem;font-weight:600;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font-size:1.15rem;font-weight:600;margin:0 0 4px;text-wrap:balance}
+.src{color:var(--muted);font-size:.8rem;margin:0}
+.src a{color:var(--accent)}
+.sub{color:var(--muted);font-size:.9rem;margin:0 0 14px}
+.choix{display:flex;flex-direction:column;gap:10px}
+.puces{display:flex;flex-wrap:wrap;gap:6px}
+.puces button{font:inherit;font-size:.85rem;background:transparent;color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:5px 10px;cursor:pointer}
+.puces button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.puces button:disabled{opacity:.35;cursor:default}
+.puces button:focus-visible,.bascule button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.hero{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:28px;align-items:center}
+@media (max-width:760px){.hero{grid-template-columns:1fr}}
+canvas{display:block;width:100%;height:auto}
+.big,.carte{position:relative}
+.legend{display:flex;flex-direction:column;gap:6px;font-family:var(--mono);font-size:.75rem;color:var(--muted)}
+.bar{display:flex;height:12px;border-radius:2px;overflow:hidden}
+.bar span{flex:1}
+.ticks{position:relative;height:1.2em;font-variant-numeric:tabular-nums}
+.ticks span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.chiffre{font-family:var(--mono);font-size:2.2rem;font-weight:500;font-variant-numeric:tabular-nums;line-height:1.1}
+.chiffre small{font-size:1rem;color:var(--muted)}
+.bascule{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-bottom:14px}
+.bascule button{font:inherit;font-size:.85rem;background:transparent;color:var(--fg);border:0;padding:6px 12px;cursor:pointer}
+.bascule button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.grille{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px 14px}
+@media (max-width:760px){.grille{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.carte{display:flex;flex-direction:column;gap:4px}
+.carte .t{display:flex;justify-content:space-between;align-items:baseline;gap:6px;font-size:.85rem}
+.carte .t b{font-weight:600}
+.carte .t span{font-family:var(--mono);font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.legende-cell{display:flex;flex-direction:column;justify-content:center}
+.mm{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:760px){.mm{grid-template-columns:1fr}}
+.calend{display:grid;grid-template-columns:2.6em repeat(12,minmax(0,1fr)) minmax(0,1.4fr);gap:1px;font-family:var(--mono);font-size:.68rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.calend .an{line-height:9px;height:9px;overflow:visible;white-space:nowrap}
+.calend .tete{text-align:center;padding-bottom:3px}
+.calend i{display:block;height:9px;cursor:pointer;border-radius:1px}
+.calend i.vide{cursor:default}
+.calend i.sel{outline:2px solid var(--fg);outline-offset:0;position:relative;z-index:1}
+.calend .col13{margin-left:4px}
+.mm .carte{position:sticky;top:12px}
+.bulle{position:absolute;pointer-events:none;background:var(--fg);color:var(--bg);font-family:var(--mono);font-size:.75rem;padding:3px 6px;border-radius:4px;white-space:nowrap;transform:translate(-50%,-130%)}
+</style>
+
+<div class="page">
+  <header>
+    <p class="src">Données d’<a href="https://www.agroclimatologie.com" target="_blank" rel="noopener">AgroClimatologie</a> (AgroClimat2050, d’après SIM2 de Météo-France), maille de 8 km, depuis août 1958. Ensoleillement : rayonnement SIM2 et durées d’insolation des stations de <a href="https://meteo.data.gouv.fr" target="_blank" rel="noopener">Météo-France</a>. Normales et moyennes par décennie calculées ici.</p>
+  </header>
+
+  <div class="choix">
+    <div class="puces" id="pIndic" role="group"></div>
+    <div class="puces" id="pMois" role="group"></div>
+  </div>
+
+  <section class="hero">
+    <div class="big"><canvas id="normale" width="900" height="860"></canvas></div>
+    <div>
+      <h2 id="hTitre"></h2>
+      <p class="sub">Normale 1991-2020.</p>
+      <div class="chiffre"><span id="moyFr"></span> <small id="moyU"></small></div>
+      <div class="legend" style="margin-top:22px"><div class="bar" id="barN"></div><div class="ticks" id="ticksN"></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Tous les 10 ans</h2>
+    <div class="bascule" role="group">
+      <button data-mode="ecart" aria-pressed="true">Écart à 1991-2020</button>
+      <button data-mode="val" aria-pressed="false">Moyenne</button>
+    </div>
+    <div class="grille" id="grille"></div>
+  </section>
+
+  <section id="sMois" hidden>
+    <h2>Mois par mois</h2>
+    <div class="bascule" role="group">
+      <button data-mode="ecart" aria-pressed="true">Écart à 1991-2020</button>
+      <button data-mode="val" aria-pressed="false">Valeur</button>
+    </div>
+    <div class="mm">
+      <div class="calend" id="calend"></div>
+      <div class="carte">
+        <div class="t"><b id="mmTitre"></b><span id="mmVal"></span></div>
+        <canvas id="cvMois" width="900" height="860"></canvas>
+        <div class="legend"><div class="bar" id="barM"></div><div class="ticks" id="ticksM"></div><div id="uM"></div></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const PAL={
+  pluie:['#efe3c2','#d9e6bd','#b3dbb6','#84c8b9','#5bb2c3','#3f95c0','#3176b0','#2a5a9c','#2d3f85','#2a1350'],
+  temp:['#2c4a8c','#3f78b5','#73a9cf','#b4d4e0','#eae6c8','#f5c97a','#ee9a4f','#da6337','#b5352a','#7d1d2a'],
+  chaud:['#f7f1e3','#f6dfb4','#f2c27f','#ec9f57','#e07a3f','#cc5534','#b03a30','#8e2630','#6a1a2c','#45122a'],
+  gel:['#f4f6f8','#dfe9f2','#c2d8ea','#a1c3e0','#7eaad4','#5c8fc6','#4373b3','#33599b','#28427f','#1d2c5e'],
+  soleil:['#5b6478','#7a8091','#9c9a98','#bcb08f','#d6c27e','#e9cf68','#f4d24e','#f7c533','#f2ab1f','#e48a10'],
+  sec:['#f6f2dc','#efe2b0','#e6cd86','#dcb466','#cf9a4e','#bd7f3e','#a56634','#89502c','#6c3d25','#4f2c1e'],
+};
+const DIV_EAU=['#8c4a12','#bf7a2e','#dfae6a','#f0d8ae','#e8e8e1','#b6dfd6','#6cbcb2','#2b8b88','#0f5a5c'];
+const DIV_CHAUD=['#2b4f8f','#4d7fbd','#8fb6da','#cfe0ec','#e8e8e1','#f3d0b5','#e79a74','#cc5a45','#992634'];
+const DIV_SOLEIL=['#3d4a66','#5f6c88','#8f98ad','#c3c8d2','#e8e8e1','#f3dea3','#efc463','#e3a22c','#c47a0f'];
+const inv=a=>[...a].reverse();
+// code, libellé, unité, palette, écart en % ou en différence, palette d'écart (du négatif au positif)
+const INDICS=[
+  ['sim2_tm','Température moyenne','°C','temp','diff',DIV_CHAUD],
+  ['sim2_tn','Température minimale','°C','temp','diff',DIV_CHAUD],
+  ['sim2_tx','Température maximale','°C','temp','diff',DIV_CHAUD],
+  ['sim2_pluie','Pluie','mm','pluie','pct',DIV_EAU],
+  ['mf_soleil','Ensoleillement','h','soleil','pct',DIV_SOLEIL],
+  ['sim2_etp','Évapotranspiration','mm','sec','pct',inv(DIV_EAU)],
+  ['sim2_bilan','Bilan pluie − ETP','mm','pluie','diff',DIV_EAU],
+  ['swi_sim2','Humidité du sol','%','pluie','diff',DIV_EAU],
+  ['sim2_gel','Jours de gel','j','gel','diff',inv(DIV_CHAUD)],
+  ['sim2_chaud','Jours à 30 °C','j','chaud','diff',DIV_CHAUD],
+  ['sim2_echaud','Jours à 25 °C','j','chaud','diff',DIV_CHAUD],
+  ['sim2_sec','Plus longue période sans pluie','j','sec','diff',inv(DIV_EAU)],
+].map(([code,nom,u,pal,ec,div])=>({code,nom,u,pal:PAL[pal],ec,div}));
+const MOIS=['Janv.','Févr.','Mars','Avril','Mai','Juin','Juil.','Août','Sept.','Oct.','Nov.','Déc.','Année'];
+const MOIS_LONG=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre','l’année'];
+
+let cells,R,K,lonMin,lonMax,latMin,latMax,NC;
+const cache={};
+let etat={indic:INDICS[0],p:13,mode:'ecart',sel:null};
+try{const s=JSON.parse(localStorage.getItem('climat-mois')||'null');if(s){etat.indic=INDICS.find(i=>i.code===s.c)||etat.indic;etat.p=s.p||13;etat.mode=s.m||'ecart'}}catch(e){}
+
+const fmtN=(x,d)=>x.toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const signe=(x,d)=>{const t=fmtN(Math.abs(x),d);return (/[1-9]/.test(t)?(x>0?'+':'−'):'')+t};
+function pasJoli(x){const p=Math.pow(10,Math.floor(Math.log10(x)));for(const m of[1,2,2.5,5,10])if(m*p>=x)return m*p;return 10*p}
+function dec(step){return step>=1?0:step>=0.1?1:2}
+function quantile(arr,q){const a=arr.filter(Number.isFinite).sort((x,y)=>x-y);return a.length?a[Math.min(a.length-1,Math.floor(q*a.length))]:0}
+function classe(v,b){let i=0;while(i<b.length&&v>=b[i])i++;return i}
+
+function bornesSeq(vals){
+  const lo=quantile(vals,.02),hi=quantile(vals,.98);
+  const step=pasJoli(Math.max((hi-lo)/10,0.1));
+  let b0=Math.ceil(lo/step)*step;const out=[];
+  for(let i=0;i<9;i++)out.push(+(b0+i*step).toFixed(6));
+  return {b:out,d:dec(step)};
+}
+function bornesDiv(lists){
+  const abs=[];lists.forEach(l=>l.forEach(v=>{if(Number.isFinite(v))abs.push(Math.abs(v))}));
+  const s=pasJoli(Math.max(quantile(abs,.95)/3,0.1));
+  return {b:[-3*s,-2*s,-s,-.4*s,.4*s,s,2*s,3*s],d:dec(s*.4)};
+}
+
+function dessine(cv,valeurs,bornes,couls){
+  const ctx=cv.getContext('2d'),W=cv.width,H=cv.height,pad=6;
+  const s=Math.min((W-2*pad)/((lonMax-lonMin)*K),(H-2*pad)/(latMax-latMin));
+  const ox=(W-(lonMax-lonMin)*K*s)/2, oy=(H-(latMax-latMin)*s)/2;
+  ctx.clearRect(0,0,W,H);
+  for(let i=0;i<NC;i++){
+    const v=valeurs[i];if(!Number.isFinite(v))continue;
+    const c=cells[i];
+    const x0=ox+(c[0]-lonMin)*K*s,x1=ox+(c[2]-lonMin)*K*s;
+    const ya=oy+(latMax-Math.max(c[1],c[3]))*s,yb=oy+(latMax-Math.min(c[1],c[3]))*s;
+    ctx.fillStyle=couls[classe(v,bornes)];
+    ctx.fillRect(Math.floor(x0),Math.floor(ya),Math.ceil(x1-x0)+1,Math.ceil(yb-ya)+1);
+  }
+  cv._geo={s,ox,oy};
+}
+function survol(cv,lire){
+  const bulle=document.createElement('div');bulle.className='bulle';bulle.hidden=true;cv.parentNode.appendChild(bulle);
+  cv.addEventListener('mousemove',e=>{
+    if(!cv._geo)return;
+    const r=cv.getBoundingClientRect(),g=cv._geo,f=cv.width/r.width;
+    const lon=lonMin+((e.clientX-r.left)*f-g.ox)/(K*g.s),lat=latMax-((e.clientY-r.top)*f-g.oy)/g.s;
+    const i=cells.findIndex(c=>lon>=c[0]&&lon<c[2]&&lat>=Math.min(c[1],c[3])&&lat<Math.max(c[1],c[3]));
+    const t=i<0?null:lire(i);
+    if(t==null){bulle.hidden=true;return}
+    bulle.textContent=t;bulle.hidden=false;
+    bulle.style.left=(e.clientX-r.left)+'px';bulle.style.top=(e.clientY-r.top+cv.offsetTop)+'px';
+  });
+  cv.addEventListener('mouseleave',()=>bulle.hidden=true);
+}
+function legende(bar,ticks,bornes,couls,d,signeOn){
+  const n=couls.length,pas=bornes.length>8?2:1;
+  bar.innerHTML=couls.map(c=>`<span style="background:${c}"></span>`).join('');
+  const montre=signeOn?(i=>[0,2,5,7].includes(i)):(i=>i%pas===0);
+  ticks.innerHTML=bornes.map((v,i)=>!montre(i)?'':`<span style="left:${(i+1)/n*100}%">${signeOn?signe(v,d):fmtN(v,d)}</span>`).join('');
+}
+const moy=a=>{let s=0,n=0;for(const v of a)if(Number.isFinite(v)){s+=v;n++}return n?s/n:NaN};
+
+// les données arrivent en scripts (d/*.js) : la page s'ouvre aussi en fichier local
+const attente={};
+function script(src){return new Promise((ok,ko)=>{const e=document.createElement('script');e.src=src;e.onload=ok;e.onerror=ko;document.head.appendChild(e)})}
+function i16(b64){const t=atob(b64),o=new Uint8Array(t.length);for(let i=0;i<t.length;i++)o[i]=t.charCodeAt(i);return new Int16Array(o.buffer)}
+window.__D=(code,b64)=>{cache[code]=i16(b64)};
+window.__M=(code,b64)=>{cacheM[code]=i16(b64)};
+window.__BASE=(c,r)=>{cells=c;R=r};
+async function donnees(code){
+  if(!cache[code])await(attente[code]??=script('d/'+code+'.js'));
+  return cache[code];
+}
+const cacheM={},attenteM={};
+async function donneesMois(code){ // null si le détail mois par mois n'est pas là (artefact)
+  if(!cacheM[code])try{await(attenteM[code]??=script('d/mois/'+code+'.js'))}catch(e){return null}
+  return cacheM[code]||null;
+}
+function carte(arr,p,t){ // p : 1..13, t : 0 = normale, 1..7 = décennies
+  const o=((p-1)*8+t)*NC,out=new Float32Array(NC);
+  for(let i=0;i<NC;i++){const v=arr[o+i];out[i]=v===-32768?NaN:v/10}
+  return out;
+}
+
+const cvN=document.getElementById('normale');
+let vueN=null,vues=[];
+survol(cvN,i=>vueN&&Number.isFinite(vueN[i])?fmtN(vueN[i],etat.indic.u==='°C'||etat.indic.u==='%'?1:0)+' '+etat.indic.u:null);
+
+function construitGrille(){
+  const g=document.getElementById('grille');g.innerHTML='';vues=[];
+  R.tranches.slice(1).forEach(([a,b])=>{
+    const fig=document.createElement('div');fig.className='carte';
+    fig.innerHTML=`<div class="t"><b>${b-a===9?'Années '+String(a).slice(2):''}</b><span></span></div><canvas width="420" height="400"></canvas>`;
+    g.appendChild(fig);
+    const v={cv:fig.querySelector('canvas'),lab:fig.querySelector('.t span'),titre:b-a===9?null:fig.querySelector('.t b'),debut:a,val:null,ec:null};
+    survol(v.cv,i=>{const x=etat.mode==='ecart'?v.ec:v.val;if(!x||!Number.isFinite(x[i]))return null;
+      return etat.mode==='ecart'?signe(x[i],etat.indic.ec==='pct'?0:1)+(etat.indic.ec==='pct'?' %':' '+etat.indic.u):fmtN(x[i],1)+' '+etat.indic.u});
+    vues.push(v);
+  });
+  const leg=document.createElement('div');leg.className='legende-cell legend';leg.id='legG';
+  leg.innerHTML='<div class="bar"></div><div class="ticks"></div><div class="u"></div>';g.appendChild(leg);
+}
+
+async function rendre(){
+  const I=etat.indic,p=etat.p;
+  try{localStorage.setItem('climat-mois',JSON.stringify({c:I.code,p,m:etat.mode}))}catch(e){}
+  document.querySelectorAll('#pIndic button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===I.code));
+  document.querySelectorAll('#pMois button').forEach(b=>{b.setAttribute('aria-pressed',+b.dataset.p===p);b.disabled=+b.dataset.p===13&&!R.indicateurs[I.code].annee});
+  document.querySelectorAll('.bascule button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===etat.mode));
+  const arr=await donnees(I.code);
+  if(I!==etat.indic||p!==etat.p)return;
+  const N=carte(arr,p,0);vueN=N;
+  const sq=bornesSeq(N);
+  dessine(cvN,N,sq.b,I.pal);
+  legende(document.getElementById('barN'),document.getElementById('ticksN'),sq.b,I.pal,sq.d,false);
+  document.getElementById('hTitre').textContent=I.nom+(p===13?' sur l’année':' en '+MOIS_LONG[p-1]);
+  const dN=I.u==='°C'||I.u==='%'?1:0;
+  document.getElementById('moyFr').textContent=fmtN(moy(N),dN);
+  document.getElementById('moyU').textContent=I.u+' en moyenne';
+  const mN=moy(N);
+  vues.forEach((v,k)=>{
+    if(v.titre)v.titre.textContent=v.debut+'-'+(R.indicateurs[I.code].fin[p-1]||'');
+    v.val=carte(arr,p,k+1);
+    v.ec=new Float32Array(NC);
+    for(let i=0;i<NC;i++)v.ec[i]=I.ec==='pct'?(N[i]>0?(v.val[i]/N[i]-1)*100:NaN):v.val[i]-N[i];
+  });
+  const leg=document.getElementById('legG');
+  if(etat.mode==='ecart'){
+    const dv=bornesDiv(vues.map(v=>v.ec));
+    vues.forEach(v=>{dessine(v.cv,v.ec,dv.b,I.div);const m=moy(v.val);
+      v.lab.textContent=Number.isFinite(m)?(I.ec==='pct'?signe((m/mN-1)*100,1)+' %':signe(m-mN,1)+' '+I.u):''});
+    legende(leg.querySelector('.bar'),leg.querySelector('.ticks'),dv.b,I.div,dv.d,true);
+    leg.querySelector('.u').textContent=I.ec==='pct'?'%':I.u;
+  }else{
+    vues.forEach(v=>{dessine(v.cv,v.val,sq.b,I.pal);const m=moy(v.val);v.lab.textContent=Number.isFinite(m)?fmtN(m,dN)+' '+I.u:''});
+    legende(leg.querySelector('.bar'),leg.querySelector('.ticks'),sq.b,I.pal,sq.d,false);
+    leg.querySelector('.u').textContent=I.u;
+  }
+  rendreMois(arr);
+}
+
+// ---- Mois par mois : une case par mois (couleur = écart national à la normale du mois), la carte du mois choisi
+const idxMois=(a,m)=>(a-R.mois.debut[0])*12+(m-R.mois.debut[1]);
+function carteMois(M,a,m){ // m : 1..12, ou 13 pour l'année entière (somme ou moyenne des 12 mois)
+  const out=new Float32Array(NC);
+  if(m<13){const k=idxMois(a,m);if(k<0||k>=R.mois.n){out.fill(NaN);return out}
+    const o=k*NC;for(let i=0;i<NC;i++){const v=M[o+i];out[i]=v===-32768?NaN:v/10}return out}
+  const agr=R.indicateurs[etat.indic.code].agr;
+  for(let mm=1;mm<=12;mm++){const k=idxMois(a,mm);if(k<0||k>=R.mois.n){out.fill(NaN);return out}
+    const o=k*NC;for(let i=0;i<NC;i++){const v=M[o+i];out[i]+=v===-32768?NaN:v/10}}
+  if(agr==='moy')for(let i=0;i<NC;i++)out[i]/=12;
+  return out;
+}
+const ecartDe=(I,v,n)=>I.ec==='pct'?(n>0?(v/n-1)*100:NaN):v-n;
+const cvM=document.getElementById('cvMois');
+let vueM=null,ecM=null,nationaux=null;
+survol(cvM,i=>{const I=etat.indic;
+  if(!vueM||!Number.isFinite(vueM[i]))return null;
+  const dN=I.u==='°C'||I.u==='%'?1:0, t=fmtN(vueM[i],dN)+' '+I.u;
+  return ecM&&Number.isFinite(ecM[i])?t+'  ('+signe(ecM[i],I.ec==='pct'?0:1)+(I.ec==='pct'?' %':' '+I.u)+')':t});
+
+async function rendreMois(arr){
+  const I=etat.indic,M=await donneesMois(I.code);
+  const sec=document.getElementById('sMois');
+  if(!M||I!==etat.indic){sec.hidden=!M;return}
+  sec.hidden=false;
+  const annee=R.indicateurs[I.code].annee,[a0]=R.mois.debut,[aF,mF]=R.indicateurs[I.code].dernier.split('-').map(Number);
+  // écarts nationaux de chaque mois (et de chaque année), à la normale du mois
+  if(!nationaux||nationaux.code!==I.code){
+    const nN=[];for(let p=1;p<=13;p++)nN[p]=moy(carte(arr,p,0));
+    const e={};
+    for(let a=a0;a<=aF;a++)for(let m=1;m<=13;m++){
+      if(m===13&&!annee)continue;
+      const c=carteMois(M,a,m),v=moy(c);
+      if(Number.isFinite(v))e[a*100+m]={v,ec:ecartDe(I,v,nN[m])};
+    }
+    nationaux={code:I.code,e};
+  }
+  const E=nationaux.e;
+  if(!etat.sel||!E[etat.sel.a*100+etat.sel.m])etat.sel={a:aF,m:mF};
+  // calendrier
+  const cal=document.getElementById('calend');
+  // l'année a sa propre échelle : ses écarts sont bien plus faibles que ceux d'un mois
+  const ecs=k=>Object.entries(E).filter(([c])=>(c%100===13)===k).map(([,x])=>x.ec);
+  const dv=bornesDiv([ecs(false)]),dv13=annee?bornesDiv([ecs(true)]):dv;
+  let h='<span></span>'+MOIS.slice(0,12).map(m=>`<span class="tete">${m[0]}</span>`).join('')+`<span class="tete col13">${annee?'An':''}</span>`;
+  for(let a=a0;a<=aF;a++){
+    h+=`<span class="an">${a%5===0||a===a0?a:''}</span>`;
+    for(let m=1;m<=13;m++){
+      const x=E[a*100+m],cl=m===13?' col13':'';
+      if(m===13&&!annee){h+='<span></span>';continue}
+      h+=x?`<i class="${cl}${a===etat.sel.a&&m===etat.sel.m?' sel':''}" data-a="${a}" data-m="${m}" style="background:${I.div[classe(x.ec,(m===13?dv13:dv).b)]}" title="${m===13?a:MOIS_LONG[m-1]+' '+a} : ${fmtN(x.v,I.u==='°C'||I.u==='%'?1:0)} ${I.u} (${signe(x.ec,I.ec==='pct'?0:1)}${I.ec==='pct'?' %':' '+I.u})"></i>`:`<i class="vide${cl}"></i>`;
+    }
+  }
+  cal.innerHTML=h;
+  cal.onclick=e=>{const t=e.target.closest('i[data-a]');if(!t)return;etat.sel={a:+t.dataset.a,m:+t.dataset.m};rendreMois(arr)};
+  // carte du mois choisi
+  const {a,m}=etat.sel, val=carteMois(M,a,m), N=carte(arr,m,0);
+  vueM=val;ecM=new Float32Array(NC);for(let i=0;i<NC;i++)ecM[i]=ecartDe(I,val[i],N[i]);
+  const x=E[a*100+m];
+  document.getElementById('mmTitre').textContent=(m===13?'Année ':MOIS_LONG[m-1].replace(/^./,c=>c.toUpperCase())+' ')+a;
+  document.getElementById('mmVal').textContent=etat.mode==='ecart'?signe(x.ec,1)+(I.ec==='pct'?' %':' '+I.u):fmtN(x.v,I.u==='°C'||I.u==='%'?1:0)+' '+I.u;
+  if(etat.mode==='ecart'){
+    const d=bornesDiv([ecM]);dessine(cvM,ecM,d.b,I.div);
+    legende(document.getElementById('barM'),document.getElementById('ticksM'),d.b,I.div,d.d,true);
+    document.getElementById('uM').textContent=I.ec==='pct'?'%':I.u;
+  }else{
+    const sq=bornesSeq(N);dessine(cvM,val,sq.b,I.pal);
+    legende(document.getElementById('barM'),document.getElementById('ticksM'),sq.b,I.pal,sq.d,false);
+    document.getElementById('uM').textContent=I.u;
+  }
+}
+
+(async()=>{
+  await script('d/base.js');
+  NC=cells.length;K=Math.cos(46.5*Math.PI/180);
+  lonMin=Math.min(...cells.map(c=>c[0]));lonMax=Math.max(...cells.map(c=>c[2]));
+  latMin=Math.min(...cells.map(c=>Math.min(c[1],c[3])));latMax=Math.max(...cells.map(c=>Math.max(c[1],c[3])));
+  const pI=document.getElementById('pIndic');
+  for(let k=INDICS.length-1;k>=0;k--)if(!R.indicateurs[INDICS[k].code])INDICS.splice(k,1);
+  if(!INDICS.includes(etat.indic))etat.indic=INDICS[0];
+  INDICS.forEach(I=>{const b=document.createElement('button');b.textContent=I.nom;b.dataset.c=I.code;b.onclick=()=>{etat.indic=I;if(etat.p===13&&!R.indicateurs[I.code].annee)etat.p=7;rendre()};pI.appendChild(b)});
+  const pM=document.getElementById('pMois');
+  MOIS.forEach((m,k)=>{const b=document.createElement('button');b.textContent=m;b.dataset.p=k+1;b.onclick=()=>{etat.p=k+1;rendre()};pM.appendChild(b)});
+  document.querySelectorAll('.bascule button').forEach(b=>b.onclick=()=>{etat.mode=b.dataset.mode;rendre()});
+  if(etat.p===13&&!R.indicateurs[etat.indic.code].annee)etat.p=7;
+  construitGrille();
+  rendre();
+})();
+</script>
